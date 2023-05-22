@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2021')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*S*D ***RPGBASEBND****************************************************                     MD041126
+/*STD *  RPGBASEMOD                                                   *                     MD041126
 /*EXI *  ALWNULL(*USRCTL)                                             *
 /*EXI *  TEXT('Midas MS Midas/SWIFT MX Meridian communication')       *
       *****************************************************************
@@ -17,13 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD061269           Date 25Apr23               *
-      *  Prev Amend No. MD059755           Date 28Mar22               *
+      *  Last Amend No. MD041126           Date 21Jan19               *
+      *  Prev Amend No. MD061269           Date 25Apr23               *
+      *                 MD059755           Date 28Mar22               *
       *                 MD059677           Date 10Mar22               *
       *                 CSW122  *CREATE    Date 04Oct21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *  MD061269 - Pacs.010.001.03 is encountering buffer issue in   *
       *             QMQM.                                             *
       *  MD059755 - Various records in MSIXISOPD and MSMXISOPD  have  *
@@ -159,27 +162,44 @@
       **  Declare MQI structures needed
       ** MQI Constants
 
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** Object Descriptor
 
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** Message Descriptor
 
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
 
       ** Get message options
 
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
 
       ** Put message options
 
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMNAME          S             48A                                                    MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
 
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
@@ -396,19 +416,23 @@
 
       ** Get message
 
-     C                   Z-ADD     MQGET         CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C**********         PARM      12000         p@msglen          9 0                      MD061269
-     C                   PARM      24000         p@msglen          9 0                      MD061269
-     C                   PARM                    q@msgbuf
-     C                   PARM                    MESLEN            9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQGET         CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM      12000         p@msglen          9 0                      MD041126
+     C**********         PARM                    q@msgbuf                                   MD041126
+     C**********         PARM                    MESLEN            9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   Z-ADD     12000         BUFLEN                                     MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
 
       ** Message starts after the API header block
 
@@ -893,13 +917,20 @@
       ** Connect to the queue manager; we have to do this explicitly
       ** now, in order to support non-default queue managers.
 
-     C                   Z-ADD     MQCONN        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    MCMQMN
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCONN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    MCMQMN                                     MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   EVAL      QMNAME = MCMQMN                                          MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
+     C                                     OCODE  : REASON )                                MD041126
 
       ** If connect failed, indicate abnormal end
 
@@ -941,15 +972,18 @@
 
       ** Open queue
 
-     C                   Z-ADD     MQOPEN        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
 
       ** Trace
 
@@ -1004,14 +1038,17 @@
 
       ** Close queue
 
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
 
       ** Trace
 
@@ -1056,11 +1093,15 @@
 
       ** Disconnect from Queue Manager
 
-     C                   CALL      'QMQM'
-     C                   PARM      MQDISC        CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM      *ZERO         OCODE             9 0
-     C                   PARM      *ZERO         REASON            9 0
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQDISC        CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM      *ZERO         OCODE             9 0                      MD041126
+     C**********         PARM      *ZERO         REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
 
       ** Trace
 

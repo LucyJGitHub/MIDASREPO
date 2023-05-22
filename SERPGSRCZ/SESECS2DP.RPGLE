@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 251631             Date 17May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251631 - Last Coupon Date not displayed in repair mode.      *
+      *         - Applied for MD034395                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -516,23 +519,24 @@
      C                             PPROT = '8' AND CSE005 = 'Y' AND                           CSE031
      C                             CSE031 = 'Y'                                               CSE031
      C                   EVAL      *IN82 = *ON
+     C                   EVAL      *IN90 = *OFF                                               251631
 
-     C                   IF        SACTN <> 'I'
-      *
-      ** If not insert and one of the coupon dates is error then do not
-      ** display last coupon date.
-     C                   IF        *IN28 = *OFF AND *IN30 = *OFF AND
-     C                             *IN32 = *OFF AND *IN34 = *OFF AND
-     C                             *IN36 = *OFF AND *IN38 = *OFF AND
-     C                             *IN40 = *OFF AND *IN42 = *OFF AND
-     C                             *IN44 = *OFF AND *IN46 = *OFF AND
-     C                             *IN48 = *OFF AND *IN50 = *OFF
-     C                   EVAL      *IN90 = *OFF
-     C                   ELSE
-     C                   EVAL      *IN90 = *ON
-     C                   ENDIF
-
-     C                   ENDIF
+     C**********         IF        SACTN <> 'I'                                               251631
+      **********                                                                              251631
+      ***If*not*insert*and*one*of*the*coupon*dates*is*error*then*do*not                       251631
+      ***display*last*coupon*date.                                                            251631
+     C**********         IF        *IN28 = *OFF AND *IN30 = *OFF AND                          251631
+     C**********                   *IN32 = *OFF AND *IN34 = *OFF AND                          251631
+     C**********                   *IN36 = *OFF AND *IN38 = *OFF AND                          251631
+     C**********                   *IN40 = *OFF AND *IN42 = *OFF AND                          251631
+     C**********                   *IN44 = *OFF AND *IN46 = *OFF AND                          251631
+     C**********                   *IN48 = *OFF AND *IN50 = *OFF                              251631
+     C**********         EVAL      *IN90 = *OFF                                               251631
+     C**********         ELSE                                                                 251631
+     C**********         EVAL      *IN90 = *ON                                                251631
+     C**********         ENDIF                                                                251631
+      **********                                                                              251631
+     C**********         ENDIF                                                                251631
      C                   ENDIF
       *
       ** Australian yield basis

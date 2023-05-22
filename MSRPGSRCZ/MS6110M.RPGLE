@@ -463,6 +463,14 @@
                                                                                               CTI004
       ** Declared variable for system value setting                                         MD048231
      D MMMPaper        S              1A                                                    MD048231
+      *                                                                                     MD051624
+     D WMACFLAG        S              1                                                     MD051624
+     D WLATM           S              6                                                     MD051624
+     D PTimeStamp      S               Z                                                    MD051624
+     D PDateIn         S              8                                                     MD051624
+     D PMDNO           S              5P 0                                                  MD051624
+     D PDATE6          S              6  0                                                  MD051624
+     D PDATE7          S              7                                                     MD051624
                                                                                             MD041126
       ** MQ Parameters                                                                      MD041126
      D HCONN           S             10I 0                                                  MD041126

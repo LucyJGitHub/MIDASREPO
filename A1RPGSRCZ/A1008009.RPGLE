@@ -75,14 +75,14 @@
       *
       ** Parameters for the QMQM calls.
       *
-     D CID             S              9P 0
+     D*** CID             S              9P 0
      D*** HCONN           S              9P 0                                               MD041126
-     D HOBJ            S              9P 0
-     D BUFLEN          S              9P 0
-     D CCODE           S              9P 0
-     D REASON          S              9P 0
-     D OCODE           S              9P 0
-     D OPTS            S              9P 0
+     D*** HOBJ            S              9P 0                                               MD041126
+     D*** BUFLEN          S              9P 0                                               MD041126
+     D*** CCODE           S              9P 0                                               MD041126
+     D*** REASON          S              9P 0                                               MD041126
+     D*** OCODE           S              9P 0                                               MD041126
+     D*** OPTS            S              9P 0                                               MD041126
       *
       ** 4-alpha and 6-alpha fields for the MQ error code
       *
@@ -160,7 +160,7 @@
       ** Send the message
       *
      C                   EVAL      MDFMT = FMSTR
-     C                   EVAL      CID = MQPUT
+     C**********         EVAL      CID = MQPUT                                              MD041126
 
      C                   IF        CommitCtl = 'Y'
       *
@@ -217,7 +217,7 @@
       ** kind of call is being made.
       *
      C                   EVAL      OPTS = OOOUT + OOFIQ
-     C                   EVAL      CID = MQOPEN
+     C**********         EVAL      CID = MQOPEN                                             MD041126
       *
       ** ODON is a subfield of the MQOD data structure, which holds the
       ** name of the queue to be opened.  It is declared in the CMQODR

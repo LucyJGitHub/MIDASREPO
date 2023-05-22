@@ -178,6 +178,18 @@
      D MQPMO           DS
      D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
      D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMNAME          S             48A                                                    MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
 
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
@@ -902,7 +914,7 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
       *                                                                                     MD041126
-     C                   EVAL      QMNAME = QMGR                                            MD041126
+     C                   EVAL      QMNAME = MCMQMN                                          MD041126
      C                   Z-ADD     *ZERO         HANDLE                                     MD041126
      C                   Z-ADD     *ZERO         OCODE                                      MD041126
      C                   Z-ADD     *ZERO         REASON                                     MD041126

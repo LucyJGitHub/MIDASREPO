@@ -437,7 +437,7 @@
      C**********         PARM                    OCODE             9 0                      MD041126
      C**********         PARM                    REASON            9 0                      MD041126
       *                                                                                     MD041126
-     C                   EVAL      QMNAME = QMGR                                            MD041126
+     C                   EVAL      QMNAME = MQManager                                       MD041126
      C                   Z-ADD     *ZERO         HANDLE                                     MD041126
      C                   Z-ADD     *ZERO         OCODE                                      MD041126
      C                   Z-ADD     *ZERO         REASON                                     MD041126
@@ -603,7 +603,7 @@
       *                                                                                     MD041126
      C                   Z-ADD     12000         BUFLEN                                     MD041126
      C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
-     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
+     C                                    BUFLEN : %ADDR(q@msgbuf) :                        MD041126
      C                                    MESLEN : CCODE : REASON )                         MD041126
       *
      C     REASON        ifne      RCNONE

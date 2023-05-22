@@ -191,6 +191,9 @@
      D PCurSet09       S            200A                                                    MD056262
      D PSysVal10       S             20A                                                    MD056262
      D PCurSet10       S            200A                                                    MD056262
+                                                                                            MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D QMNAME          S             48A                                                    MD041126
 
       *****************************************************************
       /EJECT
@@ -343,11 +346,11 @@
      C**********         PARM                    HCONN                             MD058195 MD041126
      C**********         PARM                    OCODE                             MD058195 MD041126
      C**********         PARM                    REASON                            MD058195 MD041126
-     C                   EVAL      QMNAME = QMGR                                            MD041126
-     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   EVAL      QMNAME = ODMN                                            MD041126
+     C                   Z-ADD     *ZERO         HCONN                                      MD041126
      C                   Z-ADD     *ZERO         OCODE                                      MD041126
      C                   Z-ADD     *ZERO         REASON                                     MD041126
-     C                   CALLP     MQCONN( QMNAME : HANDLE :                                MD041126
+     C                   CALLP     MQCONN( QMNAME : HCONN:                                  MD041126
      C                                     OCODE  : REASON )                                MD041126
       *                                                                                     MD056262
       ** If connect failed, indicate abnormal end                                           MD056262
@@ -362,13 +365,15 @@
       *                                                                                     MD056262
      C**********         CALLP     MQOPEN( HCONN : MQOD : OPTS :                   MD056262 MD058195
      C**********                           HIN : OCODE : REASON )                  MD056262 MD058195
-     C                   CALL      'MQOPEN'                                                 MD058195
-     C                   PARM                    HCONN                                      MD058195
-     C                   PARM                    MQOD                                       MD058195
-     C                   PARM                    OPTS                                       MD058195
-     C                   PARM                    HIN                                        MD058195
-     C                   PARM                    OCODE                                      MD058195
-     C                   PARM                    REASON                                     MD058195
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
+     C**********         CALL      'MQOPEN'                                                 MD058195
+     C**********         PARM                    HCONN                                      MD058195
+     C**********         PARM                    MQOD                                       MD058195
+     C**********         PARM                    OPTS                                       MD058195
+     C**********         PARM                    HIN                                        MD058195
+     C**********         PARM                    OCODE                                      MD058195
+     C**********         PARM                    REASON                                     MD058195
       *                                                                                     MD056262
       ** If open queue failed, indicate abnormal end                                        MD056262
       *                                                                                     MD056262
@@ -418,10 +423,11 @@
       ** Close connection                                                                   MD056262
       *                                                                                     MD056262
      C**********         CALLP     MQDISC( HCONN : OCODE : REASON )                MD056262 MD058195
-     C                   CALL      'MQDISC'                                                 MD058195
-     C                   PARM                    HCONN                                      MD058195
-     C                   PARM                    OCODE                                      MD058195
-     C                   PARM                    REASON                                     MD058195
+     C**********         CALL      'MQDISC'                                        MD058195 MD041126
+     C**********         PARM                    HCONN                             MD058195 MD041126
+     C**********         PARM                    OCODE                             MD058195 MD041126
+     C**********         PARM                    REASON                            MD058195 MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
       *                                                                                     MD056262
       ** If disconnect failed, indicate abnormal end                                        MD056262
       *                                                                                     MD056262
@@ -482,7 +488,7 @@
      C**********         PARM                    CCODE                             MD058195 MD041126
      C**********         PARM                    REASON                            MD058195 MD041126
                                                                                             MD041126
-     C                   CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :                     MD041126
+     C                   CALLP     MQPUT( HCONN : HIN  : MQMD : MQPMO :                     MD041126
      C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
      C                                    CCODE :  REASON )                                 MD041126
       *                                                                                     MD056262

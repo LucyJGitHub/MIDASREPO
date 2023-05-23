@@ -9,26 +9,51 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD061369  *CREATE  Date 08May23              */
+/*       Last Amend No. MD061413           Date 23May23              */
+/*       Prev Amend No. MD061369  *CREATE  Date 08May23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061369A - Command SCRUNSQL is zonal                       */
 /*       MD061369 - Update SMUPGXTD.AUDEL column for SMUC00105,      */
 /*                  SMUC00104 and SM000000.                          */
 /*                                                                   */
 /*********************************************************************/
              PGM
 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                      /*MD061413*/
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                               /*MD061413*/
+                                                                                        /*MD061413*/
              COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
 
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 
-             SCRUNSQL   SQL('UPDATE SMUPGXTD SET AUDEL =     +
+/**********  SCRUNSQL   SQL('UPDATE SMUPGXTD SET AUDEL =     +
                           ''Y'' where AUMBNM in (''SMUC00105'', +
-                          ''SMUC00104'', ''SM000000'')')
-
+                          ''SMUC00104'', ''SM000000'')') */                             /*MD061413*/
+/* First set up the file used for the RUNSQLSTM command.  */                            /*MD061413*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*MD061413*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061413*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*MD061413*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061413*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM)                                                /*MD061413*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*MD061413*/
+                                                                                        /*MD061413*/
+             CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set +
+                          AUDEL =' *BCAT &QUOTE *TCAT 'Y' *TCAT +
+                          &QUOTE *CAT ' where AUMBNM ')                                 /*MD061413*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD061413*/
+             CHGVAR     VAR(&STM_STR) VALUE('in (''SMUC00105'', +
+                       ''SMUC00104'', ''SM000000'')')                                   /*MD061413*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                           /*MD061413*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD061413*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD061413*/
+                                                                                        /*MD061413*/
              GOTO       CMDLBL(ENDPGM)
 
  ABNOR:

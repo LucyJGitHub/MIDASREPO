@@ -1663,6 +1663,7 @@
       *****************************************************************                     MD026939
      C     CtrGRPP       BEGSR                                                              MD026939
       *                                                                                     MD026939
+     C                   EVAL      Centered = ' '                                           MD061410
      C                   EVAL      Y=(%LEN(GRPP)-%LEN(%TRIM(GRPP)))/2+1                     MD026939
      C                   EVAL      %SUBST(Centered:Y)=GRPP                                  MD026939
      C                   EVAL      GRPP = Centered                                          MD026939

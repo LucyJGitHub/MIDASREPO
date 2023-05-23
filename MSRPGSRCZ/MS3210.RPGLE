@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD051817           Date 20Aug18               *
+      *  Last Amend No. AR782465           Date 03May23               *
+      *  Prev Amend No. MD061229           Date 03May23               *
+      *                 CSD101             Date 07Dec18               *
+      *                 MD051817           Date 20Aug18               *
       *                 CSC053             Date 20Aug18               *
       *                 AR1033033          Date 20Aug18               *
       *                 MD046248           Date 27Oct17               *
@@ -42,6 +44,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR782465 - Win FT Server's IIS has been upgraded from 6 to   *
+      *             7.5, which allows more than one type of return    *
+      *             code on FTP subcommands. Allow up to 4 valid      *
+      *             responses for each FTP subcommand.                *
+      *           - Applied for MD-61229.                             *
+      *  MD061229 - Reverse externalization of commands/error codes   *
+      *             since return codes depend on Alliance OS for each *
+      *             client.                                           *
       *  CSD101 - Password Encryption                                 *
       *  MD051817 - Unexpected return code is sent to MOPERQ by       *
       *             interface job MS_A2M_AFT                          *
@@ -65,6 +75,8 @@
      FOUTPUT    IF   E             disk    infsr(srfile)
      F***MSAFT1PD* ITF   80        disk                                                147256 CPK030
      F***MSAFT2PD* ITF  240        disk                                                147256 CPK030
+     FMSAFT1PD  IT   F   80        disk                                                     MD061229
+     FMSAFT2PD  IT   F  240        disk                                                     MD061229
       /EJECT
      D*cpy@*****       S             80    dim(1) ctdata perrcd(1)                            CPK030
       ** Array containing Copyright statement
@@ -75,8 +87,12 @@
      D**********                           fromfile(msaft1pd)                          147256 CPK030
      D*rtc******       S             30    dim(8) perrcd(8)                            147256 CPK030
      D**********                           fromfile(msaft2pd)                          147256 CPK030
-     D tabcmd          S             10    dim(8) ctdata perrcd(1)                            CPK030
-     D tabrtc          S             30    dim(8) alt(tabcmd)                                 CPK030
+     D*tabcmd***       S             10    dim(8) ctdata perrcd(1)                   CPK030 MD061229
+     D*tabrtc***       S             30    dim(8) alt(tabcmd)                        CPK030 MD061229
+     D cmd             S             10    dim(8) perrcd(8)                                 MD061229
+     D                                     fromfile(msaft1pd)                               MD061229
+     D rtc             S             30    dim(32) perrcd(8)                                AR782465
+     D                                     fromfile(msaft2pd)                               AR782465
       ** Table of FTP command v expected return code(s)
       *
      D w@codes         S              3    dim(10)
@@ -307,12 +323,15 @@
      C*****              z-add     0             x                 1 0                  147256165212
      C**********         z-add     1             x                 1 0                 165212 CPK030
      C*****w@subcmd      lookup    cmd(x)                                 60           147256 CPK030
-     C     w@subcmd      lookup    tabcmd        tabrtc                   60                  CPK030
+     C*****w@subcmd      lookup    tabcmd        tabrtc                   60         CPK030 MD061229
+     C                   z-add     1             x                 1 0                      MD061229
+     C     w@subcmd      lookup    cmd(x)                                 60                MD061229
       *
      C     *in60         ifeq      '1'
      C***********        movea     tabrtc        w@codes                                      147256
      C**********         movea     rtc(x)        w@codes                               147256 CPK030
-     C                   movea     tabrtc        w@codes                                      CPK030
+     C**********         movea     tabrtc        w@codes                             CPK030 MD061229
+     C                   movea     rtc(x)        w@codes                                    MD061229
      C                   z-add     1             p                 5 0
      C     w@codes(p)    downe     *blank
      C     o@err         andeq     *blanks
@@ -337,8 +356,17 @@
       *                                                                                    AR1033033
      C     WBypass       andne     'Y'                                                     AR1033033
       *                                                                                    AR1033033
+      ** Execute new SR which performs additional validation using more return codes from   AR782465
+      ** the new records in MSAFT2PD                                                        AR782465
+      *                                                                                     AR782465
+     C                   exsr      sr_addval                                                AR782465
+      *                                                                                     AR782465
+      ** If still in error                                                                  AR782465
+      *                                                                                     AR782465
+     C     stilerr       ifeq      'Y'                                                      AR782465
      C                   movel(p)  w@subcmd      o@opr
      C                   movel(p)  n@004         o@err
+     C                   endif                                                              AR782465
      C                   endif
      C                   endif
       *                                                                                    AR1033033
@@ -362,6 +390,41 @@
      C                   sub       1             Q
      C                   endsr
       /EJECT
+      **********************************************************************                AR782465
+      * sr_addval      : Additional Validation of return codes             *                AR782465
+      * -------          using more records in MSAFT2PD                    *                AR782465
+      *                                                                    *                AR782465
+      * Called by      : sr_check                                          *                AR782465
+      *                                                                    *                AR782465
+      * Calls          : -                                                 *                AR782465
+      *                                                                    *                AR782465
+      **********************************************************************                AR782465
+      *                                                                                     AR782465
+     C     sr_addval     begsr                                                              AR782465
+      *                                                                                     AR782465
+      ** Variable which indicates the return code is still in error even when               AR782465
+      ** additional records in MSAFT2PD are used                                            AR782465
+      *                                                                                     AR782465
+     C                   move      'Y'           stilerr           1                        AR782465
+      *                                                                                     AR782465
+      ** Copy value of index used in MSAFT files (max value of x is 8) but since            AR782465
+      ** MSAFT2PD now allows up to 4 records, then max for MSAAFT2PD index is 32            AR782465
+      ** (array rtc is 8 values per line), thus defined new index Y to keep X               AR782465
+      ** untouched.                                                                         AR782465
+     C                   z-add     x             y                 2 0                      AR782465
+      *                                                                                     AR782465
+     C                   add       8             y                                          AR782465
+     C     y             dowle     32                                                       AR782465
+     C     stilerr       andeq     'Y'                                                      AR782465
+     C                   movea     rtc(y)        w@codes                                    AR782465
+     C     w@outcd       ifeq      w@codes(p)                                               AR782465
+     C                   move      'N'           stilerr                                    AR782465
+     C                   endif                                                              AR782465
+     C                   add       8             y                                          AR782465
+     C                   enddo                                                              AR782465
+      *                                                                                     AR782465
+     C                   endsr                                                              AR782465
+      /EJECT                                                                                AR782465
       **********************************************************************
       * sr_init        : Initialise program                                *
       * -------                                                            *
@@ -492,15 +555,7 @@
       *
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
-      *                                                                                     MD051817
-      ** Array TABRTC for LS change from 227 to 229.                                        MD051817
-      *                                                                                     MD051817
-** tabcmd / tabrtc
-CD        250
-GET       229150226
-PUT       229150226
-REN       350250
-DEL       250
-TYPE      200
-LS        229
-QUIT      221
+      **********                                                                   MD051817 MD061229
+      ***Array*TABRTC*for*LS*change*from*227*to*229.**********************         MD051817 MD061229
+      **********                                                                   MD051817 MD061229
+      ** Remove TABCMD/TABRTC and externalize                                               MD061229

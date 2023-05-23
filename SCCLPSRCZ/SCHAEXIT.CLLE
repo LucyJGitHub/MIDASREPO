@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR762171           Date 26May11              */
+/*       Last Amend No. MD038665           Date 22May23              */
+/*       Prev Amend No. MD035998           Date 22May23              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR762171           Date 26May11              */
 /*                      CUP039             Date 14Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +23,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*  MD038665 - PLUX QC2709 Midas Plus GPHAEXIT process should update */
+/*             journal sequences in MXOLEJPD and MXOLTJPD for Midas  */
+/*             Export Module on MPOA Production                      */
+/*  MD035998 - Midas Plus GPHAEXIT process should update journal     */
+/*             sequences in MXOLEJPD and MXOLTJPD files for Midas    */
+/*             Export Module.                                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR762171 - Meridian Replication jobs fails with MSGW after  */
 /*                  COB. Change to name of Meridian Replication data */
@@ -116,6 +124,21 @@
              CALL       PGM(SCUPEMCE) PARM(&CURZRCV &CURZSEQ)
 /**/
              ENDDO
+/** Check if CMX001 is available              */                                        /*MD038665*/
+             CHGVAR     VAR(&SAR) VALUE('CMX001')                                       /*MD038665*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD038665*/
+/**/                                                                                    /*MD035998*/
+/* If Midas Export Data Module is present,    */                                        /*MD035998*/
+/**/                                                                                    /*MD035998*/
+/**********  IF         COND(%SST(&MMOD 99 1) *EQ 'Y') THEN(DO) */             /*MD035998 MD038665*/
+             IF         COND(%SST(&MMOD 99 1) *EQ 'Y'  *OR +
+                             &RTCD *EQ '       ' ) THEN(DO)                             /*MD038665*/
+/**/                                                                                    /*MD035998*/
+/* Call SCUPMXOL to update the MX files MXOLEJPD and MXOLTJPD   */                      /*MD035998*/
+/**/                                                                                    /*MD035998*/
+             CALL       PGM(SCUPMXOL) PARM(&CURZRCV &CURZSEQ)                           /*MD035998*/
+/**/                                                                                    /*MD035998*/
+             ENDDO                                                                      /*MD035998*/
 /**/
 /* Call SCUPGOOS to update the file GOOSJSPD.                                                     */
 /**/

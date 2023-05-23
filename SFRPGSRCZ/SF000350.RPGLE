@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD026939           Date 18May23               *
-      *  Prev Amend No. MD048072           Date 18May23               *
+      *  Last Amend No. MD061410           Date 23May23               *
+      *  Prev Amend No. MD026939           Date 18May23               *
+      *                 MD048072           Date 18May23               *
       *                 AR996504           Date 18May23               *
       *                 AR635878           Date 14Jul22               *
       *                 MD050150           Date 12Oct18               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061410 - Issue on Language Code Retrieval                  *
       *  MD026939 - Issues in SF000350P1. Make sure Initial Menu and  *
       *             User's Language Preference values are correct.    *
       *  MD048072 - SFC000350 is on MSGW due to printer overflow.     *
@@ -1279,7 +1281,9 @@
       *                                                                                     AR996504
      C     USRP          CHAIN     GPTUSRLNG0                         20                    MD026939
      C     *IN20         IFEQ      '0'                                                      MD026939
-     C                   MOVE      USRLANG       USLG              2                        MD026939
+     C**********         MOVE      USRLANG       USLG              2               MD026939 MD061410
+     C                   MOVE      *BLANKS       USLG              2                        MD061410
+     C                   EVAL      USLG = %TRIM(%SUBST(USRLANG:3:2))                        MD061410
      C     USLG          CHAIN     SDLANGL0                           80                    MD026939
      C     *IN80         IFEQ      '1'                                                      MD026939
      C                   READ      SDLANGL0                               80                MD026939

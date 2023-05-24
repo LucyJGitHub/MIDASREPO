@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD051956           Date 19Sep18               *
+      *  Last Amend No. AR782465           Date 03May23               *
+      *  Prev Amend No. MD061229           Date 03May23               *
+      *                 CSD101             Date 07Dec18               *
+      *                 MD051956           Date 19Sep18               *
       *                 MD051817           Date 20Aug18               *
       *                 CSC053             Date 20Aug18               *
       *                 AR1033033          Date 20Aug18               *
@@ -48,6 +50,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR782465 - Win FT Server's IIS has been upgraded from 6 to   *
+      *             7.5, which allows more than one type of return    *
+      *             code on FTP subcommands. Allow up to 4 valid      *
+      *             responses for each FTP subcommand.                *
+      *           - Applied for MD-61229.                             *
+      *  MD061229 - Reverse externalization of commands/error codes   *
+      *             since return codes depend on Alliance OS for each *
+      *             client.                                           *
       *  CSD101 - Password Encryption                                 *
       *  MD051956 - Alphanumeric Filename cannot process by job       *
       *             MS-A2M_AFT.                                       *
@@ -78,13 +88,16 @@
      FMSFTROPD  IF   E             disk    infsr(srfile)
      FMSFTRIPD  O    E             disk    infsr(srfile)
      F***MSAFT3PD* ITF   15        disk                                                147256 CPK030
+     FMSAFT3PD  IT   F   15        disk                                                     MD061229
       /EJECT
      D*cpy@*****       S             80    dim(1) ctdata perrcd(1)                            CPK030
       ***Array*containing*Copyright*statement*                                                CPK030
       *
      D*rtc******       S              3    dim(5) perrcd(5)                            147256 CPK030
      D**********                           fromfile(msaft3pd)                          147256 CPK030
-     D rtc             S              3    dim(2) ctdata                                      CPK030
+     D*rtc******       S              3    dim(2) ctdata                             CPK030 MD061229
+     D rtc             S              3    dim(20) perrcd(5)                                AR782465
+     D                                     fromfile(msaft3pd)                               AR782465
       ** Table of FTP expected return code(s)                                                 147256
      D/COPY WNCPYSRC,MS3250D001
       *
@@ -307,6 +320,17 @@
      C                   movel(p)  rtc(1)        wk4               4                          165212
      C*****w@in4         ifeq      wk4                                                  165212191165
      C*****w@in4         ifne      wk4                                                 191165 247997
+      *                                                                                     AR782465
+      ** Check other records in MSAFT3PD for more possible return codes                     AR782465
+      *                                                                                     AR782465
+     C     w@in4         ifne      wk4                                                      AR782465
+      *                                                                                     AR782465
+      ** Set array index to 6 (5 per line, so 6 is the 2nd line's 1st                       AR782465
+      ** element)                                                                           AR782465
+      *                                                                                     AR782465
+     C                   z-add     6             Y                 2 0                      AR782465
+     C                   exsr      sr_addval                                                AR782465
+     C                   endif                                                              AR782465
      C     w@in4         ifeq      wk4                                                        247997
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)
@@ -390,6 +414,17 @@
       *                                                                                     MD051956
      C                   enddo                                                             AR1033033
       *                                                                                    AR1033033
+      ** Check other records in MSAFT3PD for more possible return codes                     AR782465
+      *                                                                                     AR782465
+     C     w@in4         ifne      wk4                                                      AR782465
+      *                                                                                     AR782465
+      ** Set array index to 7 (5 per line, so 7 is the 2nd line's 2nd                       AR782465
+      ** element)                                                                           AR782465
+      *                                                                                     AR782465
+     C                   z-add     7             Y                                          AR782465
+     C                   exsr      sr_addval                                                AR782465
+     C                   endif                                                              AR782465
+      *                                                                                     AR782465
      C     *in55         doweq     '0'
      C*****w@in4         andne     '226 '                                                     147256
      C*****w@in4         andne     rtc(2)                                               147256165212
@@ -431,6 +466,26 @@
      C                   sub       1             Q
      C                   endsr
       /EJECT
+      **********************************************************************                AR782465
+      * sr_addval      : Additional Validation of return codes             *                AR782465
+      * -------          using more records in MSAFT3PD                    *                AR782465
+      *                                                                    *                AR782465
+      * Called by      : sr_check                                          *                AR782465
+      *                                                                    *                AR782465
+      * Calls          : -                                                 *                AR782465
+      *                                                                    *                AR782465
+      **********************************************************************                AR782465
+      *                                                                                     AR782465
+     C     sr_addval     begsr                                                              AR782465
+      *                                                                                     AR782465
+     C     y             dowle     20                                                       AR782465
+     C     w@in4         andne     wk4                                                      AR782465
+     C                   movel(p)  rtc(y)        wk4                                        AR782465
+     C                   add       5             y                                          AR782465
+     C                   enddo                                                              AR782465
+      *                                                                                     AR782465
+     C                   endsr                                                              AR782465
+      /EJECT                                                                                AR782465
       **********************************************************************
       * sr_init        : Initialise program                                *
       * -------                                                            *
@@ -634,9 +689,7 @@
       *
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
-      *                                                                                     MD051817
-      ** Array RTC changed from 250 to 226                                                  MD051817
-      *                                                                                     MD051817
-** rtc
-150
-226
+      **********                                                                   MD051817 MD061229
+      ***Array*RTC*changed*from*250*to*226********************************         MD051817 MD061229
+      **********                                                                   MD051817 MD061229
+      ** Remove RTC and externalize                                                         MD061229

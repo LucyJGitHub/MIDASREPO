@@ -80,7 +80,9 @@
 s1   C     *In40         Doweq     *Off
 
 s2   C     RTKN          Ifeq      'Y'
-     C     MDAT          andge     BJDNWD
+     C*****RECI*         andeq     'D'                                           
+     C     MDAT          andge     BJDNWD                                       
+     C*****NIDT*         andne     0
 
      C     NIDT          Ifne      0
      C                   z-add     NIDT          @@NIDT
@@ -211,6 +213,7 @@ e1   C                   Enddo
 
      C     KHSFW         KLIST
      C                   KFld                    LNRF
+     C**********         KFld                    NIDT
      C                   KFld                    @@NIDT
 
      C     KHISQ         KLIST

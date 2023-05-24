@@ -102,7 +102,8 @@ s2   C     *IN41         Doweq     *Off
      C                   z-add     BRVdat        ZIEND
 
      C                   Exsr      SRINTC
-     C                   Add(H)    ZINTR         AccInta          13 0
+     C**********         Add(H)    ZINTR         PInta                           
+     C                   Add(H)    ZINTR         AccInta          13 0           
 
      C                   Exsr      SRNEWI
      C                   Z-Add     BRVdat        ZIBEG
@@ -112,6 +113,7 @@ e2   C                   Enddo
 
      C                   z-add     PNIDT         ZIEND
      C                   Exsr      SRINTC
+     C**********         Add(H)    ZINTR         PInta                           
      C                   Add(H)    ZINTR         AccInta
 
      C     RDFC          Ifeq      'Y'
@@ -166,6 +168,16 @@ e1   C                   Endif
      C     SRINTC        BEGSR
       *
      C                   EXSR      GLINTC
+      **********
+      ***Round*down*interest*if*required
+      **********
+     C*****RDFC*         Ifeq      'Y'                                           
+     C**********         z-add     ZINTR         RDWORK           13 0           
+     C**********         z-add     RDWORK        ZINTR                           
+     C**********         Else                                                    
+     C**********         Z-add(H)  ZINTR         RUWORK           13 0           
+     C**********         Z-Add     RUWORK        ZINTR                           
+     C**********         EndIf                                                   
       *
      C                   ENDSR
 

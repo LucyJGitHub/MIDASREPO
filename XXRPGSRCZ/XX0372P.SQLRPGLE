@@ -355,6 +355,7 @@
       ** Interest Rate
 
      C     DSCalm        Ifeq      'CCR'
+     C**********         Move      DSIntr        ZFLD15                        
      C                   Move      PZIRate       ZFLD15
      C                   Eval      ZDECS = 7
 
@@ -379,6 +380,7 @@
      C                   EXSR      SRReportP2
      C                   Endif
 
+      ***Write*Report*Trailer*and*close*file
       ** Close file
      C                   EXSR      SREndRPT
 
@@ -748,6 +750,7 @@
      C                   IF        WOPNP1 = 'Y'
 
       ** Write out Trailer Format
+     C**********         WRITE     TRAILP1                                                  
      C                   Close     XX0372P1
      C                   EVAL      WOPNP1 = 'N'
 

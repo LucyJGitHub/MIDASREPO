@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *  Last Amend No. AR959958           Date 24May23               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
@@ -126,6 +127,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959958 - Upon rollover authorization, error LEV0054 is     *
+      *             received. Error should be captured upon input. If *
+      *             rollover frequency is not entered, passed the     *
+      *             original loan frequency. (Child: AR959959)        *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2684,6 +2689,8 @@
      C     DDRlfqOK      IFNE      'N'
      C     DDRLFQB       IFNE      *BLANK
      C                   MOVE      DDRLFQB       VRLFQ
+     C                   ELSE                                                               AR959958
+     C                   MOVE      DDRLFQ        VRLFQ                                      AR959958
      C                   ENDIF
      C     DDRLFQ        IFNE      *BLANK
      C     DDACTN        ANDEQ     'X'
@@ -2691,6 +2698,11 @@
      C     CLE030        ANDEQ     'Y'                                                        CLE030
      C                   MOVE      DDRLFQ        VRLFQ
      C                   ENDIF
+      *                                                                                     AR959958
+     C     DDRLFQB       IFEQ      *BLANK                                                   AR959958
+     C     DDRLDTB       ANDNE     *BLANK                                                   AR959958
+     C                   MOVE      DDRLFQ        DDRLFQB                                    AR959958
+     C                   ENDIF                                                              AR959958
      C                   ENDIF
       *
      C                   ENDIF

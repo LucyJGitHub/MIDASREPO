@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR567938           Date 24May22               *
-      *  Prev Amend No. MD059392           Date 18Jan22               *
+      *  Last Amend No. MD028973           Date 23May23               *
+      *  Prev Amend No. AR567938           Date 24May22               *
+      *                 MD059392           Date 18Jan22               *
       *                 MD054922           Date 04Feb20               *
       *                 MD055218           Date 11Mar20               *
       *                 MD054662           Date 30Oct19               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028973 - Does not use the System Time Offset when sending  *
+      *             MT942 messages.                                   *
       *  AR567938 - GLC001400 job not active after a Holiday. Allow   *
       *             user to set the next schedule wait time.          *
       *           - Applied for MD-58475.                             *
@@ -122,8 +125,12 @@
      FGLMR94L2  IF   E           K DISK    INFSR(*PSSR) PREFIX(Sp)                          MD059392
      F                                     RENAME(GLMR94D0:GLMR94D2)                        MD059392
       ** Midas GL MT941/942 Messages Requests - "SUBMITTED"                                 MD059392
-
-
+                                                                                            MD028973
+     FSDTZLVL6  IF   E           K DISK    INFSR(*PSSR)                                     MD028973
+      ** Midas SD Time Zone Level File                                                      MD028973
+                                                                                            MD028973
+     FSDTIZJI0  IF   E           K DISK    INFSR(*PSSR)                                     MD028973
+      ** Midas SD Time Zone Level File                                                      MD028973
      F***CBTRACPD  IF   E             DISK    INFSR(*PSSR)                           217556 AR740400
       ***Midas*CB*COB*trace.*******************************************              217556 AR740400
 
@@ -188,6 +195,13 @@
 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for access programs: Short Data Structure
+                                                                                            MD028973
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                   MD028973
+      ** DS for access programs: Long Data Structure                                        MD028973
+                                                                                            MD028973
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                MD028973
+      ** Externally described DS for Branch Code Details                                    MD028973
+     D SDDSTC        E DS                  EXTNAME(SDDSTJW0)                                MD028973
 
      D CBStartTime   E DS                  EXTNAME(CBStart)                                 AR740400
      D  CobStartDate          33     37                                                     MD051746
@@ -212,12 +226,19 @@
      D P@OPTN          S              7A                                        Option
 
      D WkExpTime       S              4A                                        Expiring time
+     D WkExpTime2      S              4A                                                    MD028973
      D WkCurTimAlp     S              4A                                        Current  time
+     D WkCurTimAlp2    S              4A                                                    MD028973
      D WkStartDate     S              5S 0                                                 MD051746
      D WkStartTime     S              4A                                        Start time
+     D WkStartTime2    S              4A                                                    MD028973
 
 
      D WkCurTime       S               T                                        Current  time
+     D WkCurTime2      S               T                                                    MD028973
+     D PTZYear         S              4A                                                    MD028973
+     D PDst            S             10A                                                    MD028973
+     D YEAR            S              4S 0                                                  MD028973
      D WkTime          S               T                                        Working Time
      D WkNum6          S              6S 0                                      Working Time
      D WkNum8          S              8S 0                                      Working Time
@@ -268,6 +289,7 @@
      C                   SUBDUR    MDPERQ:*MN    WkTime
      C                   MOVEL     WkTime        WkNum8
      C                   MOVEL     Wknum8        WkExpTime
+     C                   MoveL     WkExpTime     WkExpTime2                                 MD028973
      C                   ELSE
      C                   MOVEL     *LOVAL        WkExpTime
      C                   ENDIF
@@ -275,8 +297,10 @@
       ** Retrieve the Current Time.
 
      C                   TIME                    WkCurTime
+     C                   TIME                    WkCurTime2                                 MD028973
      C                   MOVEL     WkCurTime     WkNum8
      C                   MOVEL     Wknum8        WkCurTimAlp
+     C                   MoveL     Wknum8        WkCurTimAlp2                               MD028973
      C
       *                                                                                       228650
       ** Initialize array before each read loop                                               228650
@@ -317,6 +341,7 @@
      C                   IF        WkStartTime > WkCurTimAlp                                  217556
      C                   MOVEL     '0000'        WkStartTime                                  217556
      C                   ENDIF                                                                217556
+     C                   Eval      WkStartTime2 = WkStartTime                               MD028973
      C**********         ENDIF                                                       217556 AR740400
 
       ** Read the today's waiting requests with a request time less than or equal
@@ -326,6 +351,7 @@
      C*****BJRDNB        READE     GLMR94L5                                                 AR589183
      C     *LOVAL        SETLL     GLMR94L5                                                 AR589183
      C                   READ      GLMR94L5                                                 AR589183
+     C                   ExSR      CHKOFF                                                   MD028973
 
      C                   DOW       NOT %EOF(GLMR94L5)
      C**********                   AND MRSRTIM <= WkCurTimAlp           Request time issued AR589183
@@ -465,6 +491,7 @@
 
      C*****BJRDNB        READE     GLMR94L5                                                 AR589183
      C                   READ      GLMR94L5                                                 AR589183
+     C                   ExSR      CHKOFF                                                   MD028973
 
      C                   ENDDO
 
@@ -480,6 +507,7 @@
      C*****BJRDNB        READE     GLMR94L5                                          217556 AR589183
      C     *LOVAL        SETLL     GLMR94L5                                                 AR589183
      C                   READ      GLMR94L5                                                 AR589183
+     C                   ExSR      CHKOFF                                                   MD028973
      C                   ENDIF                                                                217556
 
      C                   IF        NOT %EOF(GLMR94L5)
@@ -517,7 +545,95 @@
 
      C                   UNLOCK    GLMR94L5
      C                   RETURN
-
+                                                                                            MD028973
+      *****************************************************************                     MD028973
+      /EJECT                                                                                MD028973
+      *****************************************************************                     MD028973
+      *                                                               *                     MD028973
+      * CHKOFF - Set system time offset from branch details           *                     MD028973
+      *                                                               *                     MD028973
+      * Called by: Main                                               *                     MD028973
+      *                                                               *                     MD028973
+      * Calls: None                                                   *                     MD028973
+      *                                                               *                     MD028973
+      *****************************************************************                     MD028973
+                                                                                            MD028973
+     C     CHKOFF        BegSR                                                              MD028973
+                                                                                            MD028973
+     C                   Z-Add     0             SYSHR             2 0                      MD028973
+     C                   Z-Add     0             SYSMN             2 0                      MD028973
+     C     MRBRCA        CHAIN     SDTZLVL6                                                 MD028973
+     C                   IF        %FOUND(SDTZLVL6)                                         MD028973
+     C     TLTZCD        CHAIN     SDTIZJI0                                                 MD028973
+     C                   IF        TLTZCD =  TZTZCD                                         MD028973
+     C                   MOVEL     TZGMT         SYSHR                                      MD028973
+     C                   MOVE      TZGMT         SYSMN                                      MD028973
+     C                   IF        TZGMTS = '-'                                             MD028973
+     C                   Z-SUB     SYSHR         SYSHR                                      MD028973
+     C                   Z-SUB     SYSMN         SYSMN                                      MD028973
+     C                   ENDIF                                                              MD028973
+     C                   ENDIF                                                              MD028973
+     C                   ENDIF                                                              MD028973
+     C                   If        Not %EoF(GLPRMOPD)                                       MD028973
+     C                   MoveL(P)  WkExpTime2    WkNum4            4 0                      MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   MoveL     WkNum4        WkExpTime                                  MD028973
+     C                   EndIf                                                              MD028973
+     C                   MoveL(P)  WkCurTimAlp2  WkNum4                                     MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   MoveL     WkNum4        WkCurTimAlp                                MD028973
+     C                   MoveL(P)  WkStartTime2  WkNum4                                     MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   If        WkNum4 < 0                                               MD028973
+     C                   Eval      WkNum4 = 0                                               MD028973
+     C                   EndIf                                                              MD028973
+     C                   MoveL     WkNum4        WkStartTime                                MD028973
+     C                   Eval      WkCurTime = WkCurTime2                                   MD028973
+     C                   AddDur    SYSHR:*H      WkCurTime                                  MD028973
+     C                   AddDur    SYSMN:*MN     WkCurTime                                  MD028973
+      ** Check DST                                                                          MD028973
+     C                   IF        TZDSTF = 'Y'                                             MD028973
+     C                   EVAL      DSOFFS = 0                                               MD028973
+      ** Get Current year                                                                   MD028973
+     C                   MOVE      BJRDNB        MidasDayNo                                 MD028973
+     C                   CALL      'ZDATE2'                                                 MD028973
+     C                   PARM                    MidasDayNo        5 0                      MD028973
+     C                   PARM                    BJDFIN                                     MD028973
+     C                   PARM      *ZEROS        PDateOut          6 0                      MD028973
+     C                   PARM      *BLANKS       PADateOut         7                        MD028973
+     C                   Z-ADD     *ZEROS        YEAR                                       MD028973
+     C                   IF        PDateOut > 0                                             MD028973
+     C                   IF        BJDFIN  = 'D'                                            MD028973
+     C                   EVAL      YEAR = %Subdt(%Date(PDateOut:*DMY) :                     MD028973
+     C                                         *Years)                                      MD028973
+     C                   ELSE                                                               MD028973
+     C                   EVAL      YEAR = %Subdt(%Date(PDateoUt:*MDY) :                     MD028973
+     C                                         *Years)                                      MD028973
+     C                   ENDIF                                                              MD028973
+     C                   ENDIF                                                              MD028973
+      *                                                                                     MD028973
+     C                   CALL      'AODSTCR0'                                               MD028973
+     C                   PARM      *BLANKS       P@RTCD                                     MD028973
+     C                   PARM      '*KEY   '     P@OPTN                                     MD028973
+     C                   PARM      TZDSTC        PDst                                       MD028973
+     C                   PARM      YEAR          PTZYear                                    MD028973
+     C     SDDSTC        PARM      SDDSTC        DSFDY                                      MD028973
+     C                   IF        P@RTCD = *BLANKS                                         MD028973
+     C                   IF        BJRDNB >= DSDSDT AND                                     MD028973
+     C                             BJRDNB <= DSDSED AND                                     MD028973
+     C                             BJRDNB = DSDSDT AND                                      MD028973
+     C                             Wknum6 <  DSDSDH OR                                      MD028973
+     C                             BJRDNB = DSDSED AND                                      MD028973
+     C                             Wknum6 >= DSDENH                                         MD028973
+     C                   ELSE                                                               MD028973
+     C                   AddDur    DSOFFS:*H     WkCurTime                                  MD028973
+     C                   AddDur    DSOFFS:*MN    WkCurTime                                  MD028973
+     C                   ENDIF                                                              MD028973
+     C                   ENDIF                                                              MD028973
+     C                   ENDIF                                                              MD028973
+                                                                                            MD028973
+     C                   ENDSR                                                              MD028973
+                                                                                            MD028973
       *****************************************************************
       /EJECT
       *****************************************************************

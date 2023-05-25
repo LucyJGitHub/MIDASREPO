@@ -462,15 +462,15 @@
       *
       ** Open queue
       *
-     C**********         Z-ADD     MQOPEN        CID
-     C**********         CALL      'QMQM'
-     C**********         PARM                    CID               9 0
-     C**********         PARM                    HCONN             9 0
-     C**********         PARM                    MQOD
-     C**********         PARM                    OPTS              9 0
-     C**********         PARM                    HIN               9 0
-     C**********         PARM                    OCODE             9 0
-     C**********         PARM                    REASON            9 0
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
       *                                                                                     MD041126
      C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
      C                                     HIN : OCODE : REASON )                           MD041126

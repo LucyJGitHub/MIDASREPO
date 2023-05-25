@@ -424,7 +424,8 @@
      C**********         PARM                    HIN               9 0                      MD041126
      C**********         PARM                    MQMD                                       MD041126
      C**********         PARM                    MQGMO                                      MD041126
-     C**********         PARM      12000         p@msglen          9 0                      MD041126
+     C**********         PARM      12000         p@msglen          9 0                      MD06126941126
+     C**********         PARM      24000         p@msglen          9 0             MD061269 MD041126
      C**********         PARM                    q@msgbuf                                   MD041126
      C**********         PARM                    MESLEN            9 0                      MD041126
      C**********         PARM                    CCODE             9 0                      MD041126

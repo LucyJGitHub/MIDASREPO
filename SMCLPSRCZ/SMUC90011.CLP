@@ -7,9 +7,9 @@
 /*                                                                   */
 /*       SMUC90011 - Utility for MD-60037                            */
 /*                                                                   */
-/*       (c) Finastra International Limited 2022                     */
+/*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD060037 *CREATE   Date 26Jul22              */
+/*       Last Amend No. MD060037 *CREATE   Date 25May23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
@@ -25,7 +25,7 @@
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited 2019')
+                          Finastra International Limited 2023')
 
 /* Global monitor message */
 

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2022')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Utility for MD-60037')                        *
@@ -14,9 +14,9 @@
       *                                                               *
       *  Called By: SMUC90011 - CL program                            *
       *                                                               *
-      *  (c) Finastra International Limited 2022                      *
+      *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD060037 *CREATE   Date 26Jul22               *
+      *  Last Amend No. MD060037 *CREATE   Date 25May23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

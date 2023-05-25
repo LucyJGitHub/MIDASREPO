@@ -161,6 +161,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *

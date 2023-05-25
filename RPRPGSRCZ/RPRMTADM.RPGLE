@@ -32,6 +32,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  MD060749 - Error in source compilation                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *

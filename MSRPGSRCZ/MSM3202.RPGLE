@@ -25,6 +25,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  CSW052 - Send SWIFT messages to AFT via MQ queues            *
       *                                                               *
       *****************************************************************

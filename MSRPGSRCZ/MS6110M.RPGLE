@@ -85,6 +85,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  MD058137 - Midas is not generating unique MQ MessageID if    *
       *             via MGOREF message generation                     *
       *  MD051624 - MT940's msgs found in the Outstanding Message     *

@@ -27,6 +27,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  MD061269 - Pacs.010.001.03 is encountering buffer issue in   *
       *             QMQM.                                             *
       *  MD059755 - Various records in MSIXISOPD and MSMXISOPD  have  *

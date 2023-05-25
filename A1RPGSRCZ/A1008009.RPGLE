@@ -24,6 +24,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  BA1008 - Replication of Trades to consolidated branches      *
       *                                                               *
       *****************************************************************

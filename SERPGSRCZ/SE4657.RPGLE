@@ -31,6 +31,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  MD058195 - SEC4664 00001 fails during COB due to MQOPEN call.*
       *             Changed the call of IBM MQ functions from CALLP   *
       *             to CALL operation.                                *

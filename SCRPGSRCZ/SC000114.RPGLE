@@ -25,6 +25,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-60517                              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  AR989228 - The MQ clear processing during closing of PEA     *

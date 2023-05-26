@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE ARR Forward Rates')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       CLP/XXC0370 - Midas LE ARR Forward Rates                    */
+/*                                                                   */
+/*       (c) Finastra International Systems Ltd. 2023                */
+/*                                                                   */
+/*       Last Amend No. MD061164 *CREATE  Date 03May23               */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061164 - LE ARR - Forward rates and new report changes.   */
+/*                  Formalise codes introduced by ARRLOR and ARRLOA. */
+/*                - ARRLOR - LE Loan Advice with Fwd ARR Rates       */
+/*                - ARRLOA - Pick-up future ARR rates BR events      */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Systems Ltd.2023')
+
+             DCL        VAR(&Mem) TYPE(*CHAR) LEN(50)
+
+
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Ensure dataarea QTEMP/LDA Exists */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+
+             SNDMSG     MSG('XXC0370 - Midas LE ARR Forward Rates') TOMSGQ(MRUNQ)
+
+/* Use Commitment control to enable rollback */
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+             CHGJOB     SWS(XXXXXX00)
+
+             CLRPFM     FILE(LOBRDK)
+
+/**********  ADDLFM     FILE(XXHISTL1) MBR(XXHISTL1)                                     */
+             ADDLFM     FILE(XXHISTL3) MBR(XXHISTL3)
+             MONMSG     MSGID(CPF5812 CPF7306)
+
+             CALL       PGM(XX0370)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       ERROR
+             ENDDO
+
+/**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                 */                          
+/**********    COMMIT                                                                    */                           
+/**********  ENDDO                                                                       */                            
+
+/* Call Report Program for LE Loan Advice including any BR future events */
+
+             CALL       PGM(XX0372P)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       ERROR
+             ENDDO                   
+
+             CHGJOB     SWS(XXXXXX00)
+             GOTO       END
+
+/* Monitor for database error and send appropriate message to MOPERQ */
+ ERROR:
+             ROLLBACK
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ +
+                          MRUNQ)
+             SNDMSG     MSG('XXC0370 - Midas LE ARR Forward Rates') +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+END:
+             COMMIT
+             RCLRSC
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+
+             ENDPGM

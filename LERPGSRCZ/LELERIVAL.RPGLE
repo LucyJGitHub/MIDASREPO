@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059368           Date 17Dec21               *
-      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *  Last Amend No. MD061418           Date 24May23               *
+      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
@@ -126,6 +127,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061418 - LEV0054 error received on authorisation but not   *
+      *             on completion. Default to the current Rollover    *
+      *             Frequency and Day Number if left blank.           *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2830,6 +2834,12 @@
      C     VRLDT         WHENNE    *ZEROS
      C     VRLFQ         ANDNE     *BLANK
      C     *IN85         ANDEQ     *ON
+     C     VRLDT         ORNE      *ZEROS                                                   MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLFQ        ANDNE     *BLANKS                                                  MD061418
+     C     DDRLDY        ANDNE     *BLANKS                                                  MD061418
+     C     DDACTN        ANDEQ     'A'                                                      MD061418
      C     DDACTN        IFEQ      'A'
      C                   MOVE      DDRLFQB       ZFREQ
      C                   ELSE
@@ -2837,6 +2847,12 @@
      C                   ENDIF
      C                   Z-ADD     VRLDT         ZDAYNO
      C                   Z-ADD     WRLDY         ZMDAY
+     C     DDACTN        IFEQ      'A'                                                      MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C                   EVAL      ZFREQ = DDRLFQ                                           MD061418
+     C                   EVAL      ZMDAY = %DEC(DDRLDY:2:0)                                 MD061418
+     C                   ENDIF                                                              MD061418
      C                   MOVE      CCY           ZCCY
      C                   EXSR      ZFREQB
      C     RetCodeIn     IFEQ      '*ERROR '
@@ -2865,6 +2881,12 @@
      C***********        EVAL      FldNameArr(Idx) = 'DDRLFQB'                                WA0025
      C***********        EVAL      MsgIDArr(Idx) = 'LEV0054'                                  WA0025
      C                   MOVE      'N'           DDRlfqOK
+     C     DDACTN        IFEQ      'A'                                                      MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C                   EVAL      DDRLFQB = DDRLFQ                                         MD061418
+     C                   EVAL      DDRLDYB = DDRLDY                                         MD061418
+     C                   ENDIF                                                              MD061418
      C                   ENDIF
      C                   ENDIF
      C                   ENDSL

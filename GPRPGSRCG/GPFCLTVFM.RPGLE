@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD050120           Date 17May23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054859           Date 21Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD023531           Date 30Apr14               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050120 - Update GPGLCUSL fields in GZFCLTLVPD file.        *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -361,10 +363,18 @@
                                                                                               CSF011
      C                   ENDIF                                                                CSF011
                                                                                               CSF011
-      **Setup Global Customer ID                                                            MD054859
+      **Setup*Global*Customer*ID******************************************         MD054859 MD050120
+      ** Setup all global customer details fields                                           MD050120
      C     KEY_GPGLCUSL  CHAIN     GPGLCUSL                                                 MD054859
      C                   IF        %FOUND(GPGLCUSL)                                         MD054859
      C                   EVAL      G_CGGLOB = GC_CGGLOB                                     MD054859
+     C                   EVAL      G_CGICD  = GC_CGICD                                      MD050120
+     C                   EVAL      G_CGACO  = GC_CGACO                                      MD050120
+     C                   EVAL      G_CGCNCZ = GC_CGCNCZ                                     MD050120
+     C                   EVAL      G_CGCOLC = GC_CGCOLC                                     MD050120
+     C                   EVAL      G_CGBRCD = GC_CGBRCD                                     MD050120
+     C                   EVAL      G_CGCUST = GC_CGCUST                                     MD050120
+     C                   EVAL      G_CGZONE = GC_CGZONE                                     MD050120
      C                   ENDIF                                                              MD054859
 
      C                   ENDSR

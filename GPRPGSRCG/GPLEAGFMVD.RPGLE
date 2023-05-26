@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD050120           Date 17May23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034004           Date 13Jul15               *
       *                 CGP017             Date 06Aug12               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050120 - Update GPGLCUSL fields in GZFCLTLVPD file.        *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -56,6 +58,9 @@
      F                                     USROPN
      F***GZSDCUSTL1IF   E           K DISK    INFSR(*PSSR)                         AR869238 MD034004
      FGZSDCUSTL0IF   E           K DISK    INFSR(*PSSR)                                     MD034004
+     FGPGLCUSL  IF   E           K DISK    INFSR(*PSSR)                                     MD050120
+     F                                     RENAME(GPGLCUSL:GPGLCUSLD0)                      MD050120
+     F                                     PREFIX(GC_)                                      MD050120
 
       ** Data structure for *ISO date                                                      AR819939A
      D                 DS                                                                  AR819939A
@@ -343,6 +348,19 @@
                                                                                             AR869238
      C                   ENDIF                                                              AR869238
                                                                                             AR869238
+      ** Setup all global customer details fields                                           MD050120
+     C     KEY_GPGLCUSL  CHAIN     GPGLCUSL                                                 MD050120
+     C                   IF        %FOUND(GPGLCUSL)                                         MD050120
+     C                   EVAL      G_CGGLOB = GC_CGGLOB                                     MD050120
+     C                   EVAL      G_CGICD  = GC_CGICD                                      MD050120
+     C                   EVAL      G_CGACO  = GC_CGACO                                      MD050120
+     C                   EVAL      G_CGCNCZ = GC_CGCNCZ                                     MD050120
+     C                   EVAL      G_CGCOLC = GC_CGCOLC                                     MD050120
+     C                   EVAL      G_CGBRCD = GC_CGBRCD                                     MD050120
+     C                   EVAL      G_CGCUST = GC_CGCUST                                     MD050120
+     C                   EVAL      G_CGZONE = GC_CGZONE                                     MD050120
+     C                   ENDIF                                                              MD050120
+                                                                                            MD050120
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -370,6 +388,10 @@
      C                   KFld                    G_BRCA
      C                   KFld                    G_CNUM
 
+     C     KEY_GPGLCUSL  KLIST                                                              MD050120
+     C                   KFLD                    G_CNUM                                     MD050120
+     C                   KFLD                    G_CUSTZONE                                 MD050120
+                                                                                            MD050120
      C                   ENDSR
       ********************************************************************
       /SPACE 5

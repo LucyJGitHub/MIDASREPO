@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061211           Date 17May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 249245             Date 25Jul07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *   MD061211 - Cannot close GL Account attached to a valid      *
+      *              closed Portfolio.                                *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  249245 - Applied fix 225809.                                 *
@@ -539,12 +542,12 @@
      C                   ENDIF                                                  CPB001
      C                   MOVE      DDPTFR        PREF              4
      C     POKEY         CHAIN     PMPORTLL                           80
-     C     *IN80         IFEQ      '1'
-     C                   Move      'N'           DDPTFROK
-     C                   Add       1             Idx
-     C                   Movel     'DDPTFR'      FldNamXAr(Idx)
-     C                   Movel     'RE71117'     MsgIdXAr(Idx)
-     C                   END
+     C******IN80         IFEQ      '1'                                                      MD061211
+     C**********         Move      'N'           DDPTFROK                                   MD061211
+     C**********         Add       1             Idx                                        MD061211
+     C**********         Movel     'DDPTFR'      FldNamXAr(Idx)                             MD061211
+     C**********         Movel     'RE71117'     MsgIdXAr(Idx)                              MD061211
+     C**********         END                                                                MD061211
      C*
      C     PNDPCL        IFNE      *ZERO
      C     FLAG          IFEQ      *BLANK

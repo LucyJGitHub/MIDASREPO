@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas MM NA's Purchased Amend Checking     ')          *
+/*EXI *  TEXT('Midas MM NAs Purchased Amend Checking     ')           *
       *****************************************************************
       *                                                               *
       *  Midas - Money Market Dealing Module                          *
@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
@@ -82,13 +84,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMMCDAFLL  IF   E             DISK    INFSR(*PSSR)
- 
+
      FMMLVDMLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMDEAMP0:MMLVDMP0)
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -107,50 +109,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array to contain input rate                                                          211926
      D AlpRate         S              1    DIM(12)                                            211926
       ** Array to integer part of rate                                                        211926
@@ -160,15 +162,15 @@
                                                                                               211926
       * New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(MMNASPPD)
- 
+
       * (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMNASPPD)
      D                                     PREFIX(@)
- 
+
       * (Current) Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDENBPP)
- 
- 
+
+
      D RUNDAT          DS
      D  @MBIN                 13     13
       *
@@ -179,16 +181,16 @@
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
       *
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CDE002
       ** External DS for SAR details                                            CDE002
                                                                                 CDE002
@@ -197,13 +199,13 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for AlpRate                                                                    211926
      D @AR             S              2  0                                                    211926
       ** Index for IntRate                                                                    211926
@@ -213,7 +215,7 @@
                                                                                               211926
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDActnOK                      1A
@@ -259,21 +261,21 @@
      D  DDClasOK                      1A                                                      CDL038
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A
- 
- 
+
+
       ** Deal Transaction Date in Midas Dayno. format
      D TransDate       S              5P 0
- 
+
       ** Start/Last Interest Date in Midas Dayno. format
      D LstIntDate      S              5P 0
- 
+
       ** Interest Accrual Date in Midas Dayno. format
      D IntAccDate      S              5P 0
- 
+
       ** New Next Interest Date in Midas Dayno. format
      D NewNxInDte      S              5P 0
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -287,32 +289,32 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  Convert the dates on the current live deal
       **  from YYYYMMDD format to Midas day number format
      C                   EXSR      ConvDates
- 
+
       **  Compare fields with amended values.
      C                   EXSR      CompFlds
- 
+
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
- 
+
      C     Idx           IFGT      0
      C                   EVAL      AmendOK = 'N'
      C                   ELSE
      C                   EVAL      AmendOK = 'Y'
      C                   ENDIF
- 
+
       *  If any errors were found and reset of fields in error required,
       *  do this
      C     Idx           IFGT      0
      C     ResetErrs     ANDEQ     'Y'
      C                   EXSR      ResetFlds
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -321,7 +323,7 @@
       *             with those amended.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     CompFlds      BEGSR
       *
       *-----------------------------------------*
@@ -470,7 +472,8 @@
       **  and is only amendable for status C if this is indicated on
       **  MMCDAFLL.
       *
-     C     DDISUR        IFNE      @DDISUR
+     C*****DDISUR        IFNE      @DDISUR                                                  MD049123
+     C     DDISUR        IFNE      HLISCN                                                   MD049123
      C     DDISUR        ANDNE     *BLANKS
       *
      C                   ADD       1             Idx
@@ -483,7 +486,8 @@
       * Validate Bought From Customer    *
       *----------------------------------*
       *
-     C     DDCSNM        IFNE      @DDCSNM
+     C*****DDCSNM        IFNE      @DDCSNM                                                  MD049123
+     C     DDCSNM        IFNE      HLCNUM                                                   MD049123
       *
      C     HLDSTS        IFNE      'C'
      C                   ADD       1             Idx
@@ -718,7 +722,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0495'
      C                   EVAL      DDDCRTok        = 'N'
      C                   ENDIF
- 
+
       *-----------------------------------------*
       * Interest Frequency day in Month         *
       *-----------------------------------------*
@@ -785,7 +789,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM2001'
      C                   EVAL      DDPCLIok        = 'N'
      C                   ENDIF
- 
+
       *----------------------------------------*
       * Parcel Size                            *
       *----------------------------------------*
@@ -803,7 +807,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM2001'
      C                   EVAL      DDPSZEok        = 'N'
      C                   ENDIF
- 
+
       *-----------------------------------------*
       * Profit Centre                           *
       *-----------------------------------------*
@@ -881,7 +885,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0258'                                CDL038
      C                   EVAL      ddCLASok        = 'N'                                      CDL038
      C                   ENDIF                                                                CDL038
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -945,22 +949,22 @@
      C     ddMDATOK      IFEQ      'N'
      C                   MOVEL     @DDMDAT       DDMDAT
      C                   END
- 
+
       * Account Sequence Number
      C     ddACSQOK      IFEQ      'N'
      C                   MOVEL     @DDACSQ       DDACSQ
      C                   END
- 
+
       * Currency
      C     ddCCYOK       IFEQ      'N'
      C                   MOVEL     @DDCCY        DDCCY
      C                   END
- 
+
       * FACE VALUE
      C     ddFVALOK      IFEQ      'N'
      C                   MOVEL     @DDFVAL       DDFVAL
      C                   END
- 
+
       * PURCHASE PRICE
      C     ddAMNPOK      IFEQ      'N'
      C                   MOVEL     @DDAMNP       DDAMNP
@@ -970,77 +974,77 @@
      C     ddBOKCOK      IFEQ      'N'                                          CAP004
      C                   MOVEL     @DDBOKC       DDBOKC                         CAP004
      C                   END                                                    CAP004
- 
+
       * INTEREST RATE
      C     ddINTROK      IFEQ      'N'
      C                   MOVEL     @DDINTR       DDINTR
      C                   END
- 
+
       * Interest Calculation Method
      C     ddICMTOK      IFEQ      'N'
      C                   MOVEL     @DDICMT       DDICMT
      C                   END
- 
+
       * Interest Payment Frequency
      C     ddIPFQOK      IFEQ      'N'
      C                   MOVEL     @DDIPFQ       DDIPFQ
      C                   END
- 
+
       * Next Interest Date
      C     ddNDATOK      IFEQ      'N'
      C                   MOVEL     @DDNDAT       DDNDAT
      C                   END
- 
+
       * START/LAST Interest Date
      C     ddSLIDOK      IFEQ      'N'
      C                   MOVEL     @DDSLID       DDSLID
      C                   END
- 
+
       * DISCOUNT RATE
      C     ddDCRTOK      IFEQ      'N'
      C                   MOVEL     @DDDCRT       DDDCRT
      C                   END
- 
+
       * Interest Frequency day in Month
      C     ddIPDMOK      IFEQ      'N'
      C                   MOVEL     @DDIPDM       DDIPDM
      C                   END
- 
+
       * Total Interest Amount
      C     ddMTTIOK      IFEQ      'N'
      C                   MOVEL     @DDMTTI       DDMTTI
      C                   END
- 
+
       * BASE CURRENCY RATE
      C     ddBRATOK      IFEQ      'N'
      C                   MOVEL     @DDBRAT       DDBRAT
      C                   END
- 
+
       * Round Down Interest Indicator
      C     ddRDFCOK      IFEQ      'N'
      C                   MOVEL     @DDRDFC       DDRDFC
      C                   END
- 
+
       * PARCEL FLAG
      C     ddPCLIOK      IFEQ      'N'
      C                   MOVEL     @DDPCLI       DDPCLI
      C                   END
- 
+
       * PARCEL SIZE
      C     ddPSZEOK      IFEQ      'N'
      C                   MOVEL     @DDPSZE       DDPSZE
      C                   END
- 
+
       * PROFIT CENTRE
      C     ddPRFCOK      IFEQ      'N'
      C                   MOVEL     @DDPRFC       DDPRFC
      C                   END
- 
+
       * Funding Spread/Rate
      C     ddFSRPOK      IFEQ      'N'
      C                   MOVEL     @DDFSRP       DDFSRP
      C                   END
- 
+
       * Funding Profit Centre
      C     ddFPRCOK      IFEQ      'N'
      C                   MOVEL     @DDFPRC       DDFPRC
@@ -1125,7 +1129,7 @@
      C                   END
       *
      C                   ENDSR
- 
+
       /EJECT                                                                                  211926
       *****************************************************************                       211926
       * ConvRate - Convert rate fields from characters to numeric     *                       211926
@@ -1215,9 +1219,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * INPUTS...
       * Return Code
@@ -1253,7 +1257,7 @@
      C                   KFLD                    @VDMM             2 0
      C                   KFLD                    @VDDD             2 0
      C                   KFLD                    @DEAMS            3 0
- 
+
      C     *LIKE         DEFINE    HLDDND        ZZMDNO
       *
       **  GET RUNDAT to access MULTI-BRANCHING flag.

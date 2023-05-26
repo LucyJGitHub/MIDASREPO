@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD033687A          Date 08Feb23               *
-      *  Prev Amend No. MD060788           Date 08Feb23               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD033687A          Date 08Feb23               *
+      *                 MD060788           Date 08Feb23               *
       *                 252024             Date 14Feb08               *
       *                 MD059304           Date 26Jan22               *
       *                 MD059321           Date 21Dec21               *
@@ -151,6 +152,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD033687A - Program Accepts duplicate Schedule Dates. Added  *
       *              checking for duplicate Dates.                    *
       *            - Applied for MD038423                             *
@@ -3232,6 +3234,13 @@
      C                   MOVE      DDAPRR        @DDAPRR                                    MD054028
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
+      *                                                                                     MD049123
+      ** Return back Customer Number to DDCUST field if valid                               MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDCUST        #DDCUST          10                        MD049123
+     C                   MOVEL     *BLANKS       DDCUST                                     MD049123
+     C                   MOVEL     IKCNUM        DDCUST                                     MD049123
+      *                                                                                     MD049123
      C                   CALLB     'MMLDNIAMD'
 
       * INPUTS
@@ -3258,6 +3267,9 @@
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1                          CDL038
      C*******************PARM      'N'           ResetErrs         1                          CDL038
+      *                                                                                     MD049123
+     C                   MOVEL     *BLANKS       DDCUST                                     MD049123
+     C                   MOVEL     #DDCUST       DDCUST                                     MD049123
 
       ** If any errors overwrite previous error information
 

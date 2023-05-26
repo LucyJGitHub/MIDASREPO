@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG9711            Date 26Jan06               *
       *                 CDL039             Date 22Aug05               *
       *                 CDL038             Date 10May05               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG9711- Changes to MMVNASPPD/MMVNASSPD (re-compile)         *
@@ -50,9 +52,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMMCDAFLL  IF   E             DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,19 +73,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** Flags to indicate whether transaction fields are valid
       ** These have been declared for all MM0027D2 fields, though some may
@@ -91,116 +93,116 @@
       ** The OKFlagsDS data structure is defined in the following /COPY
      D/COPY MMCPYSRC,MMNASSOK
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Deal in Screen Format
      D NwDlScnFmt    E DS                  EXTNAME(MMNASSPD)
- 
+
       * (Current) Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMNASSPD)
      D                                     PREFIX(@)
- 
+
       * (Current) Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDENSPP)
- 
+
      D RUNDAT          DS                  DTAARA(RUNDAT)
       ** Run date data area
      D  @MBIN                 13     13
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL039
       ** EXTERNAL DS FOR SAR DETAILS                                                          CDL039
                                                                                               CDL039
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** Copy of the MMVNASSD0 data structure, to allow validation of
       ** both MMVNASSPD and MMDENSPP fields by the same routine.
      D VNASSFmt      E DS                  EXTNAME(MMVNASSPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Deal Amendment Value Date in Midas Dayno. format
      D DeamValDat      S              5P 0
- 
+
       ** New Maturity Date in Midas Dayno. format
      D NewMatDate      S              5P 0
- 
+
       ** New Next Interest Date in Midas Dayno. format
      D NewNxInDte      S              5P 0
- 
+
       ** Message ID for the single database error message
      D Msg1            S                   LIKE(#MsgID)
- 
+
       ** Message data for the single database error message
      D MsgData         S                   LIKE(#MsgData)
- 
+
       ** Overall Transaction status, to be passed back to calling program
      D AmendOK         S              1A
- 
+
       ** Deal Transaction Date in Midas Dayno. format
      D TransDate       S              5P 0
- 
+
       ** Last Interest Date in Midas Dayno. format
      D LstIntDate      S              5P 0
- 
+
       ** Whether reset of errors is required
      D ResetErrs       S              1A
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -215,32 +217,32 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  Convert the dates on the current live deal
       **  from YYYYMMDD format to Midas day number format
      C                   EXSR      ConvDates
- 
+
       **  Compare fields with amended values.
      C                   EXSR      CompFlds
- 
+
       *  If any errors were found:
       *    Set Amendments OK Indicator to 'N'
- 
+
      C     Idx           IFGT      0
      C                   EVAL      AmendOK = 'N'
      C                   ELSE
      C                   EVAL      AmendOK = 'Y'
      C                   ENDIF
- 
+
       *  If any errors were found and reset of fields in error required,
       *  do this
      C     Idx           IFGT      0
      C     ResetErrs     ANDEQ     'Y'
      C                   EXSR      ResetFlds
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -250,7 +252,7 @@
       *                                                               *
       *****************************************************************
      C     CompFlds      BEGSR
- 
+
      C*-----------------------------------------*
      C* Deal Type                               *
      C*-----------------------------------------*
@@ -362,11 +364,11 @@
      C                   ENDIF
      C*
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Sale of deal number                    *
       **----------------------------------------*
- 
+
      C**  The Sale of Deal No. may not be amended.
      C                   IF        DDDADN <> @DDDADN                            B1
      C                   ADD       1             Idx
@@ -374,28 +376,30 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0402'
      C                   EVAL      ddDADNok        = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** NAB Issuer                             *
       **----------------------------------------*
- 
+
       ** Issued by customer cannot be amended
-     C                   IF        DDISUR <> @DDISUR                            B1
+     C**********         IF        DDISUR <> @DDISUR                            B1          MD049123
+     C                   IF        DDISUR <> HMISCN                             B1          MD049123
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDISUR'
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0497'
      C                   EVAL      ddISURok       = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Sold to Customer                       *
       **----------------------------------------*
- 
+
       **  This field is not amendable for R and A status deals,
       **  and is only amendable for status C if this is indicated on
       **  MMCDAFLL.
-     C     DDCSNM        IFNE      @DDCSNM
- 
+     C*****DDCSNM        IFNE      @DDCSNM                                                  MD049123
+     C     DDCSNM        IFNE      HMCNUM                                                   MD049123
+
      C     HMDSTS        IFNE      'C'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCSNM'
@@ -409,9 +413,9 @@
      C                   EVAL      ddCSNMok       = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*
      C*-----------------------------------------*
      C* Value Date                              *
@@ -436,11 +440,11 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0370'
      C                   EVAL      ddCCYok         = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Face value                             *
       **----------------------------------------*
- 
+
       ** This field is not amendable.
       ** Use the %TRIM built-in function to remove any leading or trailing
       ** spaces
@@ -450,11 +454,11 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0496'
      C                   EVAL      ddFVALok       = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Sale price                             *
       **----------------------------------------*
- 
+
       ** This field is not amendable.
       ** Use the %TRIM built-in function to remove any leading or trailing
       ** spaces
@@ -464,11 +468,11 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0500'
      C                   EVAL      ddAMNPok       = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Yield rate                             *
       **----------------------------------------*
- 
+
       ** This field is not amendable.
      C     DDINTR        IFNE      @DDINTR
      C                   ADD       1             Idx
@@ -476,11 +480,11 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0495'
      C                   EVAL      ddINTRok       = 'N'
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Profit Centre                          *
       **----------------------------------------*
- 
+
      C** Only validate this field if Profit Centre ICD flag on.
      C*
      C     BKPRCU        IFEQ      'Y'
@@ -497,11 +501,11 @@
      C                   ENDIF
      C*
      C                   ENDIF
- 
+
       **----------------------------------------*
       ** Parcel Size                            *
       **----------------------------------------*
- 
+
       ** This field is not amendable
       ** Use the %TRIM built-in function to remove any leading or trailing
       ** spaces
@@ -540,7 +544,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0258'                                CDL038
      C                   EVAL      ddCLASok        = 'N'                                      CDL038
      C                   ENDIF                                                                CDL038
- 
+
      C*
      C*-----------------------------------------------------------------*
      C* The following fields are currently UNCONDITIONALLY AMENDABLE    *
@@ -550,9 +554,9 @@
      C***DDBOKC*-*Book*Code**********************************************       CAP004
      C** DDLNKN - Linked Reference Number
      C** DDORBR - Originating Branch
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -560,7 +564,7 @@
       * RESETFLDS - Reset fields in Error                             *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETFLDS     BEGSR
       *
       * Reset fields in error to 'current' values
@@ -664,9 +668,9 @@
      C     ddCLASOK      IFEQ      'N'                                                        CDL038
      C                   MOVEL     @DDCLAS       DDCLAS                                       CDL038
      C                   END                                                                  CDL038
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -675,7 +679,7 @@
       *              to Midas Dayno (5,0) format for comparison       *
       *                                                               *
       *****************************************************************
- 
+
      C     CONVDATES     BEGSR
      C*
      C***********************************************
@@ -724,9 +728,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -754,34 +758,34 @@
      C                   PARM                    AmendOk
       * Reset of Fields in Error Required (Y/N)
      C                   PARM                    ResetErrs
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C     *LIKE         DEFINE    ILDDND        ZZMDNO
       *
       **  Get RUNDAT to access Multibranching flag.
       *
      C                   IN        RUNDAT
- 
+
       ** Access Bank details via access program
       ** (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access MIDAS Modules details via access program
       ** (database error handling done in access program)
      C                   CALLB     'AOMMODR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Access General Ledger details via access program
       ** (database error handling done in access program)
      C**********         CALL      'AOGELRR0'                                                 CGL029
@@ -790,14 +794,14 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       **  Read the first and only record on MMCDAFLL.
      C     1             CHAIN     MMCDAFLL                           60
- 
+
       **  If no valid record found then it is a data base error.
      C     *IN60         IFEQ      '1'
      C     HHDLTF        OREQ      '*'
- 
+
      C                   MOVEL     'MMCDAFLL'    DBFILE                         * DBERROR 018 *
      C                   MOVEL     *BLANKS       DBKEY                          ***************
      C                   EVAL      FieldName = 'None'
@@ -806,12 +810,12 @@
      C                              + PSProcName + DBFILE + DBKEY)
      C                   EXSR      DBErrExit
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
      C**  Close the files that are only used once.
      C                   CLOSE     MMCDAFLL
- 
+
       *                                                                                       CDL039
       ** ACCESS SAR DETAILS FILE TO DETERMINE IF CDL039 IS INSTALLED                          CDL039
       *                                                                                       CDL039

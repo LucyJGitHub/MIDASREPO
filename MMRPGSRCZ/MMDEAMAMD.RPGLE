@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -479,7 +481,8 @@
      C*
      C** This field is NOT AMENDABLE.
      C*
-     C     DDCSNM        IFNE      @DDCSNM
+     C*****DDCSNM        IFNE      @DDCSNM                                                  MD049123
+     C     DDCSNM        IFNE      HNCNUM                                                   MD049123
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCSNM'
      C                   EVAL      MsgIDArr(Idx)   = 'MMM0387'

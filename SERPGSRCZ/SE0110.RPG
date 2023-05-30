@@ -18,8 +18,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. 114468             Date 18Jan13               *
-      *  Prev Amend No. MD039572           Date 14Jan20               *
+      *  Last Amend No. MD061037           Date 25May23               *
+      *  Prev Amend No. 114468             Date 18Jan13               *
+      *                 MD039572           Date 14Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043337           Date 25Jul17               *
       *                 CER059             Date 19Jul10               *
@@ -53,6 +54,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061037 -  Account Key Generator error.
+      *              Change dataarea ZMITEM to '0000000835' when this *
+      *              program is called from Account Key Generator     *
+      *              (Menu 0000000834)                                *
       *  114468 - Optionally, accept key from Account key generator   *
       *           Applied for AR1079856                               *
       *  MD039572 - Failed component during COB - COMPONENT DLC0606C  *
@@ -524,11 +529,21 @@
      I              '1234567890'          C         DIGITS                                    CSD031
      I**********    'XLIB/SDCSNDDTQ'      C         PGMB                               CSD031 CSC043
      I              'XPLIB/SDCSNDDTQ'     C         PGMB                                      CSC043
+     IZMITEM      DS                                                                        MD061037
+     I                                        1  10 UNQCDE                                  MD061037
      C/EJECT
       *================================================================
       *  P R O G R A M     S T A R T                                  *
       *================================================================
      C/COPY WNCPYSRC,SE0110C015
+     C           *NAMVAR   DEFN           ZMITEM                                            MD061037
+     C           *LOCK     IN   ZMITEM                                                      MD061037
+     C           PRINDX    IFEQ *BLANKS                                                     MD061037
+     C                     MOVE UNQCDE    PRINDX 10                                         MD061037
+     C                     ENDIF                                                            MD061037
+     C                     MOVEL'000000'  UNQCDE                                            MD061037
+     C                     MOVE '0835'    UNQCDE                                            MD061037
+     C                     OUT  ZMITEM                                                      MD061037
      C*
      C**  FROM ERROR HANDLING SUBROUTINE RETURN TO EXIT POINT
      C*
@@ -770,6 +785,9 @@
      C** If program is called with 3 parms, return to calling program                         114468
      C**  and reset indicator                                                                 114468
      C           WNOPMS    IFGE 3                                                             114468
+     C           *LOCK     IN   ZMITEM                                                      MD061037
+     C                     MOVE PRINDX    UNQCDE                                            MD061037
+     C                     OUT  ZMITEM                                                      MD061037
      C                     MOVE '0'       *IN07                                               114468
      C                     RETRN                                                              114468
      C                     END                                                                114468
@@ -1556,6 +1574,9 @@
      C           WNOPMS    IFGE 3                                                             114468
      C   LR                MOVE '1'       RTNCD                                               114468
      C                     END                                                                114468
+     C           *LOCK     IN   ZMITEM                                                      MD061037
+     C                     MOVE PRINDX    UNQCDE                                            MD061037
+     C                     OUT  ZMITEM                                                      MD061037
      C/COPY WNCPYSRC,SE0110C014
       *                                                               *
       *================================================================

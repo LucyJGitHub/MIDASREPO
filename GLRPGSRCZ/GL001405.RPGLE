@@ -550,7 +550,7 @@
       /EJECT                                                                                MD028973
       *****************************************************************                     MD028973
       *                                                               *                     MD028973
-      * CHKOFF - Set system time offset from branch details           *                     MD028973
+      * CHKOFF - Set system time offset from time zone details        *                     MD028973
       *                                                               *                     MD028973
       * Called by: Main                                               *                     MD028973
       *                                                               *                     MD028973
@@ -612,22 +612,44 @@
      C                   ENDIF                                                              MD028973
      C                   ENDIF                                                              MD028973
       *                                                                                     MD028973
+     C                   MOVE      YEAR          PTZYear                                    MD028973
      C                   CALL      'AODSTCR0'                                               MD028973
      C                   PARM      *BLANKS       P@RTCD                                     MD028973
      C                   PARM      '*KEY   '     P@OPTN                                     MD028973
      C                   PARM      TZDSTC        PDst                                       MD028973
-     C                   PARM      YEAR          PTZYear                                    MD028973
+     C                   PARM                    PTZYear                                    MD028973
      C     SDDSTC        PARM      SDDSTC        DSFDY                                      MD028973
      C                   IF        P@RTCD = *BLANKS                                         MD028973
      C                   IF        BJRDNB >= DSDSDT AND                                     MD028973
      C                             BJRDNB <= DSDSED AND                                     MD028973
-     C                             BJRDNB = DSDSDT AND                                      MD028973
      C                             Wknum6 <  DSDSDH OR                                      MD028973
      C                             BJRDNB = DSDSED AND                                      MD028973
      C                             Wknum6 >= DSDENH                                         MD028973
      C                   ELSE                                                               MD028973
-     C                   AddDur    DSOFFS:*H     WkCurTime                                  MD028973
-     C                   AddDur    DSOFFS:*MN    WkCurTime                                  MD028973
+     C                   EVAL      SYSMN = 0                                                MD028973
+     C                   EVAL      SYSHR = 0                                                MD028973
+     C                   IF        DSOFFS = 30                                              MD028973
+     C                   EVAL      SYSMN = 30                                               MD028973
+     C                   ENDIF                                                              MD028973
+     C                   IF        DSOFFS = 60                                              MD028973
+     C                   EVAL      SYSHR = 1                                                MD028973
+     C                   ENDIF                                                              MD028973
+     C                   AddDur    SYSHR:*H      WkCurTime                                  MD028973
+     C                   AddDur    SYSMN:*MN     WkCurTime                                  MD028973
+     C                   If        Not %EoF(GLPRMOPD)                                       MD028973
+     C                   MoveL(P)  WkExpTime     WkNum4            4 0                      MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   MoveL     WkNum4        WkExpTime                                  MD028973
+     C                   EndIf                                                              MD028973
+     C                   MoveL(P)  WkCurTimAlp   WkNum4                                     MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   MoveL     WkNum4        WkCurTimAlp                                MD028973
+     C                   MoveL(P)  WkStartTime   WkNum4                                     MD028973
+     C                   Eval      WkNum4 = WkNum4 + (SYSHR * 100) + SYSMN                  MD028973
+     C                   If        WkNum4 < 0                                               MD028973
+     C                   Eval      WkNum4 = 0                                               MD028973
+     C                   EndIf                                                              MD028973
+     C                   MoveL     WkNum4        WkStartTime                                MD028973
      C                   ENDIF                                                              MD028973
      C                   ENDIF                                                              MD028973
      C                   ENDIF                                                              MD028973

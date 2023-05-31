@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059246           Date 03Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD059246           Date 03Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054095           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD059246 - Short term rate value is not displayed correctly  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1530,6 +1532,28 @@
      C                   ELSE                                                                BUG5443
      C                   MOVEL     'N'           CustFormat                                  BUG5443
      C                   END                                                                 BUG5443
+      *                                                                                     MD049123
+      ** ACCESS SAR DETAILS FOR Expansion of Customer Number                                MD049123
+      *                                                                                     MD049123
+     C                   CALLB     'AOSARDR0'                                               MD049123
+     C                   PARM      *BLANKS       @RTCD                                      MD049123
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049123
+     C                   PARM      'CDL011'      @SARD                                      MD049123
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD049123
+      *                                                                                     MD049123
+      * DATABASE ERROR                                                                      MD049123
+      *                                                                                     MD049123
+     C     @RTCD         IFNE      *BLANKS                                                  MD049123
+     C     @RTCD         ANDNE     '*NRF   '                                                MD049123
+     C                   MOVEL     'CDL011'      DBKEY                                      MD049123
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD049123
+     C                   MOVEL     '910'         DBASE                                      MD049123
+     C                   EXSR      *PSSR                                                    MD049123
+     C                   END                                                                MD049123
+     C*                                                                                     MD049123
+     C     @RTCD         IFEQ      *BLANK                                                   MD049123
+     C                   MOVEL     'S'           CustFormat                                 MD049123
+     C                   END                                                                MD049123
                                                                                               CDL028
       ** Access SAR details for CDL028                                                        CDL028
                                                                                               CDL028

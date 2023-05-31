@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059304           Date 11Nov21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
@@ -1652,6 +1654,17 @@
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
+      *                                                                                     MD049123
+      ** Return back Customer Number to DDCUST field if valid                               MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDCSNM        #DDCSNM          10                        MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     IHCNUM        DDCSNM                                     MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDISUR        #DDISUR          10                        MD049123
+     C                   MOVEL     *BLANKS       DDISUR                                     MD049123
+     C                   MOVEL     IHISCN        DDISUR                                     MD049123
+      *                                                                                     MD049123
      C                   CALLB     'MMNASPAMD'
       * INPUTS
       * Return Code
@@ -1685,6 +1698,11 @@
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
+      *                                                                                     MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     #DDCSNM       DDCSNM                                     MD049123
+     C                   MOVEL     *BLANKS       DDISUR                                     MD049123
+     C                   MOVEL     #DDISUR       DDISUR                                     MD049123
 
      C                   ENDSR
       *****************************************************************

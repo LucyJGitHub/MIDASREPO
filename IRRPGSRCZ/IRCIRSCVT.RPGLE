@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059273           Date 13Jan22               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD059273           Date 13Jan22               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057437           Date 20Jan21               *
       *                 MD054095           Date 17Oct19               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD059273 - IRS does not allow 0 Spread Rate to be input      *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1724,6 +1726,28 @@
      C                   ELSE
      C                   MOVEL     'N'           CustFormat
      C                   END
+      *                                                                                     MD049123
+      ** ACCESS SAR DETAILS FOR Expansion of Customer Number                                MD049123
+      *                                                                                     MD049123
+     C                   CALLB     'AOSARDR0'                                               MD049123
+     C                   PARM      *BLANKS       @RTCD                                      MD049123
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049123
+     C                   PARM      'CDL011'      @SARD                                      MD049123
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD049123
+      *                                                                                     MD049123
+      * DATABASE ERROR                                                                      MD049123
+      *                                                                                     MD049123
+     C     @RTCD         IFNE      *BLANKS                                                  MD049123
+     C     @RTCD         ANDNE     '*NRF   '                                                MD049123
+     C                   MOVEL     'CDL011'      DBKEY                                      MD049123
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD049123
+     C                   MOVEL     '920'         DBASE                                      MD049123
+     C                   EXSR      *PSSR                                                    MD049123
+     C                   END                                                                MD049123
+     C*                                                                                     MD049123
+     C     @RTCD         IFEQ      *BLANK                                                   MD049123
+     C                   MOVEL     'S'           CustFormat                                 MD049123
+     C                   END                                                                MD049123
       *                                                                         CIR005
       ** Access SAR details for Business Day Conventions                        CIR005
       *                                                                         CIR005

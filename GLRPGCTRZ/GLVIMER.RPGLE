@@ -278,12 +278,8 @@
      C                   TESTB     '0'           F1RETB            1      01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Refer Dr'    WError
-     C*****WRRE01        IFNE      'Y'                                                     AR1091401
-     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
-     C     WRRE01        IFEQ      'N'                                                     AR1091401
-     C     WUAUTH        OREQ      'N'                                                     AR1091401
-     C     WRRE01        ORNE      'Y'                                                     AR1091401
-     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
+     C     WRRE01        IFNE      'Y'
+     C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE01        ORNE      'Y'                                                      MD057083
@@ -292,6 +288,14 @@
      C     WRRE01        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE01        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE01        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -304,12 +308,8 @@
      C                   TESTB     '1'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Refer Cr'    WError
-     C*****WRRE02        IFNE      'Y'                                                     AR1091401
-     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
-     C     WRRE02        IFEQ      'N'                                                     AR1091401
-     C     WUAUTH        OREQ      'N'                                                     AR1091401
-     C     WRRE02        ORNE      'Y'                                                     AR1091401
-     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
+     C     WRRE02        IFNE      'Y'
+     C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE02        ORNE      'Y'                                                      MD057083
@@ -318,6 +318,14 @@
      C     WRRE02        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE02        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE02        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -330,12 +338,8 @@
      C                   TESTB     '2'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Block Dr'    WError
-     C*****WRRE03        IFNE      'Y'                                                     AR1091401
-     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
-     C     WRRE03        IFEQ      'N'                                                     AR1091401
-     C     WUAUTH        OREQ      'N'                                                     AR1091401
-     C     WRRE03        ORNE      'Y'                                                     AR1091401
-     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
+     C     WRRE03        IFNE      'Y'
+     C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE03        ORNE      'Y'                                                      MD057083
@@ -344,6 +348,14 @@
      C     WRRE03        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE03        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE03        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -357,12 +369,8 @@
      C                   TESTB     '3'           F1RETB                   01
      C     *IN01         IFEQ      *ON
      C                   MOVE      'Block Cr'    WError
-     C*****WRRE04        IFNE      'Y'                                                     AR1091401
-     C*****WUAUTH        ANDNE     'Y'                                              238884 AR1091401
-     C     WRRE04        IFEQ      'N'                                                     AR1091401
-     C     WUAUTH        OREQ      'N'                                                     AR1091401
-     C     WRRE04        ORNE      'Y'                                                     AR1091401
-     C     WUAUTH        ANDNE     'Y'                                                     AR1091401
+     C     WRRE04        IFNE      'Y'
+     C     WUAUTH        ANDNE     'Y'                                                        238884
      C     B2ACTY        ANDEQ     'G'                                                      AR802562
      C     CGL002        ANDEQ     'Y'                                                      MD057083
      C     WRRE04        ORNE      'Y'                                                      MD057083
@@ -371,6 +379,14 @@
      C     WRRE04        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE04        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE04        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd

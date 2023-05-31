@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024407           Date 03May23               *
-      *  Prev Amend No. MD023568           Date 19Apr23               *
+      *  Last Amend No. MD021870A          Date 23May23               *
+      *  Prev Amend No. MD021870           Date 23May23               *
+      *                 MD024407           Date 03May23               *
+      *                 MD023568           Date 19Apr23               *
       *                 MD060981           Date 11Apr23               *
       *                 MD021871           Date 11Apr23               *
       *                 MD021868           Date 11Apr23               *
@@ -119,6 +121,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021870A - 31 will be considered as invalid input. It should*
+      *              be either 31+ or 31- just like other numbers.    *
+      *  MD021870 - Amended the way system checks holiday. It should  *
+      *             be same how it computes for the date when using   *
+      *             formula.                                          *
       *  MD024407 - Do not allow duplicate front office ids.          *
       *  MD023568 - Incorrect reversal projected shadow/nostro        *
       *             balances when IRS deal is deleted.                *
@@ -6209,35 +6216,46 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   IF        PZHol = 'H'                                               BUG5449
      C                   EVAL      WHoliday = 'Y'                                            BUG5449
      C                   LEAVE                                                               BUG5449
+     C                   ELSE                                                               MD021870
+                                                                                            MD021870
+      ** Else, if not a holiday, check if it is a saturday or a sunday                      MD021870
+      ** and treat it as holiday                                                            MD021870
+                                                                                            MD021870
+     C                   EVAL      WRK153 = InDateMDN/7                                     MD021870
+     C                   MOVE      WRK153        WRK30                                      MD021870
+     C                   IF        (WRK30 = 142) OR (WRK30 = 285)                           MD021870
+     C                   EVAL      WHoliday = 'Y'                                           MD021870
+     C                   LEAVE                                                              MD021870
+     C                   ENDIF                                                              MD021870
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
                                                                                              BUG5449
      C                   ENDDO                                                               BUG5449
      C                   ENDIF                                                               BUG5449
                                                                                              BUG5449
-     C                   IF        WHoliday <> 'Y'                                           BUG5449
-     C                   Z-ADD     InDateMDN     PZDateIn                                    BUG5449
-     C                   CALLB     'ZCHKH'                                                   BUG5449
-     C                   PARM                    PZDateIn                                    BUG5449
-     C                   PARM      SUCUCY        PZCcy                                       BUG5449
+     C**********         IF        WHoliday <> 'Y'                                  BUG5449 MD021870
+     C**********         Z-ADD     InDateMDN     PZDateIn                           BUG5449 MD021870
+     C**********         CALLB     'ZCHKH'                                          BUG5449 MD021870
+     C**********         PARM                    PZDateIn                           BUG5449 MD021870
+     C**********         PARM      SUCUCY        PZCcy                              BUG5449 MD021870
      C**********         PARM      *BLANK        PZLoc                              BUG5449 MD059314
-     C                   PARM      BJSLCD        PZLoc                                      MD059314
-     C                   PARM      *BLANK        PZHol                                       BUG5449
+     C**********         PARM      BJSLCD        PZLoc                             MD059314 MD021870
+     C**********         PARM      *BLANK        PZHol                              BUG5449 MD021870
                                                                                              BUG5449
-     C                   IF        PZHol = 'H'                                               BUG5449
-     C                   EVAL      WHoliday = 'Y'                                            BUG5449
-     C                   ELSE                                                                BUG5449
+     C**********         IF        PZHol = 'H'                                      BUG5449 MD021870
+     C**********         EVAL      WHoliday = 'Y'                                   BUG5449 MD021870
+     C**********         ELSE                                                       BUG5449 MD021870
                                                                                              BUG5449
-      ** Else, if not a holiday, check if it is a saturday or a sunday                       BUG5449
-      ** and treat it as holiday                                                             BUG5449
+      ***Else,*if*not*a*holiday,*check*if*it*is*a*saturday*or*a*sunday*             BUG5449 MD021870
+      ***and*treat*it*as*holiday***************************************             BUG5449 MD021870
                                                                                              BUG5449
-     C                   EVAL      WRK153 = InDateMDN/7                                      BUG5449
-     C                   MOVE      WRK153        WRK30                                       BUG5449
+     C**********         EVAL      WRK153 = InDateMDN/7                             BUG5449 MD021870
+     C**********         MOVE      WRK153        WRK30                              BUG5449 MD021870
      C**********         IF        (WRK30 = 142) OR (WRK30 = 285)                   BUG5449 MD052876
      C**********         EVAL      WHoliday = 'Y'                                   BUG5449 MD052876
      C**********         ENDIF                                                      BUG5449 MD052876
-     C                   ENDIF                                                               BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         ENDIF                                                      BUG5449 MD021870
+     C**********         ENDIF                                                      BUG5449 MD021870
                                                                                              BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
@@ -6622,24 +6640,29 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C*                                                                                      BUG5449
      C**  Validate position 3                                                                BUG5449
      C*                                                                                      BUG5449
-     C**  If position 1/2 is 31, pos 3 must be blank, or 4,5,6 have entry                    BUG5449
+     C****If*position*1/2*is*31,*pos*3*must*be*blank,*or*4,5,6*have*entr           BUG5449 MD021870A
      C**  If position 1 and 2 are not '31' pos.3 must be '+' or '-'                          BUG5449
+     C**  If position 1 and 2 is '31', pos. 3 must be '+' or '-'                           MD021870A
      C*                                                                                      BUG5449
      C*                                                                                      BUG5449
-     C                   IF        SDN1 = '31' AND SWRK3 <> *BLANK                           BUG5449
-     C                             AND S456 = *BLANK                                         BUG5449
-     C                   EVAL      *IN99=*ON                                                 BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         IF        SDN1 = '31' AND SWRK3 <> *BLANK                 BUG5449 MD021870A
+     C**********                   AND S456 = *BLANK                               BUG5449 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG5449 MD021870A
+     C**********         ENDIF                                                     BUG5449 MD021870A
+     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                            MD021870A
+     C                             AND SWRK3 <> '-'                                        MD021870A
+     C                   EVAL      *IN99=*ON                                               MD021870A
+     C                   ENDIF                                                             MD021870A
      C*                                                                                      BUG5449
      C                   IF        SDN1 <> '31' AND SWRK3 <> '+'                             BUG5449
      C                             AND SWRK3 <> '-'                                          BUG5449
      C                   EVAL      *IN99=*ON                                                 BUG5449
      C                   ENDIF                                                               BUG5449
      C*                                                                                      BUG5449
-     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                              BUG5449
-     C                             AND SWRK3 <> '-' AND SWRK3 <> ' '                         BUG5449
-     C                   EVAL      *IN99=*ON                                                 BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         IF        SDN1 = '31' AND SWRK3 <> '+'                    BUG5449 MD021870A
+     C**********                   AND SWRK3 <> '-' AND SWRK3 <> ' '               BUG5449 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG5449 MD021870A
+     C**********         ENDIF                                                     BUG5449 MD021870A
      C*                                                                                      BUG5449
      C**  Validate positions 4 and 5                                                         BUG5449
      C**    If entered must be numeric, between 1 and 28 inclusive                           BUG5449

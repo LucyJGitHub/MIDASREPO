@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061274            Date 09May23              *
-      *  Prev Amend No. MD060441            Date 01Feb23              *
+      *  Last Amend No. MD061389            Date 24May23              *
+      *  Prev Amend No. MD061274            Date 09May23              *
+      *                 MD060441            Date 01Feb23              *
       *                 MD061006            Date 02Feb23              *
       *                 MD060824            Date 10Jan23              *
       *                 MD060897            Date 10Jan23              *
@@ -26,6 +27,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061389 - Incorrect period and spread on LE000372 report    *
+      *             Amended the program to get the interest period    *
+      *             from SDHSDRTD for CCR and SAVG                    *
+      *             Retrieve the spread rate and indicator from       *
+      *             HISTSHQ and HISTSHM                               *
       *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             backward looking rate                             *
@@ -202,6 +208,10 @@
      D ZFILE           S             10A
      D ZSERR           S              1A
      D ZSNUM           S              6  0
+                                                                                            MD061389
+      ** Spread Rate and Spread Indicator variables                                         MD061389
+     D wrkSpread       S             11P 7 INZ(0)                                           MD061389
+     D wrkSpreadInd    S              1A   INZ(*BLANKS)                                     MD061389
 
       ** Entry Parameters for AOCUSTR0
      D @RtCd           S              7
@@ -338,8 +348,14 @@
      C                   EVAL      P1CNA3 = BBCNA3
      C                   EVAL      P1CNA4 = BBCNA4
      C                   ENDIF
+                                                                                            MD061389
+     C                   CLEAR                   wrkSpread                                  MD061389
+     C                   CLEAR                   wrkSpreadInd                               MD061389
 
      C                   CLEAR                   DlyDS
+
+      *                                                                                     MD061389
+     C                   IF        (DSCALM = 'NCCR' OR DSCALM = 'SARR')                     MD061389
      C/exec SQL
      C+ declare FWCursor cursor for
      C+ select
@@ -368,6 +384,38 @@
      C/exec SQL
      C+ fetch next from FWCursor into :DlyDS
      C/end-exec
+
+     C                   ELSE                                                               MD061389
+     C/exec SQL                                                                             MD061389
+     C+ declare HSCursor cursor for                                                         MD061389
+     C+ select                                                                              MD061389
+     C+   CINPSD                                                                            MD061389
+     C+ , CINPED                                                                            MD061389
+     C+ , CINPDT                                                                            MD061389
+     C+ , CINPDY                                                                            MD061389
+     C+ , COBPDT                                                                            MD061389
+     C+ , COBPDY                                                                            MD061389
+     C+ , CPBRFR                                                                            MD061389
+     C+ , CRTEAP                                                                            MD061389
+     C+ , CCALCM                                                                            MD061389
+     C+ , CAVCRT                                                                            MD061389
+     C+ , CDCMRT                                                                            MD061389
+     C+ , CSMPAV                                                                            MD061389
+     C+ from SDHSDRTD                                                                       MD061389
+     C+ where                                                                               MD061389
+     C+ CTRNID = :KTRNID                                                                    MD061389
+     C+ order by CINPDT desc                                                                MD061389
+     C/end-exec                                                                             MD061389
+                                                                                            MD061389
+     C/exec SQL                                                                             MD061389
+     C+ open HSCursor                                                                       MD061389
+     C/end-exec                                                                             MD061389
+                                                                                            MD061389
+     C/exec SQL                                                                             MD061389
+     C+ fetch next from HSCursor into :DlyDS                                                MD061389
+     C/end-exec                                                                             MD061389
+                                                                                            MD061389
+     C                   ENDIF                                                              MD061389
 
       ** Int Start Date
      C     SQLCOD        IFNE      100
@@ -513,9 +561,9 @@
      C                   EVAL      P1INTA  = %trim(ZOUT21)
 
 
-     C/exec SQL
-     C+ close CLOA
-     C/end-exec
+     C**********/exec SQL                                                                   MD061389
+     C**********+ close CLOA                                                                MD061389
+     C**********/end-exec                                                                   MD061389
 
       ** Write Detail
      C                   EXSR      SRReportP1
@@ -558,6 +606,47 @@ I    C                   ENDIF
      C                   COMMIT
      C                   EVAL      *INLR = *ON
      C                   RETURN
+      *****************************************************************                     MD061389
+      /EJECT                                                                                MD061389
+      *****************************************************************                     MD061389
+      *                                                               *                     MD061389
+      * RetrieveHSTM - Retrieve History File                          *                     MD061389
+      *                                                               *                     MD061389
+      *****************************************************************                     MD061389
+     C     RetrieveHISTM BEGSR                                                              MD061389
+     C/exec SQL                                                                             MD061389
+     C+ select                                                                              MD061389
+     C+   RTSP                                                                              MD061389
+     C+ , SPIN                                                                              MD061389
+     C+   into   :wrkSpread, :wrkSpreadInd                                                  MD061389
+     C+ from HISTSHM                                                                        MD061389
+     C+ where                                                                               MD061389
+     C+     LNRF = :KTRNID                                                                  MD061389
+     C/end-exec                                                                             MD061389
+     C                   ENDSR                                                              MD061389
+      *****************************************************************                     MD061389
+      /EJECT                                                                                MD061389
+      *****************************************************************                     MD061389
+      *                                                               *                     MD061389
+      * RetrieveHISTQ - Retrieve History File                         *                     MD061389
+      *                                                               *                     MD061389
+      *****************************************************************                     MD061389
+     C     RetrieveHISTQ BEGSR                                                              MD061389
+     C/exec SQL                                                                             MD061389
+     C+ select                                                                              MD061389
+     C+   RTSP                                                                              MD061389
+     C+ , SPIN                                                                              MD061389
+     C+   into   :wrkSpread, :wrkSpreadInd                                                  MD061389
+     C+ from HISTSHQ                                                                        MD061389
+     C+ where (AMTP = 'RO' or AMTP = 'SC' or AMTP = 'MC')                                   MD061389
+     C+ and LNRF = :KTRNID and VDAT <= :XCINPDT                                             MD061389
+     C+ order by VDAT desc, PRSQ desc, LCD desc                                             MD061389
+     C+ fetch first row only                                                                MD061389
+     C/end-exec                                                                             MD061389
+     C                   IF        SQLCODE = 100                                            MD061389
+     C                   EXSR      RetrieveHISTM                                            MD061389
+     C                   ENDIF                                                              MD061389
+     C                   ENDSR                                                              MD061389
 
       *****************************************************************
       /EJECT
@@ -866,18 +955,28 @@ I    C                   ENDIF
       *                                                                                     MD060441
       ** Compute all-in interest rate                                                       MD060441
       *                                                                                     MD060441
+     C                   EXSR      RetrieveHISTQ                                            MD061389
+      *                                                                                     MD061389
      C                   CLEAR                   wrkAllInRate     11 7                      MD060441
      C                   EVAL      wrkAllInRate = WrkRate + DSBADJ                          MD060441
      C                   SELECT                                                             MD060441
-     C     DSSPIN        WHENEQ    'A'                                                      MD060441
-     C                   ADD       DSRTSP        wrkAllInRate                               MD060441
-     C     DSSPIN        WHENEQ    'S'                                                      MD060441
-     C                   SUB       DSRTSP        wrkAllInRate                               MD060441
-     C     DSSPIN        WHENEQ    'P'                                                      MD060441
-     C     DSRTSP        DIV       100           WRK_139          13 9                      MD060441
+     C*****DSSPIN        WHENEQ    'A'                                             MD060441 MD061389
+     C**********         ADD       DSRTSP        wrkAllInRate                      MD060441 MD061389
+     C     wrkSpreadInd  WHENEQ    'A'                                                      MD061389
+     C                   ADD       wrkSpread     wrkAllInRate                               MD061389
+     C*****DSSPIN        WHENEQ    'S'                                             MD060441 MD061389
+     C**********         SUB       DSRTSP        wrkAllInRate                      MD060441 MD061389
+     C     wrkSpreadInd  WHENEQ    'S'                                                      MD061389
+     C                   SUB       wrkSpread     wrkAllInRate                               MD061389
+     C*****DSSPIN        WHENEQ    'P'                                             MD060441 MD061389
+     C*****DSRTSP        DIV       100           WRK_139          13 9             MD060441 MD061389
+     C     wrkSpreadInd  WHENEQ    'P'                                                      MD061389
+     C     wrkSpread     DIV       100           WRK_139          13 9                      MD061389
      C                   MULT(H)   WRK_139       wrkAllInRate                               MD060441
-     C     DSSPIN        WHENEQ    *BLANK                                                   MD060441
-     C                   ADD       DSRTSP        wrkAllInRate                               MD060441
+     C*****DSSPIN        WHENEQ    *BLANK                                                   MD060441
+     C**********         ADD       DSRTSP        wrkAllInRate                               MD060441
+     C     wrkSpreadInd  WHENEQ    *BLANK                                                   MD061389
+     C                   ADD       wrkSpread     wrkAllInRate                               MD061389
      C                   ENDSL                                                              MD060441
      C                   Z-ADD     0             ZFLD15                                     MD060441
      C                   MOVE      wrkAllInRate  ZFLD15                                     MD060441

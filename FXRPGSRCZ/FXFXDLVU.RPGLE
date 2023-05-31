@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 252024             Date 03Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. 252024             Date 03Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
@@ -120,6 +121,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
@@ -1584,6 +1586,13 @@
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
+      *                                                                                     MD049123
+      ** Return back Customer Number to DDCUST field for amend validation                   MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDCUST        #DDCUST          10                        MD049123
+     C                   MOVEL     *BLANKS       DDCUST                                     MD049123
+     C                   MOVEL     F3DCNO        DDCUST                                     MD049123
+      *                                                                                     MD049123
      C                   CALLB     'FXFXDLAMD'
 
       * INPUTS
@@ -1618,6 +1627,9 @@
      C                   PARM      'Y'           ResetErrs         1
      C                   PARM                    InCDL099                                     CDL099
      C                   PARM                    OutCDL099                                    CDL099
+      *                                                                                     MD049123
+     C                   MOVEL     *BLANKS       DDCUST                                     MD049123
+     C                   MOVEL     #DDCUST       DDCUST                                     MD049123
 
      C                   ENDSR
       *****************************************************************

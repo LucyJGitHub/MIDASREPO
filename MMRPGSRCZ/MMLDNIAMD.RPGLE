@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR797731           Date 02Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD049123B          Date 25May23               *
+      *  Prev Amend No. MD049123           Date 25May23               *
+      *                 AR797731           Date 02Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Mar15               *
@@ -81,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123B - Error when amending rollover deal.               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  AR797731 - Error in the MM Maintenance Screen. Reverse       *
       *             BUG5169. Part of CDL020's functionality is to     *
       *             give the user option to amend the system          *
@@ -658,7 +662,8 @@
      C**  and is only amendable for status C if this is indicated on
      C**  MMCDAFLL.
      C*
-     C     DDCUST        IFNE      @DDCUST
+     C*****DDCUST        IFNE      @DDCUST                                                  MD049123
+     C     DDCUST        IFNE      HKCNUM                                                   MD049123
      C*
      C     HKDSTS        IFNE      'C'
      C                   ADD       1             Idx
@@ -1329,7 +1334,8 @@
      C     DDDADN        IFNE      *BLANKS
      C     DDDADN        ANDNE     *ZEROS
      C     @DDTYPE       IFNE      DDTYPE
-     C     @DDCUST       ORNE      DDCUST
+     C*****@DDCUST*      ORNE      DDCUST                                                  MD049123B
+     C     HKCNUM        ORNE      DDCUST                                                  MD049123B
      C     @DDCCY        ORNE      DDCCY
      C     @DDBRCA       ORNE      DDBRCA
      C                   ADD       1             Idx

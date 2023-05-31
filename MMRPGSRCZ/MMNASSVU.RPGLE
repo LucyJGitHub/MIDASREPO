@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 CDL051             Date 02May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  CDL051 - Incomplete Deals to Repair                          *
@@ -1416,6 +1418,17 @@
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
+      *                                                                                     MD049123
+      ** Return back Customer Number to DDCUST field if valid                               MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDCSNM        #DDCSNM          10                        MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     ILCNUM        DDCSNM                                     MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDISUR        #DDISUR          10                        MD049123
+     C                   MOVEL     *BLANKS       DDISUR                                     MD049123
+     C                   MOVEL     ILISCN        DDISUR                                     MD049123
+      *                                                                                     MD049123
      C                   CALLB     'MMNASSAMD'
       * INPUTS
       * Return Code
@@ -1441,6 +1454,11 @@
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1                          CDL038
      C*******************PARM      'N'           ResetErrs         1                          CDL038
+      *                                                                                     MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     #DDCSNM       DDCSNM                                     MD049123
+     C                   MOVEL     *BLANKS       DDISUR                                     MD049123
+     C                   MOVEL     #DDISUR       DDISUR                                     MD049123
 
       * If any errors overwrite previous error information
      C                   IF        AmIdx <> 0

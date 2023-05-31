@@ -38,6 +38,8 @@
       *                                                               *
       *   MD061211 - Cannot close GL Account attached to a valid      *
       *              closed Portfolio.                                *
+      *            - Do not issue the closed Portfolio error if the   *
+      *              action code is delete.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  249245 - Applied fix 225809.                                 *
@@ -66,7 +68,7 @@
       *****************************************************************
      FPMPORTLL  IF   E           K DISK    INFSR(*PSSR)
      FACCPTFR   IF   E           K DISK    INFSR(*PSSR)                         178695
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -85,52 +87,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -148,48 +150,48 @@
      D  O#BICN                 7     12
      D  O#CRNM                13     22
      D  O#ACOF                23     24
- 
+
       ** External data structure for customer details file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for profit centres file
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** External data structure for account codes file
      D SDACOD        E DS                  EXTNAME(SDACODPD)
- 
+
       ** External data structure for portfolio management customer dtl file
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
- 
+
       ** External data structure for portfolio lending customer detail file
      D SDLBCS        E DS                  EXTNAME(SDLBCSPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                 CPB001
       ** External data structure for access programs (very long)                CPB001
      D DSLDY         E DS                  EXTNAME(DSLDY)                       CPB001
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CGL029
      D @ACOD           S             10                                                       CGL029
      D DDACOD          S             10                                                       CGL029
      D WWACOD          S             10  0                                                    CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -204,9 +206,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Movel     *Blanks       RetCodeIn
      C                   Movel     *Blanks       FldNamXAr
      C                   Movel     *Blanks       MsgIDXAr
@@ -706,7 +708,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -774,9 +776,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

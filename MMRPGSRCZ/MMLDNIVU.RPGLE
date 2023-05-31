@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049123           Date 25May23               *
-      *  Prev Amend No. MD033687A          Date 08Feb23               *
+      *  Last Amend No. MD048034           Date 31May23               *
+      *  Prev Amend No. MD049123           Date 25May23               *
+      *                 MD033687A          Date 08Feb23               *
       *                 MD060788           Date 08Feb23               *
       *                 252024             Date 14Feb08               *
       *                 MD059304           Date 26Jan22               *
@@ -152,6 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048034 - MM transaction stuck with Requires Reauthorization*
+      *           - Ensure that DDCUST field contains customer number *
       *  MD049123 - Added process for Customer Number formatting.     *
       *  MD033687A - Program Accepts duplicate Schedule Dates. Added  *
       *              checking for duplicate Dates.                    *
@@ -2610,6 +2613,13 @@
       ** Called from confirmation screen?                                                   MD058540
      C                   PARM      'N'           PCONF             1                        MD058540
      C/COPY WNCPYSRC,MMLDNIXC04
+      *                                                                                     MD048034
+      ** Return back Customer Number to DDCUST field if valid                               MD048034
+      *                                                                                     MD048034
+     C     IKCNUM        IFNE      *BLANKS                                                  MD048034
+     C                   MOVEL     *BLANKS       @DDCUST                                    MD048034
+     C                   MOVEL     IKCNUM        @DDCUST                                    MD048034
+     C                   ENDIF                                                              MD048034
       *                                                                                       CDL016
       * If errors bypass Screen 2 validation                                                  CDL016
       *                                                                                       CDL016

@@ -38,6 +38,8 @@
       *                                                               *
       *   MD061211 - Cannot close GL Account attached to a valid      *
       *              closed Portfolio.                                *
+      *            - Do not issue the closed Portfolio error if the   *
+      *              action code is delete.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  249245 - Applied fix 225809.                                 *

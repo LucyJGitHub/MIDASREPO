@@ -542,12 +542,13 @@
      C                   ENDIF                                                  CPB001
      C                   MOVE      DDPTFR        PREF              4
      C     POKEY         CHAIN     PMPORTLL                           80
-     C******IN80         IFEQ      '1'                                                      MD061211
-     C**********         Move      'N'           DDPTFROK                                   MD061211
-     C**********         Add       1             Idx                                        MD061211
-     C**********         Movel     'DDPTFR'      FldNamXAr(Idx)                             MD061211
-     C**********         Movel     'RE71117'     MsgIdXAr(Idx)                              MD061211
-     C**********         END                                                                MD061211
+     C     *IN80         IFEQ      '1'
+     C     DDACTN        ANDNE     'D'                                                      MD061211
+     C                   Move      'N'           DDPTFROK
+     C                   Add       1             Idx
+     C                   Movel     'DDPTFR'      FldNamXAr(Idx)
+     C                   Movel     'RE71117'     MsgIdXAr(Idx)
+     C                   END
      C*
      C     PNDPCL        IFNE      *ZERO
      C     FLAG          IFEQ      *BLANK

@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056644           Date 14Oct20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061156           Date 19May23               *
+      *  Prev Amend No. MD056644A          Date 19May23               *
+      *                 MD056644           Date 14Oct20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
@@ -53,6 +55,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061156 - Ensure that SETTLE record will be generated with  *
+      *             Maturity falling on holiday and the current ANWD  *
+      *             is 1.                                             *
+      *  MD056644A - Incorrect field Short Term rate (field Short Term*
+      *              rate is not amendable). Reopen.                  *
+      *            - Ensure SETTLE record will not be generated when  *
+      *              deal's OUR/THEIRS Interest Payment Dates has no  *
+      *              entry.                                           *
+      *            - Applied for MD-61156.                            *
       *  MD056644 - Incorrect field Short Term rate (field Short Term *
       *             rate is not amendable).                           *
       *           - Ensure SETTLE record is generated for deals with  *
@@ -680,6 +691,10 @@
      C                             UNIPD <> MDAT) OR                                        MD056644
      C                             (WOTIN = 'THEIR' AND WDAYS = TNIPD AND                   MD056644
      C                             TNIPD <> MDAT)                                           MD056644
+     C                             OR (WOTIN = 'OUR' AND WDAYS = UNIPD AND                  MD061156
+     C                             UNIPD = MDAT AND BKANWD='1')                             MD061156
+     C                             OR (WOTIN = 'THEIR' AND WDAYS = TNIPD AND                MD061156
+     C                             TNIPD = MDAT AND BKANWD='1')                             MD061156
      C                   EVAL      PHDAY = 'Y'                                              MD056644
      C                   EVAL      PDATE = WDAYS                                            MD056644
      C                   EXSR      SRSTAN                                                   MD056644
@@ -842,7 +857,9 @@
      C*****BJRDNB        OREQ      MDAT                                                     MD056644
      C                   IF        (BJRDNB = UNIPD) OR                                      MD056644
      C                             (WPHDAY = 'Y' AND UNIPD = PDATE) OR                      MD056644
-     C                             (WPHDAY = 'N' AND UNIPD < BJRDNB) OR                     MD056644
+     C**********                   (WPHDAY = 'N' AND UNIPD < BJRDNB) OR           MD056644 MD056644A
+     C                             (WPHDAY = 'N' AND UNIPD < BJRDNB AND                    MD056644A
+     C                              UNIPD <> 0) OR                                         MD056644A
      C                             (BJRDNB = MDAT) OR                                       MD056644
      C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
      C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644
@@ -855,7 +872,9 @@
      C*****BJRDNB        OREQ      MDAT                                                     MD056644
      C                   IF        (BJRDNB = TNIPD) OR                                      MD056644
      C                             (WPHDAY = 'Y' AND TNIPD = PDATE) OR                      MD056644
-     C                             (WPHDAY = 'N' AND TNIPD < BJRDNB) OR                     MD056644
+     C**********                   (WPHDAY = 'N' AND TNIPD < BJRDNB) OR           MD056644 MD056644A
+     C                             (WPHDAY = 'N' AND TNIPD < BJRDNB AND                    MD056644A
+     C                              TNIPD <> 0) OR                                         MD056644A
      C                             (BJRDNB = MDAT) OR                                       MD056644
      C                             (MDAT > L1BSDT AND MDAT < BJRDNB) OR                     MD056644
      C                             (WPHDAY = 'Y' AND MDAT = PDATE)                          MD056644

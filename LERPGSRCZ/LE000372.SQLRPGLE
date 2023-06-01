@@ -523,9 +523,15 @@
      C                   EVAL      P1INTR  = *Blanks
      C                   ENDIF
 
+     C                   IF        (DSCALM = 'NCCR' OR DSCALM = 'SARR')                     MD061389
      C/exec SQL
      C+ close FWCursor
      C/end-exec
+     C                   ELSE                                                               MD061389
+     C/exec SQL                                                                             MD061389
+     C+ close HSCursor                                                                      MD061389
+     C/end-exec                                                                             MD061389
+     C                   ENDIF                                                              MD061389
 
       ** Principal Amount
      C                   EVAL      P1CCY  = DSccy

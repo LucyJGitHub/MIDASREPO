@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR316373           Date 03Jun15              */
+/*       Last Amend No. EML102             Date 28Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR316373           Date 03Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -49,6 +50,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       EML102 - Upgrade of UNL007 to FB2.1 SP23                    */
+/*                UNL007 - Extended Narratives                       */
+/*                   Use /COPY GLC442INT, GLC442MPS)                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
 /*                  MLCOVROVR.                                       */
@@ -118,7 +122,7 @@
                           2001')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(1)   VALUE('0')
              DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)                 /*S01117*/
- 
+
 /* THE FOLLOWING LINES ADDED FOR USER DEFINED MENUS               */  /*S01253*/
 /************DCL********VAR(&MULT) TYPE(*CHAR) LEN(2)          /*S01253 CUT004*/
 /************DCL********VAR(&ZZMSGF) TYPE(*CHAR) LEN(8)        /*S01253 CUT004*/
@@ -158,15 +162,15 @@
 /**********  DCL        VAR(&MITEM) TYPE(*CHAR) LEN(9)                         /*124565*/ /*CSF002*/
              DCL        VAR(&MITEM) TYPE(*CHAR) LEN(10)                                   /*CSF002*/
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
- 
+
 /*/COPY MLCPYSRC,MLCOVRDCL                                         */ /*CUT004*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC442INT                                    */      /*S01408*/
 /**/                                                                  /*S01408*/
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
 /**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))     *093982  CPK009*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CPK009*/
@@ -214,7 +218,7 @@
                           error during re-routing of job */           /*LN1273*/
              ENDDO                                                    /*LN1273*/
              ENDDO                                                    /*LN1273*/
- 
+
 /************CALL*******PGM(SD2320) PARM(&GROUP &USER &SLEVEL &TIMEO  +
  *************************&ERRORC &MULT)           *****/  /*S01253*/ /*S01314*/
 /************CALL*******PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +*CUT004*/
@@ -223,7 +227,7 @@
 /************IF*********COND(&MULT *EQ '  ') THEN(DO)          /*S01314 CUT004*/
 /************CHGVAR*****VAR(&MULT) VALUE('GB')                 /*S01314 CUT004*/
 /************ENDDO******                                       /*S01314 CUT004*/
- 
+
 /* Retrieve data areas for Multiple Language Support */               /*088222*/
                                                                       /*088222*/
 /************RTVDTAARA**DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*088222 CUT004*/
@@ -255,7 +259,7 @@
 /*****CHGVAR*****VAR(&FTUSRMSG) VALUE(&MULT *CAT 'FTUSRMSG  ') /*088222 CUT004*/
 /*****CHGVAR*****VAR(&REUSRLG) VALUE(&MULT *CAT 'REUSRMSG  ')  /*088222 CUT004*/
 /*****CHGVAR*****VAR(&REPTMSGF) VALUE(&MULT *CAT 'REPTMSGF  ') /*088222 CUT004*/
- 
+
 /************OVRMSGF****MSGF(ZZGBMSGF) TOMSGF(&ZZMSGF)         /*S01253 CUT004*/
 /************OVRMSGF****MSGF(FCUSRMSG) TOMSGF(&FCUSRLG)        /*LN1245 CUT004*/
 /************OVRMSGF****MSGF(&Y2MGFLA10) TOMSGF(&SDUSRLG)      /*088222 CUT004*/
@@ -278,11 +282,11 @@
 /************OVRMSGF****MSGF(FTUSRMSG) TOMSGF(&FTUSRMSG)       /*088222 CUT004*/
 /************OVRMSGF****MSGF(REUSRMSG) TOMSGF(&REUSRLG)        /*088222 CUT004*/
 /************OVRMSGF****MSGF(REPTMSGF) TOMSGF(&REPTMSGF)       /*088222 CUT004*/
- 
+
 /*/COPY MLCPYSRC,MLCOVROVR                                         */ /*CUT004*/
                                                                       /*088222*/
 /* Create the Midas Information Screen data area */                   /*088222*/
- 
+
 /*/COPY WNCPYSRC,GLC442001                                           */
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ') TEXT('Midas SC Midas +
@@ -308,7 +312,7 @@
 /**   (ii)   A database error occured within the enquiry       */
 /**   (iii)  A program crash occured within the enquiry        */
 /**/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC442MP1                                    */      /*S01408*/
 /**/                                                                  /*S01408*/
@@ -322,38 +326,38 @@
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC442MP2                                    */      /*S01408*/
 /**/                                                                  /*S01408*/
- 
- 
+
+
 /**/
 /**  If a data base error occured within the enquiry program   */
 /**  then the error will be handled by the group job program   */
 /**  GLC440.  An error may also of occured in a program called */
 /**  from within the enquiry, if so switch '1' will be set ON. */
 /**/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(CHGVAR +
                           VAR(&RTNCDE) VALUE('1'))
              ELSE
                IF         COND(%SWITCH(1XXXXXXX)) THEN(CHGVAR +
                             VAR(&RTNCDE) VALUE('3'))
- 
+
              GOTO       CMDLBL(RETRN)
- 
- 
+
+
 /**/
 /**  If an error other than a data base error occurs then      */
 /**  again GLC440 will handle it by producing a job log        */
 /**/
- 
+
  ABNOR:      CHGVAR     VAR(&RTNCDE) VALUE('2')
- 
+
 /**/
 /**  Before returning to the controling program ensure that    */
 /**  *GDA contains the contents of *LDA and the end status     */
 /**  of this program.                                          */
 /**/
- 
- 
+
+
  RETRN:      CALL       PGM(GLC440A) PARM('O')
 /*********** CHGDTAARA  DTAARA(*GDA (1 1)) VALUE(&RTNCDE)             /*S01405*/
 /*********** TFRGRPJOB  GRPJOB(GLCJOB0)                               /*S01405*/
@@ -366,7 +370,7 @@
                   DMPCLPGM                                            /*059231*/
                   GOTO       CMDLBL(ENDCL)                            /*059231*/
              ENDDO                                                    /*059231*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /************ENDPGM                                                */ /*059231*/

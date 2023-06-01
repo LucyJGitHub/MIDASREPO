@@ -2,6 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
+/*EXI *  ALWNULL(*USRCTL)                                             *                      CER073D
 /*EXI *  TEXT('Generated Code')                                       *
       *****************************************************************
       *                                                               *
@@ -11,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER073D            Date 13Aug20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073  *CREATE    Date 10Jul17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
+      *      EML014 - AnaCredit Reporting Enhancement                 *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -26,9 +30,11 @@
       *                                                               *
       *****************************************************************
 
-     FSDANACI1  IP  AE           K DISK    RENAME(SDANACD0   : FormatZON)
+     F**********SDANACI1  IP  AE           K DISK    RENAME(SDANACD0   : FormatZON)          CER073D
+     FSDANACI1  IF   E           K DISK    RENAME(SDANACD0   : FormatZON)                    CER073D
      F                                     INFSR(*PSSR)
-     FGZSDANACI0IS  AE           K DISK    RENAME(SDANACD0   : FormatGLB)
+     F**********GZSDANACI0IS  AE           K DISK    RENAME(SDANACD0   : FormatGLB)          CER073D
+     FGZSDANACI0IF   E           K DISK    RENAME(SDANACD0   : FormatGLB)                    CER073D
      F                                     PREFIX(G_)
      F                                     INFSR(*PSSR)
      FGPSBLOGL0 UF A E           K DISK    INFSR(*PSSR)
@@ -76,36 +82,97 @@
      D  END_MM                 3      4S 0
      D  END_SS                 5      6S 0
 
-     IFormatZON     01
-     I                                          ACBRCD        L1M2
-     I                                          ACCUSN        L1M1
-     IFormatGLB     02
-     I                                          G_ACBRCD      L1M2
-     I                                          G_ACCUSN      L1M1
+     I**********FormatZON     01                                                             CER073D
+     I**********                                ACBRCD        L1M2                           CER073D
+     I**********                                ACCUSN        L1M1                           CER073D
+     I**********FormatGLB     02                                                             CER073D
+     I**********                                G_ACBRCD      L1M2                           CER073D
+     I**********                                G_ACCUSN      L1M1                           CER073D
 
-     C     *INMR         IFEQ      *OFF
-     C     *IN01         IFEQ      *ON
-     C                   MOVEL     Z_SDANACI1    G_SDANACI1
-     C                   EVAL      G_ACBRCD      = ACBRCD
-     C                   EVAL      I#BFAF = 'A'
-     C                   EXSR      UPD_GLOBALFILE
-     C                   ELSE
-     C                   EVAL      I#BFAF = 'B'
-     C                   EXSR      UPD_GLOBALFILE
-     C                   ENDIF
-     C                   ELSE
-     C   02              MOVE      ACBRCD        G_ACBRCD
-     C     Z_SDANACI1    IFNE      G_SDANACI1
-     C   02              MOVEL     Z_SDANACI1    G_SDANACI1
-     C   02              EVAL      G_ACBRCD      = ACBRCD
-     C   02              EVAL      I#BFAF = 'A'
-     C   02              EXSR      UPD_GLOBALFILE
-     C                   ELSE
-     C   02              MOVE      *OFF          *IN02
-     C                   ENDIF
-     C                   ENDIF
+     C******INMR         IFEQ      *OFF                                                      CER073D
+     C******IN01         IFEQ      *ON                                                       CER073D
+     C**********         MOVEL     Z_SDANACI1    G_SDANACI1                                  CER073D
+     C**********         EVAL      G_ACBRCD      = ACBRCD                                    CER073D
+     C**********         EVAL      I#BFAF = 'A'                                              CER073D
+     C**********         EXSR      UPD_GLOBALFILE                                            CER073D
+     C**********         ELSE                                                                CER073D
+     C**********         EVAL      I#BFAF = 'B'                                              CER073D
+     C**********         EXSR      UPD_GLOBALFILE                                            CER073D
+     C**********         ENDIF                                                               CER073D
+     C**********         ELSE                                                                CER073D
+     C***02*****         MOVE      ACBRCD        G_ACBRCD                                    CER073D
+     C*****Z_SDANACI1    IFNE      G_SDANACI1                                                CER073D
+     C***02*****         MOVEL     Z_SDANACI1    G_SDANACI1                                  CER073D
+     C***02*****         EVAL      G_ACBRCD      = ACBRCD                                    CER073D
+     C***02*****         EVAL      I#BFAF = 'A'                                              CER073D
+     C***02*****         EXSR      UPD_GLOBALFILE                                            CER073D
+     C**********         ELSE                                                                CER073D
+     C***02*****         MOVE      *OFF          *IN02                                       CER073D
+     C**********         ENDIF                                                               CER073D
+     C**********         ENDIF                                                               CER073D
+      *                                                                                      CER073D
+     C     KAnac         KList                                                               CER073D
+     C                   Kfld                    ACBrcd                                      CER073D
+     C                   Kfld                    ACCusn                                      CER073D
+      *                                                                                      CER073D
+     C                   movea     '00'          *IN(01)                                     CER073D
+     C     *LOVAL        SETLL     SDANACI1                                                  CER073D
+     C                   READ      FormatZon                              20                 CER073D
+      *                                                                                      CER073D
+     C     *In20         Doweq     *Off                                                      CER073D
+      *                                                                                      CER073D
+     C     KAnac         Chain     GZSDANACI0                         21                     CER073D
+      *                                                                                      CER073D
+     C     *In21         Ifeq      *Off                                                      CER073D
+     C                   movea     '11'          *IN(01)                                     CER073D
+     C                   else                                                                CER073D
+     C                   movea     '10'          *IN(01)                                     CER073D
+     C                   Endif                                                               CER073D
+      *                                                                                      CER073D
+     C                   Movel     Z_SDANACI1    G_SDANACI1                                  CER073D
+     C                   Eval      G_ACBRCD      = ACBRCD                                    CER073D
+     C                   Eval      I#BFAF = 'A'                                              CER073D
+     C                   Exsr      UPD_GLOBALFILE                                            CER073D
+      *                                                                                      CER073D
+     C                   Exsr      UPD_SYNTOT                                                CER073D
+     C                   Read      FormatZon                              20                 CER073D
+     C                   movea     '00'          *IN(01)                                     CER073D
+     C                   Enddo                                                               CER073D
+      *                                                                                      CER073D
+     C     KGAnac        KList                                                               CER073D
+     C                   Kfld                    G_ACBrcd                                    CER073D
+     C                   Kfld                    G_ACCusn                                    CER073D
+      *                                                                                      CER073D
+     C                   movea     '00'          *IN(01)                                     CER073D
+     C     *LOVAL        SETLL     GZSDANACI0                                                CER073D
+     C                   READ      FormatGlb                              20                 CER073D
+      *                                                                                      CER073D
+     C     *In20         Doweq     *Off                                                      CER073D
+      *                                                                                      CER073D
+     C     KGAnac        Chain     SDANACI1                           21                     CER073D
+      *                                                                                      CER073D
+     C     *In21         Ifeq      *Off                                                      CER073D
+     C                   movea     '11'          *IN(01)                                     CER073D
+     C                   else                                                                CER073D
+     C                   movea     '01'          *IN(01)                                     CER073D
+     C                   Endif                                                               CER073D
+      *                                                                                      CER073D
+     C     *IN21         Ifeq      *On                                                       CER073D
+     C                   Eval      I#BFAF = 'B'                                              CER073D
+     C                   Exsr      UPD_GLOBALFILE                                            CER073D
+     C                   Endif                                                               CER073D
+      *                                                                                      CER073D
      C                   EXSR      UPD_SYNTOT
-     CLR                 EXSR      WRT_SYNLOG
+     C                   Read      FormatGlb                              20                 CER073D
+     C                   movea     '00'          *IN(01)                                     CER073D
+     C                   Enddo                                                               CER073D
+      *                                                                                      CER073D
+     C***LR*****            EXSR      WRT_SYNLOG                                             CER073D
+     C                   EXSR      WRT_SYNLOG                                                CER073D
+      *                                                                                      CER073D
+     C                   Unlock    GPSBLOGL0                                                 CER073D
+     C                   Seton                                        LR                     CER073D
+     C                   Return                                                              CER073D
      C/SPACE 5
       ********************************************************************
       * Update Global File
@@ -138,7 +205,8 @@ B    C     *IN99         IFEQ      *OFF
      C                   MOVEL     SL(I)         SYNLOGREC
      C                   ENDIF
 
-     C     *INMR         IFEQ      *OFF
+     C******INMR         IFEQ      *OFF                                                      CER073D
+     C     *IN21         Ifeq      *On                                                       CER073D
      C     *IN01         IFEQ      *ON
      C                   ADD       1             BSCNTW
      C                   ADD       1             T_BSCNTW

@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD055330           Date 14Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056875           Date 22Sep20               *
+      *  Prev Amend No. CER076             Date 12Aug20               *
+      *                 MD055330           Date 14Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26298           Date 06Oct09               *
@@ -25,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056785 - Amend record length in accordance with ERCRCBPD   *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
       *  MD055330 - ERC0100 continuously running during COB           *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
@@ -79,7 +84,8 @@
       ** ERCRCDPD - Record type 'C' workfile
       *
      F***ERCRCDPD  UF A F 2000        DISK    INFSR(*PSSR)                                  MD055330
-     FERCRCDPD  UF A F 1086        DISK    INFSR(*PSSR)                                     MD055330
+     F***ERCRCDPD  UF A F 1086        DISK    INFSR(*PSSR)                         MD055330 MD056875
+     FERCRCDPD  UF A F 1145        DISK    INFSR(*PSSR)                                     MD056875
      F                                     USROPN
       *                                                                                     BUG26298
       ** ERCRBTPD - Midas @24 KWG transmission file                                         BUG26298
@@ -146,7 +152,8 @@
       ** Variables For Output Specification
       *
      D***CRcdData       S           2000A                                                   MD055330
-     D  CRcdData       S           1086A                                                    MD055330
+     D***CRcdData       S           1086A                                          MD055330 MD056875
+     D  CRcdData       S           1145A                                                    MD056875
       *
       *****************************************************************
       /EJECT
@@ -156,7 +163,8 @@
       *
      IERCRCDPD  NS
      I**********                        1 2000  CRcdData                                    MD055330
-     I                                  1 1086  CRcdData                                    MD055330
+     I**********                        1 1086  CRcdData                           MD055330 MD056875
+     I                                  1 1145  CRcdData                                    MD056875
       *
       *****************************************************************
       /EJECT
@@ -278,6 +286,12 @@
      C                   EVAL      F1CZIP = %TRIM(F13ZIP)                                   BUG26298
      C                   EVAL      F1CTWN = %TRIM(F13TWN)                                   BUG26298
      C                   EVAL      F1CCTY = %TRIM(F13CTY)                                   BUG26298
+     C                   EVAL      BF1TINO = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      TF1TINO = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      F1TINO  = %TRIM(%SUBST(F13TINO:1:11))                      CER076
+     C                   EVAL      BF1EINO = %TRIM(F13EINO)                                   CER076
+     C                   EVAL      TF1EINO = %TRIM(F13EINO)                                   CER076
+     C                   EVAL      F1EINO  = %TRIM(F13EINO)                                   CER076
       *
      C                   IF        F13BDT <> 0
       *

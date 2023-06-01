@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. EML104             Date 05Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL152             Date 02Dec13               *
       *                 CER059             Date 19Jul10               *
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_023, EML104_024, EML104_025, EML104_026  *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  MD046248 - Finastra Rebranding                               *
@@ -287,6 +291,7 @@
      C                   EVAL      PNwrk = F0NWRK                                             CER030
      C                   EVAL      PCopy = D1MCNW                                             CER030
       *                                                                                       CER030
+     C/COPY WNCPYSRC,EML104_023                                                               EML104
      C                   CALL      'SD200099'                                                 CER030
      C                   PARM                    PBasNw                                       CER030
      C                   PARM                    PNwrk                                        CER030
@@ -387,6 +392,7 @@
      C                   IF        F1PASN = *Blank
      C                   EVAL      F1PASN = 'Y'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_024                                                               EML104
       *                                                                                       CER030
       ** Length of alternate Transaction type: Default is 3 (Multicash                        CER030
       ** and SWIFT)                                                                           CER030
@@ -451,6 +457,7 @@
       *
  B1  C                   IF        WdwRtCd <> *Blanks
      C                   ROLBK
+     C/COPY WNCPYSRC,EML104_025                                                               EML104
 
  B2  C                   IF        WdwRtCd <> 'USR0790'
      C                   EVAL      *INKC = *On
@@ -648,6 +655,7 @@
      C                   EVAL      CMG008 = 'Y'                                               CMG008
      C                   EVAL      *IN89 = *ON                                                CMG008
      C                   ENDIF                                                                CMG008
+     C/COPY WNCPYSRC,EML104_026                                                               EML104
       *    ----------    ------
      C     @INZSR        ENDSR
 

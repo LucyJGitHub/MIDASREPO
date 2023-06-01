@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EML108             Date 15Jan20             */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*                                         Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01416  *CREATE    Date 17May93              */
@@ -22,6 +23,11 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       EML108 - Upgrade FMD003 to FBM2.1SP21                      */
+/*                Added hooks EML018_009 -> 021                     */
+/*                Amended core hooks MCC84001, MCC84002, MCC84004 & */
+/*                MCC84005                                          */
+/*       FMD003 - Management Accounts Automatic Balance Update      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Code to 10 digits                 */
 /*       S01416 - Account Balances Report                           */
@@ -52,9 +58,11 @@
              DCL        VAR(&RSLV) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RPCD) TYPE(*CHAR) LEN(1)
 /**/
+/*/COPY WNCPYSRC,EML108_009                                          */                   /*EML108*/
              DCL        VAR(&OPQF) TYPE(*CHAR) LEN(1000)
+/*/COPY WNCPYSRC,EML108_010                                          */                   /*EML108*/
              DCL        VAR(&EVCD) TYPE(*CHAR) LEN(15)
- 
+
              DCL        VAR(&MCGRP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&MCRPNC) TYPE(*CHAR) LEN(4) VALUE('    ')
              DCL        VAR(&MCRPNB) TYPE(*DEC) LEN(3) VALUE(0)
@@ -94,6 +102,7 @@
                           Amount's field name */
              DCL        VAR(&ENAM2) TYPE(*CHAR) LEN(10) /*       +
                           Amount's field name */
+/*/COPY WNCPYSRC,EML108_011                                          */                   /*EML108*/
              DCLF       FILE(GLPERDL5) /*        Period file */
 /**/
 /* Global monitor message */
@@ -121,9 +130,10 @@
              CHGVAR     VAR(&MCTRM2) VALUE(%SST(&RPARM 12 1))
              CHGVAR     VAR(&MCTYP) VALUE(%SST(&RPARM 13 1))
              CHGVAR     VAR(&MCANL) VALUE(%SST(&RPARM 14 9))
- 
+/*/COPY WNCPYSRC,EML108_012                                          */                   /*EML108*/
+
 /* Access Term From and to Dates */
- 
+
              CALL       PGM(AOHBCGR0) PARM(&RTCD '*KEY' &MCGRP +
                           &DSFDY)
              CHGVAR     VAR(&PKEY) VALUE(%SST(&DSFDY 33 1))
@@ -131,9 +141,10 @@
              CHGVAR     VAR(&MCRPNB) VALUE(&MCRPNC)
              CALL       PGM(AORPERR0) PARM(&RTCD '*SETLL' &PKEY   +
                           &MCRPNB  &DSFDY)
- 
+/*/COPY WNCPYSRC,EML108_013                                          */                   /*EML108*/
+
              RCVF
- 
+
              IF         COND(&MCTRM1 *EQ 'Y') THEN(CHGVAR VAR(&DATS) +
                           VALUE(&DTSOYD))
              IF         COND(&MCTRM1 *EQ '1') THEN(CHGVAR VAR(&DATS) +
@@ -143,7 +154,7 @@
              IF         COND(&MCTRM1 *EQ 'P') THEN(CHGVAR VAR(&DATS) +
                           VALUE(&DTSPDD))
              CHGVAR     VAR(&DATF1) VALUE(&DATS)
- 
+
              IF         COND(&MCTRM2 *NE ' ') THEN(DO)
              IF         COND(&MCTRM2 *EQ 'Y') THEN(CHGVAR VAR(&DATS) +
                           VALUE(&DTSOYD))
@@ -155,13 +166,13 @@
                           VALUE(&DTSPDD))
              CHGVAR     VAR(&DATF2) VALUE(&DATS)
              ENDDO
- 
+
              CHGVAR     VAR(&DATT) VALUE(&DTEPDD)
              CHGVAR     VAR(&EVCD) VALUE(&DATT *TCAT &DATF1 *TCAT +
                           &DATF2)
- 
+
 /* If type parameter is B (balance), set field name to closing bal */
- 
+
              IF         COND(&MCTYP *EQ 'B') THEN(CHGVAR VAR(&ENAM1) +
                           VALUE('HBPDCB'))
              ELSE       CMD(DO)
@@ -175,7 +186,7 @@
                           THEN(CHGVAR VAR(&ENAM1) VALUE('HBWT1B'))
              IF         COND(&MCTYP *EQ 'A' *AND &MCTRM1 *EQ '2') +
                           THEN(CHGVAR VAR(&ENAM1) VALUE('HBWT2B'))
- 
+
              IF         COND(MCTRM2 *NE ' ') THEN(DO)
              IF         COND(&MCTYP *EQ 'A' *AND &MCTRM2 *EQ 'P') +
                           THEN(CHGVAR VAR(&ENAM2) VALUE('HBWPBL'))
@@ -186,7 +197,7 @@
              IF         COND(&MCTYP *EQ 'A' *AND &MCTRM2 *EQ '2') +
                           THEN(CHGVAR VAR(&ENAM2) VALUE('HBWT2B'))
              ENDDO
- 
+
 /* If type parameter is M (movements), set work amount to selected */
 /* movement field */
              IF         COND(&MCTYP *EQ 'M' *AND &MCTRM1 *EQ 'P') +
@@ -197,7 +208,7 @@
                           THEN(CHGVAR VAR(&ENAM1) VALUE('HBT1MT'))
              IF         COND(&MCTYP *EQ 'M' *AND &MCTRM1 *EQ '2') +
                           THEN(CHGVAR VAR(&ENAM1) VALUE('HBT2MT'))
- 
+
              IF         COND(MCTRM2 *NE ' ') THEN(DO)
              IF         COND(&MCTYP *EQ 'M' *AND &MCTRM2 *EQ 'P') +
                           THEN(CHGVAR VAR(&ENAM2) VALUE('HBPMTD'))
@@ -209,33 +220,34 @@
                           THEN(CHGVAR VAR(&ENAM2) VALUE('HBT2MT'))
              ENDDO
              ENDDO
- 
+
              IF         COND(&ENAM2 *EQ ' ') THEN(CHGVAR VAR(&ENAM2) +
                           VALUE('0'))
- 
+/*/COPY WNCPYSRC,EML108_014                                          */                   /*EML108*/
+
 /* Set up OPNQRYF parameter for QCMDEXC */
              CHGVAR     VAR(&OPQF) VALUE('OPNQRYF')
- 
+
 /* Set up files to use (use GLHIBLPD member for group code). Join to */
 /* SDACRCPD for report set if report set parameter is not 'C', and   */
 /* to SDBRCHL1 for company if report level is 'C'.                   */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT +
                           'FILE((GLHIBLPD' *BCAT &MCGRP *TCAT ')')
- 
+
              IF         COND(&RSNO *NE 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(SDACRCPD)'))
- 
+
              IF         COND(&RLEV *EQ 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(SDBRCHPD)'))
- 
+
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *TCAT ')')
- 
+
 /*/COPY WNCPYSRC,MCC84001                                            */
 /* Set up format to use (MCBLRPPD) */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT +
                           'FORMAT(MCBLRPPD)')
 /*/COPY WNCPYSRC,MCC84002                                            */
- 
+
 /* Set up query selection string, selecting on group code and */
 /*  relative period number. Work amount must be non-zero to prevent */
 /*  data mapping error. */
@@ -246,12 +258,12 @@
                           *TCAT &DTPDNY *TCAT ''''' *AND (' +
                           *TCAT &ENAM1 *BCAT '*NE 0  *OR ' *CAT +
                           &ENAM2 *BCAT '*NE 0)')
- 
+
 /* If report set is not C, select reporting set number = parameter   */
              IF         COND(&RSNO *NE 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '*AND G6RSNO *EQ ''''' +
                           *TCAT &RSNO *TCAT ''''''))
- 
+
 /* If report level is 'B' or 'C', and entity is not blank or 'ALL'   */
 /* select entity = entity parameter                                  */
              IF         COND(&RENT *NE 'ALL' *AND &RENT *NE '   ' +
@@ -259,9 +271,9 @@
                           THEN(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           '*AND GLENTY *EQ ''''' *TCAT &RENT *TCAT +
                           ''''''))
- 
+
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *TCAT ''')')
- 
+
 /* Set up key depending on value in currency field                   */
              IF         COND(&CCY *EQ 'A') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT 'KEYFLD((GLENTY) +
@@ -269,27 +281,27 @@
              ELSE       CMD(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           'KEYFLD((GLENTY) (GLRSCD) (GLENT2) +
                           (GLCCY))'))
- 
+
 /* Join files as follows:                                            */
- 
+
 /*    If report set is not 'C', Get Report code:                     */
 /*    Account Code : HBACCD in GLHIBLPD to G6ACCD in SDACRCPD        */
 /*    DRCR   : Sign (of Amount) on GLHIBLPD to G6DRCR in SDACRCL0    */
- 
+
 /*    If report level is 'C', get company from SDBRCHPD              */
 /*    Branch    : HBBRCD in GLHIBLPD to A8BRCD in SDBRCHPD           */
- 
+
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT 'JFLD(')
- 
+
              IF         COND(&RSNO *NE 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(G6ACCD HBACCD) +
                           (G6DRCR SIGNA)'))
- 
+
              IF         COND(&RLEV *EQ 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(HBBRCD A8BRCD)'))
- 
+
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *TCAT ')')
- 
+
 /* Group company, branch or entity 1 depending on value of report   */
 /* level                                                            */
              IF         COND(&RLEV *EQ 'C') THEN(CHGVAR VAR(&OPQF) +
@@ -299,29 +311,29 @@
              IF         COND(&RLEV *NE 'B' *AND &RLEV *NE 'C') +
                           THEN(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           'GRPFLD(GLENTY'))
- 
+
 /* Group on Currency if in Actual Currency                          */
              IF         COND(&CCY *EQ 'A') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT 'HBCYCD'))
- 
+
 /* Group on either account code or report code depending on whether */
 /* report set is 'C' or not.                                        */
              IF         COND(&RSNO *EQ 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT 'HBACCD GLENT2'))
              ELSE       CMD(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           'G6RSCD GLENT2'))
- 
+
 /* Group on Currency if NOT in Actual Currency                      */
              IF         COND(&CCY *NE 'A') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT 'HBCYCD'))
- 
+
 /* Select groups with a non-zero balance */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *TCAT ') +
                           GRPSLT(''GLLDB1 *NE 0 *OR GLLDB2 *NE 0'')')
- 
+
 /* Set up MAPFLDs */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT 'MAPFLD(')
- 
+
 /* If report level is 'B', set entity 1 as branch code               */
 /* If report level is 'C', set entity 1 as company code              */
 /* Else set entity 1 to blanks                                       */
@@ -332,9 +344,9 @@
              IF         COND(&RLEV *NE 'B' *AND &RLEV *NE 'C') +
                           THEN(CHGVAR VAR(&OPQF) VALUE(&OPQF *TCAT +
                           '(GLENTY ''''''   '''''')'))
- 
+
 /* Set up MAPFLD for entity 2 from 'analysis' parameter - */
- 
+
 /* The 'analysis' parameter (&MCANL) refers to 'analysis' fields on */
 /* GLHIBLPD in the following way- Each position in the parameter */
 /* corresponds to a GLHIBLPD field, ie. 1-HBBRCD, 2-HBCUST, 3-HBACSN,*/
@@ -342,7 +354,7 @@
 /* can hold a number (0-9) corresponding to the order that that */
 /* field should be incorporated into the entity field (0 first), or */
 /* blanks to indicate that the field is not required. */
- 
+
 /* First sort keys into order required. */
  LOOP1:      IF         COND(&I *GT 9) THEN(GOTO CMDLBL(ENDLOOP1))
              IF         COND(%SST(&MCANL &I 1) *EQ ' ') THEN(GOTO +
@@ -375,10 +387,10 @@
                           ''''      '''''))
  NEXT:       CHGVAR     VAR(&I) VALUE(&I + 1)
              GOTO       CMDLBL(LOOP1)
- 
+
 /* Reset index field */
  ENDLOOP1:   CHGVAR     VAR(&I) VALUE(1)
- 
+
 /* Set up MAPFLD expression */
  LOOP2:      IF         COND(&I *GT 10) THEN(GOTO CMDLBL(ENDLOOP2))
              CHGVAR     VAR(&J) VALUE(((&I - 1) * 30) + 1)
@@ -399,60 +411,67 @@
                           VALUE(&OPQF *TCAT ''')'))
              ELSE       CMD(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           '(GLENT2 '''''' '''''')'))
- 
+
 /* Report code from GLHIBLPD or SDACRCPD depending on report set */
              IF         COND(&RSNO *EQ 'C') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(GLRSCD HBACCD)'))
              ELSE       CMD(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           '(GLRSCD G6RSCD)'))
- 
+
 /* Currency from GLHIBLPD */
              IF         COND(&CCCY *EQ '   ') THEN(CHGVAR VAR(&OPQF) +
                           VALUE(&OPQF *BCAT '(GLCCY HBCYCD)'))
              ELSE       CMD(CHGVAR VAR(&OPQF) VALUE(&OPQF *BCAT +
                           '(GLCCY ''''''' *TCAT &CCCY *TCAT ''''''')'))
- 
+/*/COPY WNCPYSRC,EML108_015                                          */                   /*EML108*/
+
 /* set work amount to event amount */
- 
+
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT '(WAMT1' *BCAT +
                           &ENAM1 *TCAT ') (WAMT2' *BCAT &ENAM2 +
                           *TCAT ') (FLG ''%MIN(%ABSVAL(WAMT1) 1)'') +
                           (WAMT ''(WAMT1 * FLG) + (WAMT2 * (1 - +
                           FLG))'')')
- 
+/*/COPY WNCPYSRC,EML108_016                                          */                   /*EML108*/
+
 /* Amount is sum of calculated amounts */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT '(GLLDB1 +
                           ''%SUM(WAMT1)'') (GLLDB2 ''%SUM(WAMT2)'')')
- 
+/*/COPY WNCPYSRC,EML108_017                                          */                   /*EML108*/
+
 /* Calculate SIGN as 0 or 1 according to sign of amount */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT '(SIGN +
                           ''(%ABSVAL(WAMT) / WAMT - 1) / 2'' +
                           *ZONED 1 0) (SIGNA ''%DIGITS(SIGN)'' *CHAR)')
- 
+
 /*/COPY WNCPYSRC,MCC84003                                            */
 /* End MAPFLD string */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT '(QQRSCD '''''' '''''')')            /*CGL029*/
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *TCAT ')')
- 
+
 /* Set OPNID as ACCNTAB */
              CHGVAR     VAR(&OPQF) VALUE(&OPQF *BCAT 'OPNID(ACCNTAB)')
- 
+
 /*/COPY WNCPYSRC,MCC84004                                            */
 /* Overide MCBLRPPD */
              OVRDBF     FILE(MCBLRPPD) TOFILE(GLHIBLPD) MBR(&MCGRP) +
                           SHARE(*YES)
 /*/COPY WNCPYSRC,MCC84005                                            */
- 
+
 /**/
 /*  Execute OPNQRY Command  */
 /**/
+/*/COPY WNCPYSRC,EML108_018                                         */                    /*EML108*/
  QCMDEXC:    CALL       PGM(QCMDEXC) PARM(&OPQF 1000)
+/*/COPY WNCPYSRC,EML108_019                                         */                    /*EML108*/
 /**/
 /*  Call Balance Sheet/Profit and Loss Report  */
 /**/
+/*/COPY WNCPYSRC,EML108_020                                          */                   /*EML108*/
              CALL       PGM(MC0750) PARM(&RSEQ &RLEV &RENT &CCY +
                           &RSNO &RSLV &RPCD &EVCD &MCGRP &MCRPNC +
                           &MCTRM1 &MCTRM2 &MCTYP &MCANL)
+/*/COPY WNCPYSRC,EML108_021                                          */                   /*EML108*/
 /**/
 /*  Send Database Error Messages */
 /**/

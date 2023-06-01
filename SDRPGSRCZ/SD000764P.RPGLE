@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER076             Date 11Feb20               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132             Date 01May13               *
       *                 AR745942           Date 13Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076   - Update to KWG § 24c interface specification       *
+      *             (BaFin version 3.3)                               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -60,18 +63,18 @@
       *  CGL032 - Automatic Exchange of Information                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Non-A/c Holders
      FSDNAHOL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** SD Non-A/c Holders by Country of Tax
      FSDNHTXL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** SD Non-A/c Holders by Country of Tax                                                 CGL177
      FSDCRSNL2  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
      FSDCRSNL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
@@ -85,15 +88,18 @@
                                                                                               CER054
       ** Religious Affiliation Codes Keyed by Religious Affiliation                           CER054
      FSDRLAFL0  IF   E           K DISK    INFSR(*PSSR)                                       CER054
- 
+
       ** SD Non-A/c Holders Audit List - Detail
      FSD000764P1O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
- 
+                                                                                              CER076
+      ** Midas SD Non-account Holders extension                                               CER076
+     FSDNAHOY0  IF   E           K DISK    INFSR(*PSSR) USROPN                                CER076
+
       ** SD Non-A/c Holders Audit List - Audit
      FSD000764AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
@@ -107,62 +113,62 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** Externally described DS for Country Details
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  Extname(SCSARDPD)
                                                                                               CSW207
       ** External DS for Midas modules details                                                CSW207
      D SDMMOD        E DS                  Extname(SDMMODPD)                                  CSW207
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       ** File Information Data Structure for SD000764P1.
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for SD000764AU.
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
      D POptn           S              7
      D PSARD           S              6
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D SEnty           S              3
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       ** Parameter list fields
      D PMode           S              1
      D PLevl           S              1
      D PEnty           S              3
- 
+
       ** Other fields used
      D WRun            S              1A   Inz
      D WRecNo          S              7S 0 Inz
@@ -192,7 +198,7 @@
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -204,38 +210,38 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Set file pointer to first record and do initial read.
- 
+
      C     *Loval        SETLL     SDNAHOL1
      C                   READ      SDNAHOL1
- 
+
       ** Read SD Non-A/c Holders File until end of file
- 
+
      C                   DOW       Not %EOF(SDNAHOL1)
- 
+
       ** Print Report Header 1
- 
+
      C                   EXSR      SRPrintHdr1
- 
+
       ** Print Report Header 2
- 
+
      C                   EXSR      SRPrintHdr2
- 
+
       ** Print Non-A/c Holders' Country of Tax Code/s
- 
+
      C                   EXSR      SRPrintDtl
- 
+
      C                   EVAL      WRecNo = WRecNo + 1
- 
+
      C                   READ      SDNAHOL1
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      SRPrintFtr
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -247,9 +253,9 @@
       *                                                               *
       *****************************************************************
      C     SRPrintHdr1   BEGSR
- 
+
      C                   WRITE     HEADER1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -259,33 +265,33 @@
       *                                                               *
       *****************************************************************
      C     SRPrintHdr2   BEGSR
- 
+
       ** Set up Header 2 details
       ** Non-A/c Holder Reference
- 
+
      C                   EVAL      RREFNO = NHNAHO
- 
+
       ** Non-A/c Holder Report Name
- 
+
      C                   EVAL      RRPTNM = NHNARN
- 
+
       ** Private Individual
- 
+
      C                   EVAL      RPRVIN = NHPIND
- 
+
       ** TIN
- 
+
      C                   EVAL      RTIN   = NHTINO
- 
+
       ** Identification Type
      C                   EVAL      RIDTYP = NHIDTP
- 
+
       ** Issuing Country
- 
+
      C                   EVAL      RISCNT = NHISCT
- 
+
       ** Issuing Date
- 
+
      C**********         IF        NHISDT = 0                                                 232543
      C**********         EVAL      RISDTE = *Blanks                                           232543
      C**********         ELSE                                                                 232543
@@ -312,9 +318,9 @@
      C                   EXSR      ZDATE2                                                     232543
      C                   MOVEL(P)  ZADATE        RISDTE                                       232543
      C                   ENDIF                                                                232543
- 
+
       **   Last Change Date
- 
+
      C                   IF        NHLCDT = 0
      C                   EVAL      RLCDTE = *Blanks
      C                   ELSE
@@ -322,9 +328,9 @@
      C                   EXSR      ZDATE2
      C                   MOVEL(P)  ZADATE        RLCDTE
      C                   ENDIF
- 
+
       **   Last Change Type
- 
+
      C                   SELECT
      C                   WHEN      NHREPI = 'I'
      C                   EVAL      RLCTYP = 'Inserted'
@@ -335,20 +341,33 @@
      C                   OTHER
      C                   EVAL      RLCTYP = *Blanks
      C                   ENDSL
- 
+                                                                                              CER076
+      * Economic Identification No.                                                           CER076
+                                                                                              CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C     SDNAHOK       KLIST                                                                CER076
+     C                   KFLD                    NHNAHO                                       CER076
+     C     SDNAHOK       CHAIN     SDNAHOY0                           99                      CER076
+     C                   IF        %FOUND()                                                   CER076
+     C                   EVAL      REINO  = NHEINO                                            CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      REINO  = *BLANK                                            CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+
       **   Date of Birth
- 
+
      C                   EVAL      WDateDD = %SubSt(NHDBTH:7:2)
      C                   EVAL      WDateMM = %SubSt(NHDBTH:5:2)
      C                   EVAL      WDateYY = %SubSt(NHDBTH:3:2)
      C                   EVAL      WDateDMY= WDateDD + WDateMM + WDateYY
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM      WDateDMY      DateIn
      C                   PARM                    DayNoOut
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C                   IF        ErrorFlag = 'Y'
      C                   EVAL      RDOB = *Blanks
      C                   ELSE
@@ -356,49 +375,49 @@
      C                   EXSR      ZDATE2
      C                   MOVEL(P)  ZADATE        RDOB
      C                   ENDIF
- 
+
       **   Place of Birth - Country
- 
+
      C                   EVAL      RCTYOB = NHBTHC
- 
+
       **   Place of Birth - Town
- 
+
      C                   EVAL      RTWNOB = NHBTHT
- 
+
       ** Country of Residence
- 
+
      C                   EVAL      RCTYRS = NHCOLC
- 
+
       ** Mailing Address (Lines 1 - 4)
- 
+
      C                   EVAL      RADD1  = NHCNA1
      C                   EVAL      RADD2  = NHCNA2
      C                   EVAL      RADD3  = NHCNA3
      C                   EVAL      RADD4  = NHCNA4
- 
+
       ** Family Name/First Name
- 
+
      C                   EVAL      RLSTNM = NHIDE1
      C                   EVAL      RFSTNM = NHIDE2
- 
+
       ** Street
- 
+
      C                   EVAL      RST1   = NHIDE3
      C                   EVAL      RST2   = NHIDE4
- 
+
       **   City
- 
+
      C                   EVAL      RCITY  = NHCITY
- 
+
       **   Zip Code
- 
+
      C                   EVAL      RZIPCD = NHZIPC
       ** Issuing Authority                                                                    CSW207
      C                   IF        CSW207 = 'Y' OR                                            CSW207
      C                             PrivBank = 'Y'                                             CSW207
      C                   EVAL      RISSAU = NHISAU                                            CSW207
      C                   ENDIF                                                                CSW207
- 
+
       *                                                                                       CER047
      C                   IF        CER047 = 'Y' OR                                            CER048
      C                             CER048 = 'Y'                                               CER048
@@ -685,7 +704,7 @@
      C                   EVAL      RLUSR = NHLUSR                                             CGL132
                                                                                               CGL132
      C                   WRITE     HEADER2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -695,26 +714,26 @@
       *                                                               *
       *****************************************************************
      C     SRPrintDtl    BEGSR
- 
+
      C     NHNAHO        SETLL     SDNHTXL1
      C     NHNAHO        READE     SDNHTXL1                               77
- 
+
       ** Print Country Tax Code/s Details
- 
+
      C                   DOW       *IN77  = *OFF
- 
+
       **   Country of Tax Code
- 
+
      C                   EVAL      RCTYTX = NXCTTX
- 
+
       **   Country Name
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      NXCTTX        PCtyCd
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCTRYL0'
@@ -725,17 +744,17 @@
      C                   ELSE
      C                   EVAL      RCTYNM = A4CNNM
      C                   ENDIF
- 
+
       **   European Tax Status
- 
+
      C                   EVAL      REUTAX = NXETXS
- 
+
       **   Certificate Tax Reference
- 
+
      C                   EVAL      RCRREF = NXCERF
- 
+
       **   Certificate Expiry Date
- 
+
      C                   IF        NXCEEX = 0
      C                   EVAL      RCREXP = *Blanks
      C                   ELSE
@@ -747,24 +766,24 @@
       **   Non-account Holder Tax Status                                                      236137
                                                                                               236137
      C                   EVAL      RCNSTS = NXNSTS                                            236137
- 
+
       ** Print Report Headers for every change in
       **   Non-A/c Reference or for every new page
- 
+
      C                   EVAL      RqdLn1 = 1
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   EXSR      SRPrintHdr1
      C                   EXSR      SRPrintHdr2
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL
- 
+
      C     NHNAHO        READE     SDNHTXL1                               77
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -774,13 +793,13 @@
       *                                                               *
       *****************************************************************
      C     SRPrintFtr    BEGSR
- 
+
      C                   IF        WRecNo > 0
      C                   WRITE     FOOTER
      C                   ENDIF
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -790,37 +809,37 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *InU7 = *On
      C                   EVAL      *InU8 = *On
      C                   EVAL      *InLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** Retrieve control details.
- 
+
      C                   EVAL      WFName = 'SDNAHOPD'
      C     WFName        CHAIN     SDFCTLL1                           03
- 
+
       ** Database error.
- 
+
      C                   IF        NOT %FOUND(SDFCTLL1)
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = WFName
@@ -829,38 +848,38 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RINSER = AHNOIN
      C                   EVAL      RAMEND = AHNOAM
      C                   EVAL      RDELET = AHNODL
      C                   EVAL      RAUDIT = AHNORC
      C                   EVAL      RCOUNT = WRecNo
- 
+
      C                   IF        RCOUNT <> RAUDIT
      C                   EVAL      *IN21 = *ON
      C                   ELSE
      C                   EVAL      *IN21 = *OFF
      C                   ENDIF
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** If there is a record read, write audit control report.
- 
+
      C                   IF        WRecNo <> 0
      C                   WRITE     CONTROL
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -870,33 +889,33 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRtcd
      C                   PARM                    PMode
      C                   PARM                    PSeq
      C                   PARM                    PLevl
      C                   PARM                    PEnty
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
       **   Retrieve Run day number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -1038,6 +1057,29 @@
      C                   EVAL      CER054 = 'N'                                               CER054
      C                   EVAL      *IN39 = *OFF                                               CER054
      C                   ENDIF                                                                CER054
+                                                                                              CER076
+      ** Call AOSARDR0 to check for CER076                                                    CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *BLANKS       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn                                        CER076
+     C                   PARM      'CER076'      PSARD                                        CER076
+     C                   PARM                    DSFDY                                        CER076
+                                                                                              CER076
+     C                   IF        PRtCd <> *BLANKS AND PRtCd <> '*NRF'                       CER076
+     C     *LOCK         IN        LDA                                                        CER076
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CER076
+     C                   EVAL      DBKey = 'CER076'                                           CER076
+     C                   EVAL      DBase = 020                                                CER076
+     C                   OUT       LDA                                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+                                                                                              CER076
+     C                   IF        PRtCd = *BLANKS                                            CER076
+     C                   MOVE      'Y'           CER076            1                          CER076
+     C                   EVAL      *IN34 = *ON                                                CER076
+     C                   OPEN      SDNAHOY0                             99                    CER076
+     C                   ENDIF                                                                CER076
       *                                                                                       CER048
       ** Check if Private Banking Module is available                                         CSW207
      C                   Call      'AOMMODR0'                                                 CSW207
@@ -1092,25 +1134,25 @@
      C                   EVAL      CGL157 = 'N'                                               CGL177
      C                   ENDIF                                                                CGL177
                                                                                               CGL177
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *Blanks       ZSerr
- 
+
      C                   IF        ZSErr = 'Y'
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1120,13 +1162,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1143,19 +1185,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   EXSR      SRAUDIT                                                    CER054
                                                                                               CER054
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

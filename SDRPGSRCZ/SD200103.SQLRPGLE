@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML104             Date 05Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_015, EML104_016                          *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146 - MT940/MT950 Production in Input Cycle               *
@@ -310,6 +314,7 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                              CER030
+     F/COPY WNCPYSRC,EML104_015                                                               EML104
      C                   EVAL      WRem = OFLLN1 - PRTLN1                                     CER030
      C                   IF        WRem < 3                                                   CER030
      C                   WRITE     HEADER                                                     CER030
@@ -515,6 +520,7 @@
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
      C/COPY OFCPYSRCZ,CGL146_035                                                              CGL146
+     C/COPY WNCPYSRC,EML104_016                                                               EML104
 
      C                   ENDSR
 

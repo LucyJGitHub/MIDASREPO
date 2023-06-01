@@ -18,8 +18,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. EML104             Date 05Feb20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CMG008             Date 20Feb20               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_021, EML104_022                          *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CSD101 - Password Encryption                                 *
@@ -277,6 +281,7 @@
      C                   WHEN      CurFormat = 9                                              CER030
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                              CER030
+     C/COPY WNCPYSRC,EML104_021                                                               EML104
      C                   CALLB     'SD200128'    PSD20012x                                    CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
@@ -651,6 +656,7 @@
      C                   EVAL      CER030 = 'Y'                                               CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
+     C/COPY WNCPYSRC,EML104_022                                                               EML104
       *    ----------    ------
      C     @INZSR        ENDSR
 

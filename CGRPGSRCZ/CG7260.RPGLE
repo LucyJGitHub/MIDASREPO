@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR897548           Date 11Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD035795           Date 12Mar20               *      
+      *  Prev Amend No. AR897548           Date 11Feb22               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028899           Date 09Dec16               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035795 - Account Closure does not generate a turnover stmt *
+      *             charge when indicated. Ensure that extra daily chg*
+      *             will be posted if account has non-charge posting  *      
       *  AR897548 - Generate Interest scale each time there is a      *
       *             capitalisation (Child:AR897549)                   *
       *           - Applied for MD-59166.                             *
@@ -265,7 +269,7 @@
       ** If the account is not found ignore
      C     *IN89         IFEQ      *OFF
      C     RECI          ANDNE     'C'                                                      MD028899
-     C     ACST          ANDNE     'C'                                                      MD028899
+     C*****ACST          ANDNE     'C'                                             MD028899 MD035795
 
       ***Ignore*if*interest*frequency*between*debit*and*credit                              AR897548
      C*****DRIF          ANDEQ     CRIF                                                     AR897548

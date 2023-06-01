@@ -30,6 +30,9 @@
       *           subroutine *PSSR.                                   *
       *         - Applied for MD038719                                *
       *  MD046248 - Finastra Rebranding                               *
+      *  258471 - Fix when duplicate error encountered, don't call    *
+      *           subroutine *PSSR.                                   *
+      *         - Applied for MD038719                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
       *           (Recompile)                                         *

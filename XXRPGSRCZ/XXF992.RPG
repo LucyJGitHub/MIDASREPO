@@ -1,0 +1,191 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX Split Retail Account Balances')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas Management Accounts Module                             *
+      *                                                               *
+      *  XXF992 - Split Retail Account Balances                       *
+      *                                                               *
+      *  (c) Misys Finastra Systems Technology, Inc. 2020             *
+      *                                                               *
+      *  Last Amend No. EML108             Date 20Jan20               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 to FBM2.1SP21                        *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *                                                               *
+      *****************************************************************
+     FMCBLRPX1IF  E           K        DISK
+     FMCBLRPX2O   E                    DISK
+     FSDACRCL6IF  E           K        DISK
+     FMCAVBLV0IF  E           K        DISK
+     E                    CPY@    1   1 80
+      *
+      ** Data Structure for Compilation  - Copyright Insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           GRCD    2
+     C                     PARM           RSNO    1
+      *
+     C           @ACRC     KLIST
+     C                     KFLD           RSNO
+     C                     KFLD           G1ACCD
+     C                     KFLD           @DRCR   1
+      *
+     C           @AVBL     KLIST
+     C                     KFLD           GRCD
+     C                     KFLD           RSNO
+     C                     KFLD           KRSCD  10
+     C                     KFLD           G2BRCD
+     C                     KFLD           G2CUST
+     C                     KFLD           G2CCY
+     C                     KFLD           G2ACCD
+     C                     KFLD           G2ACSN
+      *
+     C                     READ MCBLRPX1                 90
+     C           *IN90     DOWEQ'0'
+     C                     EXSR PROCES
+     C                     READ MCBLRPX1                 90
+     C                     ENDDO
+      *
+     C                     MOVE '1'       *INLR
+      *
+      ********************************************************************
+      *
+      *  UPDRCD - Subroutine to update file
+      *
+      ********************************************************************
+     C           PROCES    BEGSR
+      *
+     C                     MOVE *BLANKS   DBRSCD 10
+     C                     MOVE *BLANKS   CRRSCD 10
+     C                     MOVELG1BRCD    G2BRCD
+     C                     MOVELG1CUST    G2CUST
+     C                     MOVELG1ACCD    G2ACCD
+     C                     MOVELG1CCY     G2CCY
+     C                     MOVELG1ACSN    G2ACSN
+      *
+     C                     MOVEL'0'       @DRCR   1
+     C           @ACRC     CHAINSDACRCL6             10
+     C           *IN10     IFEQ '0'
+     C                     MOVELG6RSCD    DBRSCD
+     C                     ENDIF
+      *
+     C                     MOVE '1'       @DRCR
+     C           @ACRC     CHAINSDACRCL6             10
+     C           *IN10     IFEQ '0'
+     C                     MOVELG6RSCD    CRRSCD
+     C                     ENDIF
+      *
+     C           DBRSCD    IFNE CRRSCD
+     C                     MOVELDBRSCD    KRSCD
+     C           @AVBL     CHAINMCAVBLV0             30
+     C           *IN30     IFEQ '0'
+      *
+     C                     Z-ADD0         G2LDB1
+     C                     Z-ADD0         G2LDB2
+     C                     Z-ADD0         G2LDB3
+     C                     Z-ADD0         G2LDB4
+     C                     Z-ADD0         G2LDB5
+     C                     MOVELDBRSCD    G2RSCD
+     C                     SELEC
+     C           G1LDB1    WHGE 0
+     C           G1LDB5    ANDGE0
+     C                     Z-ADDG1LDB1    G2LDB1
+     C                     Z-ADDG1LDB5    G2LDB5
+     C           G1LDB1    WHLT 0
+     C           G1LDB5    ANDGE0
+     C                     Z-ADD0         G2LDB1
+     C                     Z-ADDG1LDB5    G2LDB5
+     C           G1LDB1    WHGE 0
+     C           G1LDB5    ANDLT0
+     C                     Z-ADDG1LDB1    G2LDB1
+     C                     Z-ADD0         G2LDB5
+     C                     ENDSL
+     C                     EXSR SETLDB
+     C                     WRITEMCBLF2
+     C                     ENDIF
+      *
+     C                     MOVELCRRSCD    KRSCD
+     C                     Z-ADD0         G2LDB1
+     C                     Z-ADD0         G2LDB2
+     C                     Z-ADD0         G2LDB3
+     C                     Z-ADD0         G2LDB4
+     C                     Z-ADD0         G2LDB5
+     C           @AVBL     CHAINMCAVBLV0             30
+     C           *IN30     IFEQ '0'
+      *
+     C                     MOVELCRRSCD    G2RSCD
+     C                     SELEC
+     C           G1LDB1    WHLT 0
+     C           G1LDB5    ANDLT0
+     C                     Z-ADDG1LDB1    G2LDB1
+     C                     Z-ADDG1LDB5    G2LDB5
+     C           G1LDB1    WHGE 0
+     C           G1LDB5    ANDLT0
+     C                     Z-ADD0         G2LDB1
+     C                     Z-ADDG1LDB5    G2LDB5
+     C           G1LDB1    WHLT 0
+     C           G1LDB5    ANDGE0
+     C                     Z-ADDG1LDB1    G2LDB1
+     C                     Z-ADD0         G2LDB5
+     C                     ENDSL
+     C                     EXSR SETLDB
+     C                     WRITEMCBLF2
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVELG6RSCD    G2RSCD
+     C                     MOVELG6RSCD    KRSCD
+     C           @AVBL     CHAINMCAVBLV0             30
+     C           *IN30     IFEQ '0'
+     C                     Z-ADDG1LDB1    G2LDB1
+     C                     Z-ADDG1LDB5    G2LDB5
+     C                     EXSR SETLDB
+     C                     WRITEMCBLF2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      *  SETLDB - Set LDB* work fields according to report type,
+      *           and opening/closing balance
+      *
+      ********************************************************************
+     C           SETLDB    BEGSR
+      *
+     C                     SELEC
+     C           G1RTYP    WHEQ 'P'
+     C                     Z-ADDM1PDDR    G2LDB2
+     C                     Z-ADDM1PDCR    G2LDB3
+     C                     Z-ADDM1PAGG    G2LDB4
+      *
+     C           G1RTYP    WHEQ '1'
+     C                     Z-ADDM1T1DR    G2LDB2
+     C                     Z-ADDM1T1CR    G2LDB3
+     C                     Z-ADDM1T1AG    G2LDB4
+      *
+     C           G1RTYP    WHEQ '2'
+     C                     Z-ADDM1T2DR    G2LDB2
+     C                     Z-ADDM1T2CR    G2LDB3
+     C                     Z-ADDM1T2AG    G2LDB4
+      *
+     C           G1RTYP    WHEQ 'Y'
+     C                     Z-ADDM1YTDR    G2LDB2
+     C                     Z-ADDM1YTCR    G2LDB3
+     C                     Z-ADDM1YAGG    G2LDB4
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra Systems Technology, Inc. 2020

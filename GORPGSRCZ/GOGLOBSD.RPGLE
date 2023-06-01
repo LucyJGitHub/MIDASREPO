@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. MD058085           Date 11May21               *
+      *  Last Amend No. CER073D            Date 13Aug20               *      
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 MD058085           Date 11May21               *
       *                 CLE138             Date 02Nov21               *
       *                 MD056557           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
@@ -89,6 +90,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP23                    *
+      *  EML014 - AnaCredit Reporting Enhancement (Recompile)         *      
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance.                     *
       *           - Apply CLE138 original design of SDFACTX0 to store *

@@ -12,8 +12,14 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. MD061219           Date 05Apr23               *
       *  Prev Amend No. 249385             Date 01Aug22               *
+=======
+      *  Last Amend No. AR760843           Date 01Sep11               *
+      *  Prev Amend No. EML111             Date 13Jul20               *      
+      *                 249385             Date 01Aug22               *
+>>>>>>> refs/remotes/origin/MD060987_21G
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
@@ -437,9 +443,21 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  MD061219 - Spread rate indicator wrongly updated during cob. *
       *             Do not include SC event in retrieving spread      *
       *             indicator                                         *
+=======
+      *  AR760843 - Automatic Next interest payment date set in-      *
+      *             correctly. Move value of W@STBL to ZLOC only if   *
+      *             not blank. Use ZDYNBR instead of ZDAYNO for IBDT  *
+      *             and RBDT. (Child: AR760844)                       *
+      *  EML111   -Holidays should be based on currency of transaction*
+      *            and NEVER on local currency.                       *
+      *            Apply fix 198974.                                  *
+      *            Add /COPY EML111_001 EML111_002 EML111_003         *
+      *                /COPY EML111_004 EML111_005                    *      
+>>>>>>> refs/remotes/origin/MD060987_21G
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
@@ -2141,6 +2159,7 @@
      D WPARML1         S             20A   INZ('RepayDateOnMaturity')                       MD045091
      D WPARML2         C                   CONST('PDCLPAMVPayAC')                           MD050007
      D WPARML3         C                   CONST('PDCLPAMVPIAC')                            MD050018
+     D/COPY WNCPYSRC,EML111_01                                                                EML111
      D wSettleCCY      S              3A   INZ(*BLANKS)                                     MD051695
      D wLoanCCY        S              3A   INZ(*BLANKS)                                     MD051695
      D wSettleAMT      S             13P 0 INZ(*ZEROS)                                      MD051695
@@ -5520,6 +5539,7 @@ L118 I                             P   72   77 7RTSPL
       ** Save value of 'PDCLPAMVPIAC'                                                       MD050018
       *                                                                                     MD050018
      C                   MOVEL     P@VL03        PDCLPIAcc                                  MD050018
+     C/COPY WNCPYSRC,EML111_02                                                                EML111
       *                                                                                       CLE034
       ** Access SAR details to check if CLE034 is installed                                   CLE034
       *                                                                                       CLE034
@@ -14530,6 +14550,7 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      SETP          TYPE                                          S0119
      C                   MOVE      OSAC          OURS                                          S0119
       *                                                                   176823
+     C/COPY WNCPYSRC,EML111_03                                                                EML111
      C     MDST          IFEQ      01                                                          17682
      C     MDST          OREQ      07                                                          17682
      C     MDST          OREQ      08                                                          17682
@@ -14537,6 +14558,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ELSE                                                                  17682
      C                   MOVE      LCCY          ZCCY                                          17682
      C                   ENDIF                                                                 17682
+     C/COPY WNCPYSRC,EML111_04                                                                EML111
       *                                                                   CEU004
       ** If feature CEU004 is on, set currency field on LKEY1DP           CEU004
       ** If Settlement currency from the LOAN is not blank.               CEU004
@@ -14553,7 +14575,9 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                  End If         CEU00
       *                                                                   CEU004
      C                   EXSR      SETLOC                                                      S0119
+     C     W@STBL        IFNE      *BLANK                                                   AR760843
      C                   MOVE      W@STBL        ZLOC                                          S0119
+     C                   ENDIF                                                              AR760843
      C                   END                                                                   S0119
                                                                                               CLE141
       ** Save the Base Date                                                                   CLE141
@@ -14683,6 +14707,7 @@ L118 I                             P   72   77 7RTSPL
      C     MMNLCD        IFNE      MMNWKD                                                      14408
      C                   Z-ADD     @DAYNO        ZDAYNO                                        14408
      C                   EXSR      ZBKDT                                                       14408
+     C/COPY WNCPYSRC,EML111_05                                                                EML111
      C                   ENDIF                                                                 14408
      C                   ENDSL                                                                 CLE00
       *                                                                   CLE005
@@ -18085,6 +18110,9 @@ C    C                   ENDIF                                                  
      C                   MOVE      NRLC          W@STBL                                        S0119
      C                   END                                                                   S0119
       *                                                                   S01195
+     C                   ELSE                                                               AR760843
+     C                   MOVE      SYSL          W@STBL                                     AR760843
+      *                                                                                     AR760843
      C                   END                                                    *E1            S0119
       *                                                                   S01195
      C     SETRTN        ENDSR                                                  *** SETRTN *** S0119

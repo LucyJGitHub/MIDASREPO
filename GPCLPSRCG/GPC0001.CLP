@@ -70,7 +70,7 @@
              DCL        VAR(&CLE106) TYPE(*CHAR) LEN(1) VALUE('N')                      /*AR957053*/
              DCL        VAR(&CGL014) TYPE(*CHAR) LEN(1) VALUE('N')                      /*AR957053*/
 /**********  DCL        VAR(&CLE016) TYPE(*CHAR) LEN(1) VALUE('N')          */ /*AR957053 MD057401*/
-             DCL        VAR(&CLE006) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD057401*/
+/**********  DCL        VAR(&CLE006) TYPE(*CHAR) LEN(1) VALUE('N')          */ /*MD057401 MD061348*/
 
 /* Global monitor message */
 
@@ -144,10 +144,10 @@
 /**********                 'CLE016' &FMT)                       */            /*AR957053 MD057401*/
 /**********    IF         COND(&RTCD *EQ *BLANKS) THEN(CHGVAR +  */                     /*MD057401*/
 /**********                 VAR(&CLE016) VALUE('Y'))             */            /*AR957053 MD057401*/
-               CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' +
-                            'CLE006' &FMT)                                              /*MD057401*/
-               IF         COND(&RTCD *EQ '     ') THEN(CHGVAR +
-                            VAR(&CLE006) VALUE('Y'))                                    /*MD057401*/
+/**********    CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' + */                     /*MD061348*/
+/**********                 'CLE006' &FMT)                       */            /*MD057401 MD061348*/
+/**********    IF         COND(&RTCD *EQ '     ') THEN(CHGVAR +  */                     /*MD061348*/
+/**********                 VAR(&CLE006) VALUE('Y'))             */            /*MD057401 MD061348*/
                CHGVAR     VAR(&RTCD) VALUE('       ')                                   /*AR957053*/
                CALL       PGM(GZAOSARDR0) PARM(&RTCD '*VERIFY' +
                             'CLE106' &FMT)                                              /*AR957053*/
@@ -160,8 +160,8 @@
                                                                                         /*AR957053*/
 /**********    IF         COND(&CGL014 *EQ 'Y' *OR &CLE016 *EQ 'Y' + */                 /*MD057401*/
 /**********                  OR &CLE106 *EQ 'Y') THEN(DO)            */        /*AR957053 MD057401*/
-/**********    IF         COND(&CGL014 *EQ 'Y' *OR &CLE006 *EQ 'Y' +
-/**********                 *OR &CLE106 *EQ 'Y') THEN(DO)                      /*MD057401 MD061348*/
+/**********    IF         COND(&CGL014 *EQ 'Y' *OR &CLE006 *EQ 'Y' + */                 /*MD061348*/
+/**********                 *OR &CLE106 *EQ 'Y') THEN(DO)            */        /*MD057401 MD061348*/
                IF         COND(&CGL014 *EQ 'Y' *OR &CLE106 *EQ 'Y') +
                              THEN(DO)                                                   /*MD061348*/
                   CALL       PGM(GLC005020)                                             /*AR957053*/

@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD057083           Date 20Jan21               *
+      *  Last Amend No. AR1091401          Date 19May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD057083           Date 20Jan21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD024980           Date 26Mar14               *
       *                 MD000091           Date 08May13               *
@@ -44,6 +45,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1091401 - Incorrect validation of journal entry overrides. *
+      *              Do not allow insert of batch item when block     *
+      *              debits/credits = 'N' on journal entry overrides  *
+      *              and CGL002 is ON. (Child: AR1091402)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD057083 - Journal entry overrides for Retail accounts not   *
@@ -283,6 +288,14 @@
      C     WRRE01        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE01        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE01        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -305,6 +318,14 @@
      C     WRRE02        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE02        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE02        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -327,6 +348,14 @@
      C     WRRE03        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE03        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE03        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd
@@ -334,6 +363,7 @@
      C                   ENDIF
       *
       ** Check Block Credits.
+      *
       *
      C     B2DCIN        IFEQ      'C'
      C                   TESTB     '3'           F1RETB                   01
@@ -349,6 +379,14 @@
      C     WRRE04        ORNE      'Y'                                                      AR802562
      C     B2ACTY        ANDNE     'G'                                                      AR802562
      C     WUAUTH        ANDNE     'Y'                                                      MD057083
+     C     WRRE04        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WRRE04        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'R'                                                     AR1091401
+     C     WUAUTH        OREQ      'N'                                                     AR1091401
+     C     B2ACTY        ANDEQ     'N'                                                     AR1091401
      C                   EVAL      WRERST = 'E'
      C                   ENDIF
      C                   EXSR      SROvrd

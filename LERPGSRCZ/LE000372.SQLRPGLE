@@ -416,7 +416,7 @@
      C/end-exec                                                                             MD061389
                                                                                             MD061389
      C                   ENDIF                                                              MD061389
-
+                                                                                            MD061389
       ** Int Start Date
      C     SQLCOD        IFNE      100
      C     DintStart     ANDNE     0

@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CLP form calling SMU90016')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       SMUC90016 - CLP for calling SMU90016                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD060987 *CREATE   Date 20Apr23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD060987 - Utility to move GLJENPX0 records to GLJEPHX0     */
+/*                  for GLACPHPD equivalent records.                 */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                MONMSG     MSGID(CPF1023)
+
+/**/
+/* Update Tables */
+/**/
+
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+
+             CPYF       FROMFILE(&DMLIB/GLJEPHX0) +
+                          TOFILE(&DPLIB/GLJEPHXBK) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+                MONMSG     MSGID(CPF2863 CPF2817) EXEC(DO)
+                   SNDPGMMSG  MSG('Error in creating backup for +
+                          GLJENPX0.') TOMSGQ(MOPERQ MRUNQ)
+                   GOTO       CMDLBL(END)
+                ENDDO
+
+             CPYF       FROMFILE(&DMLIB/GLJENPX0) +
+                          TOFILE(&DPLIB/GLJENPXBK) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+                MONMSG     MSGID(CPF2863 CPF2817) EXEC(DO)
+                   SNDPGMMSG  MSG('Error in creating backup for +
+                          GLJENPX0.') TOMSGQ(MOPERQ MRUNQ)
+                   GOTO       CMDLBL(END)
+                ENDDO
+
+
+                CALL       PGM(SMU90016)
+
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+                DLTF       FILE(&DPLIB/GLJEPHXBK)
+                DLTF       FILE(&DPLIB/GLJENPXBK)
+
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+
+                CPYF       FROMFILE(&DPLIB/GLJEPHXBK) +
+                          TOFILE(&DMLIB/GLJEPHX0) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CPYF       FROMFILE(&DPLIB/GLJENPXBK) +
+                          TOFILE(&DMLIB/GLJENPX0) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF0000 MCH0000)
+
+
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC90016 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2023')
+
+             ENDPGM

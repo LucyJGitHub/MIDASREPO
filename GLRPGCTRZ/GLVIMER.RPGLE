@@ -362,7 +362,7 @@
      C                   ENDIF
      C                   ENDIF
       *
-      ** Check Block Credits.                                     DDE'D/D/
+      ** Check Block Credits.
       *
       *
      C     B2DCIN        IFEQ      'C'

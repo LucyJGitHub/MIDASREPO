@@ -131,7 +131,7 @@
 
       ** Long Data Structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
-   
+     
       ** Work Data Structures
      D LoanDS          DS
      D  DSRECI                        1A                                                    MD060897
@@ -1291,7 +1291,7 @@ I    C                   ENDIF
      C                   EVAL      wrkIntrstAmt = wrkIntrstAmt - prvIntrstAmt               MD060441
      C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
      C                   ENDIF                                                              MD060441
-                                                                                            MD061389
+     C                                                                                      MD060441
      C                   IF        resetFlag                                                MD061389
      C                   EVAL      ZIBEG = prvStart(ctr-1)                                  MD061389
      C                   EVAL      ZIEND = prvStart(ctr-1) +  elapsed(ctr-1)                MD061389

@@ -131,7 +131,7 @@
 
       ** Long Data Structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+   
       ** Work Data Structures
      D LoanDS          DS
      D  DSRECI                        1A                                                    MD060897
@@ -211,7 +211,12 @@
                                                                                             MD061389
       ** Spread Rate and Spread Indicator variables                                         MD061389
      D wrkSpread       S             11P 7 INZ(0)                                           MD061389
+     D savSpread       S             11P 7 INZ(0)                                           MD061389
      D wrkSpreadInd    S              1A   INZ(*BLANKS)                                     MD061389
+     D elapsed         S              5P 0 dim(1000)                                        MD061389
+     D prvStart        S              5P 0 dim(1000)                                        MD061389
+     D ctr             S              5P 0 INZ(0)                                           MD061389
+     D resetFLag       S              1N   INZ(*OFF)                                        MD061389
 
       ** Entry Parameters for AOCUSTR0
      D @RtCd           S              7
@@ -351,6 +356,11 @@
                                                                                             MD061389
      C                   CLEAR                   wrkSpread                                  MD061389
      C                   CLEAR                   wrkSpreadInd                               MD061389
+     C                   CLEAR                   resetFlag                                  MD061389
+     C                   CLEAR                   elapsed                                    MD061389
+     C                   CLEAR                   prvStart                                   MD061389
+     C                   CLEAR                   ctr                                        MD061389
+     C                   CLEAR                   wrkVDAT                                    MD061389
 
      C                   CLEAR                   DlyDS
 
@@ -579,6 +589,7 @@
      C                   CLEAR                   nxtIntrstAmt     13 0                      MD060441
      C                   CLEAR                   wrkIntrstAmt     13 0                      MD060441
      C                   CLEAR                   prvIntrstAmt     13 0                      MD060441
+     C                   CLEAR                   savIntrstAmt     13 0                      MD061389
                                                                                             MD060441
      C     PrintP3       IFEQ      '1'
      C                   EXSR      SRReportP3
@@ -642,7 +653,8 @@ I    C                   ENDIF
      C+ select                                                                              MD061389
      C+   RTSP                                                                              MD061389
      C+ , SPIN                                                                              MD061389
-     C+   into   :wrkSpread, :wrkSpreadInd                                                  MD061389
+     C+ , VDAT                                                                              MD061389
+     C+   into   :wrkSpread, :wrkSpreadInd, :wrkVDAT                                        MD061389
      C+ from HISTSHQ                                                                        MD061389
      C+ where (AMTP = 'RO' or AMTP = 'SC' or AMTP = 'MC')                                   MD061389
      C+ and LNRF = :KTRNID and VDAT <= :XCINPDT                                             MD061389
@@ -651,7 +663,24 @@ I    C                   ENDIF
      C/end-exec                                                                             MD061389
      C                   IF        SQLCODE = 100                                            MD061389
      C                   EXSR      RetrieveHISTM                                            MD061389
+     C                   LEAVESR                                                            MD061389
      C                   ENDIF                                                              MD061389
+      *                                                                                     MD061389
+     C                   IF        savSpread <> wrkSpread AND not(isFirstRun)               MD061389
+     C                   IF        wrkVDAT >= DIntStart AND wrkVDAT <= Dintend              MD061389
+     C                   EVAL      resetFlag = *ON                                          MD061389
+     C                   ELSE                                                               MD061389
+     C                   EVAL      resetFlag = *OFF                                         MD061389
+     C                   ENDIF                                                              MD061389
+     C                   ELSE                                                               MD061389
+     C                   EVAL      resetFlag = *OFF                                         MD061389
+     C                   ENDIF                                                              MD061389
+                                                                                            MD061389
+     C                   EVAL      savSpread = wrkSpread                                    MD061389
+     C                   EVAL      ctr = ctr + 1                                            MD061389
+     C                   EVAL      elapsed(ctr) =  Dindy                                    MD061389
+     C                   EVAL      prvStart(ctr) = Dintd                                    MD061389
+     C                                                                                      MD061389
      C                   ENDSR                                                              MD061389
 
       *****************************************************************
@@ -1251,6 +1280,7 @@ I    C                   ENDIF
      C                   EVAL      ZIRATE = wrkAllInRate                                    MD060441
                                                                                             MD060441
      C                   EXSR      GLINTC                                                   MD060441
+     C                   EVAL (H)  savIntrstAmt  = ZINTR                                    MD061389
                                                                                             MD060441
      C                   IF        isFirstRun                                               MD060441
      C                   EVAL (H)  wrkIntrstAmt = ZINTR                                     MD060441
@@ -1261,7 +1291,13 @@ I    C                   ENDIF
      C                   EVAL      wrkIntrstAmt = wrkIntrstAmt - prvIntrstAmt               MD060441
      C                   EVAL (H)  prvIntrstAmt = ZINTR                                     MD060441
      C                   ENDIF                                                              MD060441
-     C                                                                                      MD060441
+                                                                                            MD061389
+     C                   IF        resetFlag                                                MD061389
+     C                   EVAL      ZIBEG = prvStart(ctr-1)                                  MD061389
+     C                   EVAL      ZIEND = prvStart(ctr-1) +  elapsed(ctr-1)                MD061389
+     C                   EXSR      GLINTC                                                   MD061389
+     C                   EVAL      wrkIntrstAmt = savIntrstAmt - ZINTR                      MD061389
+     C                   ENDIF                                                              MD061389
                                                                                             MD060441
      C                   EVAL      ZFLD15 = wrkIntrstAmt                                    MD060441
      C                   EVAL      ZDECS = wrkDec                                           MD060441

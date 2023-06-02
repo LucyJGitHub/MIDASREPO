@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MDSC38665          Date 21Jul22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD025416           Date 29May23               *
+      *  Prev Amend No. MDSC38665          Date 21Jul22               *
+      *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
@@ -78,6 +79,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025416 - Issue date on a Security set up is disappearing   *
+      *             after input. Prevent blanking of ISSD even when   *
+      *             New Issue box is not ticked.                      *
       *  MDSC38665 - Make Issue Date a Mandatory input field for all  *
       *              complete securities (re-design of GEMS250592).   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
@@ -3192,7 +3196,7 @@
                                                                                               232543
       ** Check first if CGL031 is not enabled.                                                232543
      C                   IF        CGL031 <> 'Y'                                              232543
-     C                   Z-ADD     *ZEROS        S1ISSD
+     C**********         Z-ADD     *ZEROS        S1ISSD                                     MD025416
      C                   Z-ADD     *ZEROS        S1ISSP
      C**********         Z-ADD     *ZEROS        S1LMGR                                       CSD027
      C                   EVAL      S1LMGR = *BLANKS                                           CSD027

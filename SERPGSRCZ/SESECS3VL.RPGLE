@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD027228           Date 13Apr23               *
-      *  Prev Amend No. AR641079           Date 04Apr23               *
+      *  Last Amend No. MD025416           Date 29May23               *
+      *  Prev Amend No. MD027228           Date 13Apr23               *
+      *                 AR641079           Date 04Apr23               *
       *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -54,6 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD025416 - Issue date on a Security set up is disappearing   *
+      *             after input. Prevent blanking of ISSD even when   *
+      *             New Issue box is not ticked.                      *
       *  MD027228 - Incorrect Average life date validation due to     *
       *             incorrect conversion of Maturity date within      *
       *             this program. Get the correct Maturity date.      *
@@ -305,7 +309,7 @@
      C                   EVAL      DDISA2 = DDISA1
      C                   EVAL      DDFECY = *BLANKS
      C                   IF        CGL031 <> 'Y'                                              232543
-     C                   EVAL      DDISSD = *BLANKS
+     C**********         EVAL      DDISSD = *BLANKS                                         MD025416
      C                   EVAL      DDISSP = *BLANKS
      C                   ENDIF                                                                232543
      C                   EVAL      DDLMGR = *BLANKS
@@ -316,7 +320,7 @@
      C                   EVAL      DDMGRC = *BLANKS
      C                   EVAL      DDUNFD = *BLANKS
      C                   EVAL      DDUNFR = *BLANKS
-     C                   EVAL      ISSD = *ZEROS                                              225455
+     C**********         EVAL      ISSD = *ZEROS                                     225455 MD025416
      C                   EVAL      ISSP = *ZEROS                                              225455
      C**********         EVAL      LMGR = *ZEROS                                       225455 CSD027
      C                   EVAL      LMGR = *BLANKS                                             CSD027

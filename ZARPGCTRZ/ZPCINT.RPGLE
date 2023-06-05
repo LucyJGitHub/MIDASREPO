@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD036500           Date 05Jun23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -64,6 +65,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036500 - ZZLCD is being overriden by SNDT from SNDEVD.     *
+      *             This should not be done when rundate is a coupon  *
+      *             date and value date is forward valued.            *
+      *           - Applied for MD-37444.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -98,7 +103,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
      FSEDEV     IF   E           K DISK
      F***SECEO     IF   E           K DISK    RENAME(SEDEVDF:SEDEVDO)                         230608
      F***                                     RENAME(SNDEVDF:SNDEVDO)                         230608
@@ -106,12 +111,12 @@
      F                                     RENAME(SNDEVDF:SNDEVDO2)                           230608
      FSECEO3    IF   E           K DISK    RENAME(SEDEVDF:SEDEVDO2)                           230608
      F                                     RENAME(SNDEVDF:SNDEVDO)                            230608
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)                         BUG11009
       ** The following fields are defined in the external file:                             BUG11009
       **                                    134 141 DBFile                                  BUG11009
@@ -130,20 +135,23 @@
      D SECTY         E DS                  EXTNAME(SECTYD)
      D CDArr                 183    230
      D CRArr                 231    242
- 
- 
+      ** Bank details                                                                       MD036500
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                MD036500
+     D                                     PREFIX(D_)                                       MD036500
+
+
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)
- 
- 
+
+
       ** Input fields
- 
+
       ** Interest days adjustment
      D  DADJN          S              1A
       ** Nominal currency decimal places
      D NomCcyDec       S              1P 0
       ** Processing type
      D PROT            S              1A
- 
+
       ** Nominal
      D  NOML           S             11P 0
       ** Accrued indicator
@@ -160,9 +168,9 @@
      D  BJDFIN         S              1A
       ** Event Control Date
      D  ECD            S              5P 0
- 
+
       ** Working Variables
- 
+
       ** Interest Accrued (1)   (ZACCR)
      D ZACCRD          S             15P 0
       ** Interest Accrued (2)   (ZACCR)
@@ -171,7 +179,7 @@
      D ZRP             S              1A
       ** Interest rate     (ZRATE)
      D  IRATE          S             15P 9
- 
+
       ** Last Coupon Date before Control Date  (ZLCD)
      D  ZZLCD          S              5P 0
       ** Next Coupon Date (ZNCD)
@@ -182,23 +190,23 @@
      D  ZEDATE         S              5P 0
       ** Principal amount
      D ZAMT            S             15P 0
- 
- 
+
+
       ** Interest work fields
      D  ZDDAYS         S              5P 0
      D  LCDD5          S              5P 0
- 
+
      D  ZECD           S              5P 0
      D  ZINTDD         S              5P 0
- 
+
      D  ZCPNR          S             11P 7
      D  ZCFCT          S             10P 9
      D  ZPPCP          S             15P 0
      D  ZPPDI          S              1A
      D  ZPROT          S              1A
      D  ZSFPP          S             15P 0
- 
- 
+
+
      ISEDEVDF
      I              RECI                        RECI_X
      I              NMCY                        NMCY_X
@@ -210,21 +218,21 @@
      ISNDEVDO
      I              RECI                        RECI_X
      I              MDTI                        MDTI_X
- 
- 
+
+
       ** Working Variables
       ** +-----------------------------------------------------------------+
- 
+
       ** Nominal currency decimal places
- 
+
      C                   Z-ADD     NomCcyDec     ZCDP              1 0
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZPCINT
- 
+
      C                   RETURN
       /EJECT
- 
+
       ** +--- The converted ZPCINTZ1 starts here --------------------------+
       *****************************************************************
       **                                                             **
@@ -376,6 +384,8 @@
      C     CSE031        IFEQ      'N'                                                      BUG11009
      C     CSE031        OREQ      'Y'                                                      BUG11009
      C     BCNV          ANDEQ     'N'                                                      BUG11009
+      *                                                                                     MD036500
+     C     ECD           IFLT      D_BJRDNB                                                 MD036500
       *                                                                                       209875
       ** Check if previous settlement generated to ensure that                                209875
       ** the correct last coupon is passed in case the coupon date                            209875
@@ -392,6 +402,8 @@
      C     SNET          ANDEQ     'CP'                                                       209875
      C                   Z-ADD     SNDT          ZZLCD                                        209875
      C                   ENDIF                                                                209875
+      *                                                                                     MD036500
+     C                   ENDIF                                                              MD036500
       *                                                                                     BUG11009
      C                   ENDIF                                                              BUG11009
       *****************************************************************              212939 BUG11193
@@ -779,7 +791,7 @@
       *
       *****************************************************************
       ** +--- The converted ZPCINTZ1 ends here ----------------------------+
- 
+
       /EJECT
       **********************************************************************
       *                                                                    *
@@ -790,7 +802,7 @@
       *   the module that contains subroutine ZDYYR                        *
       *                                                                    *
      C     ZDYYR         BEGSR
- 
+
      C                   CALLB     'ZDYYR'
      C                   PARM                    DYBS
      C                   PARM                    DVBS
@@ -818,7 +830,7 @@
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    ZINTDD
      C                   PARM                    LCDD5
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -831,7 +843,7 @@
       *   the module that contains subroutine ZRATE                        *
       *                                                                    *
      C     ZRATE         BEGSR
- 
+
      C                   CALLB     'ZRATE'
      C                   PARM                    ZCPNR
      C                   PARM                    ZPPDI
@@ -840,7 +852,7 @@
      C                   PARM                    ZPROT
      C                   PARM                    ZCFCT
      C                   PARM                    IRATE
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -853,7 +865,7 @@
       *   the module that contains subroutine ZACCR                        *
       *                                                                    *
      C     ZACCR         BEGSR
- 
+
      C                   CALLB     'ZACCR'
      C                   PARM                    ZAMT
      C                   PARM                    IRATE
@@ -870,7 +882,7 @@
      C                   PARM                    ZRP
      C                   PARM                    ZDDAYS
      C                   PARM                    ZINTDD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -883,7 +895,7 @@
       *   the module that contains subroutine ZNCD                         *
       *                                                                    *
      C     ZNCD          BEGSR
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    ITLD
      C                   PARM                    FCPN
@@ -912,7 +924,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    NCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -925,7 +937,7 @@
       *   the module that contains subroutine ZLCD                         *
       *                                                                    *
      C     ZLCD          BEGSR
- 
+
      C                   CALLB     'ZLCD'
      C                   PARM                    ISSD
      C                   PARM                    ITLD
@@ -954,7 +966,7 @@
      C                   PARM                    HCY8                                         CSE071
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    ZZLCD
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -967,13 +979,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       ** Security Details
       ** Interest days adjustment
       ** Nominal currency decimal places
@@ -994,15 +1006,15 @@
      C                   PARM                    ZADIN
      C                   PARM                    TDCR
      C                   PARM                    ZCPOVR
- 
+
       ** System Info
       ** Date format
       ** Event Control Date
      C                   PARM                    BJDFIN
      C                   PARM                    ECD
- 
+
       * OUTPUTS
- 
+
       ** Total Purchased Interest
       ** Interest Adjustment
      C                   PARM                    ZITRA
@@ -1049,8 +1061,13 @@
      C                   ENDIF                                                              BUG11009
      C                   ENDIF                                                              BUG11009
       *                                                                                     BUG11009
+     C                   CALL      'AOBANKR0'                                               MD036500
+     C                   PARM      *BLANKS       @RTCD                                      MD036500
+     C                   PARM      '*FIRST  '    @OPTN                                      MD036500
+     C     SDBANK        PARM      SDBANK        DSFDY                                      MD036500
+      *                                                                                     MD036500
      C                   ENDSR
- 
+
       *****************************************************************
 **  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
 00000001

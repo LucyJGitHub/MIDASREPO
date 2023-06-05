@@ -628,12 +628,8 @@
      C                   ELSE                                                               MD028973
      C                   EVAL      SYSMN = 0                                                MD028973
      C                   EVAL      SYSHR = 0                                                MD028973
-     C                   IF        DSOFFS = 30                                              MD028973
-     C                   EVAL      SYSMN = 30                                               MD028973
-     C                   ENDIF                                                              MD028973
-     C                   IF        DSOFFS = 60                                              MD028973
-     C                   EVAL      SYSHR = 1                                                MD028973
-     C                   ENDIF                                                              MD028973
+     C                   EVAL      SYSHR = DSOFFS / 60                                      MD028973
+     C                   EVAL      SYSMN = DSOFFS - (SYSHR * 60)                           MD028973
      C                   AddDur    SYSHR:*H      WkCurTime                                  MD028973
      C                   AddDur    SYSMN:*MN     WkCurTime                                  MD028973
      C                   If        Not %EoF(GLPRMOPD)                                       MD028973

@@ -171,8 +171,8 @@
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer "Authority Holders Link Report *
-      *             for KWG$24c" not generated.                       *
+      *  MD053634 - Requested Customer Authority Holders Link Report *
+      *             for KWG$24c not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
@@ -3035,6 +3035,9 @@
      C                   MOVEL     'USR1532'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   END
+      *                                                                                       HUT122
+     C/COPY WNCPYSRC,HUT122_022                                                               HUT122
+      *                                                                                       HUT122
       * Customer is the EUROCLEAR customer on SDSTRDPD.
       * CASE: WRK.Customer Deln Flag 023 is Do not delete
      C     WDS1023       IFEQ      'F'

@@ -24,12 +24,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 240193             Date 12Jul06               *
+      *                 240193             Date 12Jul06               *
       *                 239740             Date 29May06               *
       *                 BG11679            Date 05Jul06               *
       *                 CSD027B            Date 29Jun06               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Prevent       *
+      *             further checking when value is already validated. *
       *  MD046248 - Finastra Rebranding                               *
       *  240193 - Apply fix 239740.                                   *
       *  239740 - Incorporation conflict introduced at SP01 (BUG9185) *
@@ -111,7 +114,11 @@
      F                                     IGNORE(TABTG10F)
      F                                     IGNORE(TABLETHF)
      F                                     IGNORE(TABLETRF)
+      ** Counterparty Nostro file                                                           MD022354
+     FSDCNSTL1  IF   E           K DISK                                                     MD022354
  
+      ** Customer Details File                                                              MD022354
+     FSDCUSTL2  IF   E           K DISK                                                     MD022354
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FFSETLV001
  
@@ -1197,7 +1204,8 @@
       **      Counterparty Nostro  (Broker)
       **      ~~~~~~~~~~~~~~~~~~~
       **   Entry only allowed for Settlement Types 01,02,07,08,12
-     C     SBCPN         IFNE      *BLANK
+     C*****SBCPN         IFNE      *BLANK                                                   MD022354
+     C     SBCPN10       IFNE      *BLANK                                                   MD022354
  
      C     SBSLT         IFNE      '01'
      C     SBSLT         ANDNE     '02'
@@ -1214,7 +1222,9 @@
  
       **   - must exist as a valid Counterparty Nostro on PF/TABLET2
       **     or as a valid customer on PF/CLINTCB
-     C                   MOVEL     SBCPN         SBCPN6            6
+     C**********         MOVEL     SBCPN         SBCPN6            6                        MD022354
+     C                   MOVEL     SBCPN10       SBCPN6            6                        MD022354
+     C                   MOVE      SBCPN10       SBCPN4            4                        MD022354
      C******             TESTN                   SBCPN6               75                     CSD027B
  
       **   If counterparty nostro field entered is numeric, access
@@ -1236,10 +1246,14 @@
       **   Else counterparty nostro field entered is not numeric,
       **   access LF/SNAME to check for customer shortname
      C******             ELSE                                                                CSD027B
-     C                   MOVE      SBCPN         KCSNM
+     C     *IN71         IFEQ      '1'                                                      MD022354
+     C     SBCPN4        ORNE      *BLANKS                                                  MD022354
+     C**********         MOVE      SBCPN         KCSNM                                      MD022354
+     C                   MOVE      SBCPN10       KCSNM                                      MD022354
  
-     C     KCSNM         CHAIN     SNAME                              74
-     C  N74RECI          COMP      'D'                                7474
+     C*****KCSNM         CHAIN     SNAME                              74                    MD022354
+     C     KCSNM         CHAIN     @CUSTD5                            74                    MD022354
+     C**N74RECI*         COMP      'D'                                7474                  MD022354
  
       **   If record found, store customer number for this customer
       **   shortname in a work field
@@ -1251,10 +1265,12 @@
       **   Else access PF/TABLET2 to check for valid counterparty
       **   nostro
      C                   ELSE
-     C                   MOVEL     SBCPN         KCPSH2
+     C**********         MOVEL     SBCPN         KCPSH2                                     MD022354
+     C                   MOVEL     SBCPN10       KCPSH2                                     MD022354
  
-     C     KCPSH         CHAIN     TABLET2F                           70
-     C  N70RECI          COMP      'D'                                7070
+     C*****KCPSH         CHAIN     TABLET2F                           70                    MD022354
+     C     KCPSH2        CHAIN     @AWREDN                            70                    MD022354
+     C**N70RECI*         COMP      'D'                                7070                  MD022354
  
       **   - no live record exists
      C     *IN70         IFEQ      '1'
@@ -1267,6 +1283,7 @@
      C                   ENDIF
  
      C**********         ENDIF                                                               CSD027B
+     C                   ENDIF                                                              MD022354
  
      C                   ENDIF
  
@@ -2081,7 +2098,8 @@
      C     CNUMB         IFNE      *BLANKS                                                    CSD027
      C                   MOVEL     CNUMB         BCPN
      C                   ELSE
-     C                   MOVEL     SBCPN         BCPN
+     C**********         MOVEL     SBCPN         BCPN                                       MD022354
+     C                   MOVEL     SBCPN10       BCPN                                       MD022354
      C                   END
  
       /COPY WNCPYSRC,FFSETLV009

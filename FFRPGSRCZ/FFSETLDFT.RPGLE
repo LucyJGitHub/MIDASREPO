@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD095             Date 08Apr14               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Changed       *
+      *             SBCPN to SBCPN10 due to changes in FFBSETPD.      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
       *           (Recompile)                                         *
@@ -344,7 +347,8 @@
      C                   MOVE      SETP          SBSLT
      C                   MOVE      SETA          SBSLA
      C                   MOVE      FACO          SBFAO
-     C                   MOVEL     CNOS          SBCPN
+     C**********         MOVEL     CNOS          SBCPN                                      MD022354
+     C                   MOVEL     CNOS          SBCPN10                                    MD022354
      C                   MOVE      SEBR          SBSBR                                         S0111
  
      C                   ELSE
@@ -354,7 +358,8 @@
      C                   MOVE      FOSETP        SBSLT
      C                   MOVE      FOSETA        SBSLA
      C                   MOVE      FOFACO        SBFAO
-     C                   MOVEL     FOCNOS        SBCPN
+     C**********         MOVEL     FOCNOS        SBCPN                                      MD022354
+     C                   MOVEL     FOCNOS        SBCPN10                                    MD022354
      C                   MOVE      FOSEBR        SBSBR
  
      C                   ENDIF

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26944           Date 28Jan10               *
       *                 BUG26906           Date 21Jan10               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
+      *             due to changes in FFBSETPD.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  BUG26944 - Field values on the Extension tab of EXTR         *

@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BG9185             Date 08Nov05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Changed       *
+      *             SBCPN to SBCPN10 due to changes in FFBSETPD.      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BG9185 - Correction to CGL029 (Recompile)                    *
@@ -275,7 +278,8 @@
      C                   END
  
      C                   MOVE      BFAO          SBFAO
-     C                   MOVEL     BCPN          SBCPN
+     C**********         MOVEL     BCPN          SBCPN                                      MD022354
+     C                   MOVEL     BCPN          SBCPN10                                    MD022354
  
      C                   ENDSR
  

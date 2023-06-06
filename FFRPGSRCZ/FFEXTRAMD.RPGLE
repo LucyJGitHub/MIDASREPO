@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BG9185             Date 08Nov05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CAS002             Date 14Jan02               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Change        *
+      *             SBCPN to SBCPN10 due to amendment in FFBSETPD.    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BG9185 - Correction to CGL029 (Recompile)                    *
@@ -611,7 +614,8 @@
       ** indicator = 'N'.
  
      C     ECPI          IFNE      'N'
-     C     SBCPN         IFNE      @SBCPN
+     C*****SBCPN         IFNE      @SBCPN                                                   MD022354
+     C     SBCPN10       IFNE      @SBCPN10                                                 MD022354
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBCPN'
      C                   EVAL      MsgIDArr(Idx)   = 'MMA0555'

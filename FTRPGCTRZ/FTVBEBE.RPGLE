@@ -819,14 +819,14 @@
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
       *                                                                                     MD060908
-      ** Message ID 5049570 is configurable and UXP default severity                        MD060908
+      ** Message ID FTM0069 is configurable and UXP default severity                        MD060908
       ** in UXP is 'E' (Error).                                                             MD060908
       *                                                                                     MD060908
      C                   IF        %SUBST(ADCHK1:1:1) = ':'                                 MD060908
      C                   Move      'W'           OKBnc1                                     MD060908
      C                   Add       1             WIx                                        MD060908
      C                   Movel     'SBNC1'       WFldNmXAr(WIx)                             MD060908
-     C                   Movel     '5049571'     WMsgIDXAr(WIx)                             MD060908
+     C                   Movel     'FTM0069'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
 
      C                   If        AD#2 = 'Y'
@@ -843,7 +843,7 @@
      C                   Move      'W'           OKBnc2                                     MD060908
      C                   Add       1             WIx                                        MD060908
      C                   Movel     'SBNC2'       WFldNmXAr(WIx)                             MD060908
-     C                   Movel     '5049571'     WMsgIDXAr(WIx)                             MD060908
+     C                   Movel     'FTM0069'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
 
      C                   If        AD#3 = 'Y'
@@ -860,7 +860,7 @@
      C                   Move      'W'           OKBnc3                                     MD060908
      C                   Add       1             WIx                                        MD060908
      C                   Movel     'SBNC3'       WFldNmXAr(WIx)                             MD060908
-     C                   Movel     '5049571'     WMsgIDXAr(WIx)                             MD060908
+     C                   Movel     'FTM0069'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
 
      C                   If        AD#4 = 'Y'
@@ -877,7 +877,7 @@
      C                   Move      'W'           OKBnc4                                     MD060908
      C                   Add       1             WIx                                        MD060908
      C                   Movel     'SBNC4'       WFldNmXAr(WIx)                             MD060908
-     C                   Movel     '5049571'     WMsgIDXAr(WIx)                             MD060908
+     C                   Movel     'FTM0069'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
 
      C                   If        AD#5 = 'Y'
@@ -894,7 +894,7 @@
      C                   Move      'W'           OKBnc5                                     MD060908
      C                   Add       1             WIx                                        MD060908
      C                   Movel     'SBNC5'       WFldNmXAr(WIx)                             MD060908
-     C                   Movel     '5049571'     WMsgIDXAr(WIx)                             MD060908
+     C                   Movel     'FTM0069'     WMsgIDXAr(WIx)                             MD060908
      C                   ENDIF                                                              MD060908
 
       *  If no errors then customer is an address

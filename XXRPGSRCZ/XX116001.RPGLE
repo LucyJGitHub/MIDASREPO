@@ -16,7 +16,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  EML116 - MT202 Field 53B Update                              *
+      *  EML116 - MT202 Field 53B Update.                             *
       *                                                               *
       *****************************************************************
       ** D-specs
@@ -41,7 +41,7 @@
      D SystemValue     S             20
 
       ** Processing mode
-     D ProcMode        S            190                                                       CSC018
+     D ProcMode        S            190
 
       ** General error indicator
      D GenError        S              1

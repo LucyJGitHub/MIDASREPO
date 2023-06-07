@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051508           Date 12Jul18               *
+      *  Last Amend No. MD061083           Date 01Jun23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051508           Date 12Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041643           Date 27Sep16               *
       *                 MD036567           Date 26Apr16               *
@@ -90,6 +91,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061083 - Ordering Customer 1 and Ordering Customer 2 went  *
+      *             blank after user authorized that incoming payment *
+      *             transaction                                       *
+      *           - Display warning message '5049572' for illegal     *
+      *             SWIFT character.                                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051508 - Correct field name in order to return proper      *
@@ -439,6 +445,7 @@
       *                                                                                     BUG13025
      C                   If        CFT004 = 'Y'                                             BUG13025
      C**********                   And WIx > 0                                     BUG13025 MD033105
+     C                             OR CFT004 = 'N'                                          MD061038
      C                   Eval      IPORC1 = DDORC1                                          BUG13025
      C                   Eval      IPORC2 = DDORC2                                          BUG13025
      C                   Eval      IPORC3 = DDORC3                                          BUG13025
@@ -934,23 +941,43 @@
      C                   ENDIF
       *
      C     AD#1          IFEQ      'Y'
-     C                   MOVEL     'N'           OKORC1
+     C**********         MOVEL     'N'           OKORC1                                     MD061083
+     C                   EVAL      OKORC1 = 'W'                                             MD061083
+     C                   EVAL      WIx +=1                                                  MD061083
+     C                   EVAL      WFldNmXAr(WIx) = 'DDORC1'                                MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
      C                   ENDIF
       *
      C     AD#2          IFEQ      'Y'
-     C                   MOVEL     'N'           OKORC2
+     C**********         MOVEL     'N'           OKORC2                                     MD061083
+     C                   EVAL      OKORC2 = 'W'                                             MD061083
+     C                   EVAL      WIx +=1                                                  MD061083
+     C                   EVAL      WFldNmXAr(WIx) = 'DDORC2'                                MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
      C                   ENDIF
       *
      C     AD#3          IFEQ      'Y'
-     C                   MOVEL     'N'           OKORC3
+     C**********         MOVEL     'N'           OKORC3                                     MD061083
+     C                   EVAL      OKORC3 = 'W'                                             MD061083
+     C                   EVAL      WIx +=1                                                  MD061083
+     C                   EVAL      WFldNmXAr(WIx) = 'DDORC3'                                MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
      C                   ENDIF
       *
      C     AD#4          IFEQ      'Y'
-     C                   MOVEL     'N'           OKORC4
+     C**********         MOVEL     'N'           OKORC4                                     MD061083
+     C                   EVAL      OKORC4 = 'W'                                             MD061083
+     C                   EVAL      WIx +=1                                                  MD061083
+     C                   EVAL      WFldNmXAr(WIx) = 'DDORC4'                                MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
      C                   ENDIF
                                                                                               CFT032
      C                   IF        AD#5 = 'Y'                                                 CFT032
-     C                   EVAL      OKORC5 = 'N'                                               CFT032
+     C**********         EVAL      OKORC5 = 'N'                                      CFT032 MD061083
+     C                   EVAL      OKORC5 = 'W'                                             MD061083
+     C                   EVAL      WIx +=1                                                  MD061083
+     C                   EVAL      WFldNmXAr(WIx) = 'DDORC5'                                MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
      C                   ENDIF                                                                CFT032
                                                                                               CFT032
      C                   IF        CSW207 = 'N'                                               250600

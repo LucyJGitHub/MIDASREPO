@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022354           Date 06Jun23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping.                                     *
       *  MD022354 - Error in Counterparty Nostro field. Change        *
       *             SBCPN to SBCPN10 due to amendment in FFBSETPD.    *
       *  MD046248 - Finastra Rebranding                               *
@@ -759,7 +762,8 @@
       ** indicator = 'N'.
  
      C     ECPI          IFNE      'N'
-     C     SCCPN         IFNE      @SCCPN
+     C*****SCCPN         IFNE      @SCCPN                                                   MD061489
+     C     SCCPN10       IFNE      @SCCPN10                                                 MD061489
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SCCPN'
      C                   EVAL      MsgIDArr(Idx)   = 'MMA0566'

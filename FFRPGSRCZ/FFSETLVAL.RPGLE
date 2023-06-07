@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022354           Date 06Jun23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping.                                     *
       *  MD022354 - Error in Counterparty Nostro field. Prevent       *
       *             further checking when value is already validated. *
       *  MD046248 - Finastra Rebranding                               *
@@ -83,12 +86,12 @@
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Customer by shortname
      FSNAME     IF   E           K DISK
      F                                     RENAME(CLINTCBF:SNAMECBF)
@@ -116,12 +119,12 @@
      F                                     IGNORE(TABLETRF)
       ** Counterparty Nostro file                                                           MD022354
      FSDCNSTL1  IF   E           K DISK                                                     MD022354
- 
+
       ** Customer Details File                                                              MD022354
      FSDCUSTL2  IF   E           K DISK                                                     MD022354
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FFSETLV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -133,19 +136,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -153,37 +156,37 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D FFEBSET       E DS                  EXTNAME(FFEBSETPD)
       * Broker settlement OK flags
- 
+
      D FFECSET       E DS                  EXTNAME(FFECSETPD)
       * Customer settlement OK flags
- 
+
      D FFCSET        E DS                  EXTNAME(FFCSETPD)
       * Customer settlement format definition
      D**SCSLA1**              54     55                                                       TDA034
@@ -211,7 +214,7 @@
      D**SCSLA7**              54     63                                                       TDA034
      D**SCSLA7**              84     93                                                TDA034 239740
      D  SCSLA7                54     63                                                       239740
- 
+
      D FFBSET        E DS                  EXTNAME(FFBSETPD)
       * Broker settlement format definition
      D**SBSLA1**              54     55                                                       TDA034
@@ -239,36 +242,36 @@
      D**SBSLA7**              54     63                                                       TDA034
      D**SBSLA7**              84     93                                                TDA034 239740
      D  SBSLA7                54     63                                                       239740
- 
+
      D FFVSETL       E DS                  EXTNAME(FFVSETLPD)
       ** The valid settlements format
- 
+
      D@DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long data Structure
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CFF007
       ** Third DS for Access Programs, Very Long data Structure                               CFF007
                                                                                               CFF007
      D KCPSH           DS            12
       ** Key for Counterparty Nostro Table file
      D  KCPSH2                 5     12
- 
+
      D KCSNM           DS            10
       **  Key to LF/SNAME
       **  Also, re-defines Client Number/Shortname
      D  KCSNM1                 1      1
      D  KCSNM2                 1      6
      D  KCSNM3                 7     10
- 
+
      D FFNKY           DS            12
       ** Key for Nostro Codes Table file
      D  FFNKY1                 1      2
      D  FFNCCY                 8     10
      D  FFNOSN                11     12  0
- 
+
      D*FFAKY****       DS            12                                                       CGL029
      D FFAKY           DS            18                                                       CGL029
       ** Key for Account Codes Table file
@@ -277,47 +280,47 @@
      D  FFAKY2                18     18                                                       CGL029
      D**FFACOD**               8     11  0                                                    CGL029
      D**FFAKY2**              12     12                                                       CGL029
- 
+
      D FFCKY           DS            12
       ** Key for currencies table file
      D  FFCKY1                 1      2
      D  FFCCY                  9     11
      D  FFCKY2                12     12
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Branch Details
      D  BRCH         E                     EXTFLD(A8BRCD)
      D  LCCD         E                     EXTFLD(A8LCCD)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Customer details
      D  CUST         E                     EXTFLD(BBCUST)
      D  CSSN         E                     EXTFLD(BBCSSN)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Modules Details
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)                      CPM003
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
      ** Trading details
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)                    CPM003
       ** Portfolio Management ICD
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  QQACC2       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D PMPORT        E DS                  EXTNAME(PMPORTPD) IMPORT
       ** PMPORTPD imported from FFVPORTRF
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)                                  CGL029
      D  QQACC3       E                     EXTFLD(QQACCD)                                     CGL029
       ** Account Code Details                                                                 CGL029
@@ -326,7 +329,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** AOACODR0 Parameters                                                                  CGL029
      D PRTCD           S              7A                                                      CGL029
      D POPTN           S              7A                                                      CGL029
@@ -334,30 +337,30 @@
                                                                                               CGL029
       ** Customer/Broker Flag
      D  CustBrokFl     S              1A
- 
+
       ** Trade date OK flag
      D  OKTRSD         S              1A
- 
+
       ** Instrument Currency
      D  ISCY           S              3A
- 
+
       ** Broker Code (6S,0)
      D**BOCO****       S              6S 0                                                    CSD027
      D  BOCO           S              6                                                       CSD027
- 
+
       ** Customer Code (6S,0)
      D**CUSC****       S              6S 0                                                    CSD027
      D  CUSC           S              6                                                       CSD027
- 
+
       ** Portfolio reference
      D SPTFR           S              4A
- 
+
       ** Branch code
      D SBRCD           S              3A
- 
+
       ** Settlement Branch ID
      D WXSLB           S                   LIKE(SBRCD)
- 
+
      D*WXSLA****       DS            12                                                       CGL029
      D WXSLA           DS            18                                                       CGL029
       ** Settlement A/C
@@ -366,26 +369,26 @@
      D  WXSLA3                17     18                                                       CGL029
      D**WXSLA2**               7     10                                                       CGL029
      D**WXSLA3**              11     12                                                       CGL029
- 
+
       ** Customer Number - part of
       ** key List for LF/ACCNT (Accounts): FFACTK
      D*FFCNUM***       S              6S 0                                                    CSD027
      D FFCNUM          S              6                                                       CSD027
- 
+
       ** Account Sequence - part of
       ** key List for LF/ACCNT (Accounts): FFACTK
      D FFACSQ          S              2S 0
- 
+
       ** Branch Code - part of
       ** key List for LF/ACCNT (Accounts): FFACTK
      D FFBRCB          S              3A
- 
+
       ** MEMOS update indicator (= Y or N or E)
      D XMIND           S              1A
- 
+
       ** Portfolio reference (imported from the FFVPORTRF module)
      D WWPORT          S              1A   IMPORT
- 
+
       ** PB customer indicator                                                                CFF007
      D PPBBFLG         S              1A                                                      CFF007
      D PPBCFLG         S              1A                                                      CFF007
@@ -395,26 +398,26 @@
                                                                                               CFF007
       ** Transaction date
      D TRSD            S              5P 0
- 
+
       ** Current trading date
      D CTDATE          S              5  0
- 
+
       ** Instrument currency
      D KCCY            S                   LIKE(SBRCD)
- 
+
       ** Part of Composite Key to LF/SNAME
      D  KCPSH1         S              2A
- 
+
       ** Branch internal customer - from SDBRCHPD
      D BICN            S                   LIKE(A8BICN)
- 
+
       ** Customer Number - key for CLINT logical file
      D*KCBCD****       S              6S 0                                                    CSD027
      D KCBCD           S              6                                                       CSD027
- 
+
       ** Record type - key for CLINT logical file
      D KRCDT           S              1A
- 
+
      D CGL014          S              1                                                       CGL014
      D PTR_Amount      S             15  0                                                    CGL014
      D PTR_Curr        S              3                                                       CGL014
@@ -436,48 +439,48 @@
      D WPrvBOCO        S              6                                                       B11679
      D WPrvCUSC        S              6                                                       B11679
      D WPrvSPTFR       S              4                                                       CGL014
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FFSETLV002
- 
+
       ** +--------------------------------------+
       ** ¦ I-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      IACCNTABF
       ** Input fields for record ACCNTABF file ACCNT format ACCNTABF.
      I              PTFR                        ACPTFR
- 
+
      IACNUMABF
       ** Input fields for record ACNUMABF file ACNUM format ACCNTABF.
      I              PTFR                        NUPTFR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,FFSETLV003
- 
+
       ** Reset error fields
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
@@ -486,7 +489,7 @@
       ** It therefore requires FVAL_ARRAY and STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_RESET
       **--------------------------------------------------------------------------------------------
- 
+
       ** Resets
       ** ~~~~~~
      C                   EVAL      WXSLB  = *BLANKS
@@ -499,10 +502,10 @@
      C**********         EVAL      CNUMC  = 0                                                 CSD027
      C                   EVAL      CNUMB  = *BLANKS                                           CSD027
      C                   EVAL      CNUMC  = *BLANKS                                           CSD027
- 
+
       ** Set MEMO indicator to N
      C                   EVAL      XMIND  = 'N'
- 
+
       ** Setup various table keys.
      C                   MOVE      '20'          FFCKY1
      C                   MOVE      '1'           FFCKY2
@@ -513,35 +516,35 @@
      C                   MOVE      'A'           KRCDT
      C                   MOVE      ISCY          KCCY
      C                   MOVE      ISCY          FFCCY
- 
+
      C                   SELECT
       **                 ------
- 
+
      C                   WHEN      CustBrokFl = 'B'
- 
+
       /COPY WNCPYSRC,FFSETLV004
      C                   EXSR      BrokerSR
- 
+
      C                   WHEN      CustBrokFl = 'C'
- 
+
       /COPY WNCPYSRC,FFSETLV005
- 
+
      C                   EXSR      CustSR
- 
+
       /COPY WNCPYSRC,FFSETLV006
- 
+
      C                   ENDSL
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FFSETLV007
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -550,9 +553,9 @@
       *          requested                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     BrokerSR      BEGSR
- 
+
       **      Settlement Type (Broker)
       **      ~~~~~~~~~~~~~~~
      C     SBSLT         IFEQ      '  '
@@ -594,7 +597,7 @@
      C     SBSLT         ANDNE     '15'                                                       CFF007
      C     PPBBFLG       ANDEQ     'Y'                                                        CFF007
      C     CFF007        ANDEQ     'Y'                                                        CFF007
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLT'
@@ -606,12 +609,12 @@
      C                   ENDIF                                                                CFF007
      C                   EVAL      OKBSLT = 'N'
      C                   GOTO      BSEND
- 
+
      C                   ENDIF
- 
+
       **   Types 04 + 14 only allowed if Retail present (BGRTBN)
      C     BGRTBN        IFEQ      'N'
- 
+
      C     SBSLT         IFEQ      '04'
      C     SBSLT         OREQ      '14'
      C                   EVAL      ErrorFound = 'Y'
@@ -621,9 +624,9 @@
      C                   EVAL      OKBSLT = 'N'
      C                   GOTO      BSEND
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   Type 07 - Instr. ccy must be U.S. ccy code
      C     SBSLT         IFEQ      '07'
      C     KCCY          ANDNE     BLUSCY
@@ -634,10 +637,10 @@
      C                   EVAL      OKBSLT = 'N'
      C                   GOTO      BSEND
      C                   ENDIF
- 
+
       **   Type 14 - Retail A/c nos. must be supported
      C     SBSLT         IFEQ      '14'
- 
+
       **   BMRANR =  Retail account numbers required indicator.
      C     BMRANR        ANDNE     'Y'
      C                   EVAL      ErrorFound = 'Y'
@@ -647,9 +650,9 @@
      C                   EVAL      OKBSLT = 'N'
      C                   GOTO      BSEND
      C                   ENDIF
- 
+
       **   Continue only if Settlement Type not in error
- 
+
       **      Settlement Account (Broker)
       **      ~~~~~~~~~~~~~~~~~~
       **   - Settlement Types 00,04,06,15 : entry not allowed
@@ -657,7 +660,7 @@
      C     SBSLT         OREQ      '04'
      C     SBSLT         OREQ      '06'
      C     SBSLT         OREQ      '15'
- 
+
       * If settlement account has an entry, not allowed.
      C     SBSLA         IFNE      *BLANK
      C                   EVAL      ErrorFound = 'Y'
@@ -665,36 +668,36 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0449'
      C                   EVAL      OKBSLA = 'N'
- 
+
      C                   ELSE
      C                   EVAL      WXSLB = SBRCD
- 
+
      C     SBSLT         IFNE      '00'
- 
+
      C                   MOVE      '01'          FFACSQ
- 
+
      C     SBSLT         IFEQ      '04'
      C                   EVAL      FFCNUM = BOCO
       * Move current account default a/c code to FFACOD account code.
      C                   MOVE      BMACCD        FFACOD
      C                   ENDIF
- 
+
      C     SBSLT         IFEQ      '06'
       * user number =  branch internal customer
      C                   MOVE      BICN          FFCNUM
       * account code = computer suspense account code.
      C                   MOVE      BKACCD        FFACOD
      C                   ENDIF
- 
+
      C     SBSLT         IFEQ      '15'
       * user number =  broker number.
      C                   EVAL      FFCNUM = BOCO
       * account code = default broker account code.
      C                   EVAL      FFACOD = DFBA
- 
+
       * If it's a client portfolio and if a portfolio exists in PMPORTPD
       * use margin account sequence by default for the settlement account
- 
+
       * Portfolio management module indicator
      C     BGPFMG        IFEQ      'Y'
       * Portfolios supported
@@ -709,13 +712,13 @@
      C                   EVAL      FFACSQ = PNACSQ
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Types 01,02,07,08,12 : if entered, must be a
       **   2 digit no. (left adjusted) which when combined with
       **   Instr. Currency exists as a valid nostro code on PF/TABLETL
@@ -726,11 +729,11 @@
      C     SBSLT         OREQ      '12'
       *
      C                   EVAL      FFNCCY = KCCY
- 
+
      C     SBSLA         IFNE      *BLANK
- 
+
      C                   TESTN                   SBSLA1               75
- 
+
      C     *IN75         IFEQ      '0'
      C     SBSLA2        ORNE      *BLANK
      C                   EVAL      ErrorFound = 'Y'
@@ -738,10 +741,10 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0450'
      C                   EVAL      OKBSLA = 'N'
- 
+
      C                   ELSE
      C                   MOVE      SBSLA1        FFNOSN
- 
+
      C     FFNKY         CHAIN     TABLETLF                           70
      C  N70RECI          COMP      'D'                                7070
       **  - no live record
@@ -756,12 +759,12 @@
      C                   MOVE      CNUM          FFCNUM
      C                   MOVE      ACOD          FFACOD
      C                   MOVE      ACSQ          FFACSQ
- 
+
      C                   MOVE      BRCA          WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  - Nostro code must be entered
      C                   ELSE
      C                   EVAL      ErrorFound = 'Y'
@@ -769,16 +772,16 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0450'
      C                   EVAL      OKBSLA = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Type 03 : must be a left adjusted 6 digit no.
      C     SBSLT         IFEQ      '03'
- 
+
      C******             TESTN                   SBSLA3               75                     CSD027B
- 
+
      C******IN75         IFEQ      '0'                                                       CSD027B
      C*****SBSLA3        OREQ      '000000'                                                  CSD027B
      C     SBSLA3        IFEQ      '000000'                                                  CSD027B
@@ -792,31 +795,31 @@
      C                   MOVE      BICN          FFCNUM
      C                   MOVE      BLACCD        FFACOD
      C                   MOVE      '01'          FFACSQ
- 
+
      C                   MOVE      SBRCD         WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
      C     SBSLT         IFEQ      '05'
- 
+
      C******             TESTN                   SBSLA                75                     CSD027B
- 
+
      C******IN75         IFEQ      '1'                                                       CSD027B
- 
+
      C                   MOVE      SBSLA3        KCBCD
      C     KCLINT        CHAIN     CLINT                              71
- 
- 
+
+
      C     *IN71         IFEQ      '0'
      C                   MOVE      SBSLA5        FFACOD
      C*****FFAKY         CHAIN     TABTE10F                           70                      CGL029
      C**N70RECI*         COMP      'D'                                7070                    CGL029
      C                   EXSR      SRACOD                                                     CGL029
- 
+
      C                   ENDIF
- 
+
      C******             ENDIF                                                               CSD027B
- 
+
      C     *IN71         IFEQ      '1'
      C     *IN70         OREQ      '1'
      C******IN75         OREQ      '0'                                                       CSD027B
@@ -857,33 +860,33 @@
      C                   MOVE      SBSLA5        KYACOD
      C                   MOVE      SBSLA6        KYACSQ
      C                   MOVE      SBSBR         KYBRCA
- 
+
      C     KEYB          SETLL     ACCNT                                  99
- 
+
      C                   IF        *in99 = False
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0452'
      C                   EVAL      OKBSLA = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      SBRCD         WXSLB
      C                   ENDIF
      C                   ENDIF                                                                CFF007
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Type 14 : must be a left adjusted Retail A/c no.
       **                           with the same ccy as the Instr. ccy
      C     SBSLT         IFEQ      '14'
- 
+
      C                   TESTN                   SBSLA7               75
- 
+
      C     *IN75         IFEQ      '0'
      C     SBSLA6        ORNE      '  '
      C                   EVAL      ErrorFound = 'Y'
@@ -892,16 +895,16 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0453'
      C                   EVAL      OKBSLA = 'N'
      C                   ELSE
- 
+
      C                   MOVE      SBSLA7        KACNO            10 0
      C     KACNO         CHAIN     ACNUM                              71
      C  N71RECI          COMP      'D'                                7171
- 
+
      C     *IN71         IFEQ      '1'
      C     CCY           ORNE      KCCY
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
- 
+
      C                   EVAL      FldNamXArr(XIdx) = 'SBSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0453'
      C                   EVAL      OKBSLA = 'N'
@@ -915,29 +918,29 @@
      C                   MOVE      ACSQ          FFACSQ
      C                   MOVE      BRCA          WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **      Settlement Branch (Broker)
       **      ~~~~~~~~~~~~~~~~~
      C     BGMBIN        IFEQ      'Y'
- 
+
      C     SBSLT         IFNE      '05'
      C     SBSBR         IFNE      *BLANKS
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBSBR'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0460'
      C                   EVAL      OKBSBR = 'N'
- 
+
      C                   ENDIF
- 
+
       ** If Settlekment method is 05:
      C                   ELSE
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       @RTCD             7
@@ -945,67 +948,67 @@
      C                   PARM      SBSBR         @BRCD             3
      C*****SDBRCH        PARM      SDBRCH        @DSFDY                                       CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
       **   - live record not found
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBSBR'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0461'
      C                   EVAL      OKBSBR = 'N'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBSBR'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0460'
      C                   EVAL      OKBSBR = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       **   Selector is used
- 
+
      C                   MOVEL     BRCH          WXSLB
      C                   MOVEL     BRCH          SBSBR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   If Retail present, Settlement Account not yet in error,
       **    and Settlement type not '00'
      C     BGRTBN        IFEQ      'Y'
      C     OKBSLA        ANDEQ     'Y'
      C     SBSLT         ANDNE     '00'
- 
+
       **   - if the Account Type for the Settlement A/c code is 'R' for
       **      Retail, the account must exist on LF/ACCNT and be open
- 
+
       **   - access  Account codes table file
      C*****FFAKY         CHAIN     TABTE10F                           70                      CGL029
      C**N70RECI*         COMP      'D'                                7070                    CGL029
      C                   EXSR      SRACOD                                                     CGL029
- 
+
       **  - if a Retail account access LF/ACCNT
      C     *IN70         IFEQ      '0'
      C*****ATYP*         ANDEQ     'R'                                                        CGL029
      C     A5ACTY        ANDEQ     'R'                                                        CGL029
- 
+
      C                   MOVE      WXSLB         FFBRCB
      C     FFACTK        CHAIN     ACCNT                              71
      C                   MOVE      *BLANK        FFBRCB
      C  N71RECI          COMP      'D'                                7171
- 
+
       **  - Error if no live open Retail A/c exists
- 
+
      C     *IN71         IFEQ      '1'
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
@@ -1013,18 +1016,18 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0454'
      C                   EVAL      OKBSLA = 'N'
      C                   ELSE
- 
+
       **  - record found, set Memos update ind. to 'Y'
      C                   MOVE      'Y'           XMIND
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     BGPFMG        IFEQ      'Y'
      C     FCPORS        ANDNE     'B'
      C     BGN4ST        OREQ      'Y'
- 
+
       ** Test if customer of settlement account is the same as broker
       ** entered on the transaction.
      C     FFCNUM        IFNE      BOCO
@@ -1034,7 +1037,7 @@
      C                   EVAL      MsgIDWArr(WIdx) = 'MMA0479'
      C                   MOVE      'W'           OKBSLA
      C                   ENDIF
- 
+
       ** Access ACCNT to obtain portfolio reference
      C                   EVAL      FFBRCB = WXSLB
      C     FFACTK        CHAIN     ACCNT                              71
@@ -1062,21 +1065,21 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   If Memos Update ind on, + Transaction Date not in error
- 
+
      C     XMIND         IFEQ      'Y'
      C     OKTRSD        ANDEQ     'Y'
- 
+
       **   - determine Back Value Date
      C     CTDATE        SUB       BJBVPD        BVDATE            5 0
- 
+
      C     DACO          IFGT      BVDATE
      C                   MOVE      DACO          BVDATE
      C                   ENDIF
- 
+
       **   - Transaction Date must not be before Back Value Date
      C     TRSD          IFLT      BVDATE
      C                   EVAL      ErrorFound = 'Y'
@@ -1085,9 +1088,9 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0455'
      C                   EVAL      OKBSLA = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate broker account's remaining balance                                          CGL014
                                                                                               CGL014
      C                   IF        CGL014 = 'Y'  AND  OKBMAR <> 'N'  AND                      CGL014
@@ -1143,13 +1146,13 @@
      C                   ENDIF                                                                CGL014
                                                                                               CGL014
      C                   ENDIF                                                                CGL014
- 
- 
+
+
       **      For Account Of (Broker)
       **      ~~~~~~~~~~~~~~
       **   Entry only allowed for Settlement Types 01,02,07,08,12
      C     SBFAO         IFNE      *BLANK
- 
+
      C     SBSLT         IFNE      '01'
      C     SBSLT         ANDNE     '02'
      C     SBSLT         ANDNE     '07'
@@ -1160,9 +1163,9 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SBFAO'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0456'
      C                   EVAL      OKBFAO = 'N'
- 
+
      C                   ELSE
- 
+
      C**********         CALLB     'AOCUSTR0'                                                 CFF007
      C                   CALLB     'AOCUSTR1'                                                 CFF007
      C                   PARM      *BLANKS       @RTCD             7
@@ -1171,34 +1174,34 @@
      C                   PARM                    @KYST             7
      C*****SDCUST        PARM      SDCUST        DSSDY                                        CFF007
      C     SDCUST        PARM      SDCUST        DSLDY                                        CFF007
- 
+
       **   - must exist as a live record on SDCUSTPD
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBFAO'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0457'
      C                   EVAL      OKBFAO = 'N'
- 
+
      C                   ELSE
- 
+
       **   Set up SBFAO for display
- 
+
      C                   MOVE      *BLANKS       SBFAO
      C     @KYST         IFEQ      '*CNUM'
      C                   MOVEL     CUST          SBFAO
      C                   ELSE
      C                   MOVE      CSSN          SBFAO
      C                   ENDIF
- 
+
       **   Set up key KCBCD
- 
+
      C                   MOVE      CUST          KCBCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C/SPACE 2
       **      Counterparty Nostro  (Broker)
@@ -1206,7 +1209,7 @@
       **   Entry only allowed for Settlement Types 01,02,07,08,12
      C*****SBCPN         IFNE      *BLANK                                                   MD022354
      C     SBCPN10       IFNE      *BLANK                                                   MD022354
- 
+
      C     SBSLT         IFNE      '01'
      C     SBSLT         ANDNE     '02'
      C     SBSLT         ANDNE     '07'
@@ -1217,23 +1220,23 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SBCPN'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0458'
      C                   EVAL      OKBCPN = 'N'
- 
+
      C                   ELSE
- 
+
       **   - must exist as a valid Counterparty Nostro on PF/TABLET2
       **     or as a valid customer on PF/CLINTCB
      C**********         MOVEL     SBCPN         SBCPN6            6                        MD022354
      C                   MOVEL     SBCPN10       SBCPN6            6                        MD022354
      C                   MOVE      SBCPN10       SBCPN4            4                        MD022354
      C******             TESTN                   SBCPN6               75                     CSD027B
- 
+
       **   If counterparty nostro field entered is numeric, access
       **   LF/CLINT to check that record exists
      C******IN75         IFEQ      '1'                                                       CSD027B
      C                   MOVE      SBCPN6        KCBCD
      C     KCLINT        CHAIN     CLINTCBF                           71
      C  N71RECI          COMP      'D'                                7171
- 
+
       **   - no live record exists
      C******IN71         IFEQ      '1'                                                       CSD027B
      C******             EVAL      ErrorFound = 'Y'                                          CSD027B
@@ -1242,7 +1245,7 @@
      C******             EVAL      MsgIDXArr(XIdx) = 'MMA0459'                               CSD027B
      C******             EVAL      OKBCPN = 'N'                                              CSD027B
      C******             ENDIF                                                               CSD027B
- 
+
       **   Else counterparty nostro field entered is not numeric,
       **   access LF/SNAME to check for customer shortname
      C******             ELSE                                                                CSD027B
@@ -1250,28 +1253,28 @@
      C     SBCPN4        ORNE      *BLANKS                                                  MD022354
      C**********         MOVE      SBCPN         KCSNM                                      MD022354
      C                   MOVE      SBCPN10       KCSNM                                      MD022354
- 
+
      C*****KCSNM         CHAIN     SNAME                              74                    MD022354
      C     KCSNM         CHAIN     @CUSTD5                            74                    MD022354
      C**N74RECI*         COMP      'D'                                7474                  MD022354
- 
+
       **   If record found, store customer number for this customer
       **   shortname in a work field
      C     *IN74         IFEQ      '0'
- 
+
      C**********         Z-ADD     CNUM          CNUMB             6 0                        CSD027
      C                   MOVE      CNUM          CNUMB             6                          CSD027
- 
+
       **   Else access PF/TABLET2 to check for valid counterparty
       **   nostro
      C                   ELSE
      C**********         MOVEL     SBCPN         KCPSH2                                     MD022354
      C                   MOVEL     SBCPN10       KCPSH2                                     MD022354
- 
+
      C*****KCPSH         CHAIN     TABLET2F                           70                    MD022354
      C     KCPSH2        CHAIN     @AWREDN                            70                    MD022354
      C**N70RECI*         COMP      'D'                                7070                  MD022354
- 
+
       **   - no live record exists
      C     *IN70         IFEQ      '1'
      C                   EVAL      ErrorFound = 'Y'
@@ -1281,35 +1284,35 @@
      C                   EVAL      OKBCPN = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         ENDIF                                                               CSD027B
      C                   ENDIF                                                              MD022354
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If there have been no errors, set up the valid settlements
       ** file details for customer or broker, as appropriate.
      C                   IF        XIdx = 0
- 
+
      C                   EXSR      SetupVBrok
- 
+
      C                   ENDIF
- 
+
      C     BSEND         TAG                                                    *** BSEND  ***
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * CustSR - Processing when customer settlement instructions     *
       *          requested                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     CustSR        BEGSR
- 
+
       **   1. Settlement Type (Customer)
       **      ~~~~~~~~~~~~~~~
      C     SCSLT         IFEQ      '  '
@@ -1351,7 +1354,7 @@
      C     SCSLT         ANDNE     '15'                                                       CFF007
      C     PPBCFLG       ANDEQ     'Y'                                                        CFF007
      C     CFF007        ANDEQ     'Y'                                                        CFF007
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLT'
@@ -1364,10 +1367,10 @@
      C                   EVAL      OKCSLT = 'N'
      C                   GOTO      CSEND
      C                   ENDIF
- 
+
       **   Types 04 + 14 only allowed if Retail present (BGRTBN)
      C     BGRTBN        IFEQ      'N'
- 
+
      C     SCSLT         IFEQ      '04'
      C     SCSLT         OREQ      '14'
      C                   EVAL      ErrorFound = 'Y'
@@ -1377,9 +1380,9 @@
      C                   EVAL      OKCSLT = 'N'
      C                   GOTO      CSEND
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   Type 07 - Instr. ccy must be U.S. ccy code
      C     SCSLT         IFEQ      '07'
      C     KCCY          ANDNE     BLUSCY
@@ -1390,10 +1393,10 @@
      C                   EVAL      OKCSLT = 'N'
      C                   GOTO      CSEND
      C                   ENDIF
- 
+
       **   Type 14 - Retail A/c nos. must be supported
      C     SCSLT         IFEQ      '14'
- 
+
       **   BMRANR =  Retail account numbers required indicator.
      C     BMRANR        ANDNE     'Y'
      C                   EVAL      ErrorFound = 'Y'
@@ -1403,9 +1406,9 @@
      C                   EVAL      OKCSLT = 'N'
      C                   GOTO      CSEND
      C                   ENDIF
- 
+
       **   Continue only if Settlement Type not in error
- 
+
       **   2. Settlement Account (Customer)
       **      ~~~~~~~~~~~~~~~~~~
       **   - Settlement Types 00,04,06,15 : entry not allowed
@@ -1413,7 +1416,7 @@
      C     SCSLT         OREQ      '04'
      C     SCSLT         OREQ      '06'
      C     SCSLT         OREQ      '15'
- 
+
       * If settlement account has an entry, not allowed.
      C     SCSLA         IFNE      *BLANK
      C                   EVAL      ErrorFound = 'Y'
@@ -1421,37 +1424,37 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0466'
      C                   EVAL      OKCSLA = 'N'
- 
+
      C                   ELSE
      C                   EVAL      WXSLB = SBRCD
- 
+
      C     SCSLT         IFNE      '00'
- 
+
      C                   MOVE      '01'          FFACSQ
- 
+
      C     SCSLT         IFEQ      '04'
      C                   EVAL      FFCNUM = CUSC
- 
+
       * Move current account default a/c code to FFACOD account code.
      C                   MOVE      BMACCD        FFACOD
      C                   ENDIF
- 
+
      C     SCSLT         IFEQ      '06'
       * user number =  branch internal customer
      C                   MOVE      BICN          FFCNUM
       * account code = computer suspense account code.
      C                   MOVE      BKACCD        FFACOD
      C                   ENDIF
- 
+
      C     SCSLT         IFEQ      '15'
       * user number =  customer number.
      C                   EVAL      FFCNUM = CUSC
       * account code = default customer account code.
      C                   EVAL      FFACOD = DFCA
- 
+
       * If it's a client portfolio and if a portfolio exists in PMPORTPD
       * use margin account sequence by default for the settlement account
- 
+
       * Portfolio management module indicator
      C     BGPFMG        IFEQ      'Y'
       * Portfolios supported
@@ -1466,13 +1469,13 @@
      C                   EVAL      FFACSQ = PNACSQ
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Types 01,02,07,08,12 : if entered, must be a
       **   2 digit no. (left adjusted) which when combined with
       **   Instr. Currency exists as a valid nostro code on PF/TABLETL
@@ -1483,11 +1486,11 @@
      C     SCSLT         OREQ      '12'
       *
      C                   EVAL      FFNCCY = KCCY
- 
+
      C     SCSLA         IFNE      *BLANK
- 
+
      C                   TESTN                   SCSLA1               75
- 
+
      C     *IN75         IFEQ      '0'
      C     SCSLA2        ORNE      *BLANK
      C                   EVAL      ErrorFound = 'Y'
@@ -1495,10 +1498,10 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0467'
      C                   EVAL      OKCSLA = 'N'
- 
+
      C                   ELSE
      C                   MOVE      SCSLA1        FFNOSN
- 
+
      C     FFNKY         CHAIN     TABLETLF                           70
      C  N70RECI          COMP      'D'                                7070
       **  - no live record
@@ -1513,12 +1516,12 @@
      C                   MOVE      CNUM          FFCNUM
      C                   MOVE      ACOD          FFACOD
      C                   MOVE      ACSQ          FFACSQ
- 
+
      C                   MOVE      BRCA          WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  - Nostro code must be entered
      C                   ELSE
      C                   EVAL      ErrorFound = 'Y'
@@ -1526,16 +1529,16 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0467'
      C                   EVAL      OKCSLA = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Type 03 : must be a left adjusted 6 digit no.
      C     SCSLT         IFEQ      '03'
- 
+
      C******             TESTN                   SCSLA3               75                     CSD027B
- 
+
      C******IN75         IFEQ      '0'                                                       CSD027B
      C*****SCSLA3        OREQ      '000000'                                                  CSD027B
      C     SCSLA3        IFEQ      '000000'                                                  CSD027B
@@ -1549,42 +1552,42 @@
      C                   MOVE      BICN          FFCNUM
      C                   MOVE      BLACCD        FFACOD
      C                   MOVE      '01'          FFACSQ
- 
+
      C                   MOVE      SBRCD         WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
      C     SCSLT         IFEQ      '05'
- 
+
      C******             TESTN                   SCSLA                75                     CSD027B
- 
+
      C******IN75         IFEQ      '1'                                                       CSD027B
- 
+
      C                   MOVE      SCSLA3        KCBCD
      C     KCLINT        CHAIN     CLINT                              71
- 
- 
+
+
      C     *IN71         IFEQ      '0'
      C                   MOVE      SCSLA5        FFACOD
      C*****FFAKY         CHAIN     TABTE10F                           70                      CGL029
      C**N70RECI*         COMP      'D'                                7070                    CGL029
      C                   EXSR      SRACOD                                                     CGL029
- 
+
      C                   ENDIF
- 
+
      C******             ENDIF                                                               CSD027B
- 
+
      C     *IN71         IFEQ      '1'
      C     *IN70         OREQ      '1'
      C******IN75         OREQ      '0'                                                       CSD027B
      C     SCSLA6        OREQ      '00'
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0469'
      C                   EVAL      OKCSLA = 'N'
- 
+
      C                   ELSE
       *                                                                                       CFF007
      C     CFF007        IFEQ      'Y'                                                        CFF007
@@ -1598,46 +1601,46 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA1163'                                CFF007
      C                   EVAL      OKCSLA = 'N'                                               CFF007
      C                   ELSE                                                                 CFF007
- 
+
      C                   MOVE      SCSLA3        FFCNUM
      C                   MOVE      SCSLA5        FFACOD
      C                   MOVE      SCSLA6        FFACSQ
- 
+
      C     BGMBIN        IFEQ      'Y'
      C                   MOVE      SBRSC         WXSLB
- 
+
      C                   MOVE      SCSLA3        KYCNUM
      C                   MOVE      ISCY          KYCCY
      C                   MOVE      SCSLA5        KYACOD
      C                   MOVE      SCSLA6        KYACSQ
      C                   MOVE      SBRSC         KYBRCA
- 
+
      C     KEYC          SETLL     ACCNT                                  99                   08599
- 
+
      C                   IF        *in99 = False
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCSLA'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0469'
      C                   EVAL      OKCSLA = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      SBRCD         WXSLB
      C                   ENDIF
      C                   ENDIF                                                                CFF007
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   - Settlement Type 14 : must be a left adjusted Retail A/c no.
       **                           with the same ccy as the Instr. ccy
      C     SCSLT         IFEQ      '14'
- 
+
      C                   TESTN                   SCSLA7               75
- 
+
      C     *IN75         IFEQ      '0'
      C     SCSLA6        ORNE      '  '
      C                   EVAL      ErrorFound = 'Y'
@@ -1646,11 +1649,11 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0470'
      C                   EVAL      OKCSLA = 'N'
      C                   ELSE
- 
+
      C                   MOVE      SCSLA7        KACNO            10 0
      C     KACNO         CHAIN     ACNUM                              71
      C  N71RECI          COMP      'D'                                7171
- 
+
      C     *IN71         IFEQ      '1'
      C     CCY           ORNE      KCCY
      C                   EVAL      ErrorFound = 'Y'
@@ -1668,29 +1671,29 @@
      C                   MOVE      ACSQ          FFACSQ
      C                   MOVE      BRCA          WXSLB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **      Settlement Branch (Customer)
       **      ~~~~~~~~~~~~~~~~~
      C     BGMBIN        IFEQ      'Y'
- 
+
      C     SCSLT         IFNE      '05'
      C     SBRSC         IFNE      *BLANKS
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBRSC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0477'
      C                   EVAL      OKBRSC = 'N'
- 
+
      C                   ENDIF
- 
+
       ** If Settlement method is 05:
      C                   ELSE
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       @RTCD             7
@@ -1698,67 +1701,67 @@
      C                   PARM      SBRSC         @BRCD             3
      C*****SDBRCH        PARM      SDBRCH        @DSFDY                                       CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
       **   - live record not found
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     @RTCD         IFEQ      '*NOSEL '
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBRSC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0478'
      C                   EVAL      OKBRSC = 'N'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SBRSC'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0477'
      C                   EVAL      OKBRSC = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       **   Selector is used
- 
+
      C                   MOVEL     BRCH          WXSLB
      C                   MOVEL     BRCH          SBRSC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   If Retail present, Settlement Account not yet in error,
       **    and Settlement type not '00'
      C     BGRTBN        IFEQ      'Y'
      C     OKCSLA        ANDEQ     'Y'
      C     SCSLT         ANDNE     '00'
- 
+
       **   - if the Account Type for the Settlement A/c code is 'R' for
       **      Retail, the account must exist on LF/ACCNT and be open
- 
+
       **   - access  Account codes table file
      C*****FFAKY         CHAIN     TABTE10F                           70                      CGL029
      C**N70RECI*         COMP      'D'                                7070                    CGL029
      C                   EXSR      SRACOD                                                     CGL029
- 
+
       **  - if a Retail account access LF/ACCNT
      C     *IN70         IFEQ      '0'
      C*****ATYP*         ANDEQ     'R'                                                        CGL029
      C     A5ACTY        ANDEQ     'R'                                                        CGL029
- 
+
      C                   MOVE      WXSLB         FFBRCB
      C     FFACTK        CHAIN     ACCNT                              71
      C                   MOVE      *BLANK        FFBRCB
      C  N71RECI          COMP      'D'                                7171
- 
+
       **  - Error if no live open Retail A/c exists
- 
+
      C     *IN71         IFEQ      '1'
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
@@ -1766,18 +1769,18 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0471'
      C                   EVAL      OKCSLA = 'N'
      C                   ELSE
- 
+
       **  - record found, set Memos update ind. to 'Y'
      C                   MOVE      'Y'           XMIND
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     BGPFMG        IFEQ      'Y'
      C     FCPORS        ANDNE     'B'
      C     BGN4ST        OREQ      'Y'                                          CPB001
- 
+
       ** Test if customer of settlement account is the same as customer
       ** entered on the transaction.
      C     FFCNUM        IFNE      CUSC
@@ -1787,7 +1790,7 @@
      C                   EVAL      MsgIDWArr(WIdx) = 'MMA0479'
      C                   MOVE      'W'           OKCSLA
      C                   ENDIF
- 
+
       ** Access ACCNT to obtain portfolio reference
      C                   EVAL      FFBRCB = WXSLB
      C     FFACTK        CHAIN     ACCNT                              71
@@ -1815,21 +1818,21 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **   If Memos Update ind on, + Transaction Date not in error
- 
+
      C     XMIND         IFEQ      'Y'
      C     OKTRSD        ANDEQ     'Y'
- 
+
       **   - determine Back Value Date
      C     CTDATE        SUB       BJBVPD        BVDATE            5 0
- 
+
      C     DACO          IFGT      BVDATE
      C                   MOVE      DACO          BVDATE
      C                   ENDIF
- 
+
       **   - Transaction Date must not be before Back Value Date
      C     TRSD          IFLT      BVDATE
      C                   EVAL      ErrorFound = 'Y'
@@ -1838,7 +1841,7 @@
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0472'
      C                   EVAL      OKCSLA = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CGL014
       ** Validate customer account's remaining balance                                        CGL014
@@ -1896,12 +1899,12 @@
      C                   ENDIF                                                                CGL014
                                                                                               CGL014
      C                   ENDIF                                                                CGL014
- 
+
       **      For Account Of (Customer)
       **      ~~~~~~~~~~~~~~
       **   Entry only allowed for Settlement Types 01,02,07,08,12
      C     SCFAO         IFNE      *BLANK
- 
+
      C     SCSLT         IFNE      '01'
      C     SCSLT         ANDNE     '02'
      C     SCSLT         ANDNE     '07'
@@ -1912,9 +1915,9 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SCFAO'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0473'
      C                   EVAL      OKCFAO = 'N'
- 
+
      C                   ELSE
- 
+
      C**********         CALLB     'AOCUSTR0'                                                 CFF007
      C                   CALLB     'AOCUSTR1'                                                 CFF007
      C                   PARM      *BLANKS       @RTCD             7
@@ -1923,41 +1926,42 @@
      C                   PARM                    @KYST             7
      C*****SDCUST        PARM      SDCUST        DSSDY                                        CFF007
      C     SDCUST        PARM      SDCUST        DSLDY                                        CFF007
- 
+
       **   - must exist as a live record on SDCUSTPD
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx + 1
      C                   EVAL      FldNamXArr(XIdx) = 'SCFAO'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0474'
      C                   EVAL      OKCFAO = 'N'
- 
+
      C                   ELSE
- 
+
       **   Set up SCFAO for display
- 
+
      C                   MOVE      *BLANKS       SCFAO
      C     @KYST         IFEQ      '*CNUM'
      C                   MOVEL     CUST          SCFAO
      C                   ELSE
      C                   MOVE      CSSN          SCFAO
      C                   ENDIF
- 
+
       **   Set up key KCBCD
- 
+
      C                   MOVE      CUST          KCBCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C/SPACE 2
       **      Counterparty Nostro (Customer)
       **      ~~~~~~~~~~~~~~~~~~~
       **   Entry only allowed for Settlement Types 01,02,07,08,12
-     C     SCCPN         IFNE      *BLANK
- 
+     C*****SCCPN         IFNE      *BLANK                                                   MD061489
+     C     SCCPN10       IFNE      *BLANK                                                   MD061489
+
      C     SCSLT         IFNE      '01'
      C     SCSLT         ANDNE     '02'
      C     SCSLT         ANDNE     '07'
@@ -1968,21 +1972,23 @@
      C                   EVAL      FldNamXArr(XIdx) = 'SCCPN'
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0475'
      C                   EVAL      OKCCPN = 'N'
- 
+
      C                   ELSE
- 
+
       **   - must exist as a valid Counterparty Nostro on PF/TABLET2
       **     or as a valid customer on PF/CLINTCB
-     C                   MOVEL     SCCPN         SCCPN6            6
+     C**********         MOVEL     SCCPN         SCCPN6            6                        MD061489
+     C                   MOVEL     SCCPN10       SCCPN6            6                        MD061489
+     C                   MOVE      SCCPN10       SCCPN4            4                        MD061489
      C******             TESTN                   SCCPN6               75                     CSD027B
- 
+
       **   If counterparty nostro field entered is numeric, access
       **   LF/CLINT to check that record exists
      C******IN75         IFEQ      '1'                                                       CSD027B
      C                   MOVE      SCCPN6        KCBCD
      C     KCLINT        CHAIN     CLINTCBF                           71
      C  N71RECI          COMP      'D'                                7171
- 
+
       **   - no live record exists
      C     *IN71         IFEQ      '1'
      C******             EVAL      ErrorFound = 'Y'                                          CSD027B
@@ -1991,30 +1997,36 @@
      C******             EVAL      MsgIDXArr(XIdx) = 'MMA0476'                               CSD027B
      C******             EVAL      OKCCPN = 'N'                                              CSD027B
      C******             ENDIF                                                               CSD027B
- 
+
       **   Else counterparty nostro field entered is not numeric,
       **   access LF/SNAME to check for customer shortname
      C******             ELSE                                                                CSD027B
-     C                   MOVE      SCCPN         KCSNM
- 
-     C     KCSNM         CHAIN     SNAME                              74
-     C  N74RECI          COMP      'D'                                7474
- 
+     C     *IN71         IFEQ      '1'                                                      MD061489
+     C     SCCPN4        ORNE      *BLANKS                                                  MD061489
+     C**********         MOVE      SCCPN         KCSNM                                      MD061489
+     C                   MOVE      SCCPN10       KCSNM                                      MD061489
+
+     C*****KCSNM         CHAIN     SNAME                              74                    MD061489
+     C     KCSNM         CHAIN     @CUSTD5                            74                    MD061489
+     C**N74RECI*         COMP      'D'                                7474                  MD061489
+
       **   If record found, store customer number for this customer
       **   shortname in a work field
      C     *IN74         IFEQ      '0'
- 
+
      C**********         Z-ADD     CNUM          CNUMC             6 0                        CSD027
      C                   MOVE      CNUM          CNUMC             6                          CSD027
- 
+
       **   Else access PF/TABLET2 to check for valid counterparty
       **   nostro
      C                   ELSE
-     C                   MOVEL     SCCPN         KCPSH2
- 
-     C     KCPSH         CHAIN     TABLET2F                           70
-     C  N70RECI          COMP      'D'                                7070
- 
+     C**********         MOVEL     SCCPN         KCPSH2                                     MD061489
+     C                   MOVEL     SCCPN10       KCPSH2                                     MD061489
+
+     C*****KCPSH         CHAIN     TABLET2F                           70                    MD061489
+     C     KCPSH2        CHAIN     @AWREDN                            70                    MD061489
+     C**N70RECI*         COMP      'D'                                7070                  MD061489
+
       **   - no live record exists
      C     *IN70         IFEQ      '1'
      C                   EVAL      ErrorFound = 'Y'
@@ -2024,25 +2036,26 @@
      C                   EVAL      OKCCPN = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+     C                   ENDIF                                                              MD061489
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If there have been no errors, set up the valid settlements
       ** file details for customer or broker, as appropriate.
      C                   IF        XIdx = 0
- 
+
      C                   EXSR      SetupVCust
- 
+
      C                   ENDIF
- 
+
      C     CSEND         TAG                                                    *** CSEND  ***
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2050,17 +2063,17 @@
       * SetupVBrok - Set up valid file fields for broker              *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupVBrok    BEGSR
- 
+
       /COPY WNCPYSRC,FFSETLV008
- 
+
       ** Settlement type
      C                   MOVEL     SBSLT         BSLT
- 
+
       ** Settlement account
       ** Settlement branch
- 
+
      C     SBSLT         IFEQ      '04'
      C     SBSLT         OREQ      '06'
      C     SBSLT         OREQ      '15'
@@ -2070,9 +2083,9 @@
      C                   MOVE      WXSLA         BSLA
      C                   MOVE      WXSLB         BSBR
      C                   ELSE
- 
+
      C                   MOVE      SBSLA         BSLA
- 
+
      C     BGMBIN        IFEQ      'Y'
      C                   MOVE      SBSBR         BSBR
      C                   ELSE
@@ -2082,18 +2095,18 @@
      C                   MOVE      *BLANK        BSBR
      C                   END
      C                   END
- 
+
      C                   END
- 
+
       ** Settlement branch ID
      C                   MOVE      WXSLB         BBID                                          S0111
- 
+
       ** For account of
      C                   MOVE      SBFAO         BFAO
- 
+
       ** Counterparty nostro
       ** If broker customer number present, use it
- 
+
      C*****CNUMB         IFNE      0                                                          CSD027
      C     CNUMB         IFNE      *BLANKS                                                    CSD027
      C                   MOVEL     CNUMB         BCPN
@@ -2101,11 +2114,11 @@
      C**********         MOVEL     SBCPN         BCPN                                       MD022354
      C                   MOVEL     SBCPN10       BCPN                                       MD022354
      C                   END
- 
+
       /COPY WNCPYSRC,FFSETLV009
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2113,17 +2126,17 @@
       * SetupVCust - Set up valid file fields for customer            *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupVCust    BEGSR
- 
+
       /COPY WNCPYSRC,FFSETLV010
- 
+
       ** Settlement type
      C                   MOVEL     SCSLT         CSLT
- 
+
       ** Settlement account
       ** Settlement branch
- 
+
      C     SCSLT         IFEQ      '04'
      C     SCSLT         OREQ      '06'
      C     SCSLT         OREQ      '15'
@@ -2133,9 +2146,9 @@
      C                   MOVE      WXSLA         CSLA
      C                   MOVE      WXSLB         BRSC
      C                   ELSE
- 
+
      C                   MOVE      SCSLA         CSLA
- 
+
      C     BGMBIN        IFEQ      'Y'
      C                   MOVE      SBRSC         BRSC
      C                   ELSE
@@ -2145,29 +2158,30 @@
      C                   MOVE      *BLANK        BRSC
      C                   END
      C                   END
- 
+
      C                   END
- 
+
       ** Settlement branch ID
      C                   MOVE      WXSLB         CBID                                          S0111
- 
+
       ** For account of
      C                   MOVE      SCFAO         CFAO
- 
+
       ** Counterparty nostro
       ** If customer customer number present, use it
- 
+
      C*****CNUMC         IFNE      *ZERO                                                      CSD027
      C     CNUMC         IFNE      *BLANKS                                                    CSD027
      C                   MOVEL     CNUMC         CCPN
      C                   ELSE
-     C                   MOVEL     SCCPN         CCPN
+     C**********         MOVEL     SCCPN         CCPN                                       MD061489
+     C                   MOVEL     SCCPN10       CCPN                                       MD061489
      C                   END
- 
+
       /COPY WNCPYSRC,FFSETLV011
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2175,9 +2189,9 @@
       * *inzsr - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Parameters returned to caller
       ** -----------------------------
@@ -2197,7 +2211,7 @@
      C                   PARM                    MsgDtaWArr
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    FFVSETL
- 
+
       ** Parameters received from caller
       ** -------------------------------
       ** Data structure containing broker details
@@ -2246,11 +2260,11 @@
      C                   PARM                    PPBCFLG                                      CFF007
       ** Collaterals Processing enhancement                                                   CGL014
      C                   PARM                    CGL014                                       CGL014
- 
- 
+
+
       ** Access the (old-fashioned) FF ICD
      C                   READ      TABTB80F                               99
- 
+
       ** Key lists
       ** ---------
       **   Set-up key to customer master file
@@ -2258,7 +2272,7 @@
      C     KCLINT        KLIST
      C                   KFLD                    KCBCD
      C                   KFLD                    KRCDT
- 
+
       ** Key List for LF/ACCNT (Accounts): FFACTK
      C     FFACTK        KLIST
       ** Customer Number
@@ -2271,7 +2285,7 @@
      C                   KFLD                    FFACSQ
       ** Branch Code
      C                   KFLD                    FFBRCB
- 
+
      C     KEYC          KLIST
      C**********         KFLD                    KYCNUM            6 0                        CSD027
      C                   KFLD                    KYCNUM            6                          CSD027
@@ -2280,19 +2294,19 @@
      C                   KFLD                    KYACOD                                       CGL029
      C                   KFLD                    KYACSQ            2 0
      C                   KFLD                    KYBRCA            3
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FFSETLV012
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CGL029
       /EJECT                                                                                  CGL029
       *****************************************************************                       CGL029

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022354           Date 06Jun23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSD095             Date 08Apr14               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping.                                     *
       *  MD022354 - Error in Counterparty Nostro field. Changed       *
       *             SBCPN to SBCPN10 due to changes in FFBSETPD.      *
       *  MD046248 - Finastra Rebranding                               *
@@ -56,21 +59,21 @@
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Customer/broker instrument defaults
      FDEFLT     IF   E           K DISK
- 
+
       ** Extended settlement instructions
      FSDEXSTL1  IF   E           K DISK                                         073714
- 
+
       ** Futures and Options clients
      FFOCLT     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -82,19 +85,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -102,32 +105,32 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--- Named indicators -------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Map variable names to indicators to allow use of names instead ¦
@@ -146,43 +149,43 @@
      D pIndicator      S               *   INZ(%Addr(*In))
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      D BrokIns       E DS                  EXTNAME(FFBSETPD)
       ** Broker settlement instructions
- 
+
      D CustIns       E DS                  EXTNAME(FFCSETPD)
       ** Customer settlement instructions
- 
+
      D InstTypes     E DS                  EXTNAME(INTYPD)
       ** Instrument types
      D ITRECI        E                     EXTFLD(RECI)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Flag indicating whether details for customer or broker are
       ** required.
      D CustBrokFl      S              1A
- 
+
       ** Customer or broker number
      D*CustBrokNo      S              6S 0                                                    CSD027
      D CustBrokNo      S              6A                                                      CSD027
- 
+
       ** Market centre
      D MarketCent      S              2A
- 
+
       ** Instrument code
      D InstCode        S              3A
- 
+
       ** Enhanced OTCs feature flag
      D CFF001          S              1A
- 
+
       ** Transaction type (purchase or sale)
      D STRTY           S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -190,7 +193,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      IFOCLTDF
      I              RECI                        FORECI
      I              SETP                        FOSETP
@@ -198,42 +201,42 @@
      I              FACO                        FOFACO
      I              CNOS                        FOCNOS
      I              SEBR                        FOSEBR
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       ** Do the intial processing for this transaction
      C                   EXSR      Initial
- 
+
       ** Proceed according to whether customer or broker instructions
       ** are required
      C                   SELECT
       **                 ------
- 
+
      C                   WHEN      CustBrokFl = 'B'
      C                   EXSR      Broker
- 
+
      C                   WHEN      CustBrokFl = 'C'
      C                   EXSR      Customer
- 
+
      C                   ENDSL
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -242,103 +245,103 @@
       *          requested                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     Broker        BEGSR
- 
+
       **   Instrument Defaults
       **   ~~~~~~~~~~~~~~~~~~~
       *
       **   LF/DEFLT record does not exist
       *
      C                   IF        NoRecDEFLT = True OR RECI <> 'D'
- 
+
      C     BCPT          IFNE      ' '
      C                   MOVE      BCMC          SBCMC
      C                   MOVE      BCMS          SBCMS
      C                   ENDIF
- 
+
      C     STRTY         IFEQ      'P'
- 
+
      C     BCGP          IFNE      00
      C                   MOVE      BCGP          SBCHC
      C                   ENDIF
- 
+
      C                   ELSE
       **                 (Else STRTY <> 'P')
- 
+
      C     BCGS          IFNE      00
      C                   MOVE      BCGS          SBCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If STRTY = 'P'")
- 
+
      C                   ELSE
       *
       **   Else LF/DEFLT record does exist
       *
       **   - 1. Commission details
      C     CPAT          IFNE      ' '
- 
+
       **    (from LF/DEFLT)
      C                   MOVE      CMCD          SBCMC
      C                   MOVE      CMSD          SBCMS
- 
+
      C                   ELSE
       **                 (Else CPAT = blanks)
- 
+
       **    (from LF/INTYP)
      C     BCPT          IFNE      ' '
      C                   MOVE      BCMC          SBCMC
      C                   MOVE      BCMS          SBCMS
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CPAT <> blanks")
- 
+
       **   - 2. Charge code (Purchase)
      C     STRTY         IFEQ      'P'
- 
+
      C     CGEP          IFNE      00
       **    (from LF/DEFLT)
- 
+
      C                   MOVE      CGEP          SBCHC
      C                   ELSE
       **                 (Else CGEP = 0)
- 
+
       **    (from LF/INTYP)
      C     BCGP          IFNE      00
      C                   MOVE      BCGP          SBCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CGEP <> 0")
- 
+
       **   - 3. Charge code (Sale)
      C                   ELSE
       **                 (Else STRTY <> 'P')
- 
+
      C     CGES          IFNE      00
       **    (from LF/DEFLT)
- 
+
      C                   MOVE      CGES          SBCHC
      C                   ELSE
       **                 (Else CGES = 0)
- 
+
       **    (from LF/INTYP)
      C     BCGS          IFNE      00
      C                   MOVE      BCGS          SBCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CGES <> 0")
- 
+
      C                   ENDIF
       **                 (End of "If STRTY = 'P')
- 
+
      C                   ENDIF
       **                 (End of "If NoRecDEFLT = True OR RECI <> D")
- 
+
       **   Settlement Defaults
       **   ~~~~~~~~~~~~~~~~~~~
      C                   IF        NoRecDEFLT = False AND RECI = 'D'
@@ -350,10 +353,10 @@
      C**********         MOVEL     CNOS          SBCPN                                      MD022354
      C                   MOVEL     CNOS          SBCPN10                                    MD022354
      C                   MOVE      SEBR          SBSBR                                         S0111
- 
+
      C                   ELSE
       **                 (Else no record was found or SETP = 0)
- 
+
       **   - from LF/FOCLT
      C                   MOVE      FOSETP        SBSLT
      C                   MOVE      FOSETA        SBSLA
@@ -361,13 +364,13 @@
      C**********         MOVEL     FOCNOS        SBCPN                                      MD022354
      C                   MOVEL     FOCNOS        SBCPN10                                    MD022354
      C                   MOVE      FOSEBR        SBSBR
- 
+
      C                   ENDIF
       **                 (End of "If NoRecDEFLT = False AND SETP <> 0")
- 
+
      C                   ENDSR
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -376,37 +379,37 @@
       *            requested                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     Customer      BEGSR
- 
+
       **   Instrument Defaults
       **   ~~~~~~~~~~~~~~~~~~~
       *
       **   LF/DEFLT record does not exist
       *
      C                   IF        NoRecDEFLT = True OR RECI <> 'D'
- 
+
       **   - from LF/INTYP
      C     CCPT          IFNE      ' '
      C                   MOVE      CCMC          SCCMC
      C                   MOVE      CCMS          SCCMS
      C                   ENDIF
- 
+
      C     STRTY         IFEQ      'P'
      C     CCGP          IFNE      00
      C                   MOVE      CCGP          SCCHC
      C                   ENDIF
- 
+
      C                   ELSE
       **                 (Else STRTY <> 'P')
- 
+
      C     CCGS          IFNE      00
      C                   MOVE      CCGS          SCCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If STRTY = 'P'")
- 
+
      C                   ELSE
       *
       **   Else LF/DEFLT record does exist
@@ -419,94 +422,96 @@
       **
      C                   ELSE
       **                 (Else CPAT = blank)
- 
+
       **    (from LF/INTYP)
      C     CCPT          IFNE      ' '
      C                   MOVE      CCMC          SCCMC
      C                   MOVE      CCMS          SCCMS
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CPAT <> blank)
- 
+
       **   - 2. Charge code (Purchase)
      C     STRTY         IFEQ      'P'
- 
+
      C     CGEP          IFNE      00
- 
+
       **    (from LF/DEFLT)
      C                   MOVE      CGEP          SCCHC
      C                   ELSE
       **                 (Else CGEP = 0)
- 
+
       **    (from LF/INTYP)
      C     CCGP          IFNE      00
      C                   MOVE      CCGP          SCCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CGEP <> 0")
- 
+
       **   - 3. Charge code (Sale)
      C                   ELSE
       **                 (Else STRTY <> 'P')
- 
+
      C     CGES          IFNE      00
- 
+
       **    (from LF/DEFLT)
      C                   MOVE      CGES          SCCHC
      C                   ELSE
       **                 (Else CGES = 0)
- 
+
       **    (from LF/INTYP)
      C     CCGP          IFNE      00
      C                   MOVE      CCGS          SCCHC
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CGES <> 0")
- 
+
      C                   ENDIF
       **                 (End of "If STRTY = 'P')
- 
+
      C                   ENDIF
       **                 (End of "If NoRecDEFLT = True OR RECI <> D")
       **
- 
+
       **   Settlement Defaults
       **   ~~~~~~~~~~~~~~~~~~~
      C                   IF        NoRecDEFLT = False AND RECI = 'D'
      C                                                AND SETP <> 0
- 
+
       **   - from LF/DEFLT
      C                   MOVE      SETP          SCSLT
      C                   MOVE      SETA          SCSLA
      C                   MOVE      FACO          SCFAO
-     C                   MOVEL     CNOS          SCCPN
+     C**********         MOVEL     CNOS          SCCPN                                      MD061489
+     C                   MOVEL     CNOS          SCCPN10                                    MD061489
      C                   MOVE      SEBR          SBRSC                                         S0111
- 
+
      C                   ELSE
       **                 (Else no valid record or SETP = 0)
- 
+
       **   - from LF/FOCLT
      C                   MOVE      FOSETP        SCSLT
      C                   MOVE      FOSETA        SCSLA
      C                   MOVE      FOFACO        SCFAO
-     C                   MOVEL     FOCNOS        SCCPN
+     C**********         MOVEL     FOCNOS        SCCPN                                      MD061489
+     C                   MOVEL     FOCNOS        SCCPN10                                    MD061489
      C                   MOVE      FOSEBR        SBRSC
- 
+
      C                   ENDIF
       **                 (End of "If NoRecDEFLT = False and RECI = 'D' and
       **                  SETP <> 0")
- 
+
       ** For OTCS default settlement instructions
       ** if Enhanced OTC is present
      C                   IF        MarketCent = *blanks AND CFF001 = 'Y'
      C                   EXSR      DOTCST
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
       /EJECT
       ********************************************************************
@@ -518,61 +523,65 @@
       **       SR. ICUDFT                                                *
       **                                                                 *
       ********************************************************************
- 
+
      C     DOTCST        BEGSR
- 
+
       ** Access option transaction settlement instructions
      C                   MOVE      ISCY          BYCYCD
      C                   MOVE      CustBrokNo    BYCUST
      C                   MOVE      'OP'          BYTRTY
- 
+
      C     KEXST         CHAIN     SDEXSTL1                           97
      C                   IF        NoRecEXST = False
- 
+
       ** Pay instructions
      C     STRTY         IFEQ      'P'
      C                   MOVEL     BYPSTY        SCSLT
      C                   MOVEL     BYPONO        SCSLA
      C                   MOVEL     BYBYNB        SCFAO
-     C                   MOVEL     BYACBN        SCCPN
+     C**********         MOVEL     BYACBN        SCCPN                                      MD061489
+     C                   MOVEL     BYACBN        SCCPN10                                    MD061489
      C                   ELSE
- 
+
       ** Receive instructions
      C                   MOVEL     BYRSTY        SCSLT
      C                   MOVEL     BYRONO        SCSLA
      C                   MOVEL     *BLANK        SCFAO
-     C                   MOVEL     BYRIBN        SCCPN
+     C**********         MOVEL     BYRIBN        SCCPN                                      MD061489
+     C                   MOVEL     BYRIBN        SCCPN10                                    MD061489
      C                   ENDIF
- 
+
       ** Access 'ALL' transaction settlement instructions
      C                   ELSE
      C                   MOVE      'AT'          BYTRTY
- 
+
      C     KEXST         CHAIN     SDEXSTL1                           97
- 
+
      C                   IF        NoRecEXST = False
- 
+
       ** Pay instructions
      C     STRTY         IFEQ      'P'
      C                   MOVEL     BYPSTY        SCSLT
      C                   MOVEL     BYPONO        SCSLA
      C                   MOVEL     BYBYNB        SCFAO
-     C                   MOVEL     BYACBN        SCCPN
+     C**********         MOVEL     BYACBN        SCCPN                                      MD061489
+     C                   MOVEL     BYACBN        SCCPN10                                    MD061489
      C                   ELSE
- 
+
       ** Receive instructions
      C                   MOVEL     BYRSTY        SCSLT
      C                   MOVEL     BYRONO        SCSLA
      C                   MOVEL     *BLANK        SCFAO
-     C                   MOVEL     BYRIBN        SCCPN
- 
+     C**********         MOVEL     BYRIBN        SCCPN                                      MD061489
+     C                   MOVEL     BYRIBN        SCCPN10                                    MD061489
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -580,19 +589,19 @@
       * Initial - Initial processing for a transaction                *
       *                                                               *
       *****************************************************************
- 
+
      C     Initial       BEGSR
- 
+
      C                   CLEAR                   InstTypes
- 
+
       ** Access the default instructions file.  The fields on the key
       ** list are received as parameters
      C     KDefault      CHAIN     DEFLT                              99
- 
+
       ** If no record on the defaults file, return the values from the
       ** instruments file
      C                   IF        NoRecDEFLT = True OR RECI <> 'D'
- 
+
       ** First retrieve the record from the instruments file, using the
       ** validation function for instruments
       ** If this call returns an error, just ignore it: this is not
@@ -614,26 +623,26 @@
      C                   PARM                    MsgDtaXArr
       ** The instrument types format (data strucure)
      C                   PARM                    InstTypes
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Instrument type
      C                   PARM                    InstCode
       ** Market ID
      C                   PARM                    MarketCent
- 
+
      C                   IF        ReturnCode <> *blanks
      C                   CLEAR                   InstTypes
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Access the Futures and Options clients file for broker or
       ** customer details as required.
      C     CustBrokNo    CHAIN     FOCLT                              98
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -645,9 +654,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Outputs from this procedure
       ** ---------------------------
@@ -657,7 +666,7 @@
       ** (DSs based on FFBSETPD and FFCSETPD)
      C                   PARM                    BrokIns
      C                   PARM                    CustIns
- 
+
       ** Inputs to this procedure
       ** ------------------------
       ** Customer/broker flag (1A)
@@ -672,28 +681,28 @@
      C                   PARM                    STRTY
       ** Enhanced OTCs feature flag (1A)
      C                   PARM                    CFF001
- 
- 
+
+
       ** Key list for LF/DEFLT
      C     KDefault      KLIST
      C                   KFLD                    CustBrokNo
      C                   KFLD                    MarketCent
      C                   KFLD                    InstCode
- 
+
       ** Key list for LF/SDEXSTL1
      C     KEXST         KLIST                                                                 07371
      C                   KFLD                    BYCYCD                                        07371
      C                   KFLD                    BYCUST                                        07371
      C                   KFLD                    BYTRTY                                        07371
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

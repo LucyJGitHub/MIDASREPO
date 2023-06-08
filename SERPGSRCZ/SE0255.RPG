@@ -48,8 +48,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058079           Date 11May21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD024566           Date 07Jun23               *
+      *  Prev Amend No. MD058079           Date 11May21               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -115,6 +116,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD024566 - Online Enquiry of Outstanding Trades at Depot does*
+      *             not show any trades or position. Include positions*
+      *             valuing today to be displayed in the enquiry.     *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
@@ -355,6 +359,7 @@
      E/COPY ZSRSRC,ZSDESCZ1
      E/COPY ZSRSRC,ZDATE2Z1
       /EJECT
+     I              'DisplayDepotValToday'C         SECDPT                                  MD024566
      I*
      I*      RECORD IDENTIFIERS FOR INPUT FILE DPTRM
      ITRADSIF     33
@@ -1507,7 +1512,10 @@ AW   C                     END
      C**                                                                  E32246
      C**   Ignore trades that have been settled today                     E32246
      C**                                                                  E32246
-     C           WDAT      IFLE RUND                                      E32246
+     C********** WDAT      IFLE RUND                                                 E32246 MD024566
+     C           WDAT      IFLT RUND                                                        MD024566    
+     C           WDAT      OREQ RUND                                                        MD024566
+     C           WSV01     ANDNE'Y'                                                         MD024566
      C           *IN33     IFEQ '1'                                       E32246
      C           *IN34     OREQ '1'                                       E32246
      C           *IN37     OREQ '1'                                       E32318
@@ -1847,7 +1855,10 @@ AW   C                     END
      C**                                                                  E32246
      C**   Ignore trades that have been settled today                     E32246
      C**                                                                  E32246
-     C           WDAT      IFLE RUND                                      E32246
+     C********** WDAT      IFLE RUND                                                 E32246 MD024566
+     C           WDAT      IFLT RUND                                                        MD024566    
+     C           WDAT      OREQ RUND                                                        MD024566
+     C           WSV01     ANDNE'Y'                                                         MD024566
      C           *IN33     IFEQ '1'                                       E32246
      C           *IN34     OREQ '1'                                       E32246
      C           *IN37     OREQ '1'                                       E32318
@@ -2064,7 +2075,7 @@ AW   C                     END
      C           *IN83     IFEQ '0'
      C           RECI      ANDEQ'D'
      C                     ADD  UDNS      WSETL
-     C                     ADD  UNSI      WSETL                           S01158
+     C**********           ADD  UNSI      WSETL                                      S01158 MD024566
      C**   Must include BB, RP etc if figures on screen include them      E32281
      C**   (these are considered settled if they have reached v. date)    E32281
      C                     ADD  UNRV      WSETL                           E32281
@@ -3043,6 +3054,49 @@ AW   C                     END
      C                     MOVE 'N'       CSE039  1                       CSE039
      C                     ENDIF                                          CSE039
       *                                                                   CSE039
+     C                     CALL 'AOSVALR0'                                                  MD024566
+     C                     PARM *BLANKS   PRTCD                                             MD024566
+     C                     PARM SECDPT    PSV01  20                                         MD024566
+     C                     PARM           PCS01 200                                         MD024566
+     C                     PARM           PSV02  20                                         MD024566
+     C                     PARM           PCS02 200                                         MD024566
+     C                     PARM           PSV03  20                                         MD024566
+     C                     PARM           PCS03 200                                         MD024566
+     C                     PARM           PSV04  20                                         MD024566
+     C                     PARM           PCS04 200                                         MD024566
+     C                     PARM           PSV05  20                                         MD024566
+     C                     PARM           PCS05 200                                         MD024566
+     C                     PARM           PSV06  20                                         MD024566
+     C                     PARM           PCS06 200                                         MD024566
+     C                     PARM           PSV07  20                                         MD024566
+     C                     PARM           PCS07 200                                         MD024566
+     C                     PARM           PSV08  20                                         MD024566
+     C                     PARM           PCS08 200                                         MD024566
+     C                     PARM           PSV09  20                                         MD024566
+     C                     PARM           PCS09 200                                         MD024566
+     C                     PARM           PSV10  20                                         MD024566
+     C                     PARM           PCS10 200                                         MD024566
+      *                                                                                     MD024566
+     C                     MOVE 'N'       WSV01   1                                         MD024566
+      *                                                                                     MD024566
+     C           PRTCD     IFEQ *BLANK                                                      MD024566
+     C                     MOVELPCS01     WSV01                                             MD024566
+     C                     ELSE                                                             MD024566
+      *                                                                                     MD024566
+      ** Database Error (return code other than *NRF)                                       MD024566
+      *                                                                                     MD024566
+     C           PRTCD     IFNE '*NRF   '                                                   MD024566
+     C           *LOCK     IN   LDA                                                         MD024566
+     C                     MOVEL'SDSVALPD'DBFILE           ************                     MD024566
+     C                     MOVELPSV01     DBKEY            * DBERR 10 *                     MD024566
+     C                     Z-ADD10        DBASE            ************                     MD024566
+     C                     OUT  LDA                                                         MD024566
+     C                     MOVE *ON       *INU7                                             MD024566
+     C                     MOVE *ON       *INU8                                             MD024566
+     C                     MOVE *ON       *INLR                                             MD024566
+     C                     EXSR *PSSR                                                       MD024566
+     C                     ENDIF                                                            MD024566
+     C                     ENDIF                                                            MD024566
      C**  Access Securities Trading details                               E28732
      C*                                                                   E28732
      C                     CALL 'AOSTRDR0'                                E28732

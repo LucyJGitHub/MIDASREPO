@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054576           Date 14Oct19               *
-      *  Prev Amend No. MD053762           Date 16Jun19               *
+      *  Last Amend No. MD036963           Date 19May23               *
+      *  Prev Amend No. MD054576           Date 14Oct19               *
+      *                 MD053762           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
@@ -93,6 +94,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD036963 - MM Rollover with sub-type change causes incorrect *
+      *             accounting                                        *
       *  MD054576 - Account keys not displayed in DKEYSDP report      *
       *             (DL0280) and GEDLPD (DL0295) after Day 1 COBDL    *
       *  MD053762 - Tiered Witholding Tax System Values               *
@@ -3528,7 +3531,15 @@
      C*
      C           F6        IFNE *BLANKS                                   080603
      C                     MOVE F6        AC4
-     C                     MOVE '01'      PN4
+     C**********           MOVE '01'      PN4                                               MD036963
+     C           TYPE      IFEQ 'IP'                                                        MD036963
+     C           TYPE      OREQ 'TI'                                                        MD036963
+     C           TYPE      OREQ 'FL'                                                        MD036963
+     C           CDL006    ANDEQ'Y'                                                         MD036963
+     C                     MOVE '21'      PN4                                               MD036963
+     C                     ELSE                                                             MD036963
+     C                     MOVE '04'      PN4                                               MD036963
+     C                     END                                                              MD036963
      C                     MOVE '1'       PR4
      C                     END
      C* Update file
@@ -4828,6 +4839,32 @@ E001 C                     ENDIF                                          S01460
      C*****************************************************        S01434 080603
      C***********          MOVE '3'       PR4                      S01434 080603
      C***********          MOVE '31'      PN4                      S01434 080603
+      *                                                                                     MD036963
+     C           F6        IFNE *BLANKS                                                     MD036963
+     C                     MOVE F6        AC1                                               MD036963
+     C           TYPE      IFEQ 'IP'                                                        MD036963
+     C           TYPE      OREQ 'TI'                                                        MD036963
+     C           TYPE      OREQ 'FL'                                                        MD036963
+     C           CDL006    ANDEQ'Y'                                                         MD036963
+     C                     MOVE '22'      PN1                                               MD036963
+     C                     ELSE                                                             MD036963
+     C                     MOVE '05'      PN1                                               MD036963
+     C                     END                                                              MD036963
+     C                     MOVE '1'       PR1                                               MD036963
+     C                     END                                                              MD036963
+      ** UPDATE FILE                                                                        MD036963
+     C                     EXSR ACUP                                                        MD036963
+     C*                                                                                     MD036963
+     C                     MOVE F1        AC4                                               MD036963
+     C           TYPE      IFEQ 'IP'                                                        MD036963
+     C           TYPE      OREQ 'TI'                                                        MD036963
+     C           TYPE      OREQ 'FL'                                                        MD036963
+     C           CDL006    ANDEQ'Y'                                                         MD036963
+     C                     MOVE '22'      PN4                                               MD036963
+     C                     ELSE                                                             MD036963
+     C                     MOVE '05'      PN4                                               MD036963
+     C                     END                                                              MD036963
+     C                     MOVE '3'       PR4                                               MD036963
      C*                                                                   S01434
      C* Update file                                                       S01434
      C*                                                                   S01434
@@ -4870,8 +4907,10 @@ E001 C                     ENDIF                                          S01460
      C***********          MOVE '2'       PR1                      S01434 080603
      C***********          MOVE '01'      PN1                      S01434 080603
      C*                                                                   080603
-     C                     MOVE F1        AC1                             080603
-     C                     MOVE '3'       PR1                             080603
+     C**********           MOVE F1        AC1                                        080603 MD036963
+     C                     MOVE F6        AC1                                               MD036963
+     C**********           MOVE '3'       PR1                                        080603 MD036963
+     C                     MOVE '1'       PR1                                               MD036963
      C                     MOVE '18'      PN1              Prin. Incr     080603
      C*                                                                   S01434
      C* Update file                                                       S01434
@@ -4891,8 +4930,10 @@ E001 C                     ENDIF                                          S01460
      C***********          MOVE '2'       PR4                      S01434 080603
      C***********          MOVE '01'      PN4                      S01434 080603
      C*                                                                   080603
-     C                     MOVE F1        AC4                             080603
-     C                     MOVE '3'       PR4                             080603
+     C**********           MOVE F1        AC4                                        080603 MD036963
+     C                     MOVE F6        AC4                                               MD036963
+     C**********           MOVE '3'       PR4                                        080603 MD036963
+     C                     MOVE '1'       PR4                                               MD036963
      C                     MOVE '19'      PN4              Prin. Decr     080603
      C*                                                                   S01434
      C* Update file                                                       S01434

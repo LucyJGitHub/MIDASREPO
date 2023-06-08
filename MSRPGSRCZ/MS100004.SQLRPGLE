@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2022')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('MIR and MOR Sequence Generator')                       *

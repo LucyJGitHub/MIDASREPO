@@ -12,11 +12,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060824           Date 10Jan23               *
-      *  Prev Amend No. MD058517  *CREATE  Date 17Oct22               *
+      *  Last Amend No. MD061272           Date 05Jun23               *
+      *  Prev Amend No. MD060824           Date 10Jan23               *
+      *                 MD058517  *CREATE  Date 17Oct22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061272 - Current bench adj/calc method was used in compu-  *
+      *             ting the final rate instead of the rolled over    *
+      *             details                                           *
+      *             Use new benchmark adj/calc method details if the  *
+      *             value of rollover date is within interest period  *
+      *             and rollover trn is authorised                    *
       *  MD060824 - Future rates were rounded up on rates known date  *
       *             on LOAC and LEFWBRPD                              *
       *             Amended rate computation to follow ZAGETCALRT     *
@@ -115,28 +122,34 @@
 
      C                   CLEAR                   wCurrRate                                  MD060824
      C                   CLEAR                   wFinalRate                                 MD060824
+     C                   EXSR      getRollOvrDet                                            MD061272
      C                   SELECT
-     C     Calm          WHENEQ    'NCCR'
+     C*****Calm          WHENEQ    'NCCR'                                                   MD061272
      C*****CDCMRT        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C     wrkCALM       WHENEQ    'NCCR'                                                   MD061272
      C                   EVAL      wCurrRate =  CDCMRT                                      MD060824
      C                   Z-ADD     1             Ix
-     C     Calm          WHENEQ    'CCR'
+     C*****Calm          WHENEQ    'CCR'                                                    MD061272
      C*****CAVCRT        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C     wrkCALM       WHENEQ    'CCR'                                                    MD061272
      C                   EVAL      wCurrRate =  CAVCRT                                      MD060824
      C                   Z-ADD     FINPSD        K_VDAT
      C                   EVAL      Ix += 1
-     C     Calm          WHENEQ    'SARR'
+     C*****Calm          WHENEQ    'SARR'                                                   MD061272
      C*****CRTEAP        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C     wrkCALM       WHENEQ    'SARR'                                                   MD061272
      C                   EVAL      wCurrRate =  CRTEAP                                      MD060824
      C                   Z-ADD     1             Ix
-     C     Calm          WHENEQ    'SAVG'
+     C*****Calm          WHENEQ    'SAVG'                                                   MD061272
      C*****CSMPAV        ADD(H)    BADJ          K_BRTE                                     MD060824
+     C     wrkCALM       WHENEQ    'SAVG'                                                   MD061272
      C                   EVAL      wCurrRate =  CSMPAV                                      MD060824
      C                   Z-ADD     FINPSD        K_VDAT
      C                   EVAL      Ix += 1
      C                   ENDSL
       ** Compute final value of BRTE
-     C                   EVAL      wFinalRate = wCurrRate + BADJ                            MD060824
+     C**********         EVAL      wFinalRate = wCurrRate + BADJ                   MD060824 MD061272
+     C                   EVAL      wFinalRate = wCurrRate + wrkBADJ                         MD061272
      C                   EVAL(H)   K_BRTE     = wFinalRate                                  MD060824
 
      C                   MOVE      'A'           K_LLAG
@@ -265,4 +278,29 @@
      C                   RETURN
 
      C                   ENDSR
-      *****************************************************************
+      *****************************************************************                     MD061272
+      *                                                               *                     MD061272
+      *  getRollOvrDet - Get rollover details (ncalm and nbadj)       *                     MD061272
+      *                                                               *                     MD061272
+      *****************************************************************                     MD061272
+     C     getRollOvrDet BEGSR                                                              MD061272
+                                                                                            MD061272
+     C                   CLEAR                   wrkBADJ          11 7                      MD061272
+     C                   CLEAR                   wrkCALM           4                        MD061272
+     C                   CLEAR                   wrkLNRF           6                        MD061272
+     C                   EVAL      wrkBADJ = BADJ                                           MD061272
+     C                   EVAL      wrkCALM = CALM                                           MD061272
+     C                   IF        (RLDT <> 0) AND (RLDT >= FINPSD AND                      MD061272
+     C                             RLDT <= FINPED)                                          MD061272
+     C/exec SQL                                                                             MD061272
+     C+ select TRANSREF INTO :wrkLNRF                                                       MD061272
+     C+ from LEWIPROLL                                                                      MD061272
+     C+ where TRANSREF  = :LNRF                                                             MD061272
+     C/end-exec                                                                             MD061272
+     C                   IF        SQLCOD = 100                                             MD061272
+     C                   EVAL      wrkBADJ = NBADJ                                          MD061272
+     C                   EVAL      wrkCALM = NCALM                                          MD061272
+     C                   ENDIF                                                              MD061272
+     C                   ENDIF                                                              MD061272
+                                                                                            MD061272
+     C                   ENDSR                                                              MD061272

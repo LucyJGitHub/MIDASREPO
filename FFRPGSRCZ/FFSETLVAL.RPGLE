@@ -1233,9 +1233,12 @@
       **   If counterparty nostro field entered is numeric, access
       **   LF/CLINT to check that record exists
      C******IN75         IFEQ      '1'                                                       CSD027B
+     C                   MOVE      0             *IN71                                      MD061489
+     C     SBCPN4        IFEQ      *BLANKS                                                  MD061489
      C                   MOVE      SBCPN6        KCBCD
      C     KCLINT        CHAIN     CLINTCBF                           71
      C  N71RECI          COMP      'D'                                7171
+     C                   ENDIF                                                              MD061489
 
       **   - no live record exists
      C******IN71         IFEQ      '1'                                                       CSD027B
@@ -1263,7 +1266,8 @@
      C     *IN74         IFEQ      '0'
 
      C**********         Z-ADD     CNUM          CNUMB             6 0                        CSD027
-     C                   MOVE      CNUM          CNUMB             6                          CSD027
+     C**********         MOVE      CNUM          CNUMB             6                 CSD027 MD061489
+     C                   MOVE      BBCUST        CNUMB             6                        MD061489
 
       **   Else access PF/TABLET2 to check for valid counterparty
       **   nostro
@@ -1985,12 +1989,15 @@
       **   If counterparty nostro field entered is numeric, access
       **   LF/CLINT to check that record exists
      C******IN75         IFEQ      '1'                                                       CSD027B
+     C                   MOVE      0             *IN71                                      MD061489
+     C     SCCPN4        IFEQ      *BLANKS                                                  MD061489
      C                   MOVE      SCCPN6        KCBCD
      C     KCLINT        CHAIN     CLINTCBF                           71
      C  N71RECI          COMP      'D'                                7171
+     C                   ENDIF                                                              MD061489
 
       **   - no live record exists
-     C     *IN71         IFEQ      '1'
+     C******IN71         IFEQ      '1'                                                      MD061489
      C******             EVAL      ErrorFound = 'Y'                                          CSD027B
      C******             EVAL      XIdx = XIdx + 1                                           CSD027B
      C******             EVAL      FldNamXArr(XIdx) = 'SCCPN'                                CSD027B
@@ -2015,7 +2022,8 @@
      C     *IN74         IFEQ      '0'
 
      C**********         Z-ADD     CNUM          CNUMC             6 0                        CSD027
-     C                   MOVE      CNUM          CNUMC             6                          CSD027
+     C**********         MOVE      CNUM          CNUMC             6                 CSD027 MD061489
+     C                   MOVE      BBCUST        CNUMC             6                        MD061489
 
       **   Else access PF/TABLET2 to check for valid counterparty
       **   nostro
@@ -2036,7 +2044,6 @@
      C                   EVAL      OKCCPN = 'N'
      C                   ENDIF
      C                   ENDIF
-     C                   ENDIF                                                              MD061489
 
      C                   ENDIF
 

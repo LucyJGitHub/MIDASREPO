@@ -93,9 +93,9 @@
       *                                                               *
       *  MD061083 - Ordering Customer 1 and Ordering Customer 2 went  *
       *             blank after user authorized that incoming payment *
-      *             transaction                                       *
-      *           - Display warning message '5049572' for illegal     *
-      *             SWIFT character.                                  *
+      *             transaction.                                      *
+      *           - Display warning message 'FTM0070' for non-SWIFT   *
+      *             character.                                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051508 - Correct field name in order to return proper      *
@@ -945,7 +945,7 @@
      C                   EVAL      OKORC1 = 'W'                                             MD061083
      C                   EVAL      WIx +=1                                                  MD061083
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC1'                                MD061083
-     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF
       *
      C     AD#2          IFEQ      'Y'
@@ -953,7 +953,7 @@
      C                   EVAL      OKORC2 = 'W'                                             MD061083
      C                   EVAL      WIx +=1                                                  MD061083
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC2'                                MD061083
-     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF
       *
      C     AD#3          IFEQ      'Y'
@@ -961,7 +961,7 @@
      C                   EVAL      OKORC3 = 'W'                                             MD061083
      C                   EVAL      WIx +=1                                                  MD061083
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC3'                                MD061083
-     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF
       *
      C     AD#4          IFEQ      'Y'
@@ -969,7 +969,7 @@
      C                   EVAL      OKORC4 = 'W'                                             MD061083
      C                   EVAL      WIx +=1                                                  MD061083
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC4'                                MD061083
-     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF
                                                                                               CFT032
      C                   IF        AD#5 = 'Y'                                                 CFT032
@@ -977,7 +977,7 @@
      C                   EVAL      OKORC5 = 'W'                                             MD061083
      C                   EVAL      WIx +=1                                                  MD061083
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC5'                                MD061083
-     C                   EVAL      WMsgIDXAr(Wix) = '5049572'                               MD061083
+     C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF                                                                CFT032
                                                                                               CFT032
      C                   IF        CSW207 = 'N'                                               250600

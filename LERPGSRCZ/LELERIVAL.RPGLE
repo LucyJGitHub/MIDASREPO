@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD061418           Date 24May23               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend no. MD053935           Date 08Jun23               *
+      *  Prev Amend No. MD061418           Date 24May23               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -127,6 +128,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053935 - Default NCHI to have a value even if NBRA is blank*
+      *           - Prevents incorreclty showing up of LEV0288.       *
       *  MD061418 - LEV0054 error received on authorisation but not   *
       *             on completion. Default to the current Rollover    *
       *             Frequency and Day Number if left blank.           *
@@ -3914,7 +3917,14 @@
      C     DDNCHIB       WHENEQ    *BLANK
      C     DDNBRAB       ANDEQ     *BLANKS
      C     DDNbraOK      ANDNE     'N'
-     C                   MOVE      ' '           WNCHI                                      AR702532
+     C**********         MOVE      ' '           WNCHI                             AR702532 MD053935
+     C     PTYP          IFEQ      63                                                       MD053935
+     C     PTYP          OREQ      65                                                       MD053935
+     C     PTYP          OREQ      67                                                       MD053935
+     C                   MOVE      'N'           WNCHI                                      MD053935
+     C                   ELSE                                                               MD053935
+     C                   MOVE      'D'           WNCHI                                      MD053935
+     C                   ENDIF                                                              MD053935
       *                                                                                     AR702532
      C     DDNCHIB       WHENEQ    *BLANK                                                   AR702532
      C     DDNBRAB       ANDNE     *BLANKS                                                  AR702532

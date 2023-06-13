@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034724   *CREATE   Date 13Jun15             *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD061502             Date 09Jun23             *
+      *  Prev Amend No. MD034724   *CREATE   Date 13Jun15             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061502 - SM000075 in MSGW due to "Receiver to small to     *
+      *             hold result'                                      *
       *  MD034724 - New method to restore libraries.                  *
       *                                                               *
       *****************************************************************
@@ -37,14 +39,19 @@
      D B24             S             24A   INZ('                        ')
      D KeyStr          S           1000A
      D FormatStr       S            100A
-     D FoundPos        S              4  0
-     D StartPos        S              4  0
-     D StartKey        S              4  0
+     D*FoundPos*       S              4  0                                                  MD061502
+     D FoundPos        S              6  0                                                  MD061502
+     D*StartPos*       S              4  0                                                  MD061502
+     D StartPos        S              6  0                                                  MD061502
+     D*StartKey*       S              4  0                                                  MD061502
+     D StartKey        S              6  0                                                  MD061502
      D KeyCount        S              6  0
-     D RestPos         S              4  0
+     D*RestPos**       S              4  0                                                  MD061502
+     D RestPos         S              6  0                                                  MD061502
      D SearchStr       S           1000A
      D SearchLen       S              3  0
      D XMLLen          S              4  0
+     D TotLen          S              6  0                                                  MD061502
       *
      D                 DS
      D KeyPosA                 1      6
@@ -107,10 +114,12 @@
       *
       ** Once the new key data has been inserted then add the rest of the XML
       **  string.  Re-use StartPos to store field length.
+     C                   EVAL      TotLen = %LEN(%TRIMR(XMLData_Data))                      MD061502
      C                   EVAL      StartPos = %LEN(%TRIMR(UpdateData))
      C                   EVAL      UpdateData = %TRIMR(UpdateData) +
      C                             %SUBST(XMLData_Data:RestPos: +
-     C                             (8000 - StartPos))
+     C**********                   (8000 - StartPos))                                       MD061502
+     C                             (TotLen - StartPos))                                     MD061502
      C                   EVAL      XMLData_Data = UpdateData
      C                   EVAL      XMLData_Len = %LEN(%TRIMR(XMLData_Data))
       *

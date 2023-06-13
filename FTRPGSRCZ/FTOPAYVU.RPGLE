@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061240           Date 25May23               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
@@ -110,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061240 - Charges are defaulted during OPAY amend. Add      *
+      *             validation to execute the defaulting of charges   *
+      *             only if action is insert.                         *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1266,6 +1270,7 @@
       * Validate Charges/Commission details
       *  - Default values
      C                   IF        @CFT009 = 'N'
+     C                             AND SACTION = 'I'                                        MD061240
      C                   EXSR      DeftCCDetl
      C                   ENDIF
 

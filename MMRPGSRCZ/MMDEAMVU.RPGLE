@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060284           Date 26Aug22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD060284           Date 26Aug22               *
+      *                 MD059304           Date 11Nov21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD053472           Date 27Oct20               *
       *                 MD055318           Date 17Feb20               *
@@ -94,6 +95,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD060284 - Deal amendment type "SC" is blocked by error      *
       *             45049106.                                         *
       *           - Make both settlement fields protected for deal    *
@@ -1597,6 +1599,12 @@
 
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
+      *                                                                                     MD049123
+      ** Return back Customer Number to DDCUST field if valid                               MD049123
+      *                                                                                     MD049123
+     C                   MOVEL     DDCSNM        #DDCSNM          10                        MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     IGCNUM        DDCSNM                                     MD049123
      C                   CALLB     'MMDEAMAMD'
 
       * INPUTS
@@ -1623,6 +1631,9 @@
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1                          CDL038
      C*******************PARM      'N'           ResetErrs         1                          CDL038
+      *                                                                                     MD049123
+     C                   MOVEL     *BLANKS       DDCSNM                                     MD049123
+     C                   MOVEL     #DDCSNM       DDCSNM                                     MD049123
 
       ** If any errors overwrite previous error information
 

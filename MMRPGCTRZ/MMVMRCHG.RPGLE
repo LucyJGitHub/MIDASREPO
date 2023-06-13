@@ -36,8 +36,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1076900          Date 08Feb13               *
+      *  Last Amend No. MD052156           Date 31May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1076900          Date 08Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052156 - LDNI DLM0176 Date cannot be less than the next    *
+      *             Principal change Date requested                   *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1076900 - Update scheduled rate change error               *
       *  CDL033 - Floating Rate CDs Issued                            *
@@ -214,6 +217,7 @@
      D WRK30           S              3  0
      D WCTLDYN         S              5P 0
      D PCtlDate        S              5P 0
+     D SvPrDt          S              5P 0                                                  MD052156
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -436,9 +440,14 @@
       ** Date cannot be less than the control date for principal
       ** change
       *
-     C     InDateMDN     IFLT      WCTLDYN
-     C     WCTLDYN       ANDGT     0
-     C     InDateMDN     ANDGE     Rundate                                                 AR1076900
+     C*****InDateMDN     IFLT      WCTLDYN                                                  MD052156
+     C*****WCTLDYN       ANDGT     0                                                        MD052156 
+     C*****InDateMDN     ANDGE     Rundate                                        AR1076900 MD052156
+     C     InDateMDN     IFLT      PCtlDate                                                 MD052156
+     C     InDateMDN     ANDGT     WCTLDYN                                                  MD052156
+     C     PCtlDate      ORLE      WCTLDYN                                                  MD052156
+     C     InDateMDN     ANDLE     WCTLDYN                                                  MD052156
+     C     WCTLDYN       ANDGT     0                                                        MD052156
      C                   ADD       1             Idx
      C                   MOVE      'Y'           Errorfound
      C                   MOVEL     'DLM0176'     MsgIDArr(Idx)
@@ -515,24 +524,27 @@
       *
      C                   EVAL      WPRDT = *ZERO
      C                   EVAL      WCTLDYN = *ZERO
+     C                   EVAL      SvPrDt = *ZERO                                           MD052156
       *
      C     KFRSDL        SETLL     DLFRSCD0
      C     KFRSDP        READE     DLFRSCD0                               30
      C                   DOW       (*IN30 = *OFF) AND
      C                             (WCTLDYN = *ZERO)
      C                   IF        HHDTPR <> 'Y'
-     C                   Z-ADD     HHPRDT        WCTLDYN
+     C**********         Z-ADD     HHPRDT        WCTLDYN                                    MD052156
+     C                   EVAL      WCTLDYN = SvPrDt                                         MD052156
      C                   LEAVE
      C                   ENDIF
+     C                   EVAL      SvPrDt = HHPRDT                                          MD052156
      C     KFRSDP        READE     DLFRSCD0                               30
      C                   ENDDO
       *
       ** If nothing was found, default control date to next principal
       ** change date
       *
-     C                   IF        (WCTLDYN = *ZERO) AND (PCtlDate <> *ZERO)
-     C                   EVAL      WCTLDYN = PCtlDate
-     C                   ENDIF
+     C**********         IF        (WCTLDYN = *ZERO) AND (PCtlDate <> *ZERO)                MD052156
+     C**********         EVAL      WCTLDYN = PCtlDate                                       MD052156
+     C**********         ENDIF                                                              MD052156
       *
      C                   ENDSR
  

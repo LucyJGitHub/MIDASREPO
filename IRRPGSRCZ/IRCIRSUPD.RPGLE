@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026941           Date 02May23               *
-      *  Prev Amend No. MD023568           Date 19Apr23               *
+      *  Last Amend No. MD051652           Date 30May23               *
+      *  Prev Amend No. MD026941           Date 02May23               *
+      *                 MD023568           Date 19Apr23               *
       *                 MD059410           Date 21Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
@@ -129,6 +130,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051652 - Floating Rate did not fix due to ZERO TINFD.      *
+      *             Fix is to update TINFD according to the rate      *
+      *             change date schedules.                            *
       *  MD026941 - No projection generated for reversal of completed *
       *           - deals.                                            *
       *           - Reinstate call to DL2900 in SIRDEL but condition  *
@@ -338,6 +342,9 @@
      FREADVCL1  UF   E           K DISK    COMMIT                                             CRE020
      F                                     USROPN                                             CRE020
                                                                                               CRE020
+      ** IRS Schedule (Their Rate)                                                          MD051652
+     FDLDTSCL3  IF   E           K DISK    RENAME(DLDTSCD0:L3DTSCD0)                        MD051652
+                                                                                            MD051652
      FDLDLDGLM  IF   E           K DISK    PREFIX(WF)                                       MD056655
      F                                     RENAME(DLDLDGD0:DLDLDGD1)                        MD056655
      FDLDLDGLN  UF A E           K DISK                                                       CLE025
@@ -3159,10 +3166,33 @@
      C                   Z-ADD     0             TINFD
      C                   ELSE
       *
+      ** If Rate Change Date is to be processed TODAY,                                      MD051652
+      ** look for the next rate change date if Rate Change Freq is 'Z'                      MD051652
+      *                                                                                     MD051652
+     C                   IF        RXTNICD = BJRDNB                                         MD051652
+     C                   IF        TICFR = 'Z'                                              MD051652
+     C                   EVAL      WKNICD = RXTNICD                                         MD051652
+     C                   EVAL      WKOTIN = 'T'                                             MD051652
+     C                   EVAL      WKRCIP = 'R'                                             MD051652
+      *                                                                                     MD051652
+      ** Find the next rate change date schedule not yet processed                          MD051652
+     C     KDLSC2        SETLL     DLDTSCL3                                                 MD051652
+     C     KDLSC         READE     DLDTSCL3                               95                MD051652
+     C                   DOW       *IN95 = *OFF                                             MD051652
+     C                   IF        PRDT > ##TNICD                                           MD051652
+     C                   EVAL      WKNICD = PRDT                                            MD051652
+     C                   LEAVE                                                              MD051652
+     C                   ENDIF                                                              MD051652
+     C     KDLSC         READE     DLDTSCL3                               95                MD051652
+     C                   ENDDO                                                              MD051652
+      *                                                                                     MD051652
+     C                   ENDIF                                                              MD051652
+     C                   ENDIF                                                              MD051652
       * User pays Fixed Rate, Counterparty pays Floating Rate
       * Reset only, if Next Intr.Chg Date, or Rate Fix Days changed
       *
      C     RXTNICD       IFNE      ##TNICD                                                  BUG11266
+     C     WKNICD        ORNE      ##TNICD                                                  MD051652
      C     RXTFRFD       ORNE      ##TFRFD                                                  BUG11266
      C     RXTEINR       ORNE      ##TEINR                                                  BUG11266
      C     RXC1R2        ORNE      ##L2CYR1                                                   235490
@@ -3253,6 +3283,18 @@
      C     RXTNICD       IFNE      *ZEROS
      C                   Z-ADD     TNICD         ZINDT
      C                   MOVE      TFRFD         ZRFDY
+      *                                                                                     MD051652
+     C                   IF        TICFR = 'Z'                                              MD051652
+      *                                                                                     MD051652
+     C                   IF        RXTNICD = ##TNICD                                        MD051652
+     C                   Z-ADD     WKNICD        ZINDT                                      MD051652
+     C                   ENDIF                                                              MD051652
+      *                                                                                     MD051652
+     C                   IF        RXTNICD < ##TNICD                                        MD051652
+     C                   Z-ADD     RXTNICD       ZINDT                                      MD051652
+     C                   ENDIF                                                              MD051652
+      *                                                                                     MD051652
+     C                   ENDIF                                                              MD051652
       *
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
@@ -5920,11 +5962,25 @@
      C     *LIKE         DEFINE    L2CYR0        ##L2CYR0                                     235490
      C     *LIKE         DEFINE    BQFIRA        WkFIRA                                       CAP056
      C     *LIKE         DEFINE    BQFIAU        WkFIAU                                       CAP056
+     C     *LIKE         DEFINE    PRDT          WKNICD                                     MD051652
+     C     *LIKE         DEFINE    OTIN          WKOTIN                                     MD051652
+     C     *LIKE         DEFINE    RCIP          WKRCIP                                     MD051652
       *
       ** Partial Key for DLDTSCPD                                               CAP004
      C     KDTSC         KLIST                                                  CAP004
      C                   KFLD                    DLNO                           CAP004
      C                                                                          CAP004
+     C     KDLSC2        KLIST                                                              MD051652
+     C                   KFLD                    RXDLNO                                     MD051652
+     C                   KFLD                    WKOTIN                                     MD051652
+     C                   KFLD                    WKRCIP                                     MD051652
+     C                   KFLD                    RXTNICD                                    MD051652
+      *                                                                                     MD051652
+     C     KDLSC         KLIST                                                              MD051652
+     C                   KFLD                    RXDLNO                                     MD051652
+     C                   KFLD                    WKOTIN                                     MD051652
+     C                   KFLD                    WKRCIP                                     MD051652
+      *                                                                                     MD051652
       *                                                                                       CIR003
       ** Partial Key for LF/DLGXSTL0                                                          CIR003
       *                                                                                       CIR003

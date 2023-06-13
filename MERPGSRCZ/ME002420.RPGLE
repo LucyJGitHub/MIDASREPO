@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051648           Date 11Sep20               *
+      *  Last Amend No. MD028973           Date 23May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051648           Date 11Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028973 - Doesn't allow start date of 12mn. Amended program *
+      *             to remove the defaulting to current time when     *
+      *             start time is zero.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051648 - Network AC MT942 Schedules Maint. -wrong formatted*
@@ -317,15 +321,15 @@
       ** Start Time: default is the current system time
       *
      C**********         IF        F1STIM = 0                                               MD051648
-     C                   IF        F1STIM = *BLANKS                                         MD051648
-     C                             OR F1STIM = '00:00'                                      MD051648
-     C                   TIME                    WFld6N0           6 0
+     C**********         IF        F1STIM = *BLANKS                                MD051648 MD028973
+     C**********                   OR F1STIM = '00:00'                             MD051648 MD028973
+     C**********         TIME                    WFld6N0           6 0                      MD028973
      C**********         MOVEL     WFld6N0       F1STIM                                     MD051648
-     C                   MOVEL     WFld6N0       DSTIME                                     MD051648
-     C                   EVAL      DSCHAR3 = ':'                                            MD051648
-     C                   EXSR      HHMN_HHCMN                                               MD051648
-     C                   EVAL      F1STIM = DSHHMN                                          MD051648
-     C                   ENDIF
+     C**********         MOVEL     WFld6N0       DSTIME                            MD051648 MD028973
+     C**********         EVAL      DSCHAR3 = ':'                                   MD051648 MD028973
+     C**********         EXSR      HHMN_HHCMN                                      MD051648 MD028973
+     C**********         EVAL      F1STIM = DSHHMN                                 MD051648 MD028973
+     C**********         ENDIF                                                              MD028973
       *                                                                                     MD051648
       ** Initialize to 00:00                                                                MD051648
       *                                                                                     MD051648

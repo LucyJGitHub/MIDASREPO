@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046446           Date 14Apr23               *
-      *  Prev Amend No. MD037251           Date 13Mar23               *
+      *  Last Amend No. MD052189           Date 01Jun23               *
+      *  Prev Amend No. MD046446           Date 14Apr23               *
+      *                 MD037251           Date 13Mar23               *
       *                 MD049864           Date 11Mar23               *
       *                 MD054313           Date 10Mar23               *
       *                 MD045018           Date 06Mar23               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052189 - MM fixes rate on the wrong date.                  *
       *  MD046446 - FLR0022 Encountered even with correct rate fix    *
       *             day and value date input                          *
       *  MD037251 - Amendment of LDNI cause rate change to be skipped.*
@@ -1027,9 +1029,16 @@
      C**********         MOVE      *Blank        IKBSVF                              CDL033 MD037251
      C**********         Z-ADD     *ZERO         IKINFD                              CDL033 MD037251
      C**********         MOVE      *Blank        IKINFF                              CDL033 MD037251
+     C     HKFXDM        IFNE      0                                                        MD052189
+     C                   Move      HKFXDM        WKFXDM            2                        MD052189
+     C                   Else                                                               MD052189
+     C                   Move      *Blanks       WKFXDM                                     MD052189
+     C                   EndIf                                                              MD052189
                                                                                               CDL033
      C                   IF        DDACTN = 'I'                                               CDL033
      C                             OR DDACTN = 'A' AND  DDSTRT <> *blanks                   MD054313
+     C                             Or DDACTN = 'A' And DDFXDM <> WKFXDM                     MD052189
+     C                             Or DDACTN = 'A' And WRCDT <> HKRCDT                      MD052189
                                                                                               CDL033
      C                   MOVE      *Blank        IKBSVF                                     MD037251
      C                   Z-ADD     *ZERO         IKINFD                                     MD037251

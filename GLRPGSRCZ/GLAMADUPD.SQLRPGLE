@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 262263             Date 18Dec09               *
-      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *  Last Amend No. MD059672           Date 14Jun23               *
+      *  Prev Amend No. 262263             Date 18Dec09               *
+      *                 AR891357A          Date 12Mar20               *
       *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
@@ -138,6 +139,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059672 - STRAN overflow. Amend to use ADD instead of EVAL  *
+      *             in incrementing the value of WWTRNO.              *
+      *             Applied for MD061475                              *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
       *  AR891357A - RUNDT field is not existing on the module.       *
@@ -3868,7 +3872,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   MOVE      ST_ZZ199      ST1RAT                                     AR900144
      C                   EVAL      WWTRNO = S1TRNO                                          AR900144
      C**********         EVAL      WWTRNO = +1                                    AR900144 AR1073268
-     C                   EVAL      WWTRNO += 1                                             AR1073268
+     C**********         EVAL      WWTRNO += 1                                    AR1073268 MD059672
+     C                   ADD       1             WWTRNO                                     MD059672
      C                   ELSE                                                               AR900144
      C                   Z-ADD     1             WWTRNO                                     AR900144
      C                   ENDIF                                                              AR900144
@@ -4137,7 +4142,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   IF        *IN60 = *OFF                                             MD026269
      C                   MOVE      ST_ZZ199      ST1RAT                                     MD026269
      C                   EVAL      WWTRNO = S1TRNO                                          MD026269
-     C                   EVAL      WWTRNO += 1                                              MD026269
+     C*********          EVAL      WWTRNO += 1                                     MD026269 MD059672
+     C                   ADD       1             WWTRNO                                     MD059672
      C                   ELSE                                                               MD026269
      C                   Z-ADD     1             WWTRNO                                     MD026269
      C                   ENDIF                                                              MD026269
@@ -4249,7 +4255,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   MOVE      ST_ZZ199      ST1RAT                                     AR900144
      C                   EVAL      WWTRNO = S1TRNO                                          AR900144
      C**********         EVAL      WWTRNO = +1                                    AR900144 AR1073268
-     C                   EVAL      WWTRNO += 1                                             AR1073268
+     C**********         EVAL      WWTRNO += 1                                    AR1073268 MD059672
+     C                   ADD       1             WWTRNO                                     MD059672
      C                   ELSE                                                               AR900144
      C                   Z-ADD     1             WWTRNO                                     AR900144
      C                   ENDIF                                                              AR900144
@@ -4357,7 +4364,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   MOVE      ST_ZZ199      ST1RAT                                     AR900144
      C                   EVAL      WWTRNO = S1TRNO                                          AR900144
      C**********         EVAL      WWTRNO = +1                                    AR900144 AR1073268
-     C                   EVAL      WWTRNO += 1                                             AR1073268
+     C**********         EVAL      WWTRNO += 1                                    AR1073268 MD059672
+     C                   ADD       1             WWTRNO                                     MD059672
      C                   ELSE                                                               AR900144
      C                   Z-ADD     1             WWTRNO                                     AR900144
      C                   ENDIF                                                              AR900144
@@ -4653,7 +4661,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   MOVE      ST_ZZ199      ST1RAT                                     AR900144
      C                   EVAL      WWTRNO = S1TRNO                                          AR900144
      C**********         EVAL      WWTRNO = +1                                    AR900144 AR1073268
-     C                   EVAL      WWTRNO += 1                                             AR1073268
+     C**********         EVAL      WWTRNO += 1                                    AR1073268 MD059672
+     C                   ADD       1             WWTRNO                                     MD059672
      C                   ELSE                                                               AR900144
      C                   Z-ADD     1             WWTRNO                                     AR900144
      C                   ENDIF                                                              AR900144

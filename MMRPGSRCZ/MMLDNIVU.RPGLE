@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD048034           Date 31May23               *
-      *  Prev Amend No. MD049123           Date 25May23               *
+      *  Last Amend No. MD061485           Date 13Jun23               *  
+      *  Prev Amend No. MD048034           Date 31May23               *
+      *                 MD049123           Date 25May23               *
       *                 MD033687A          Date 08Feb23               *
       *                 MD060788           Date 08Feb23               *
       *                 252024             Date 14Feb08               *
@@ -153,6 +154,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061485 - Interest Rate becomes zero when amending LDNI deal*
       *  MD048034 - MM transaction stuck with Requires Reauthorization*
       *           - Ensure that DDCUST field contains customer number *
       *  MD049123 - Added process for Customer Number formatting.     *
@@ -1360,6 +1362,7 @@
      C                   IF        Idx = 0                                                    CDL033
      C                   EXSR      ValidatePC                                                 CDL033
      C                   ENDIF                                                                CDL033
+     C                   EXSR      SetupAmend                                               MD061485
      C                   IF        DDSTRT <> *BLANKS                                        BUG12589
      C                   EVAL      @@STRT = IKINTR                                          BUG12589
      C                   ENDIF                                                              BUG12589

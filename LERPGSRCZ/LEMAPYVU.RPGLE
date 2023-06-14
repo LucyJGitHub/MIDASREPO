@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049414           Date 29Jun22               *
-      *  Prev Amend No. MD020027           Date 29Jun22               *
+      *  Last Amend No. AR959968           Date 14Jun23               *
+      *  Prev Amend No. MD049414           Date 29Jun22               *
+      *                 MD020027           Date 29Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -104,6 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR959968 - Projected Account Movements for Loan Write off    *
+      *             For write-off clear settlement instructions       *
+      *             (Child: AR962026)                                 *
       *  MD049414 - Changed size of PPayParm from 92 to 1045 to       *
       *             include other fields.                             *
       *           - Applied for MD020027.                             *
@@ -1907,7 +1911,9 @@
 
       ** Remove settlements if Settlement Allocation is available                             CLE034
                                                                                               CLE034
-     C                   IF        DDSTAL = 'Y'                                               CLE034
+     C**********         IF        DDSTAL = 'Y'                                      CLE034 AR959968
+     C                   IF        DDSTAL = 'Y' OR                                          AR959968
+     C                             DDWOFF = 'Y'                                             AR959968
      C                   EVAL      InPaySttmt = *Blanks                                       CLE034
      C                   EVAL      InRecSttmt = *Blanks                                       CLE034
      C                   EVAL      DDPSTM = '00'                                              CLE034

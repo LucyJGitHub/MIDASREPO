@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. 263778             Date 13Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -68,6 +69,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  263778 - COB components SEC0612F and SEC0806 failed due to   *
+      *           FCOOB between SECTYD and SECTYA. Applied 170071 to  *
+      *           rename RECI field to RECIX in SECTYD.               *
+      *         - Applied for MD-61345.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -305,6 +310,11 @@
      E                    CPY@    1   1 80
       /COPY ZSRSRC,ZDATE2Z1
       /COPY ZSRSRC,ZSDESCZ1
+      *                                                                                       263778
+      ** Rename RECI field                                                                    263778
+      *                                                                                       263778
+     ISECTYDF                                                                                 263778
+     I              RECI                            RECIX                                     263778
       /COPY ZSRSRC,ZSDESCZ2
       /EJECT
      I*
@@ -456,14 +466,17 @@
      C*
      C* ADD TO COUNT OF INPUT RECORDS
      C*
-     C           RECI      IFNE '*'
-     C           RECI      ANDNE'C'                                       E14008
+     C********** RECI      IFNE '*'                                                           263778
+     C********** RECI      ANDNE'C'                                                    E14008 263778
+     C           RECIX     IFNE '*'                                                           263778
+     C           RECIX     ANDNE'C'                                                           263778
      C                     ADD  1         IREC
      C                     END
      C*
      C* IF LIVE RECORD (RECI=D) ADD TO COUNT AND NO FURTHER ACTION
      C*
-     C           RECI      IFEQ 'D'
+     C********** RECI      IFEQ 'D'                                                           263778
+     C           RECIX     IFEQ 'D'                                                           263778
      C                     ADD  1         LVREC
      C                     ELSE
      C*
@@ -477,7 +490,8 @@
      C* DO NOT DROP THE SECURITY. THIS TEST IS NEEDED WHEN THE            066394
      C* RETENTION DATE FOR THE SECURITIES ARE NOT THE SAME FOR THE        066394
      C* TRADES                                                            066394
-     C           RECI      IFEQ 'M'
+     C********** RECI      IFEQ 'M'                                                           263778
+     C           RECIX     IFEQ 'M'                                                           263778
      C                     ADD  1         MATREC
      C* DON'T DROP RECORD IF TRADS RECORD FOUND                           098899
      C                     SETOF                     30                   098899
@@ -524,7 +538,8 @@
       *                                                                                       CAS002
      C/COPY WNCPYSRC,SE2570C007
      C           *IN88     IFEQ '1'                                       066394
-     C                     MOVE '*'       RECI
+     C*********            MOVE '*'       RECI                                                263778
+     C                     MOVE '*'       RECIX                                               263778
      C                     ADD  1         DPREC
      C                     ADD  1         DPREC2  50                                          095907
      C                     ADD  1         DECREC                          S01158
@@ -537,7 +552,8 @@
      C*
      C* IF RECORD NOT LIVE OR MATURED, DROP RECORD
      C*
-     C                     MOVE '*'       RECI
+     C**********           MOVE '*'       RECI                                                263778
+     C                     MOVE '*'       RECIX                                               263778
      C* ADD ONE IN NUMBER OF DROPPED RECORDS ON THE PRINTER FILE BUT DO                       095907
      C* NOT CONSIDER FOR TRADES AS '*'  AND 'C' ARE NOT COUNTED IN FIELD                      095907
      C* NORE                                                                                  095907
@@ -557,7 +573,8 @@
      C* IF RECORD IS TO BE DROPPED (RECI=*)
      C*      PRINT DETAIL REPORT
      C*
-     C           RECI      IFEQ '*'
+     C********** RECI      IFEQ '*'                                                           263778
+     C           RECIX     IFEQ '*'                                                           263778
      C/COPY WNCPYSRC,SE2570C002
      C                     EXSR PR01
      C*                                                                   S01408

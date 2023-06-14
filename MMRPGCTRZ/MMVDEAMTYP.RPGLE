@@ -503,6 +503,7 @@
      C     H@MTYP        AndNe     'IP'                                         CDL019
      C     H@MTYP        AndNe     'TD'                                         CDL019
      C     H@MTYP        AndNe     'IT'                                         CDL019
+     C     H@MTYP        AndNe     'CI'                                                     MD061467
       *                                                                         CDL019
       * Do not allow PI/PD for IT/IP dealtypes unless                                         240942
       * system value AllowPIPDforITIPD = 'Y'                                                  240942
@@ -529,6 +530,33 @@
      C     H@MTYP        OrEq      'TI'                                                       250892
      C     DDMTYP        AndEq     'CI'                                                       250892
      C     AllowCI       AndEq     'N'                                                        250892
+      *                                                                                     MD061467
+      ** Do not allow SC amendments for Fix term deposits unless                            MD061467
+      ** system value AllowSCforFiXD = "Y".                                                 MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TD'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TI'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'IP'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TD'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'IT'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'CI'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
       *                                                                                       CDL088
      C                   IF         CDL088 <> 'Y'                                             CDL088
      C                             OR  (H@MTYP <> 'BD' AND                                    CDL088
@@ -538,21 +566,8 @@
      C                                  H@MTYP <> 'DA' AND                                    CDL088
      C                                  H@MTYP <> 'TA' AND                                    CDL088
      C                                  H@MTYP <> 'TB')                                       CDL088
-      ** Do not allow SC amendments for Fix term deposits unless                            MD061467
-      ** system value AllowSCforFiXD = "Y".                                                 MD061467
-      *                                                                                     MD061467
-     C     DDMTYP        IFEQ      'SC'                                                     MD061467
-     C     PRNINTB       AndEq     'N'                                                      MD061467
-      *                                                                                     MD061467
-     C     H@MTYP        IFeq      'TI'                                                     MD061467
-     C     H@MTYP        OReq      'IP'                                                     MD061467
-     C     H@MTYP        OReq      'TD'                                                     MD061467
-     C     H@MTYP        Oreq      'IT'                                                     MD061467
-     C     H@MTYP        Oreq      'CI'                                                     MD061467
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0302'     Msgid2
-     C                   ENDIF                                                              MD061467
-     C                   ENDIF                                                              MD061467
      C                   ENDIF                                                                CDL088
      C                   END
      C                   END

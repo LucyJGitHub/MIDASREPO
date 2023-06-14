@@ -62,7 +62,7 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
 
-     C                   MoveA     DatatoVal     @DTA                     26
+     C                   MoveA     DatatoVal     @DTA
      C     ' '           LOOKUP    @DTA                                   26
 
      C                   If        DataToVal = *Blanks

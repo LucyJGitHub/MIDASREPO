@@ -445,7 +445,6 @@
       *                                                                                     BUG13025
      C                   If        CFT004 = 'Y'                                             BUG13025
      C**********                   And WIx > 0                                     BUG13025 MD033105
-     C                             OR CFT004 = 'N'                                          MD061038
      C                   Eval      IPORC1 = DDORC1                                          BUG13025
      C                   Eval      IPORC2 = DDORC2                                          BUG13025
      C                   Eval      IPORC3 = DDORC3                                          BUG13025

@@ -40,9 +40,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061459 - Account ID always displayed as invalid            *
-      *             on hierarchy enquiry (after F10)                  *
+      *             on hierarchy enquiry (after F10).                 *
       *             Use DSSDY instead of DSFDY as data structure      *
-      *             passed to AOACODR0                                *
+      *             passed to AOACODR0.                               *
       *  MD059561 - Manual sweeps are failing with decimal data error *
       *             in field I_CCUS.                                  *
       *  MD046248 - Finastra Rebranding                               *

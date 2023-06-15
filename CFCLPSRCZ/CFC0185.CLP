@@ -9,8 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 247251             Date 24Aug21              */
-/*       Prev Amend No. MD056206           Date 24Sep20              */
+/*       Last Amend No. BA6016             Date 10Feb23              */
+/*       Prev Amend No. MD060952           Date 19Jan23              */
+/*                      MD027509           Date 10Oct22              */
+/*                      CSC059             Date 10Oct22              */
+/*                      247251             Date 24Aug21              */
+/*                      MD056206           Date 24Sep20              */
 /*                      MD055267           Date 16Mar20              */
 /*                      CSW051             Date 15Mar18              */
 /*                      MD046248           Date 27Oct17              */
@@ -48,6 +52,12 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       BA6016 - Upgrade CMD IFSAUT to BFMidas (GSH016)             */
+/*       MD060952 - Error with CSC059 on as CPYTOPCD is still being  */
+/*                  executed                                         */
+/*       MD027509 - Change folder calculation to use absolute path.  */
+/*                  Applied for MD-38096                             */
+/*       CSC059 - Replace QDLS processing by IFS                     */
 /*       247251 - Duplicate confirmations are arriving in TRAM. Do   */
 /*                not call CF0120 as MMM sends confs to TRAM instead.*/
 /*                Also no need to copy to CFWOCMPD as no longer used */
@@ -141,7 +151,11 @@
              DCL        VAR(&GCHAS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTNVAR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&TERM) TYPE(*CHAR) LEN(1)
-             DCL        VAR(&FLR) TYPE(*CHAR) LEN(9)
+/************DCL        VAR(&FLR) TYPE(*CHAR) LEN(9)                                      /*CSC059*/
+             DCL        VAR(&FLR) TYPE(*CHAR) LEN(50)                                     /*CSC059*/
+             DCL        VAR(&RETCOD) TYPE(*CHAR) LEN(7)                                   /*BA6016*/
+             DCL        VAR(&FMT200) TYPE(*CHAR) LEN(200)                                 /*BA6016*/
+             DCL        VAR(&BA6016) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6016*/
              DCL        VAR(&CMPREC) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')     /*CCF001*/
              DCL        VAR(&CCF001) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CCF001*/
@@ -160,10 +174,71 @@
              DCL        VAR(&IFSFILES) TYPE(*CHAR) LEN(256)                               /*CSW025*/
              DCL        VAR(&QDLSFLR) TYPE(*CHAR) LEN(256)                                /*CSW025*/
 /*/COPY WNCPYSRC,CFC0185012                                          */
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(50)                                    /*CSC059*/
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC059*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC059*/
+             DCL        VAR(&ZSUBDIR) TYPE(*CHAR) LEN(200)                                /*CSC059*/
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(10 0)                                  /*CSC059*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                    /*CSC059*/
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7) VALUE('       ')                    /*CSC059*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) VALUE('CSC059')                      /*CSC059*/
+             DCL        VAR(&SARREC) TYPE(*CHAR) LEN(200)                                 /*CSC059*/
+             DCL        VAR(&CSC059) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CSC059*/
+/*/COPY GPCPYSRCG,GPSVALDCL                                          */                   /*CSC059*/
 
 /* Global monitor messages                                           */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +
                           EXEC(GOTO ABNOR)
+/*                                                                                        /*CSC059*/
+/* Check if feature CSC059 is on */                                                       /*CSC059*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SAR &SARREC)                      /*CSC059*/
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                          VAR(&CSC059) VALUE('Y'))                                        /*CSC059*/
+/*                                                                                        /*CSC059*/
+/* If CSC059 is on, check IASP */                                                         /*CSC059*/
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+/*                                                                                        /*CSC059*/
+/*  Get the global IASP system values */                                                  /*CSC059*/
+/*                                                                                        /*CSC059*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC059*/
+/*                                                                                          CSC059*/
+/** Check whether system is in IASP environment.                                            CSC059*/
+/*                                                                                          CSC059*/
+             CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                             /*CSC059*/
+/*                                                                                          CSC059*/
+/*  If IASP environment,                                                                    CSC059*/
+/*                                                                                          CSC059*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC059*/
+/*                                                                                          CSC059*/
+/*  Get name of IASP.                                                                       CSC059*/
+/*                                                                                          CSC059*/
+             CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                               /*CSC059*/
+/*                                                                                        /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+/** Get the zone IFS subdirectory system value */                                         /*CSC059*/
+/*                                                                                        /*CSC059*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'ZoneIFSsubdirectory' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC059*/
+/*                                                                                        /*CSC059*/
+/** Determine IFS subdirectory. */                                                        /*CSC059*/
+/*                                                                                        /*CSC059*/
+             CHGVAR     VAR(&ZSUBDIR) VALUE(%SST(&SVAL1 1 200))                           /*CSC059*/
+             CALL       PGM(AOSARDR0) PARM(&RETCOD '*VERIFY' +
+                          'BA6016' &FMT200)                                               /*BA6016*/
+             IF         COND(&RETCOD *EQ '       ') THEN(DO)                              /*BA6016*/
+             CHGVAR     VAR(&BA6016) VALUE('Y')                                           /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+/*                                                                                        /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
 
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW025')                              /*CSW025*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW025) VALUE('Y'))                            /*CSW025*/
@@ -186,10 +261,35 @@
 
 /*/COPY WNCPYSRC,CFC0185004                                          */
 /* If folder does not exist - error */
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             OVRPRTF FILE(QSYSPRT) HOLD(*YES)                                             /*CSC059*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC059*/
+/**********  CHGVAR     VAR(&FLR) VALUE(&IASP *TCAT '/' *CAT +
+                          &ZSUBDIR *TCAT '/CFFLR.' *CAT &TRAMID)             /*CSC059*/ /*MD027509*/
+             CHGVAR     VAR(&FLR) VALUE('/' *CAT &IASP *TCAT '/' *CAT +
+                          &ZSUBDIR *TCAT '/CFFLR.' *CAT &TRAMID)                        /*MD027509*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
+             CHGVAR     VAR(&FLR) VALUE('/' *CAT +
+                          &ZSUBDIR *TCAT '/CFFLR.' *CAT &TRAMID)                        /*MD027509*/
+             ENDDO                                                                        /*CSC059*/
+             CRTDIR     DIR(&FLR)                                                         /*CSC059*/
+             MONMSG     MSGID(CPFA0A0) EXEC(GOTO CONT)                                    /*CSC059*/
+/** Invoke Handelsbanken command IFSAUT to correctly set user        */                   /*BA6016*/
+/** authority to the IFS directory                                   */                   /*BA6016*/
+                                                                                          /*BA6016*/
+             IF         COND((&IASP_YN *EQ 'Y') *AND (&BA6016 *EQ +
+                        'Y')) THEN(DO)                                                    /*BA6016*/
+             IFSAUT     PATH(&FLR)                                                        /*BA6016*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CHGVAR     VAR(&FLR) VALUE('CFFLR.' *CAT &TRAMID)
 
              CRTFLR     FLR(&FLR)
              MONMSG     MSGID(CPF8A85 CPF8A18) EXEC(GOTO CONT)
+             ENDDO                                                                        /*CSC059*/
              GOTO ABNOR
 
  CONT:       CHKOBJ     OBJ(*LIBL/CFBUSYPD) OBJTYPE(*FILE)
@@ -205,6 +305,10 @@
                            &FLR *CAT '/*')                                        /*CSW025 245314A*/
              CHGVAR     VAR(&IFSFILES) VALUE('/QOpenSys/tram/' *CAT +
                            &FLR *CAT '/*')                                                /*263114*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC059*/
+                MOVE       OBJ(&IFSFILES) TODIR(&FLR)                                     /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
                 CHGVAR     VAR(&QDLSFLR) VALUE('/QDLS/' *CAT &FLR)                        /*CSW025*/
                 MOVE       OBJ(&IFSFILES) TODIR(&QDLSFLR)                                 /*CSW025*/
              MONMSG     MSGID(CPFA0A0 CPFA0B8) EXEC(SNDMSG +
@@ -212,6 +316,7 @@
                           Delay wait.') TOMSGQ(MOPERQ))                                   /*207006*/
              MONMSG     MSGID(CPFA093)                                                   /*BUG3557*/
              MONMSG     MSGID(CPFA0A9)                                                    /*263114*/
+             ENDDO                                                                        /*CSC059*/
              ENDDO                                                                        /*CSW025*/
                                                                                           /*CSW025*/
 /* Alternatively the data from Message Manager may be coming in from  */                  /*CSW051*/
@@ -225,6 +330,7 @@
              CALL       CFG003                                                            /*CSW051*/
              CHGVAR     VAR(&CPYSTATUS) VALUE('PENDING')                                  /*CSW051*/
              CHGVAR     VAR(&QDLSFLR) VALUE(&FLR)                                         /*CSW051*/
+             IF         COND(&CSC059 *NE 'Y') THEN(DO)                                  /*MD060952*/
              CPYTOPCD   FROMFILE(*LIBL/CFTRAMPD) TOFLR(&QDLSFLR) +
                           TODOC(TRAMHOST.DAT)                                             /*CSW051*/
              MONMSG     MSGID(IWS1612 CPF9999) EXEC(DO)
@@ -236,19 +342,46 @@
              MONMSG     MSGID(CPFA093) EXEC(DO)                                           /*CSW051*/
              CHGVAR     VAR(&CPYSTATUS) VALUE('DELAYED')                                  /*CSW051*/
              ENDDO                                                                        /*CSW051*/
+             ENDDO                                                                      /*MD060952*/
+             ELSE (DO)                                                                  /*MD060952*/
+             CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/CFTRAMPD')                            /*MD060952*/
+             CPYTOIMPF  FROMFILE(*LIBL/CFTRAMPD *FIRST) +
+                          TOSTMF(&FILE)  +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                /*MD060952*/
+             ENDDO                                                                      /*MD060952*/
              IF         COND(&CPYSTATUS *NE 'DELAYED') THEN(CLRPFM +
                           FILE(CFTRAMPD))                                                 /*CSW051*/
              ENDDO                                                                        /*CSW051*/
                                                                                           /*CSW051*/
 /* Loop until PC is not using folder - TRAM.DAT not found */
 RETRY:       CHGVAR     VAR(&LOOP) VALUE(1)                           /*108872*/
- TRY:        CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFBUSYPD) +
+/*TRY:       CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFBUSYPD) +                                  /*CSC059*/
+/*****                    FROMDOC(TRAM.DAT) MBROPT(*REPLACE) +                            /*CSC059*/
+/*****                    TRNFMT(*NOTEXT)                                                 /*CSC059*/
+/*****       MONMSG     MSGID(CPF3130 CPF4286)  +                                         /*CSC059*/
+/*****                       EXEC(GOTO CMDLBL(TRY))                  /*062770*/           /*CSC059*/
+/*****       MONMSG     MSGID(CPF3137) EXEC(GOTO ABNOR)                                   /*CSC059*/
+/*****       MONMSG     MSGID(CPF8A82 IWS168B IWS1611) EXEC(GOTO COPY)                    /*CSC059*/
+TRY:         IF         COND(&CSC059 *NE 'Y') THEN(DO)                                    /*CSC059*/
+             CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFBUSYPD) +
                           FROMDOC(TRAM.DAT) MBROPT(*REPLACE) +
-                          TRNFMT(*NOTEXT)
+                          TRNFMT(*NOTEXT)                                                 /*CSC059*/
              MONMSG     MSGID(CPF3130 CPF4286)  +
-                             EXEC(GOTO CMDLBL(TRY))                  /*062770*/
-             MONMSG     MSGID(CPF3137) EXEC(GOTO ABNOR)
-             MONMSG     MSGID(CPF8A82 IWS168B IWS1611) EXEC(GOTO COPY)
+                             EXEC(GOTO CMDLBL(TRY))                                       /*CSC059*/
+             MONMSG     MSGID(CPF3137) EXEC(GOTO ABNOR)                                   /*CSC059*/
+             MONMSG     MSGID(CPF8A82 IWS168B IWS1611) EXEC(GOTO COPY)                    /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAM.DAT')                          /*CSC059*/
+             CPYFRMIMPF FROMSTMF(&FILE) TOFILE(*LIBL/CFBUSYPD) +
+                          MBROPT(*REPLACE) RCDDLM(*CRLF) +
+                          DTAFMT(*DLM) RMVBLANK(*NONE)                                    /*CSC059*/
+             MONMSG     MSGID(CPF4128)  +
+                             EXEC(GOTO CMDLBL(TRY))                                       /*CSC059*/
+             MONMSG     MSGID(CPF9822 CPF2207) EXEC(GOTO ABNOR)                           /*CSC059*/
+             MONMSG     MSGID(CPFA0D4 CPF2817) EXEC(GOTO COPY)                            /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
 /* */                                                                /*065979*/
 /** After 5 loops get user to check that PC is not in auto mode   */ /*065979*/
 /** since crashed PC will leave TRAM.DAT behind                   */ /*065979*/
@@ -290,6 +423,30 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
              CHGVAR  &TRAMSWFTF VALUE('Y')                            /*108872*/
              CHGVAR  &TRAMCPTYF VALUE('Y')                            /*108872*/
 
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR  VAR(&FILE) VALUE(&FLR *TCAT '/TRAMHOST.DAT')                         /*CSC059*/
+             DSPLNK     OBJ(&FILE) OUTPUT(*PRINT)                                         /*CSC059*/
+             MONMSG (CPFA0A9) +
+                    EXEC(CHGVAR &TRAMHOSTF VALUE('N'))                                    /*CSC059*/
+             IF   (&TRAMHOSTF *EQ 'Y') THEN( +
+                    DLTSPLF FILE(QSYSPRT) SPLNBR(*LAST))                                  /*CSC059*/
+                                                                                          /*CSC059*/
+             CHGVAR  VAR(&FILE) VALUE(&FLR *TCAT '/TRAMSWFT.DAT')                         /*CSC059*/
+             DSPLNK     OBJ(&FILE) OUTPUT(*PRINT)                                         /*CSC059*/
+             MONMSG (CPFA0A9) +
+                    EXEC(CHGVAR &TRAMSWFTF VALUE('N'))                                    /*CSC059*/
+             IF   (&TRAMSWFTF *EQ 'Y') THEN( +
+                    DLTSPLF FILE(QSYSPRT) SPLNBR(*LAST))                                  /*CSC059*/
+                                                                                          /*CSC059*/
+             CHGVAR  VAR(&FILE) VALUE(&FLR *TCAT '/TRAMCPTY.DAT')                         /*CSC059*/
+             DSPLNK     OBJ(&FILE) OUTPUT(*PRINT)                                         /*CSC059*/
+             MONMSG (CPFA0A9) +
+                    EXEC(CHGVAR &TRAMCPTYF VALUE('N'))                                    /*CSC059*/
+             IF   (&TRAMCPTYF *EQ 'Y') THEN( +
+                    DLTSPLF FILE(QSYSPRT) SPLNBR(*LAST))                                  /*CSC059*/
+                                                                                          /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CHKDLO  DLO(TRAMHOST.DAT) FLR(&FLR)                      /*108872*/
              MONMSG (CPF8A82) +
                     EXEC(CHGVAR &TRAMHOSTF VALUE('N'))                /*108872*/
@@ -301,6 +458,7 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
              CHKDLO  DLO(TRAMCPTY.DAT) FLR(&FLR)                      /*108872*/
              MONMSG (CPF8A82) +
                     EXEC(CHGVAR &TRAMCPTYF VALUE('N'))                /*108872*/
+             ENDDO                                                                        /*CSC059*/
 
 /* If the other documents do not exist then delete TRAM.DAT marker    /*108872*/
              IF   ((&TRAMHOSTF *EQ 'N') *AND +
@@ -324,11 +482,21 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
                           AUTO mode.Enter ''C'' to continue if it +
                           is not') TOMSGQ(MOPERQ) +
                           MSGRPY(&MSGREPLY)                           /*108872*/
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAM.DAT')                          /*CSC059*/
+             CPYFRMIMPF FROMSTMF(&FILE) TOFILE(*LIBL/CFBUSYPD) +
+                          MBROPT(*REPLACE) RCDDLM(*CRLF) +
+                          DTAFMT(*DLM) RMVBLANK(*NONE)                                    /*CSC059*/
+             MONMSG     MSGID(CPF9822 CPF2207) EXEC(GOTO ABNOR)                           /*CSC059*/
+             MONMSG     MSGID(CPFA0D4 CPF2817) EXEC(GOTO COPY)                            /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFBUSYPD) +
                           FROMDOC(TRAM.DAT) MBROPT(*REPLACE) +
                           TRNFMT(*NOTEXT)                             /*108872*/
                  MONMSG  (CPF3137) EXEC(GOTO ABNOR)                   /*108872*/
                  MONMSG  (CPF8A82 IWS168B IWS1611) EXEC(GOTO COPY)    /*108872*/
+             ENDDO                                                                        /*CSC059*/
 
              IF   ((&MSGREPLY *EQ 'C') *OR +
                    (&MSGREPLY *EQ 'c')) THEN(DO)                      /*108872*/
@@ -341,8 +509,15 @@ CHECKDOC:    CHGVAR  &TRAMHOSTF VALUE('Y')                            /*108872*/
                    ENDDO                                              /*108872*/
 
 DLTDOC:
+            IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                     /*CSC059*/
+            CHGVAR  VAR(&FILE) VALUE(&FLR *TCAT '/TRAM.DAT')                              /*CSC059*/
+            RMVLNK  OBJLNK(&FILE)                                                         /*CSC059*/
+            MONMSG (CPFA0A9 CPFA0BD)  EXEC(GOTO COPY)                                     /*CSC059*/
+            ENDDO                                                                         /*CSC059*/
+            ELSE (DO)                                                                     /*CSC059*/
             DLTDLO  DLO(TRAM.DAT) FLR(&FLR)                           /*108872*/
             MONMSG (CPF8A82 CPF8A16)  EXEC(GOTO COPY)                 /*108872*/
+            ENDDO                                                                         /*CSC059*/
 
 /* If TRAM.DAT deleted here then send messages to MOPERQ for            108872*/
 /* diagnostics                                                          108872*/
@@ -370,7 +545,49 @@ DLTDOC:
                 ENDDO                                                 /*108872*/
 
 /* Allocate folder by creating MIDAS.DAT document */
- COPY:      CPYTOPCD  FROMFILE(*LIBL/CFBUSYPD) TOFLR(&FLR) +
+/*COPY:     CPYTOPCD  FROMFILE(*LIBL/CFBUSYPD) TOFLR(&FLR) +                              /*CSC059*/
+COPY:       IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                     /*CSC059*/
+            CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/MIDAS.DAT')                              /*CSC059*/
+            CPYTOIMPF  FROMFILE(*LIBL/CFBUSYPD *FIRST) +
+                          TOSTMF(&FILE) MBROPT(*REPLACE) +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                  /*CSC059*/
+             MONMSG     MSGID(CPF2817) EXEC(DO)                                           /*CSC059*/
+             DLYJOB     DLY(30)                                                           /*CSC059*/
+             GOTO       TRY                                                               /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+/** Invoke Handelsbanken command IFSAUT to correctly set user        */                   /*BA6016*/
+/** authority to the IFS directory                                   */                   /*BA6016*/
+                                                                                          /*BA6016*/
+             IF         COND((&IASP_YN *EQ 'Y') *AND (&BA6016 *EQ +
+                        'Y')) THEN(DO)                                                    /*BA6016*/
+             IFSAUT     PATH(&FILE)                                                       /*BA6016*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+                                                                                          /*CSC059*/
+/* Check that PC hasn't started using the folder whilst AS/400 */                         /*CSC059*/
+/* was trying to start using it.                               */                         /*CSC059*/
+             DLYJOB     DLY(60)                                                           /*CSC059*/
+                                                                                          /*CSC059*/
+            CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAM.DAT')                           /*CSC059*/
+            CPYFRMIMPF FROMSTMF(&FILE) TOFILE(*LIBL/CFBUSYPD) +
+                         MBROPT(*REPLACE) RCDDLM(*CRLF) +
+                         DTAFMT(*DLM) RMVBLANK(*NONE)                                     /*CSC059*/
+            MONMSG     MSGID(CPF4128)  +
+                            EXEC(GOTO CMDLBL(TRY))                                        /*CSC059*/
+            MONMSG     MSGID(CPF9822 CPF2207) EXEC(GOTO ABNOR)                            /*CSC059*/
+            MONMSG     MSGID(CPFA0D4 CPF2817) EXEC(GOTO CONT2)                            /*CSC059*/
+                                                                                          /*CSC059*/
+/* If copy successful, TRAM.DAT exists and PC is busy,      */                            /*CSC059*/
+/* so delete MIDAS.DAT document just created and try again. */                            /*CSC059*/
+            CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/MIDAS.DAT')                          /*CSC059*/
+            RMVLNK     OBJLNK(&FILE)                                                      /*CSC059*/
+            MONMSG     (CPFA0A9 CPFA0BD)                                                  /*CSC059*/
+            GOTO TRY                                                                      /*CSC059*/
+                                                                                          /*CSC059*/
+            ENDDO                                                                         /*CSC059*/
+            ELSE (DO)                                                                     /*CSC059*/
+            CPYTOPCD  FROMFILE(*LIBL/CFBUSYPD) TOFLR(&FLR) +
                       TODOC(MIDAS.DAT) REPLACE(*YES) TRNFMT(*NOTEXT)
              MONMSG     MSGID(CPF8A80 IWS16B9 IWS1612) +
                           EXEC(DO)                                   /*098361*/
@@ -393,12 +610,20 @@ DLTDOC:
              DLTDLO     DLO(MIDAS.DAT) FLR(&FLR)
              MONMSG     MSGID(CPF8A82 CPF8A16)                       /*062770*/
              GOTO TRY
+             ENDDO                                                                        /*CSC059*/
 
 /* Clear temporary file  */
 /****CONT2:       CLRPFM     FILE(CFWOCMPD)                                            */ /*247251*/
 CONT2:       IF         (&CSW025 *NE 'Y') THEN(DO)                                        /*247251*/
                 CLRPFM     FILE(CFWOCMPD)                                                 /*247251*/
 
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAMHOST.DAT')                      /*CSC059*/
+             CHGVAR     VAR(&COUNT) VALUE(0)                                              /*CSC059*/
+             RTVMBRD    FILE(*LIBL/CFWOCMPD) NBRCURRCD(&COUNT)                            /*CSC059*/
+             IF         COND(&COUNT *EQ 0) THEN(GOTO EMPTY)                               /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
 /* If folder has not been collected, copy back to file to add new ones */
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWOCMPD) +
                           FROMDOC(TRAMHOST.DAT) TRNFMT(*NOTEXT)
@@ -408,6 +633,7 @@ CONT2:       IF         (&CSW025 *NE 'Y') THEN(DO)                              
              MONMSG     MSGID(CPF8A82 IWS16B8 IWS1611) +
                           EXEC(GOTO EMPTY)                         /* E40238 */
                                                                    /* E40238 */
+             ENDDO                                                                        /*CSC059*/
              CHGVAR     VAR(&CMPREC) VALUE(Y)
              GOTO FULL
 
@@ -431,6 +657,23 @@ CONT2:       IF         (&CSW025 *NE 'Y') THEN(DO)                              
 /**********  CPYTOPCD   FROMFILE(CFWOCMPD) TOFLR(&FLR) +
 /**********               TODOC(TRAMHOST.DAT) REPLACE(*YES) +
 /**********               TRNFMT(*NOTEXT)                                                /*245314A*/
+             IF         COND(&CSW025 *NE 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/TRAMHOST.DAT')                          /*CSC059*/
+             CPYTOIMPF  FROMFILE(*LIBL/CFWOCMPD *FIRST) +
+                          TOSTMF(&FILE) MBROPT(*ADD) +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                  /*CSC059*/
+             MONMSG     MSGID(CPF2817 CPF4028 CPFA096 CPFA0D4 CPFA0A9 +
+                              CPC2959 CPC2206 CPC2958                 )                   /*CSC059*/
+/** Invoke Handelsbanken command IFSAUT to correctly set user        */                   /*BA6016*/
+/** authority to the IFS directory                                   */                   /*BA6016*/
+                                                                                          /*BA6016*/
+             IF         COND((&IASP_YN *EQ 'Y') *AND (&BA6016 *EQ +
+                        'Y')) THEN(DO)                                                    /*BA6016*/
+             IFSAUT     PATH(&FILE)                                                       /*BA6016*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+             ENDDO                                                                        /*CSC059*/
              ENDDO                                                                        /*247251*/
 /*/COPY WNCPYSRC,CFC0185014                                          */
                                                                      /*CCF001*/
@@ -450,20 +693,47 @@ CONT2:       IF         (&CSW025 *NE 'Y') THEN(DO)                              
              CLRPFM     FILE(CFCONCPD)                               /*CCF001*/
                                                                      /*CCF001*/
 /*If folder has not been collected, copy back to file to add new ones  CCF001*/
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+                                                                                          /*CSC059*/
+             CPYF       FROMFILE(SCFFDJW0) TOFILE(CFCONCPP) +
+                           MBROPT(*REPLACE) INCREL((*IF CFFILE *EQ +
+                           'CFCONCPP')) FMTOPT(*MAP *DROP)                                /*CSC059*/
+                                                                                          /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/CONCORD.DAT')                       /*CSC059*/
+             CPYFRMIMPF FROMSTMF(&FILE) TOFILE(*LIBL/CFCONCPD) +
+                          MBROPT(*REPLACE) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED) RMVBLANK(*NONE) +
+                          FLDDFNFILE(CFCONCPP)                                            /*CSC059*/
+             MONMSG     MSGID(CPFA0D4 CPF2817) EXEC(GOTO EMPTY3)                          /*CSC059*/
+             CHGVAR     VAR(&COUNT) VALUE(0)                                              /*CSC059*/
+             RTVMBRD    FILE(*LIBL/CFCONCPD) NBRCURRCD(&COUNT)                            /*CSC059*/
+             IF         COND(&COUNT *EQ 0) THEN(GOTO EMPTY3)                              /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFCONCPD) +
                           FROMDOC(CONCORD.DAT) TRNFMT(*NOTEXT)       /*CCF001*/
                                                                    /*/*CCF001*/
              MONMSG     MSGID(CPF8A82 IWS16B8 IWS1611) +
                           EXEC(GOTO EMPTY3)                        /*/*CCF001*/
                                                                    /*/*CCF001*/
+             ENDDO                                                                        /*CSC059*/
              CHGVAR     VAR(&CMPREC) VALUE(Y)                        /*CCF001*/
              GOTO FULL3                                              /*CCF001*/
 EMPTY3:      CHGVAR     VAR(&CMPREC) VALUE(N)                        /*CCF001*/
                                                                      /*CCF001*/
 /* Rename document to stop duplication */                            /*CCF001*/
-FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
+/*FULL3:     RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +                            /*CSC059*/
+FULL3:                                                                                    /*CSC059*/
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/CONCORD.DAT')                       /*CSC059*/
+             RNM        OBJ(&FILE) NEWOBJ('CONCWRK.DAT')                                  /*CSC059*/
+             MONMSG     MSGID(CPFA0A9 CPFA0AB)                                            /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
+             RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                         FLR(&FLR)                                    /*CCF001*/
              MONMSG     MSGID(CPF8A82 CPF8A14 IWS1611)
+             ENDDO                                                                        /*CSC059*/
                                                                    /*/*CCF001*/
 /* Call CF0121 to extract outgoing messages */                       /*CCF001*/
 /*/COPY WNCPYSRC,CFC0185007                                          */
@@ -472,14 +742,45 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              ENDDO                                                                        /*CSW025*/
 /*/COPY WNCPYSRC,CFC0185008                                          */
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/CONCWRK.DAT')                       /*CSC059*/
+             RNM        OBJ(&FILE) NEWOBJ('CONCORD.DAT')                                  /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              RNMDLO     DLO(CONCWRK.DAT) NEWDLO(CONCORD.DAT) FLR(&FLR)
+             ENDDO                                                                        /*CSC059*/
                    GOTO CMDLBL(ABNOR)                              /*/*CCF001*/
              ENDDO                                                   /*CCF001*/
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/CONCWRK.DAT')                       /*CSC059*/
+             RNM        OBJ(&FILE) NEWOBJ('CONCORD.DAT')                                  /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              RNMDLO     DLO(CONCWRK.DAT) NEWDLO(CONCORD.DAT) FLR(&FLR)
+             ENDDO                                                                        /*CSC059*/
                    GOTO CMDLBL(ABNOR)                              /*/*CCF001*/
              ENDDO                                                   /*CCF001*/
                                                                      /*CCF001*/
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/CONCWRK.DAT')                           /*CSC059*/
+             CPYTOIMPF  FROMFILE(*LIBL/CFCONCPD *FIRST) +
+                          TOSTMF(&FILE) MBROPT(*REPLACE) +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                  /*CSC059*/
+/** Invoke Handelsbanken command IFSAUT to correctly set user        */                   /*BA6016*/
+/** authority to the IFS directory                                   */                   /*BA6016*/
+                                                                                          /*BA6016*/
+             IF         COND((&IASP_YN *EQ 'Y') *AND (&BA6016 *EQ +
+                        'Y')) THEN(DO)                                                    /*BA6016*/
+             IFSAUT     PATH(&FILE)                                                       /*BA6016*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/CONCWRK.DAT')                       /*CSC059*/
+             RNM        OBJ(&FILE) NEWOBJ('CONCORD.DAT')                                  /*CSC059*/
+             MONMSG     MSGID(CPFA0A9) EXEC(GOTO ABNOR)                                   /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CPYTOPCD   FROMFILE(CFCONCPD) TOFLR(&FLR) +
                           TODOC(CONCWRK.DAT) REPLACE(*YES) +
                           TRNFMT(*NOTEXT)                            /*CCF001*/
@@ -488,6 +789,7 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                                                                      /*CCF001*/
              MONMSG     MSGID(CPF8A82) +
                           EXEC(GOTO ABNOR)                         /*/*CCF001*/
+             ENDDO                                                                        /*CSC059*/
              ENDDO                                                   /*CCF001*/
                                                                      /*CCF001*/
              CHGDTAARA  DTAARA(CFSTAT (1 3)) VALUE(&TRAMID)
@@ -496,6 +798,13 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
              CLRPFM     FILE(CFWICMPD)
 
 /* If folder has not been collected, copy back to file to add new ones */
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAMSWFT.DAT')                      /*CSC059*/
+             CHGVAR     VAR(&COUNT) VALUE(0)                                              /*CSC059*/
+             RTVMBRD    FILE(*LIBL/CFWICMPD) NBRCURRCD(&COUNT)                            /*CSC059*/
+             IF         COND(&COUNT *EQ 0) THEN(GOTO EMPTY2)                              /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWICMPD) +
                           FROMDOC(TRAMSWFT.DAT) TRNFMT(*NOTEXT)
 /************MONMSG     MSGID(CPF8A82 IWS1602 IWS16B8 IWS1611) + ***** E40238 */
@@ -503,6 +812,7 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                                                                     /* E40238 */
              MONMSG     MSGID(CPF8A82 IWS16B8 IWS1611) +
                           EXEC(GOTO EMPTY2)                         /* E40238 */
+             ENDDO                                                                        /*CSC059*/
                                                                     /* E40238 */
              CHGVAR     VAR(&CMPREC) VALUE(Y)
              GOTO FULL2
@@ -530,6 +840,24 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                           CMDLBL(ABNOR))                            /* E42976 */
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                            /* E42976 */
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR VAR(&FILE) VALUE(&FLR *TCAT '/TRAMSWFT.DAT')                          /*CSC059*/
+             CPYTOIMPF  FROMFILE(*LIBL/CFWICMPD *FIRST) +
+                          TOSTMF(&FILE) MBROPT(*ADD) +
+                          STMFCODPAG(*PCASCII) RCDDLM(*CRLF) +
+                          DTAFMT(*FIXED)                                                  /*CSC059*/
+             MONMSG     MSGID(CPF2817 CPF4028 CPFA096 CPFA0D4 CPFA0A9 +
+                              CPC2959 CPC2206 CPC2958                 )                   /*CSC059*/
+/** Invoke Handelsbanken command IFSAUT to correctly set user        */                   /*BA6016*/
+/** authority to the IFS directory                                   */                   /*BA6016*/
+                                                                                          /*BA6016*/
+             IF         COND((&IASP_YN *EQ 'Y') *AND (&BA6016 *EQ +
+                        'Y')) THEN(DO)                                                    /*BA6016*/
+             IFSAUT     PATH(&FILE)                                                       /*BA6016*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6016*/
+             ENDDO                                                                        /*BA6016*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
 
 /*           CPYTOPCD   FROMFILE(CFWICMPD) TOFLR(&FLR) +
                           TODOC(TRAMSWFT.DAT) REPLACE(*YES) +
@@ -545,18 +873,44 @@ FULL3:       RNMDLO     DLO(CONCORD.DAT) NEWDLO(CONCWRK.DAT) +
                                                                                         /*MD055267*/
              DLCOBJ     OBJ((CFWICMPD *FILE *EXCL *FIRST))                              /*MD055267*/
                                                                                         /*MD055267*/
+             ENDDO                                                                        /*CSC059*/
              CHGDTAARA  DTAARA(CFSTAT (4 3)) VALUE(&TRAMID)
 
 /* Copy feedback */
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+                                                                                          /*CSC059*/
+             CPYF       FROMFILE(SCFFDJW0) TOFILE(CFWFEDPP) +
+                           MBROPT(*REPLACE) INCREL((*IF CFFILE *EQ +
+                           'CFWFEDPP')) FMTOPT(*MAP *DROP)                                /*CSC059*/
+                                                                                          /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAMFEED.DAT')                      /*CSC059*/
+             CPYFRMIMPF FROMSTMF(&FILE) TOFILE(*LIBL/CFWFEDPD) +
+                          MBROPT(*ADD) RCDDLM(*CRLF) DTAFMT(*FIXED) +
+                          FLDDFNFILE(CFWFEDPP) RPLNULLVAL(*FLDDFT)                        /*CSC059*/
+             MONMSG     MSGID(CPF2817 CPF4028 CPFA096 CPFA0D4 CPFA0A9 +
+                              CPC2959 CPC2206 CPC2958                 )                   /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/TRAMFEED.DAT')                      /*CSC059*/
+             RMVLNK     OBJLNK(&FILE)                                                     /*CSC059*/
+             MONMSG     (CPFA0A9 CPFA0BD)                                                 /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              CPYFRMPCD  FROMFLR(&FLR) TOFILE(CFWFEDPD) +
                           FROMDOC(TRAMFEED.DAT) MBROPT(*ADD)
 /**********  MONMSG     MSGID(CPF8A82 IWS1602 IWS16B8 IWS1611)        /*108872*/
             MONMSG     MSGID(CPF8A82 IWS1602 IWS16B8 IWS1611 IWS1603) /*108872*/
              DLTDLO     DLO(TRAMFEED.DAT) FLR(&FLR)
              MONMSG     MSGID(CPF8A82 CPF8A16)
+             ENDDO                                                                        /*CSC059*/
 /*/COPY WNCPYSRC,CFC0185003                                          */
+             IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/
+             CHGVAR     VAR(&FILE) VALUE(&FLR *TCAT '/MIDAS.DAT')                         /*CSC059*/
+             RMVLNK     OBJLNK(&FILE)                                                     /*CSC059*/
+             MONMSG     (CPFA0A9 CPFA0BD)                                                 /*CSC059*/
+             ENDDO                                                                        /*CSC059*/
+             ELSE (DO)                                                                    /*CSC059*/
              DLTDLO     DLO(MIDAS.DAT) FLR(&FLR)
              MONMSG     MSGID(CPF8A82 CPF8A16)
+             ENDDO                                                                        /*CSC059*/
 
 /* End of loop for each TRAM system */
              GOTO EXDEAL

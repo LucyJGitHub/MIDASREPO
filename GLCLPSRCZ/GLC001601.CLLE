@@ -10,8 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. CGL200             Date 17Feb23              */
+/*       Prev Amend No. CSW101             Date 03Feb23              */
+/*                      MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG25167           Date 29Jul09              */
 /*                      BUG23458A          Date 23Mar09              */
 /*                      BUG23458           Date 20Mar09              */
@@ -20,6 +22,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL200 - Timestamp on batch items and related postings      */
+/*       CSW101 - PAYplus Interface.                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG25167 - SWITI Journal batch interface fails with missing */
@@ -32,12 +36,12 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&TERM)
- 
+
 /** Declare PGM Variables                                            */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2008')
- 
+
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
@@ -50,28 +54,30 @@
              DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
              DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1)
              DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
- 
+
              DCL        VAR(&GLU) TYPE(*CHAR) LEN(10)
              DCL        VAR(&XXU) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MID) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&SBMMSGQL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SBMMSGQ) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&SRTCD)   TYPE(*CHAR) LEN(7)
              DCL        VAR(&SOPTN)   TYPE(*CHAR) LEN(7) +
                           VALUE('*VERIFY')
              DCL        VAR(&SSARD)   TYPE(*CHAR) LEN(6) +
                           VALUE('CER046')
- 
+             DCL        VAR(&CSW101)  TYPE(*CHAR) LEN(1) VALUE('N')                       /*CSW101*/
+             DCL        VAR(&CGL200)  TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL200*/
+
 /** Global monitor message                                           */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /** Retrieve job attributes (Type indicates the mode of running)     */
              RTVJOBA    USER(&USER) TYPE(&TYPE)
- 
+
 /* If in job queue, go to Create LDA                                 */
 /**Due*to*this*solution*the*actuall*call*of*the*program*GLC001600*****/                   /*CER059*/
 /* Due to this solution the actual call of the program GLC001601     */                   /*CER059*/
@@ -80,29 +86,45 @@
 /**********  IF         COND(&TYPE *EQ '0') THEN(GOTO CMDLBL(SBM))   */                 /*BUG25167*/
              IF         COND(&TYPE *EQ '0' *AND &TERM *EQ 'Y') +
                           THEN(GOTO CMDLBL(SBM))                                        /*BUG25167*/
- 
+
 /* Determine if CER046 is installed                                  */
- 
+
              CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)
- 
+
 /* If CER046 is not installed then end the processing                */
- 
+
              IF         COND(&SRTCD *NE '       ' *AND &SRTCD *NE +
                           '*NRF   ') THEN(DO)
              SNDPGMMSG  MSG('CER046 - Payments and Clearing is not +
                           switched on') TOMSGQ(MOPERQ)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
+/* Determine if CSW101 is installed                                  */                   /*CSW101*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN 'CSW101')                        /*CSW101*/
+             IF         COND(&SRTCD *EQ '       ') +
+                          THEN(CHGVAR &CSW101 VALUE('Y'))                                 /*CSW101*/
+
+/* Determine if CGL200 is installed                                                       /*CGL200*/
+
+             CHGVAR (&SSARD) ('CGL200')                                                   /*CGL200*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)                          /*CGL200*/
+
+/* If CGL200 is installed                                                                 /*CGL200*/
+
+             IF         COND(&SRTCD *EQ '       ' ) THEN(DO)                              /*CGL200*/
+                        CHGVAR (&CGL200) ('Y')                                            /*CGL200*/
+             ENDDO                                                                        /*CGL200*/
+
 /* Create lib and copy dtaara ZMITEM for pgm ZVACTBU                 */
              CHKOBJ     OBJ(&USER) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(CRTLIB LIB(&USER))
- 
+
 /**********  CHKOBJ     OBJ(&USER/ZMITEM) OBJTYPE(*DTAARA)           */                 /*BUG25167*/
 /**********  MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTZM))      */                 /*BUG25167*/
- 
+
 /**********  DLTDTAARA  DTAARA(&USER/ZMITEM)                         */                 /*BUG25167*/
- 
+
 /**********  CHKOBJ     OBJ(&USER/ZMUSER) OBJTYPE(*DTAARA)           */    /*BUG23092*/ /*BUG25167*/
 /**********  MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTZM))      */    /*BUG23092*/ /*BUG25167*/
                                                                                         /*BUG23092*/
@@ -110,7 +132,7 @@
                                                                                         /*BUG23092*/
 /**TZM:      CRTDUPOBJ  OBJ(ZMITEM) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
                           TOLIB(&USER)                               */                 /*BUG25167*/
- 
+
 /**********  CRTDUPOBJ  OBJ(ZMUSER) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
                           TOLIB(&USER)                               */    /*BUG23092*/ /*BUG25167*/
                                                                                         /*BUG23092*/
@@ -120,6 +142,8 @@
              CRTDUPOBJ  OBJ(ZMUSER) FROMLIB(QTEMP) OBJTYPE(*DTAARA) +
                           TOLIB(&USER)                                                  /*BUG25167*/
                                                                                         /*BUG25167*/
+             MONMSG     MSGID(CPD2104 CPF2130)                                            /*CSW101*/
+                                                                                        /*BUG25167*/
              CHKOBJ     OBJ(&USER/ZMITEM) OBJTYPE(*DTAARA)                              /*BUG25167*/
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(&USER/ZMITEM) TYPE(*CHAR) LEN(10) +
@@ -128,7 +152,7 @@
              MONMSG     MSGID(CPF2103)                                                   /*mike*/
 /**********  RTVJOBA    JOB(&TERM)                                   */                 /*BUG25167*/
              CHGVAR     VAR(&TERM) VALUE('Y')                                           /*BUG25167*/
- 
+
 /**********  SBMJOB     CMD(CALL PGM(GLC001600) PARM(&TERM)) +
                           JOB(GLC001600) JOBD(MBATCH)                */          /*mike*/ /*CER059*/
 /*           SBMJOB     CMD(CALL PGM(GLC001600) PARM(&TERM)) +
@@ -139,8 +163,19 @@
 /* Delete temporary library                                          */
              RMVLIBLE LIB(&USER)
 /***         SBMJOB     CMD(DLTLIB LIB(&USER))                     ***/                 /*BUG23092*/
+
+/** If feature CSW101 switched on, call new process to delete        */                   /*CSW101*/
+/** temporary library.                                               */                   /*CSW101*/
+             IF         COND(&CSW101 = 'Y') THEN(DO)                                      /*CSW101*/
+                SBMJOB     CMD(CALL PGM(GLC100004)) JOB(GLC100004) +
+                             JOBD(MBATCH)                                                 /*CSW101*/
+             ENDDO                                                                        /*CSW101*/
+             ELSE (DO)                                                                    /*CSW101*/
+
              SBMJOB     CMD(DLTLIB LIB(&USER)) JOBD(MBATCH)                             /*BUG23092*/
- 
+
+             ENDDO                                                                        /*CSW101*/
+
 /* Terminate the program                                             */
              GOTO       CMDLBL(END)
 /* Create LDA in QTEMP if not present                                */
@@ -150,46 +185,63 @@ SBM:
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ') TEXT('MIDAS/ABS SD AS400 +
                           LOCAL DATA AREA EQUIVALENT'))
- 
+
 /* Set-off Database Error Switches                                   */
              CHGJOB     SWS(XXXXXX00)
- 
+
              ALCOBJ     OBJ((GLJEIHPD *FILE *EXCL *FIRST))
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
- 
+
              ALCOBJ     OBJ((GLJEIPPD *FILE *EXCL *FIRST))
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
- 
+
              ALCOBJ     OBJ((GLJEIXPD *FILE *EXCL *FIRST))
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))
- 
+                                                                                          /*CGL200*/
+             IF         COND(&CGL200 *EQ 'Y' ) THEN(DO)                                   /*CGL200*/
+             ALCOBJ     OBJ((GLJEIPX0 *FILE *EXCL *FIRST))                                /*CGL200*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG3))                            /*CGL200*/
+             ENDDO                                                                        /*CGL200*/
+
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(*LIBL/SDFCTLPA (*FILE))
 /* Multiple language support                                         */
              CALL       PGM(SF0410) PARM(&GROUP &USER1 &SLEVEL +
                           &TIMEO &ERRORC &MULT)
- 
+
+/** If error and feature CSW101 switched on, send msg notifying      */                   /*CSW101*/
+/** the user is not authorised to the JE Interface function.         */                   /*CSW101*/
+             IF         COND((&CSW101 = 'Y') *AND (&ERRORC = 1)) THEN(DO)                 /*CSW101*/
+                SNDPGMMSG  MSG('User is not authorised to the Journal Entry +
+                             Interface menu') TOMSGQ(MOPERQ)                              /*CSW101*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CSW101*/
+             ENDDO                                                                        /*CSW101*/
+             ELSE (DO)                                                                    /*CSW101*/
+
              IF         COND(&ERRORC = 1) THEN(GOTO CMDLBL(ABNOR))
+
+             ENDDO                                                                        /*CSW101*/
+
              IF         COND(&MULT = '  ') THEN(DO)
                              CHGVAR     VAR(&MULT) VALUE('GB')
                           ENDDO
- 
+
              CHGVAR     VAR(&GLU) VALUE(&MULT *CAT GLUSRMSG)
              CHGVAR     VAR(&XXU) VALUE(&MULT *CAT XXUSRMSG)
              CHGVAR     VAR(&MID) VALUE(&MULT *CAT MIDAS)
- 
+
              OVRMSGF    MSGF(GLUSRMSG) TOMSGF(&GLU)
              OVRMSGF    MSGF(XXUSRMSG) TOMSGF(&XXU)
              OVRMSGF    MSGF(MIDAS) TOMSGF(&MID)
- 
+
 /**Call*GL001600*Program**********************************************/                   /*CER059*/
 /**********  CALL       PGM(GL001600)                                */                   /*CER059*/
 /* Call GL001601 Program                                             */                   /*CER059*/
              CALL       PGM(GL001601)                                                     /*CER059*/
- 
+
              MONMSG     MSGID(CPF0001) EXEC(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* If U7/U8 on process data base error                               */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
@@ -207,22 +259,28 @@ SBM:
              SNDBRKMSG  MSG('The transfer data is currently being +
                           processed by a different job, please try +
                           again later.') TOMSGQ(&SBMMSGQL/&SBMMSGQ)
- 
+
 ABNOR:       DLCOBJ     OBJ((GLJEIHPD *FILE *EXCL *FIRST)) /* +
                           Posting Interface Header */
              DLCOBJ     OBJ((GLJEIPPD *FILE *EXCL *FIRST)) /* +
                           Posting Interface Details */
              DLCOBJ     OBJ((GLJEIXPD *FILE *EXCL *FIRST)) /* +
                           Posting interface Add. Narratives */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(END))
- 
+
+             IF         COND(&CGL200 *EQ 'Y' ) THEN(DO)                                   /*CGL200*/
+             DLCOBJ     OBJ((GLJEIPX0 *FILE *EXCL *FIRST))                                /*CGL200*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(END))                                                    /*CGL200*/
+             ENDDO                                                                        /*CGL200*/
+
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(END))
  END:
              CHGVAR   VAR(&CPYFLD) VALUE('(c) +
                        Finastra International Limited')
- 
+
              ENDPGM

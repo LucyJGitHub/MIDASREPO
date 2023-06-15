@@ -13,8 +13,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD060058           Date 21Jun22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. MD060058           Date 21Jun22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD023889           Date 10Dic13               *
       *                 CGL135B            Date 04Nov13               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  MD060058 - Locking on PRONO with job GO_ONL_OLP. Call        *
       *             AOPRONU0 for updates. Fix is similar to MD027654. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -81,6 +83,16 @@
       *
      FRSACMTPD  O    E             DISK
      F                                     COMMIT
+      *                                                                                       CGL200
+     FGLJENP00  IF   E           K DISK                                                       CGL200
+     F                                     RENAME(GLJEIPD0:GLJENPD1)                          CGL200
+     F                                     USROPN                                             CGL200
+      *                                                                                       CGL200
+     FGLACMTX0  O    E             DISK                                                       CGL200
+     F                                     COMMIT                                             CGL200
+     F                                     RENAME(GLAPOSD0:GLACMTD0)                          CGL200
+     F                                     USROPN                                             CGL200
+      *                                                                                       CGL200
      F/COPY OFCPYSRCZ,CGL135_100                                                             CGL135B
       *
       *****************************************************************
@@ -848,6 +860,30 @@
      C                   ENDIF                                                                CAP205
                                                                                               CAP205
      C                   WRITE     RSACMTPO                             10
+      *                                                                                       CGL200
+     C     CGL200        IFEQ      'Y'                                                        CGL200
+     C     KEY001        CHAIN     GLJENP00                                                   CGL200
+     C                                                                                        CGL200
+     C                   IF        %FOUND(GLJENP00)                                           CGL200
+     C                                                                                        CGL200
+     C                   MOVE      BRCA          XXBRCA                                       CGL200
+     C                   MOVE      CUSN          XXCNUM                                       CGL200
+     C                   MOVE      CCYD          XXCCY                                        CGL200
+     C                   MOVE      ACDE          XXACOD                                       CGL200
+     C                   MOVE      ACSQ          XXACSQ                                       CGL200
+     C                   MOVE      PTDT          XXPSTD                                       CGL200
+     C                   MOVE      VUDT          XXVALD                                       CGL200
+      *                                                                                       CGL200
+     C                   MOVE      BTTMST        XXTMST                                       CGL200
+      *                                                                                       CGL200
+     C                   CALL      'GL009700'                                                 CGL200
+     C                   PARM                    UNQK#             9                          CGL200
+     C                   MOVEL(P)  UNQK#         XXUNQK                                       CGL200
+     C                   MOVEL(P)  UNQK#         FUNDQQ                                       CGL200
+     C                                                                                        CGL200
+     C                   WRITE     GLACMTD0                                                   CGL200
+     C                   ENDIF                                                                CGL200
+     C                   ENDIF                                                                CGL200
       *
       *     Data base error if write fails
       *
@@ -1038,6 +1074,27 @@
      C                   EVAL      CAP205 = 'Y'                                               CAP205
      C                   ENDIF                                                                CAP205
                                                                                               CAP205
+      *                                                                                       CGL200
+      * Access SAR details for CGL200                                                         CGL200
+      *                                                                                       CGL200
+     C                   MOVEL     'N'           CGL200            1                          CGL200
+     C                   CALLB     'AOSARDR0'                                                 CGL200
+     C                   PARM      *BLANKS       @RTCD                                        CGL200
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL200
+     C                   PARM      'CGL200'      @SARD                                        CGL200
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL200
+                                                                                              CGL200
+     C     @RTCD         IFEQ      *BLANK                                                     CGL200
+     C                   MOVEL     'Y'           CGL200                                       CGL200
+     C                   OPEN      GLJENP00                                                   CGL200
+     C                   OPEN      GLACMTX0                                                   CGL200
+     C                   ENDIF                                                                CGL200
+      *                                                                                       CGL200
+     C     KEY001        KLIST                                                                CGL200
+     C                   KFLD                    BTPTDT                                       CGL200
+     C                   KFLD                    BTBTNB                                       CGL200
+     C                   KFLD                    BTBINB                                       CGL200
+      *                                                                                       CGL200
      C/COPY OFCPYSRCZ,CGL135_107                                                             CGL135B
       *
      C                   ENDSR

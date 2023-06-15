@@ -16,10 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD033116           Date 01Mar23               *
-      *  Prev Amend No. MD060840           Date 08Feb23               *
-      *                 MD060283           Date 22Aug22               *
-      *                 MD059368           Date 18Dec21               *
+      *  Last Amend No. MD060620           Date 25May23               *
+      *  Prev Amend No. MD059368           Date 18Dec21               *
       *                 MD058543A          Date 09Sep21               *
       *                 MD058734           Date 03Sep21               *
       *                 MD058644           Date 31Aug21               *
@@ -169,20 +167,72 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD033116 - Do not toggle the sign. Validate and save the     *
-      *             fields as they are entered.                       *
-      *  MD057286 - Midas unexpectedly update the rate on MM transac- *
-      *             tion.                                             *
-      *           - Initialize screen field DDAIR when Short term rate*
-      *             is present and CDL033 is ON. Then, validate the   *
-      *             said field to assign a correct interest rate.     *
-      *  MD054313 -  FRN testing - it is possible to insert MM deal   *
-      *             type IT with Actual Interest Rate <>0 and Short   *
-      *             term Rate = 0 but not possible to authorise it.   *
-      *             Program is amended to ensure that the computation *
-      *             of TOTI done when Short Term Rate is not entered. *
-      *  MD042902 - Serious Midas error when base rate code without   *
-      *             spread entered                                    *
+      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
+      *           - Applied fix for MD-61250.                         *
+      *  MD059368 - Inhibit the LIBOR Deregulation fields if CDL102   *
+      *             is switched off                                   *
+      *  MD058543A - BADJ not included in DDAIR during amend of deal. *
+      *              Initialise DDAIR to *BLANKS when Short Term Rate *
+      *              is not equal to '.0000000'.                      *
+      *  MD058734 - Default value for Day Basis Average based         *
+      *             from Calculation Method 3,4 and 5.                *
+      *  MD058644 - Unable to set CD maturity date due to             *
+      *             'Negative Interest' validation error              *
+      *  MD058547 - User cannot amend a call notice deposit taken     *
+      *             because of error 45049507. Add DDACTN on call to  *
+      *             MMVACTINTR.                                       *
+      *  MD058379 - Serious midas error encountered in FUND. Correct  *
+      *             the placement of reference rate field (Recompile) *
+      *  MD058404 - Replace the event codes used by CDL102 with new   *
+      *             event codes.                                      *
+      *  CDL102 - LIBOR Deregulation - Dealing                        *
+      *  MD058540 - Removed excess parameters when calling ZAVSPRRATE *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
+      *  MD057049 - BNDCSP not passed to MMVLDRRAT                    *
+      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+      *             being updated                                     *
+      *  CER050 - Annualised Percentage Rate                          *
+      *  MD050209 - Removed Interest Payment Frequency Validation     *
+      *  MD047719 - Pass 'Action Code' as parameter to MMVTOIT for    *
+      *             validation purposes. Apply fix for MD-51582.      *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+      *             parameter to indicate reject transaction.         *
+      *             Applied for MD041482                              *
+      *  MD037869A - Unable to authorise deal in LDNI after updating  *
+      *              base rate.                                       *
+      *  MD037869 - Unable to authorise deal in LDNI after updating   *
+      *             base rate.                                        *
+      *  CGL165 - Dual Withholding Tax                                *
+      *  MD033488 - Allow negative rates. Reversed MD031494.          *
+      *  MD031494 - Negative Interest - MMDeals negative interest     *
+      *             rates become positive when deal is amended.       *
+      *           - Amend the program to use the correct sign of the  *
+      *             entered rate.                                     *
+      *  MD030409 - MM Rollover (RODL) of the deposit should only be  *
+      *             allowed at the maturity date of the deposit when  *
+      *             Taxable Indicator equal to 'A' and EU Tax status  *
+      *             equal to T (Threshold).                           *
+      *           - Consider the new Tax indicator value = 'A' in the *
+      *             rollover validation when CER069 is ON.            *
+      *  MD029724 - Rollover not allowed before maturity for deposits *
+      *             with Taxable Indicator not equal to 'T'(Threshold)*
+      *           - Include the taxable indicator in the rollover     *
+      *             validation                                        *
+      *  MD031408 - Serious Midas error when inserting in LDNI.       *
+      *             Reverted BUG5517 fix and made input files user    *
+      *             controlled to avoid multiple open.                *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompile)                                         *
+      *  MD025884 - Bad response from SOAP due to character string    *
+      *             substitution error. Removed duplicate BLen        *
+      *             retrieval as this is already done in ZAVTOTINT.   *
+      *  MD027019 - Replace '0' Total Interest with the calculated    *
+      *              interest amount                                  *
+      *  CDL093 - MM Interest calculation type 9.                     *
+      *  CDL015 - Daily Compounding of Interest                       *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
       *           tead of ".".                                        *
@@ -532,6 +582,20 @@
      D  VRRDP                         2S 0                                                    CDL102
      D  VDBAV                         1S 0                                                    CDL102
      D  VRTKN                         1A                                                      CDL102
+      *                                                                                     MD060620
+      ** Check Libor Fields                                                                 MD060620
+     D ChkLiborFlds    DS                                                                   MD060620
+     D  LBBLRT                        1A                                                    MD060620
+     D  LBRFRR                       10A                                                    MD060620
+     D  LBCALM                        4A                                                    MD060620
+     D  LBBADJ                       13S 0                                                  MD060620
+     D  LBFLOR                       13S 0                                                  MD060620
+     D  LBLBDY                        2S 0                                                  MD060620
+     D  LBLODY                        2S 0                                                  MD060620
+     D  LBOPSH                        1A                                                    MD060620
+     D  LBRRDP                        2S 0                                                  MD060620
+     D  LBDBAV                        1S 0                                                  MD060620
+     D  LBRTKN                        1A                                                    MD060620
 
      D TranIn        E DS                  EXTNAME(MMLDNIPD)
       * Incoming Transaction
@@ -1142,12 +1206,8 @@
      C                   ENDIF                                                                CGL058
 
       /COPY WNCPYSRC,MMLDNIV007
-      *                                                                                     MD060840
-      ** Validate Business Day Convention fields when CDL096 is ON and CDL033 is OFF        MD060840
-     C                   IF        CDL096 = 'Y' AND CDL033 = 'N'                            MD060840
      C                   EXSR      VBDYCCY                                                    CDL096
      C                   EXSR      VPAMCNV                                                    CDL096
-     C                   ENDIF                                                              MD060840
 
       *  *------------------------*
       *  * Validate All Dates     *  #03
@@ -2291,7 +2351,6 @@
                                                                                             MD037869
       ** Get old base rate when action is not insert                                        MD037869
      C                   IF        DDACTN <> 'I'                                            MD037869
-     C                             AND DDBSRC <> *BLANKS                                    MD060283
      C**********         EVAL      Baserate = IKINTR - @SPRD                      MD037869 MD037869A
      C                   EVAL      Baserate = IKINTR - IKSPRD                              MD037869A
      C                   ENDIF                                                              MD037869
@@ -4348,10 +4407,26 @@
      C                   EXSR      RESETERRS                                                MD059368
       ** Inhibit the LIBOR fields if CDL102 is switched off                                 MD059368
      C                   IF        TranScnBlrt <> *Blanks                                   MD059368
+      *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
+     C                   MOVEL     TranScnBlrt   ChkLiborFlds                               MD060620
+     C                   IF        LBBLRT <> *BLANKS OR                                     MD060620
+     C                             LBRFRR <> *BLANKS OR                                     MD060620
+     C                             LBCALM <> *BLANKS OR                                     MD060620
+     C                             LBBADJ <> *ZEROS  OR                                     MD060620
+     C                             LBFLOR <> *ZEROS  OR                                     MD060620
+     C                             LBLBDY <> *ZEROS  OR                                     MD060620
+     C                             LBLODY <> *ZEROS  OR                                     MD060620
+     C                             LBOPSH <> *BLANKS OR                                     MD060620
+     C                             LBRRDP <> *ZEROS  OR                                     MD060620
+     C                             LBDBAV <> *ZEROS  OR                                     MD060620
+     C                             LBRTKN <> *BLANKS                                        MD060620
+      *                                                                                     MD060620
      C                   MOVEL     'N'           DDBSRCOK                                   MD059368
      C                   ADD       1             Idx                                        MD059368
      C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                               MD059368
      C                   EVAL      MsgIDArr(Idx) = '5049527'                                MD059368
+     C                   ENDIF                                                              MD060620
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
 
@@ -5456,17 +5531,18 @@
      C     IKAMNP        IFGT      0
      C                   Z-SUB     IKAMNP        IKAMNP
      C                   ENDIF
-     C*****IKMTTI        IFLT      0                                                        MD033116
-     C**********         Z-SUB     IKMTTI        IKMTTI                                     MD033116
-     C**********         ENDIF                                                              MD033116
+     C     IKMTTI        IFLT      0
+     C                   Z-SUB     IKMTTI        IKMTTI
+     C                   ENDIF
+
      C                   ELSE
 
      C     IKAMNP        IFLT      0
      C                   Z-SUB     IKAMNP        IKAMNP
      C                   ENDIF
-     C*****IKMTTI        IFGT      0                                                        MD033116
-     C**********         Z-SUB     IKMTTI        IKMTTI                                     MD033116
-     C**********         ENDIF                                                              MD033116
+     C     IKMTTI        IFGT      0
+     C                   Z-SUB     IKMTTI        IKMTTI
+     C                   ENDIF
 
      C                   ENDIF
      C                   ENDIF                                                                247452
@@ -5793,9 +5869,9 @@
                                                                                               CDL096
      C                   EXSR      RESETERRS                                                  CDL096
                                                                                               CDL096
-     C**********         IF        CDL096  <> 'Y'                                    CDL096 MD060840
-     C**********         LEAVESR                                                     CDL096 MD060840
-     C**********         ENDIF                                                       CDL096 MD060840
+     C                   IF        CDL096  <> 'Y'                                             CDL096
+     C                   LEAVESR                                                              CDL096
+     C                   ENDIF                                                                CDL096
       *                                                                                       CDL096
       ** Call validation module for Payment Convention Currencies                             CDL096
      C                   CALLB     'MMVBDYCCY'   PMMvBDyCcy                                   CDL096
@@ -5831,9 +5907,9 @@
                                                                                               CDL096
      C                   EXSR      RESETERRS                                                  CDL096
                                                                                               CDL096
-     C**********         IF        CDL096  <> 'Y'                                    CDL096 MD060840
-     C**********         LEAVESR                                                     CDL096 MD060840
-     C**********         ENDIF                                                       CDL096 MD060840
+     C                   IF        CDL096  <> 'Y'                                             CDL096
+     C                   LEAVESR                                                              CDL096
+     C                   ENDIF                                                                CDL096
       *                                                                                       CDL096
       ** Call validation module for Payment and Amount Convention                             CDL096
      C                   CALLB     'MMVPAMCNV'   PMMvPAmCnv                                   CDL096

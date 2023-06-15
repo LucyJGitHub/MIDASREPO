@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036589           Date 14Feb16              */
+/*       Last Amend No. CGL200             Date 17Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036589           Date 14Feb16              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
@@ -45,6 +46,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL200 - Timestamp on batch items and related postings      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -84,7 +86,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*********** PGM        PARM(&PARM)                                   /*S01117*/
- 
+
 /* &RLEV IS STANDARD RCF PARM NOT USED IN THIS PROGRAM  */            /*S01117*/
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
 /**/
@@ -119,6 +121,15 @@
              DCL        VAR(&CAP204) TYPE(*CHAR) LEN(1)                             /*CAP204*/
              DCL        VAR(&CDL002) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD036589*/
 /*                                                                    /*S01408*/
+             DCL        VAR(&CGL200) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL200*/
+                                                                                          /*CGL200*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' +
+                          'CGL200' &FMT)                                                  /*CGL200*/
+                                                                                          /*CGL200*/
+             IF         COND(&RTCD *EQ '       ' ) THEN(DO)                               /*CGL200*/
+                        CHGVAR (&CGL200) ('Y')                                            /*CGL200*/
+             ENDDO                                                                        /*CGL200*/
+                                                                                          /*CGL200*/
 /*/COPY WNCPYSRC,GLC0802C07                                           /*S01408*/
 /*                                                                    /*S01408*/
              CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)       /*CTI001*/
@@ -131,7 +142,7 @@
 /*  Check if TI module is switched on  */                             /*CTI001*/
              IF         COND(%SST(&FMT 103 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&TION) VALUE('Y'))                      /*CTI001*/
- 
+
                                                                       /*S01473*/
 /* Access switchable features file to see if feature S01473     */    /*S01473*/
 /* is installed  */                                                   /*S01473*/
@@ -281,6 +292,10 @@
                                                             /*S01154*/
 /**/
 /*                                                                    /*S01408*/
+             IF         COND(&CGL200 *EQ 'Y') THEN(DO)                /*CGL200*/
+             CLRPFM     FILE(GLACMTX0)                                /*CGL200*/
+             ENDDO                                                    /*CGL200*/
+/*                                                                      CGL200*/
 /*/COPY WNCPYSRC,GLC0802C09                                           /*S01408*/
 /*                                                                    /*S01408*/
                                                                                           /*CER037*/

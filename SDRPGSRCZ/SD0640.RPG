@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008  *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Last Amend No. CGL069             Date 10Jan23               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,8 @@
 0010 F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CGL069 - Accrue up to Month-End for Accruals Processing in   *
+      *             Advance (ANWD=1)                                  *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -261,6 +264,8 @@
      ISDGELR    E DSSDGELRPD                                              S01194
      I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT                 S01194
      I/COPY WNCPYSRC,SD0640I001
+     ISCSARD    E DSSCSARDPD                                              CGL069
+      * SAR File Details Accessed via Access Program AOSARDR0             CGL069
      I*                                                                   S01194
      IDSFDY     E DSDSFDY                                                 S01194
      I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE    S01194
@@ -331,6 +336,20 @@
 0107 C*****      APFQ      COMP 'D'                      14               S01194
 0107 C           BKAPFQ    COMP 'D'                      14               S01194
      C***12                Z-ADDAPDA      OAPDA   50                      S01194
+      *                                                                   CGL069
+      *** Check if CGL069 is switched *ON.                                CGL069
+      *                                                                   CGL069
+     C                     CALL 'AOSARDR0'                                CGL069
+     C                     PARM *BLANKS   @RTCD   7                       CGL069
+     C                     PARM '*VERIFY' @OPTN   7                       CGL069
+     C                     PARM 'CGL069'  @SARD   6                       CGL069
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL069
+      *                                                                   CGL069
+     C           @RTCD     IFNE *BLANK                                    CGL069
+     C                     MOVE 'N'       CGL069  1                       CGL069
+     C                     ELSE                                           CGL069
+     C                     MOVE 'Y'       CGL069                          CGL069
+     C                     ENDIF                                          CGL069
      C/COPY WNCPYSRC,SD0640C003
      C*
      C**   IF ACC/PROF FREQ = D  AND ACC/PROF DATE LESS THAN NEXT
@@ -367,15 +386,25 @@
      C*                                                                   E20929
      C           BKAPFQ    IFEQ 'D'                         IF DAILY      E20929
      C*                                                                   E20929
+     C           CGL069    IFEQ 'Y'                         CGL069 *ON    CGL069
+      *                                                                   CGL069
+     C           BKANWD    IFEQ '0'                         NORM PROCSSNG.CGL069
+     C                     SUB  1         BJDNWD                          CGL069
+     C                     ENDIF                                          CGL069
+      *                                                                   CGL069
+     C                     ELSE                             CGL069 *OFF   CGL069
      C           BKANWD    IFEQ '0'                         NORM PROCSSNG.E20929
      C           BKANWD    OREQ '1'                         OR ADVANCE.   E20929
      C/COPY WNCPYSRC,SD0640C001
      C                     SUB  1         BJDNWD                          E20929
      C/COPY WNCPYSRC,SD0640C002
+     C                     ENDIF                                          CGL069
      C                     END                              END IF..      E20929
      C*                                                                   E20929
      C           BKANWD    IFEQ '2'                         IN ARREARS.   E20929
      C/COPY WNCPYSRC,SD0640C005
+     C           BKANWD    OREQ '1'                         OR ADVANCE &  CGL069
+     C           CGL069    ANDEQ'Y'                         CGL069 *ON    CGL069
      C                     Z-ADDBKAPDT    BJDNWD                          E20929
      C                     END                              END IF..      E20929
      C*                                                                   E20929

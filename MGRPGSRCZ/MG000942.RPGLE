@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD022383           Date 17Mar22               *
-      *  Prev Amend No. 261775             Date 17Mar22               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD022383           Date 17Mar22               *
+      *                 261775             Date 17Mar22               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
       *                 MD055842           Date 02Jun20               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Include GSH026 and GSH046CC1                        *
+      *  GSH046CC1 - Structured MT940 Automated Process CC1           *
       *  MD022383 - No field 86 generated for an MT942                *
       *           - Applied for MD-59407                              *
       *  261775 - No F86 defined for MT942s. Place :86 in every page. *
@@ -2249,6 +2253,9 @@
      C                   PARM      MGACSQ        PAcsq                                      BUG25311
      C                   PARM                    PDCInd                                     BUG23742
      C                   PARM                    PRtty                                      BUG23742
+     C                   PARM      *BLANKS       PPNarr           30                          BA6026
+     C                   PARM      *BLANKS       PNaty             1                          BA6026
+     C                   PARM      *BLANKS       PDstn            11                          BA6026
      C                   PARM                    PArrExt                                    BUG23742
      C                   PARM                    PFormL1                                    BUG23742
      C                   PARM                    PFormL2                                    BUG23742
@@ -2279,6 +2286,7 @@
      C                   PARM                    WFldNmXAr                                  BUG23742
      C                   PARM                    WMsgIDXAr                                  BUG23742
      C                   PARM                    WMsgDtXAr                                  BUG23742
+     C                   PARM      MGSFD9        PPNar2           30                          BA6026
      C                   ELSE                                                               BUG23742
       *                                                                                     BUG23742
      C                   CALL      'MG001900'                                                 CER030

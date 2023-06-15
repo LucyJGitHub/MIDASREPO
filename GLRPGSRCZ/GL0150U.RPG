@@ -10,8 +10,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059419           Date 27May22               *
-      *  Prev Amend No. MD059687           Date 25Mar22               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 BA6020             Date 16Mar23               *
+      *                 CSW101             Date 23Feb23               *
+      *                 MD059419           Date 27May22               *
+      *                 MD059687           Date 25Mar22               *
       *                 MD059688           Date 24Mar22               *
       *                 MD057760           Date 01Apr21               *
       *                 CSD103             Date 10Aug20               *
@@ -89,6 +93,13 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Pass the Postings Narr, Nwrk A/c type and Nwrk      *
+      *           Destination, all blank as for MG000940 use only)    *
+      *           Include GSH026 and GSH046CC1                        *
+      *  BA6020 - Add specific header field to CM XML output          *
+      *  CSW101 - PAYplus/Midas Interface                             *
       *  MD059419 - Transfer of Interface Batch is Failing due to an  *
       *             array index error on MG001901. Initialized index  *
       *             on call to MG001900 and MG001901.                 *
@@ -250,6 +261,11 @@
       ** UPD: Midas GL Journal Entry File - Additional Information                            CGL013
       *                                                                                       CGL013
      F/COPY WNCPYSRC,GL0150UFPG                                           S01408
+     FGLJEIP00IF  E           K        DISK         KINFSR *PSSR      UC                      CGL200
+      *                                                                                       CGL200
+     FGLJENPX0O   E                    DISK         KINFSR *PSSR      UC                      CGL200
+     F            GLJEIPD0                          KRENAMEGLJENPD0                           CGL200
+      *                                                                                       CGL200
      FGLJIX1PDIF  E           K        DISK                           UC                      CER001
       *                                                                                       CER001
       ** RTV: GL Batch Posting Interface File  Retrieval index                                CER001
@@ -313,8 +329,23 @@
      E                    WAR        20  1                                                    CER046
      E                    WCQAR       8  1                                                    CER046
      E                    PEX        22 35                                                  BUG25476
+      *                                                                                       BA6020
+     E                    FNMARR     40 10                                                    BA6020
+     E                    MIDARR     40  7                                                    BA6020
+     E                    MDTARR     40 45                                                    BA6020
+     E                    WFLDAR     40 10                                                    BA6020
+     E                    WMIDAR     40  7                                                    BA6020
+     E                    WMDTAR     40 45                                                    BA6020
+      *                                                                                       BA6020
      E/COPY ZSRSRC,ZDATE9Z1                                                                   CER046
       /EJECT
+      *                                                                                       CGL200
+     IGLJEIPD0                                                                                CGL200
+     I              BTPTDT                          XXPTDT                                    CGL200
+     I              BTBTNB                          XXBTNB                                    CGL200
+     I              BTBINB                          XXBINB                                    CGL200
+     I              BTTMST                          XXTMST                                    CGL200
+      *                                                                                       CGL200
       * Data structures:-
      I*                                                                   120652
      IRUNDAT      DS                                                      120652
@@ -733,6 +764,26 @@
       *                                                                                    AR792734A
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0150UCPG                                           S01408
+      * Check if CGL200 is present                                                            CGL200
+      *                                                                                       CGL200
+     C                     MOVEL'N'       CGL200  1                                           CGL200
+     C                     CALL 'AOSARDR0'                                                    CGL200
+     C                     PARM *BLANKS   UUAPRC                                              CGL200
+     C                     PARM '*VERIFY' UUAPOP                                              CGL200
+     C                     PARM 'CGL200'  UUACID                                              CGL200
+     C           D@SARD    PARM D@SARD    UUFDY                                               CGL200
+      *                                                                                       CGL200
+     C           UUAPRC    IFEQ *BLANK                                                        CGL200
+     C                     MOVEL'Y'       CGL200                                              CGL200
+     C                     OPEN GLJEIP00                                                      CGL200
+     C                     OPEN GLJENPX0                                                      CGL200
+     C                     ENDIF                                                              CGL200
+      *                                                                                       CGL200
+     C           KEY001    KLIST                                                              CGL200
+     C                     KFLD           XXPTDT                                              CGL200
+     C                     KFLD           XXBTNB                                              CGL200
+     C                     KFLD           XXBINB                                              CGL200
+      *                                                                                       CGL200
       *                                                                                       CER001
       ** Check Feature ULX043 is Present, if so open File                                     CER001
       *                                                                                       CER001
@@ -859,6 +910,24 @@
      C*                                                                   120652
      C                     EXSR FLDVAL                                    120652
      C/COPY WNCPYSRC,GL0150UC02
+      *                                                                   CGL200
+     C           CGL200    IFEQ 'Y'                                       CGL200
+      *                                                                   CGL200
+     C                     Z-ADDBTPTDT    XXPTDT                          CGL200
+     C                     MOVE P@IFBN    XXBTNB                          CGL200
+     C                     Z-ADDBTBINB    XXBINB                          CGL200
+      *                                                                   CGL200
+     C           KEY001    CHAINGLJEIP00             93                   CGL200
+      *                                                                   CGL200
+     C           *IN93     IFEQ *OFF                                      CGL200
+      *                                                                   CGL200
+     C                     MOVE XXTMST    BTTMST                          CGL200
+      *                                                                   CGL200
+     C                     WRITEGLJENPD0                                  CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
      C*                                                                   120652
      C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
      C*********************WRITE@BTREAK                    ¦              CGL016
@@ -933,7 +1002,16 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE PBCNO     BABTNB                                              CER046
      C                     ELSE                                                               CER046
      C/COPY WNCPYSRC,GLH00196
+      *                                                                                       CSW101
+     C           CSW101    IFEQ 'Y'                                                           CSW101
+     C           PBCNO     ANDNE*BLANKS                                                       CSW101
+     C                     MOVE PBCNO     BABTNB                                              CSW101
+     C                     ELSE                                                               CSW101
+      *                                                                                       CSW101
      C                     MOVE P@BHNO    BABTNB                                              CGL013
+      *                                                                                       CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
      C                     ENDIF                                                              CER046
       **********                                                                     CER030 BUG23742
       ***Format*and*Populate*Extended*Narrative                                      CER030 BUG23742
@@ -1025,10 +1103,166 @@ E1   C                     ENDIF                                          CGL016
      C********** CER030    IFEQ 'Y'                                                BUG25476 AR833906
      C           CER031    IFEQ 'Y'                                                         AR833906
      C           EXNRDS    ANDNE*BLANKS                                                     BUG25476
+     C           CSW101    OREQ 'Y'                                                           CSW101
+      *                                                                                       CSW101
+     C           EXNRDS    IFNE *BLANKS                                                       CSW101
      C                     EXSR SRVADI                                                      BUG25476
+     C                     ENDIF                                                              CSW101
      C******               ENDIF                                                   BUG25476 BUG26840
       *                                                                                     BUG25476
      C/COPY WNCPYSRC,GLH00197
+      *                                                                                       CSW101
+     C           CSW101    IFEQ 'Y'                                                           CSW101
+     C           EXNRDS    ANDEQ*BLANKS                                                       CSW101
+      *                                                                                       BA6020
+     C           BA6020    IFEQ 'Y'                                                           BA6020
+      *                                                                                       BA6020
+      ** Replace blank narratives with '/'                                                    BA6020
+      *                                                                                       BA6020
+     C           BAFN2     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN2                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN3     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN3                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN4     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN4                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN5     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN5                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN6     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN6                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN7     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN7                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN8     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN8                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN9     IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN9                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN10    IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN10                                              BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN11    IFEQ *BLANKS                                                       BA6020
+     C                     MOVEL'/'       BAFN11                                              BA6020
+     C                     ENDIF                                                              BA6020
+      *                                                                                       BA6020
+      *  Now restore narratives after the last real narrative to blanks.                      BA6020
+      *                                                                                       BA6020
+     C           BAFN11    IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN11                                              BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN10    IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN10                                              BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN9     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN9                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN8     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN8                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN7     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN7                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN6     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN6                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN5     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN5                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN4     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN4                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN3     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN3                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN2     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN2                                               BA6020
+     C                     ELSE                                                               BA6020
+     C                     GOTO QUITER                                                        BA6020
+     C                     ENDIF                                                              BA6020
+     C           QUITER    TAG                                                                BA6020
+     C                     MOVELBAFN2     BAADI1                                              BA6020
+     C                     CAT  BAFN3:1   BAADI1                                              BA6020
+     C                     MOVELBAFN6     BAADI2                                              BA6020
+     C                     MOVELBAFN7     BAADI3                                              BA6020
+     C                     CAT  BAFN8:1   BAADI3                                              BA6020
+     C                     MOVELBAFN9     BAADI4                                              BA6020
+     C                     CAT  BAFN10:1  BAADI4                                              BA6020
+     C                     MOVELBAFN11    BAADI5                                              BA6020
+     C                     MOVE *BLANKS   BAADI6                                              BA6020
+      *                                                                                       BA6020
+      **  Now restore narratives to blanks.                                                   BA6020
+      *                                                                                       BA6020
+     C           BAFN2     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN2                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN3     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN3                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN4     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN4                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN5     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN5                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN6     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN6                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN7     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN7                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN8     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN8                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN9     IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN9                                               BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN10    IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN10                                              BA6020
+     C                     ENDIF                                                              BA6020
+     C           BAFN11    IFEQ '/'                                                           BA6020
+     C                     MOVE *BLANKS   BAFN11                                              BA6020
+     C                     ENDIF                                                              BA6020
+      *                                                                                       BA6020
+      ** If feature BA6020 is OFF                                                             BA6020
+      *                                                                                       BA6020
+     C                     ELSE                                                               BA6020
+     C                     MOVELBAFN2     BAADI1                                              CSW101
+     C                     CAT  BAFN3:1   BAADI1                                              CSW101
+     C                     MOVELBAFN4     BAADI2                                              CSW101
+     C                     CAT  BAFN5:1   BAADI2                                              CSW101
+     C                     MOVELBAFN6     BAADI3                                              CSW101
+     C                     MOVELBAFN7     BAADI4                                              CSW101
+     C                     CAT  BAFN8:1   BAADI4                                              CSW101
+     C                     MOVELBAFN9     BAADI5                                              CSW101
+     C                     CAT  BAFN10:1  BAADI5                                              CSW101
+     C                     MOVELBAFN11    BAADI6                                              CSW101
+      *                                                                                       BA6020
+     C                     ENDIF                                                              BA6020
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
      C                     WRITEGLJENXD0                                                      CGL013
      C                     ENDIF                                                            BUG26840
      C                     ENDIF                                                              CGL013
@@ -1349,6 +1583,8 @@ E1   C                     ENDIF                                          CGL016
       *                                                                                       CER046
      C                     EXSR SRBRCH                                                        CER046
       *                                                                                       CER046
+     C           CSW101    IFEQ 'N'                                                           CSW101
+      *                                                                                       CSW101
      C           PBRBT     IFNE DBRN                                                          CER046
      C********** MBIN      ANDNE'N'                                                 CER046 MD025865A
      C           MBIN      ANDEQ'N'                                                        MD025865A
@@ -1358,6 +1594,8 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE 'Y'       PERRF                                               CER046
      C                     MOVE 'Y'       OKF,ID                                              CER046
      C                     ENDIF                                                              CER046
+      *                                                                                       CSW101
+     C                     ENDIF                                                              CSW101
       *                                                                                       CER046
       ** Validate Account                                                                     CER046
       *                                                                                       CER046
@@ -3682,6 +3920,11 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVELA7ACCD    PKACCD                                              CER046
      C                     MOVELA7ACSN    PKACSN                                              CER046
      C                     MOVELA7BRCD    PKBRCD                                              CER046
+      *                                                                                       CSW101
+     C           CSW101    IFEQ 'Y'                                                           CSW101
+     C                     MOVELA7NONB    BTNNBI                                              CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
      C                     EXSR SRADTL                                                        CER046
       *                                                                                       CER046
      C                     ENDIF                                                              CER046
@@ -3845,6 +4088,11 @@ E1   C                     ENDIF                                          CGL016
      C                     EXSR SRANST                                                        CER046
      C           PRTCD     IFEQ *BLANKS                                                       CER046
      C                     MOVELA7NONB    W2NNBI                                              CER046
+      *                                                                                       CSW101
+     C           CSW101    IFEQ 'Y'                                                           CSW101
+     C                     MOVELA7NONB    BTNNBI                                              CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
      C                     ENDIF                                                              CER046
       *                                                                                       CER046
       ** Check if there are differences between file and input                                CER046
@@ -4041,6 +4289,11 @@ E1   C                     ENDIF                                          CGL016
      C                     EXSR SRANST                                                        CER046
      C           PRTCD     IFEQ *BLANKS                                                       CER046
      C                     MOVELA7NONB    W2NNBI                                              CER046
+      *                                                                                       CSW101
+     C           CSW101    IFEQ 'Y'                                                           CSW101
+     C                     MOVELA7NONB    BTNNBI                                              CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
      C                     ENDIF                                                              CER046
      C                     ENDIF                                                              CER046
       *                                                                                       CER046
@@ -4610,6 +4863,48 @@ E1   C                     ENDIF                                          CGL016
      C                     KFLD           BTBINB                                            BUG23742
       *                                                                                       CGL013
      C/COPY WNCPYSRC,GLH00200
+      *                                                                                       CSW101
+      ** Check if 'CSW101' is switched ON.                                                    CSW101
+      *                                                                                       CSW101
+     C                     MOVE 'N'       CSW101  1                                           CSW101
+      *                                                                                       CSW101
+     C                     CALL 'AOSARDR0'                                                    CSW101
+     C                     PARM *BLANKS   PRTCD                                               CSW101
+     C                     PARM '*VERIFY' POPTN                                               CSW101
+     C                     PARM 'CSW101'  PSARD                                               CSW101
+     C           D@SARD    PARM D@SARD    UUFDY                                               CSW101
+      *                                                                                       CSW101
+     C           PRTCD     IFNE *BLANKS                                                       CSW101
+     C           PRTCD     ANDNE'*NRF   '                                                     CSW101
+      *                                                                                       CSW101
+     C           *LOCK     IN   LDA                                                           CSW101
+     C                     MOVE 'SCSARDPD'DBFILE                                              CSW101
+     C                     MOVEL'002'     DBASE                                               CSW101
+     C                     MOVEL'CSW101'  DBKEY                                               CSW101
+     C                     OUT  LDA                                                           CSW101
+      *                    EXSR *PSSR                                                         CSW101
+     C                     ELSE                                                               CSW101
+      *                                                                                       CSW101
+     C           PRTCD     IFEQ *BLANKS                                                       CSW101
+     C                     MOVE 'Y'       CSW101                                              CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
+     C                     ENDIF                                                              CSW101
+      *                                                                                       CSW101
+      ** Check if 'BA6020' is switched ON.                                                    BA6020
+      *                                                                                       BA6020
+     C                     MOVE 'N'       BA6020  1                                           BA6020
+      *                                                                                       BA6020
+     C                     CALL 'AOSARDR0'                                                    BA6020
+     C                     PARM *BLANKS   PRTCD                                               BA6020
+     C                     PARM '*VERIFY' POPTN                                               BA6020
+     C                     PARM 'BA6020'  PSARD                                               BA6020
+     C           D@SARD    PARM D@SARD    UUFDY                                               BA6020
+      *                                                                                       BA6020
+     C           PRTCD     IFEQ *BLANKS                                                       BA6020
+     C                     MOVE 'Y'       BA6020                                              BA6020
+     C                     ENDIF                                                              BA6020
+      *                                                                                       BA6020
      C                     ENDSR                                                              CGL013
       *                                                                                       CGL013
       *****************************************************************                     BUG23669
@@ -4773,12 +5068,18 @@ E1   C                     ENDIF                                          CGL016
      C                     PARM           PFOR20 70                                         BUG25476
      C**********           PARM           IDX     30                               BUG25476 MD059419
      C                     PARM 0         IDX     30                                        MD059419
-     C                     PARM           FNMARR 10                                         BUG25476
-     C                     PARM           MIDARR  7                                         BUG25476
-     C                     PARM           MDTARR 45                                         BUG25476
-     C                     PARM           WFLDAR 10                                         BUG25476
-     C                     PARM           WMIDAR  7                                         BUG25476
-     C                     PARM           WMDTAR 45                                         BUG25476
+     C**********           PARM           FNMARR 10                                  BUG25476 BA6020
+     C**********           PARM           MIDARR  7                                  BUG25476 BA6020
+     C**********           PARM           MDTARR 45                                  BUG25476 BA6020
+     C**********           PARM           WFLDAR 10                                  BUG25476 BA6020
+     C**********           PARM           WMIDAR  7                                  BUG25476 BA6020
+     C**********           PARM           WMDTAR 45                                  BUG25476 BA6020
+     C                     PARM           FNMARR                                              BA6020
+     C                     PARM           MIDARR                                              BA6020
+     C                     PARM           MDTARR                                              BA6020
+     C                     PARM           WFLDAR                                              BA6020
+     C                     PARM           WMIDAR                                              BA6020
+     C                     PARM           WMDTAR                                              BA6020
       *                                                                                     BUG25476
      C           PRTCD1    IFEQ '*ERROR'                                                    BUG25476
      C                     MOVE 'Y'       PERRF                                             BUG25476
@@ -4855,6 +5156,9 @@ E1   C                     ENDIF                                          CGL016
      C                     PARM           PACSQ                                             BUG25476
      C                     PARM           PDCIN                                             BUG25476
      C                     PARM           PTRTP                                             BUG25476
+     C                     PARM *BLANKS   PPNARR 30                                           BA6026
+     C                     PARM *BLANKS   PNATY   1                                           BA6026
+     C                     PARM *BLANKS   PDSTN  11                                           BA6026
      C                     PARM           PEX                                               BUG25476
      C                     PARM           PFOR1                                             BUG25476
      C                     PARM           PFOR2                                             BUG25476
@@ -4886,6 +5190,7 @@ E1   C                     ENDIF                                          CGL016
      C                     PARM           WFLDAR                                            BUG25476
      C                     PARM           WMIDAR                                            BUG25476
      C                     PARM           WMDTAR                                            BUG25476
+     C                     PARM           PPNAR2 30                                           BA6026
       *                                                                                     BUG25476
      C           PRTCD1    IFEQ '*ERROR'                                                    BUG25476
      C                     MOVE 'Y'       PERRF                                             BUG25476

@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas A6 Correspondence Manager - EPOX Interface')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Correspondence Manager                              */
+/*                                                                   */
+/*       A6C000003 - Correspondence Manager - EPOX Interface         */
+/*                                                                   */
+/*       (c) Finastra Systems Technology, Inc. 2023                  */
+/*                                                                   */
+/*       Last Amend No. BA6020  *CREATE    Date 16Jan23              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA6020 - Add specific header field to CM XML Output         */
+/*                Set Authority for Control Files                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PATH)
+
+/*/COPY WNCPYSRC,mmCnnnnINT                                          */
+
+             DCL        VAR(&PATH) TYPE(*CHAR) LEN(150)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(256) VALUE(' ')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra Systems Technology, Inc. 2023')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Move backup path name to IFSAUT parameter.   */
+             CHGVAR     VAR(&PARM) VALUE(&PATH)
+
+/* Execute Handelsbanken command IFSAUT to set up athority.                           */
+
+             IFSAUT     PATH(&PARM)
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+/*/COPY WNCPYSRC,mmCnnnnERR                                          */
+
+             CHGJOB     SWS(XXXXXX11)
+
+
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra Systems Technology, Inc. 2023')
+
+/*/COPY WNCPYSRC,mmCnnnnEND                                          */
+
+/* (Add any specific end processing here) */
+
+             ENDPGM

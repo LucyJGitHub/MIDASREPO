@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD030451           Date 18Sep14               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD030451           Date 18Sep14               *
       *                 MD048056           Date 16Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033630A          Date 25May16               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD030451 - Keep the Workstation id value                     *
@@ -249,6 +251,12 @@
      F***PRONO   UF  E           K        DISK         KCOMIT                               MD027654
      FPRONO   IF  E           K        DISK         KCOMIT                                  MD027654
      F                                              KINFSR ERRSR                              239155
+     FGLJENP00IF  E           K        DISK                           UC  CGL200
+     F            GLJEIPD0                          KRENAMEGLJENPD1       CGL200
+     F                                              KINFSR ERRSR          CGL200
+     FGLACMTX0O   E                    DISK         KCOMIT            UC  CGL200
+     F            GLAPOSD0                          KRENAMEGLACMTD0       CGL200
+     F                                              KINFSR ERRSR          CGL200
      F/COPY WNCPYSRC,GL4445F001
      FRSACMTPDO   E           K        DISK         KCOMIT       A
      F                                              KINFSR ERRSR                              239155
@@ -416,6 +424,9 @@
      IWTRNM       DS                                                      S01413
      I                                        1   3 WBNUM                 S01413
      I                                        4   6 WBINB                 S01413
+      *                                                                                       CGL200
+     I              'GL009700'            C         CG200P                                    CGL200
+      *                                                                                       CGL200
      I/COPY WNCPYSRC,GL4445I001
      I/COPY ZSRSRC,ZHOLDS                                                 S01195
      I/COPY ZSRSRC,ZHOLI                                                  S01195
@@ -482,6 +493,12 @@
      C*
      C           *IN03     DOWEQ'0'
       *                                                                   CGL016
+      *                                                                   CGL200
+     C           CGL200    IFEQ 'Y'                                       CGL200
+     C                     MOVE BTTMST    W0TMST                          CGL200
+     C           KEY001    CHAINGLJENP00             99                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
      C                     MOVE 'Y'       W0OK    1                       CGL016
       *                                                                   CGL016
      C/COPY OFCPYSRCZ,CGL135_092                                                             CGL135B
@@ -1397,7 +1414,34 @@
      C                     PARM           BTPDID                                              CAP207
       *                                                                                       CAP207
       *                                                                                       CAP205
-     C*
+     C           CGL200    IFEQ 'Y'                                       CGL200
+      *                                                                   CGL200
+     C                     MOVEL*BLANKS   FUNDQQ                          CGL200
+      *                                                                   CGL200
+     C           *IN99     IFEQ *OFF                                      CGL200
+     C                     MOVE BRCA      XXBRCA                          CGL200
+     C                     MOVE CUSN      XXCNUM                          CGL200
+     C                     MOVE CCYD      XXCCY                           CGL200
+     C                     MOVE ACDE      XXACOD                          CGL200
+     C                     MOVE ASNC      XXACSQ                          CGL200
+     C                     MOVE PTDT      XXPSTD                          CGL200
+     C                     MOVE VUDT      XXVALD                          CGL200
+      *                                                                   CGL200
+     C                     CALL CG200P                                    CGL200
+     C                     PARM           UNQK#   9                       CGL200
+     C                     MOVELUNQK#     XXUNQK    P                     CGL200
+     C                     MOVELUNQK#     FUNDQQ    P                     CGL200
+      *                                                                   CGL200
+     C                     MOVE BTTMST    XXTMST                          CGL200
+      *                                                                   CGL200
+     C                     WRITEGLACMTD0                                  CGL200
+      *                                                                   CGL200
+     C                     MOVE W0TMST    BTTMST                          CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL4445C010
      C                     WRITERSACMTPO               10
       *                                                                                       CGL029
@@ -1808,6 +1852,38 @@
      C                     ENDIF                                                              CAP205
      C                     ENDIF                                                              CAP205
       *                                                                                       CAP205
+     ** Access SAR details for CGL200                                     CGL200
+      *                                                                   CGL200
+     C                     MOVEL'N'       CGL200  1                       CGL200
+     C                     CALL 'AOSARDR0'                                CGL200
+     C                     PARM *BLANKS   @RTCD                           CGL200
+     C                     PARM '*VERIFY' @OPTN                           CGL200
+     C                     PARM 'CGL200'  @SARD                           CGL200
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL200
+      *                                                                   CGL200
+     C           @RTCD     IFEQ *BLANK                                    CGL200
+     C                     MOVEL'Y'       CGL200                          CGL200
+     C                     OPEN GLJENP00                                  CGL200
+     C                     OPEN GLACMTX0                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C           *LIKE     DEFN BTTMST    W0TMST                          CGL200
+      *                                                                   CGL200
+     C           KEY001    KLIST                                          CGL200
+     C                     KFLD           BTPTDT                          CGL200
+     C                     KFLD           BTBTNB                          CGL200
+     C                     KFLD           BTBINB                          CGL200
+      *                                                                   CGL200
+     C           KEY002    KLIST                                          CGL200
+     C                     KFLD           XXBRCA                          CGL200
+     C                     KFLD           XXCNUM                          CGL200
+     C                     KFLD           XXCCY                           CGL200
+     C                     KFLD           XXACOD                          CGL200
+     C                     KFLD           XXACSQ                          CGL200
+     C                     KFLD           XXPSTD                          CGL200
+     C                     KFLD           XXVALD                          CGL200
+     C                     KFLD           XXUNQK                          CGL200
+      *                                                                   CGL200
      C/COPY OFCPYSRCZ,CGL135_099                                                             CGL135B
      C                     ENDSR
      C*

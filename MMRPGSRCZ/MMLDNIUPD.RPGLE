@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036339           Date 06Mar23               *
-      *  Prev Amend No. MD029131           Date 21Feb23               *
+      *  Last Amend No. AR872050           Date 05Jun23               *
+      *  Prev Amend No. MD036339           Date 06Mar23               *
+      *                 MD029131           Date 21Feb23               *
       *                 255899A            Date 21Jun22               *
       *                 263173             Date 20Jun22               *
       *                 AR637449           Date 16Jun22               *
@@ -111,6 +112,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR872050 - Fix package request for Funds Transfer and        *
+      *             Securities module. Incorporated fix AR790465.     *
+      *             (Child:AR872051)                                  *
+      *  AR790465 - Amending the maturity date does not reflect on    *
+      *             depot movement OUT date field. (Child:AR790466)   *
       *  MD036339 - DL Error amending Maturity date.                  *
       *           - Ensure Interest rate field is updated when Short  *
       *             Term rate is amended.                             *
@@ -295,6 +301,8 @@
      F                                     USROPN                                             CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
+     FSEDPMVL3  UF A E           K DISK                                                     AR790465
+     F                                     COMMIT                                           AR790465
      F/COPY WNCPYSRC,MMLDNIDF01
 
       *****************************************************************
@@ -1865,6 +1873,19 @@
      C                   ENDIF                                                                CDL102
       *
      C                   UPDATE    DEALSDCF
+      *                                                                                     AR790465
+      ** If there is no Error Update the DPDO field on the SE Depo                          AR790465
+      ** Movement file                                                                      AR790465
+      *                                                                                     AR790465
+     C                   MOVE      IKDN38        KDPAD             6 0                      AR790465
+     C     KDPAD         SETLL     DPTMVDF                                                  AR790465
+     C     KDPAD         READE     DPTMVDF                                99                AR790465
+      *                                                                                     AR790465
+     C     *IN99         DOWEQ     '0'                                                      AR790465
+     C                   Z-ADD     MDAT          DPDO                                       AR790465
+     C                   UPDATE    DPTMVDF                                                  AR790465
+     C     KDPAD         READE     DPTMVDF                                99                AR790465
+     C                   ENDDO                                                              AR790465
                                                                                               CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
                                                                                               CRE020
@@ -2286,7 +2307,7 @@
       *                                                                                       155792
      C                   MOVE      'N'           @@CNRQ                                       155792
      C                   TESTB     '2'           DNSI                     99                  261319
-     C                   MOVE      'N'           CHAURO            1                        MD029131 
+     C                   MOVE      'N'           CHAURO            1                        MD029131
       *
       * IF SETTLEMENT INSTRUCTIONS WERE PREVIOUSLY PRESENT
       * OR IF 2 LEVEL INPUT NOT PRESENT
@@ -2377,7 +2398,7 @@
       ** or if interest adjustment is present                                                 261319
       *                                                                                       261319
      C     *IN99         OREQ      *ON                                                        261319
-     C     CHAURO        OREQ      'Y'                                                      MD029131 
+     C     CHAURO        OREQ      'Y'                                                      MD029131
       *
       ** Produce a confirmation now
       *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1016548          Date 15Oct12               *
+      *  Last Amend No. MD024899           Date 18Apr23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1016548          Date 15Oct12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024899 - Database Error due to Error locking during autho- *
+      *             rization. Removed unnecessary record lock during  *
+      *             validation.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1016548 - Database error encountered during authorization  *
       *              (Child:AR1016553)                                *
@@ -562,7 +566,8 @@
  
  
       ** Check if record still exists
-     C     KAUTH2        CHAIN     DLAIAUL2                           85
+     C*****KAUTH2        CHAIN     DLAIAUL2                           85                    MD024899
+     C     KAUTH2        CHAIN(N)  DLAIAUL2                           85                    MD024899
       *
       ** Send message 'Record no longer on file'
      C                   If        *IN85 = *ON
@@ -641,7 +646,7 @@
      C                   MOVE      NDCNUM        PPCNUM            6                          CSD027
      C                   Z-ADD     NDIPTM        PPIPTM            6 0          BUG6696
      C                   Z-ADD     NDRDNB        PPRDNB            5 0          BUG6696
-     C                   UNLOCK    DLAIAUL2
+     C**********         UNLOCK    DLAIAUL2                                                 MD024899
      C                   CALL      'DL0100'
      C                   PARM      DDOPTN        PPOPTN            1
      C                   PARM                    PPDLNO

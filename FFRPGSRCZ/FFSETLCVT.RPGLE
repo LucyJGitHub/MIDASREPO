@@ -17,12 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BG9185             Date 08Nov05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -31,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping.                                     *
+      *  MD022354 - Error in Counterparty Nostro field. Changed       *
+      *             SBCPN to SBCPN10 due to changes in FFBSETPD.      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BG9185 - Correction to CGL029 (Recompile)                    *
@@ -38,12 +44,12 @@
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -55,19 +61,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -75,46 +81,46 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D CustIns       E DS                  EXTNAME(FFCSETPD)
       ** Customer settlement instructions, screen format
- 
+
      D BrokIns       E DS                  EXTNAME(FFBSETPD)
       ** Broker settlement instructions, screen format
- 
+
      D SetFlFmt      E DS                  EXTNAME(TRSET)
       ** Settlement instructions in file format
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details.
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **Second DS for access programs, long data structure.
- 
+
       ** +--- Named indicators -------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Map variable names to indicators to allow use of names instead ¦
@@ -131,17 +137,17 @@
      D pIndicator      S               *   INZ(%Addr(*In))
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Flag indicating whether details for customer or broker are
       ** required.
      D CustBrokFl      S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -149,43 +155,43 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Determine instrument currency decimal places
- 
+
      C                   EXSR      DetInCcyDP
- 
+
       ** Proceed according to whether customer or broker instructions
       ** are required
      C                   SELECT
       **                 ------
- 
+
      C                   WHEN      CustBrokFl = 'B'
      C                   EXSR      Broker
- 
+
      C                   WHEN      CustBrokFl = 'C'
      C                   EXSR      Customer
- 
+
      C                   ENDSL
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -194,23 +200,23 @@
       *          requested                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     Broker        BEGSR
- 
+
       ** Clear output settlement instructions
- 
+
      C                   CLEAR                   BrokIns
- 
+
      C     BCMC          IFNE      0
      C                   MOVE      BCMC          SBCMC
      C                   END
- 
+
      C     BCMA          IFEQ      0
- 
+
      C     BCPT          IFEQ      'A'
      C                   MOVEL     'A'           SBCMA
      C                   END
- 
+
      C                   ELSE
      C                   MOVEL     *BLANK        ZFIELD           16
      C                   MOVE      BCMA          ZFIELD
@@ -219,15 +225,15 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SBCMA
      C                   END
- 
+
      C     BCMS          IFNE      0
      C                   MOVE      BCMS          SBCMS
      C                   END
- 
+
      C     BCHC          IFNE      0
      C                   MOVE      BCHC          SBCHC
      C                   END
- 
+
      C     BCHA          IFNE      0
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      BCHA          ZFIELD
@@ -236,12 +242,12 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SBCHA
      C                   END
- 
+
      C     BMAR          IFEQ      0
      C                   MOVE      *BLANK        SBMAR
- 
+
      C                   ELSE
- 
+
      C     BMAR          IFEQ      -1
      C                   Z-ADD     0             XBMAR            13 0
      C                   MOVEL     *BLANK        ZFIELD
@@ -250,7 +256,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SBMAR
- 
+
      C                   ELSE
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      BMAR          ZFIELD
@@ -259,11 +265,11 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SBMAR
      C                   END
- 
+
      C                   END
- 
+
      C                   MOVE      BSLT          SBSLT
- 
+
      C     BSLT          IFEQ      04
      C     BSLT          OREQ      06
      C     BSLT          OREQ      15
@@ -273,13 +279,14 @@
      C                   MOVE      BSLA          SBSLA
      C                   MOVE      BSBR          SBSBR                                         S0111
      C                   END
- 
+
      C                   MOVE      BFAO          SBFAO
-     C                   MOVEL     BCPN          SBCPN
- 
+     C**********         MOVEL     BCPN          SBCPN                                      MD022354
+     C                   MOVEL     BCPN          SBCPN10                                    MD022354
+
      C                   ENDSR
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -288,23 +295,23 @@
       *            requested                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     Customer      BEGSR
- 
+
       ** Clear output settlement instructions
- 
+
      C                   CLEAR                   CustIns
- 
+
      C     CCMC          IFNE      0
      C                   MOVE      CCMC          SCCMC
      C                   END
- 
+
      C     CCMA          IFEQ      0
- 
+
      C     CCPT          IFEQ      'A'
      C                   MOVEL     'A'           SCCMA
      C                   END
- 
+
      C                   ELSE
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      CCMA          ZFIELD
@@ -313,15 +320,15 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SCCMA
      C                   END
- 
+
      C     CCMS          IFNE      0
      C                   MOVE      CCMS          SCCMS
      C                   END
- 
+
      C     CCHC          IFNE      0
      C                   MOVE      CCHC          SCCHC
      C                   END
- 
+
      C     CCHA          IFNE      0
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      CCHA          ZFIELD
@@ -330,12 +337,12 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SCCHA
      C                   END
- 
+
      C     CMAR          IFEQ      0
      C                   MOVE      *BLANK        SCMAR
- 
+
      C                   ELSE
- 
+
      C     CMAR          IFEQ      -1
      C                   Z-ADD     0             XCMAR            13 0
      C                   MOVEL     *BLANK        ZFIELD
@@ -344,7 +351,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SCMAR
- 
+
      C                   ELSE
      C                   MOVEL     *BLANK        ZFIELD
      C                   MOVE      CMAR          ZFIELD
@@ -353,11 +360,11 @@
      C                   PARM                    ZADEC
      C                   MOVE      ZFIELD        SCMAR
      C                   END
- 
+
      C                   END
- 
+
      C                   MOVE      CSLT          SCSLT
- 
+
      C     CSLT          IFEQ      04
      C     CSLT          OREQ      06
      C     CSLT          OREQ      15
@@ -367,12 +374,13 @@
      C                   MOVE      CSLA          SCSLA
      C                   MOVE      BRSC          SBRSC                                         S0111
      C                   END
- 
+
      C                   MOVE      CFAO          SCFAO
-     C                   MOVEL     CCPN          SCCPN
- 
+     C**********         MOVEL     CCPN          SCCPN                                      MD061489
+     C                   MOVEL     CCPN          SCCPN10                                    MD061489
+
      C                   ENDSR
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -380,20 +388,20 @@
       * DetInCcyDP - Determine instrument currency decimal places     *
       *                                                               *
       *****************************************************************
- 
+
      C     DetInCcyDP    BEGSR
- 
+
       *
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR'      @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      KCCY          @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6NBDP        ZADEC             1 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -405,9 +413,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Outputs from this procedure
       ** ---------------------------
@@ -417,10 +425,10 @@
      C                   PARM                    CustIns
       ** Broker settlement instructions, screen format
      C                   PARM                    BrokIns
- 
+
       ** Inputs to this procedure
       ** ------------------------
- 
+
       ** Settlement Instructions in File Format
      C                   PARM                    SetFlFmt
       ** Customer/broker flag (1A)
@@ -429,15 +437,15 @@
      C                   PARM                    KTNBR             6
       ** Instrument currency
      C                   PARM                    KCCY              3
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

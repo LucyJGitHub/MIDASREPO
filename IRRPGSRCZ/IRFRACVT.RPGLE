@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 245692             Date 11Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -812,6 +814,28 @@
      C                   ELSE
      C                   MOVEL     'N'           CustFormat
      C                   END
+      *                                                                                     MD049123
+      ** ACCESS SAR DETAILS FOR Expansion of Customer Number                                MD049123
+      *                                                                                     MD049123
+     C                   CALLB     'AOSARDR0'                                               MD049123
+     C                   PARM      *BLANKS       @RTCD                                      MD049123
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049123
+     C                   PARM      'CDL011'      @SARD                                      MD049123
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD049123    
+      *                                                                                     MD049123
+      * DATABASE ERROR                                                                      MD049123
+      *                                                                                     MD049123
+     C     @RTCD         IFNE      *BLANKS                                                  MD049123
+     C     @RTCD         ANDNE     '*NRF   '                                                MD049123
+     C                   MOVEL     'CDL011'      DBKEY                                      MD049123
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD049123
+     C                   MOVEL     '910'         DBASE                                      MD049123
+     C                   EXSR      *PSSR                                                    MD049123
+     C                   END                                                                MD049123
+     C*                                                                                     MD049123
+     C     @RTCD         IFEQ      *BLANK                                                   MD049123
+     C                   MOVEL     'S'           CustFormat                                 MD049123
+     C                   END                                                                MD049123
       *
       **  Access SAR details file to determine if Bus. Day Convention is on.
       *

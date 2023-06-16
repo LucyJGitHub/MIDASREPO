@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CTI006             Date 31Mar14               *
+      *  Last Amend No. AR902158           Date 04May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR902158 - Start position out of range when field length     *
+      *             being exported is 20,0.  (Child: AR902159)        *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface (Recompile)    *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -67,7 +70,8 @@
  
  
       ** Number field 30,10
-     D InNumber        S             30S10
+     D*InNumber*       S             30S10                                                  AR902158
+     D InNumber        S             31S10                                                  AR902158
  
       ** Alpha field 32 long, returned from reformatting procedures
      D fmAlpNum32      S             32A
@@ -472,7 +476,8 @@
       **  20 character to the left of the dp, this data will start at
       **  20 - N + 1, where N is the number digits to the left of the dp.
       **  N = Length - Decimal positions.
-     C                   eval      InPtr = 20 - (fmLength-fmDecPos) + 1
+     C**********         eval      InPtr = 20 - (fmLength-fmDecPos) + 1                     AR902158
+     C                   eval      InPtr = 21 - (fmLength-fmDecPos) + 1                     AR902158
      C                   eval      %subst(fmAlpNum32:OutPtr:(fmLength-fmDecPos))
      C                              = %subst(InAlpha:InPtr:(fmLength-fmDecPos))
  

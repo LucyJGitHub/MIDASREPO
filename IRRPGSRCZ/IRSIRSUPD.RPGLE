@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059410           Date 21Dec21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD051652           Date 30May23               *
+      *  Prev Amend No. MD026941           Date 02May23               *
+      *                 MD023568           Date 19Apr23               *
+      *                 MD059410           Date 21Dec21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056655A          Date 09Oct20               *
@@ -124,6 +127,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051652 - Floating Rate did not fix due to ZERO TINFD.      *
+      *             Fix is to update TINFD according to the rate      *
+      *             change date schedules.                            *
+      *  MD026941 - No projection generated for reversal of completed *
+      *           - deals.                                            *
+      *           - Reinstate call to DL2900 in SIRDEL but condition  *
+      *             it for completed deals only                       *
+      *           - Set CHTP value for reversal of postings.          *
+      *  MD023568 - Incorrect reversal projected shadow/nostro        *
+      *             balances when IRS deal is deleted.                *
+      *             1. Apply fix similar to BUG7587 to prevent        *
+      *                deletion of unprocessed records from cash      *
+      *                flow file DLCFSCPD.                            *
+      *             2. Do not call DL2900 from SIRDEL (reversal       *
+      *                subroutine)                                    *
       *  MD059410 - Wrong rate is applied for the computation of int  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -314,6 +332,8 @@
      FREADVCL1  UF   E           K DISK    COMMIT                                             CRE020
      F                                     USROPN                                             CRE020
                                                                                               CRE020
+      ** IRS Schedule (Their Rate)                                                          MD051652
+     FDLDTSCL3  IF   E           K DISK    RENAME(DLDTSCD0:L3DTSCD0)                        MD051652
      F/COPY WNCPYSRC,IRSIRSDF01
       *****************************************************************
       ** +--------------------------------------+
@@ -1749,6 +1769,22 @@
      C                   EXSR      *PSSR
      C                   END
      C**********         ENDIF                                                        CIR008 BUG6373
+     C                   IF        FIDSTS =  'C'                                            MD026941
+      *                                                                                     MD026941
+      ** Before Status is necessary for delete of Completed deals                           MD026941
+      *                                                                                     MD026941
+     C                   CALLB     'DL2900'                                                 MD026941
+     C                   PARM      *BLANK        PRTCD                                      MD026941
+     C                   PARM                    PDLNO                                      MD026941
+     C                   PARM      'B'           PBEAF                                      MD026941
+                                                                                            MD026941
+     C     PRTCD         IFEQ      '*ERROR'                                                 MD026941
+     C                   MOVEL     'DL2900'      DBFILE                                     MD026941
+     C                   MOVEL     '995'         DBASE                                      MD026941
+     C                   MOVEL     *BLANK        DBKEY                                      MD026941
+     C                   EXSR      *PSSR                                                    MD026941
+     C                   ENDIF                                                              MD026941
+     C                   ENDIF                                                              MD026941
       *
       * SET CONFIRMATION BIT ON DEAL
       * AND CONFIRMATION REQUIRED INDICATOR
@@ -1775,6 +1811,11 @@
       *
      C                   UPDATE    DEALSDGF
      C/COPY WNCPYSRC,IRSIRSDC07
+      *                                                                                     MD026941
+      ** Restore CHTP for deletion of completed deals in AOOUSWU1                           MD026941
+      *                                                                                     MD026941
+     C                   EVAL      CHTP = WSCHTP                                            MD026941
+      *                                                                                     MD026941
 
       ** If Interest Rate Calendars feature present and data has been           CAP004
       ** input via server clear dates from file.                                CAP004
@@ -1790,17 +1831,17 @@
      C                   MOVEL     DEALS         Z#ASTS
      C                   MOVE      RSDLNO        PDLNO
       *
-     C                   CALLB     'DL2900'
-     C                   PARM      *BLANK        PRTCD
-     C                   PARM                    PDLNO
-     C                   PARM      'A'           PBEAF
-      *
-     C     PRTCD         IFEQ      '*ERROR'
-     C                   MOVEL     'DL2900'      DBFILE
-     C                   MOVEL     '996'         DBASE
-     C                   MOVEL     *BLANK        DBKEY
-     C                   EXSR      *PSSR
-     C                   END
+     C***********        CALLB     'DL2900'                                                 MD023568
+     C***********        PARM      *BLANK        PRTCD                                      MD023568
+     C***********        PARM                    PDLNO                                      MD023568
+     C***********        PARM      'A'           PBEAF                                      MD023568
+      ***********                                                                           MD023568
+     C*****PRTCD         IFEQ      '*ERROR'                                                 MD023568
+     C***********        MOVEL     'DL2900'      DBFILE                                     MD023568
+     C***********        MOVEL     '996'         DBASE                                      MD023568
+     C***********        MOVEL     *BLANK        DBKEY                                      MD023568
+     C***********        EXSR      *PSSR                                                    MD023568
+     C***********        END                                                                MD023568
      C**********         ENDIF                                                        CIR008 BUG6373
       *
      C                   ENDSR
@@ -2580,10 +2621,33 @@
      C                   Z-ADD     0             TINFD
      C                   ELSE
       *
+      ** If Rate Change Date is to be processed TODAY,                                      MD051652
+      ** look for the next rate change date if Rate Change Freq is 'Z'                      MD051652
+      *                                                                                     MD051652
+     C                   IF        RSTNICD = BJRDNB                                         MD051652
+     C                   IF        TICFR = 'Z'                                              MD051652
+     C                   EVAL      WKNICD = RSTNICD                                         MD051652
+     C                   EVAL      WKOTIN = 'T'                                             MD051652
+     C                   EVAL      WKRCIP = 'R'                                             MD051652
+      *                                                                                     MD051652
+      ** Find the next rate change date schedule not yet processed                          MD051652
+     C     KDLSC2        SETLL     DLDTSCL3                                                 MD051652
+     C     KDLSC         READE     DLDTSCL3                               95                MD051652
+     C                   DOW       *IN95 = *OFF                                             MD051652
+     C                   IF        PRDT > ##TNICD                                           MD051652
+     C                   EVAL      WKNICD = PRDT                                            MD051652
+     C                   LEAVE                                                              MD051652
+     C                   ENDIF                                                              MD051652
+     C     KDLSC         READE     DLDTSCL3                               95                MD051652
+     C                   ENDDO                                                              MD051652
+      *                                                                                     MD051652
+     C                   ENDIF                                                              MD051652
+     C                   ENDIF                                                              MD051652
       * User pays Fixed Rate, Counterparty pays Floating Rate
       * Reset only, if Next Intr.Chg Date, or Rate Fix Days changed
       *
      C     RSTNICD       IFNE      ##TNICD                                                    227642
+     C     WKNICD        ORNE      ##TNICD                                                  MD051652
      C     RSTFRFD       ORNE      ##TFRFD                                                    227642
      C     RSTEINR       ORNE      ##TEINR                                                  BUG11266
      C     RSC1R1        ORNE      ##L1CYR1                                                   235490
@@ -2673,6 +2737,19 @@
      C                   Z-ADD     TNICD         ZINDT
      C                   MOVE      TFRFD         ZRFDY
       *
+      *                                                                                     MD051652
+     C                   IF        TICFR = 'Z'                                              MD051652
+      *                                                                                     MD051652
+     C                   IF        RSTNICD = ##TNICD                                        MD051652
+     C                   Z-ADD     WKNICD        ZINDT                                      MD051652
+     C                   ENDIF                                                              MD051652
+      *                                                                                     MD051652
+     C                   IF        RSTNICD < ##TNICD                                        MD051652
+     C                   Z-ADD     RSTNICD       ZINDT                                      MD051652
+     C                   ENDIF                                                              MD051652
+      *                                                                                     MD051652
+     C                   ENDIF                                                              MD051652
+      *                                                                                     MD051652
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
@@ -3453,6 +3530,11 @@
       ** processed (Cash Flow)                                                                CAP043
                                                                                               CAP043
      C                   IF        CAP043 = 'Y'                                               CAP043
+      *                                                                                     MD023568
+      ** Retain cash flow records if deal reversal (needed for                              MD023568
+      ** generating reversal entries in case of projected movements)                        MD023568
+      *                                                                                     MD023568
+     C                   IF        RSCHTP <> 'R'                                            MD023568
      C     KDTSC         SETLL     DLCFSCD0                                                   CAP043
      C     KDTSC         READE     DLCFSCD0                               98                  CAP043
                                                                                               CAP043
@@ -3465,6 +3547,7 @@
                                                                                               CAP043
      C     KDTSC         READE     DLCFSCD0                               98                  CAP043
      C                   ENDDO                                                                CAP043
+     C                   ENDIF                                                              MD023568
                                                                                               CAP043
       ** Clear all dates for this transaction except those already                            CAP043
       ** processed (Principal Change)                                                         CAP043
@@ -4674,11 +4757,25 @@
      C     *LIKE         DEFINE    L1CYR0        ##L1CYR0                                     235490
      C     *LIKE         DEFINE    BQFIRA        WkFIRA                                       CAP056
      C     *LIKE         DEFINE    BQFIAU        WkFIAU                                       CAP056
+     C     *LIKE         DEFINE    PRDT          WKNICD                                     MD051652
+     C     *LIKE         DEFINE    OTIN          WKOTIN                                     MD051652
+     C     *LIKE         DEFINE    RCIP          WKRCIP                                     MD051652
       *
       ** Partial Key for DLDTSCPD                                               CAP004
      C     KDTSC         KLIST                                                  CAP004
      C                   KFLD                    DLNO                           CAP004
      C                                                                          CAP004
+     C     KDLSC2        KLIST                                                              MD051652
+     C                   KFLD                    RSDLNO                                     MD051652
+     C                   KFLD                    WKOTIN                                     MD051652
+     C                   KFLD                    WKRCIP                                     MD051652
+     C                   KFLD                    RSTNICD                                    MD051652
+      *                                                                                     MD051652
+     C     KDLSC         KLIST                                                              MD051652
+     C                   KFLD                    RSDLNO                                     MD051652
+     C                   KFLD                    WKOTIN                                     MD051652
+     C                   KFLD                    WKRCIP                                     MD051652
+      *                                                                                     MD051652
      C     KIRCList      KLIST                                                                CAP043
      C                   KFLD                    RSFRNT                                       CAP043
                                                                                               CAP043

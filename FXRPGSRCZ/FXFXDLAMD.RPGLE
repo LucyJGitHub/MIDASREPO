@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056102           Date 30Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD056102           Date 30Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 17Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD056102 - Split value date error during amend               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
@@ -475,7 +477,8 @@
      C**  and is only amendable for status C if this is indicated on
      C**  FXCDAFLL.
      C*
-     C     DDCUST        IFNE      @DDCUST
+     C*****DDCUST        IFNE      @DDCUST                                                  MD049123
+     C     DDCUST        IFNE      FHDCNO                                                   MD049123
      C*
      C     FHDSTS        IFNE      'C'
      C                   ADD       1             Idx

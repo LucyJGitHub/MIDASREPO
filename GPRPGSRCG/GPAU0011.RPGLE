@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GP Report Field Maintenance')
+/*EXI *  TEXT('Midas GP Report Field Maintenance')                    *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,15 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP004  *CREATE    Date 23May03               *
+      *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0011DF. (Child: AR1058383)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
       *                                                               *
@@ -33,6 +38,23 @@
  
      D ERR             S             76    DIM(15) CTDATA PERRCD(1)
  
+     D NARR1           C                   ' Field '                                       AR1058381
+     D NARR2           C                   ' Edit Word/Size '                              AR1058381
+     D NARR3           C                   ' Description '                                 AR1058381
+     D NARR4           C                   ' Column Headings '                             AR1058381
+     D NARR5           C                   ' Reference '                                   AR1058381
+     D NARR6           C                   ' Branch '                                      AR1058381
+                                                                                           AR1058381
+     D NARR7           C                   '                                  -            AR1058381
+     D                                                                        -            AR1058381
+     D                                                                        -            AR1058381
+     D                                           '                                         AR1058381
+                                                                                           AR1058381
+     D NARR8           C                   'CK/3=Exit, CK/6=Update, CK/12=Prev-            AR1058381
+     D                                     ious screen                        -            AR1058381
+     D                                                                        -            AR1058381
+     D                                           '                                         AR1058381
+                                                                                           AR1058381
      D                 DS
      D  AF_DATA                1    109
      D  AFEDTW                 1     26
@@ -75,8 +97,17 @@
       *****************************************************************
      C     DSPLAY        BEGSR
  
-     C                   WRITE     SUBFLCT2
+     C                   MOVE      NARR1         HEADER1                                   AR1058381
+     C                   MOVE      NARR2         HEADER2                                   AR1058381
+     C                   MOVE      NARR3         HEADER3                                   AR1058381
+     C                   MOVE      NARR4         HEADER4                                   AR1058381
+     C                   MOVE      NARR5         HEADER5                                   AR1058381
+     C                   MOVE      NARR6         HEADER6                                   AR1058381
+     C                   MOVE      NARR7         FOOTER1                                   AR1058381
+     C                   MOVE      NARR8         FOOTER2                                   AR1058381
+     C**********         WRITE     SUBFLCT2                                                AR1058381
      C                   WRITE     SUBMESS
+     C                   WRITE     SUBFLCT2                                                AR1058381
      C                   READ      SUBFLCT2                               99    *
      C                   MOVEL     *BLANK        DDERR
      C* CK/3

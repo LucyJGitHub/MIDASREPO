@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping (Recompile)                          *
+      *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
+      *             due to changes in FFBSETPD.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -66,18 +72,18 @@
       *             FFSETLCVT module                                  *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Transaction details
      FTRANS2    IF   E           K DISK    PREFIX(T)
- 
+
       ** Instrument details
      FINTYP     IF   E           K DISK    PREFIX(O)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -89,136 +95,136 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------+
- 
+
       **--------------------------------------------------------------+
       **--------------------------------------------------------------+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transaction Details:
       ** ~~~~~~~~~~~ ~~~~~~~~
- 
+
       ** Trade Details in File Format
      D TRANFilFmt    E DS                  EXTNAME(TRANSD) PREFIX(T)
- 
+
       ** Market Trade Details in Screen Format
      D EXTRScnFmt    E DS                  EXTNAME(FFEXTRPD) PREFIX(EX)
- 
+
       ** OTC Trade Details in Screen Format
      D OTCCScnFmt    E DS                  EXTNAME(FFOTCCPD) PREFIX(OT)
- 
+
       ** OTCO Trade Details in Screen Format                                                  CAP166
      D OTCOScnFmt    E DS                  EXTNAME(FFOTCOPD) PREFIX(ON)                       CAP166
                                                                                               CAP166
       ** Settlement Details:
       ** ~~~~~~~~~~ ~~~~~~~~
- 
+
       ** Settlement Details in File Format
      D SETLFilFmt    E DS                  EXTNAME(TRSETD)
- 
+
       ** Broker settlement details in screen format
      D BSETScnFmt    E DS                  EXTNAME(FFBSETPD)
- 
+
       ** Customer settlement details in screen format
      D CSETScnFmt    E DS                  EXTNAME(FFCSETPD)
- 
+
       ** Extension Details:
       ** ~~~~~~~~~ ~~~~~~~~
- 
+
       ** FF Extension data (Exchange Traded)
      D EXTRExtDta    E DS                  EXTNAME(FFETEXPD) PREFIX(EX)
- 
+
       ** FF Extension data (OTC Trade)
      D OTCCExtDta    E DS                  EXTNAME(FFOTEXPD) PREFIX(OT)
- 
+
       ** Instrument Details:
       ** ~~~~~~~~~~ ~~~~~~~
- 
+
       ** Instrument details in File format
      D INSTFilFmt    E DS                  EXTNAME(INTYPD) PREFIX(O)
- 
+
       ** Standing Data files
       ** ~~~~~~~~ ~~~~ ~~~~~
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Dealing ICD
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** Portfolio Management ICD
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
- 
+
       ** Externally described DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  SCA_ZONE     E                     EXTFLD(ZONE)                                       CGP001
- 
+
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Define variable for switchable CFF001.
      D CFF001          S              1A   INZ(*BLANKS)
- 
+
       ** Define variable for switchable CFF007.
      D CFF007          S              1
- 
+
       ** Define parameter to be passed to APLOGTRAN.
      D TRANSDTL        S           5800A
- 
+
       ** Parameter for premium
      D PPrem           S             15A   INZ(*BLANKS)
- 
+
       ** Transaction status parameter
      D PSTS            S             24A
- 
+
       ** Customer/Broker Flag
      D PFLAG           S              1A
- 
+
       ** Alpha version of transaction reference
      D WTNBR           S              6A
- 
+
       ** Define parameters for AOSARDR0
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
- 
+
       ** Action Code
      D PACTN           S              1A
       *                                                                                       CGL029
@@ -231,25 +237,25 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Access the transaction details
      C     TNBR          CHAIN     TRANS2                             71
- 
+
       ** If transaction reference does not exist in TRANSD, perform
       ** DBerror processing.
      C     *IN71         IFEQ      '1'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'TRANS'
      C                   MOVEL     TNBR          WTNBR
@@ -257,25 +263,25 @@
      C                   EVAL      DBASE = 6
      C                   OUT       LDA
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
       ** Access instrument details to get instrument currency
      C     TISTT         CHAIN     INTYP                              71
- 
+
       ** If instrument type does not exist in INTYPD, perform
       ** DBerror processing.
      C     *IN71         IFEQ      '1'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'INTYP'
      C                   EVAL      DBKEY = TISTT
      C                   EVAL      DBASE = 7
      C                   OUT       LDA
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
       ** Determine if the trade was a market or an OTC trade.
      C                   IF        TMTHN = 0
                                                                                               CAP166
@@ -288,9 +294,9 @@
      C                   ELSE
      C                   EXSR      SRMKTTrade
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -304,12 +310,12 @@
       *         FFSETLCVT - Settlement convert functions              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMKTTrade    BEGSR
- 
+
       ** Store the value of Last Change type to SACTN field.
      C                   EVAL      EXSACTN = PACTN
- 
+
       ** Call program to convert data from TRANSD to screen format.
      C                   RESET                   ReturnCode
      C                   CALLB     'FFEXTRCVT'
@@ -331,20 +337,20 @@
      C                   PARM                    PSTS
       ** CFF007 Enhancement
      C                   PARM                    CFF007
- 
+
       ** If error occurred in the called module, stop processing and
       ** return an error code to the calling program. This applies to
       ** the rest of modules called in this program.
      C                   IF        ReturnCode <> *BLANKS
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Blank out Spot Price field if instrument is a Future.  This is
       ** to avoid error when trade is replayed in the main system.
      C                   IF        (OISPT < 4) OR (OISPT = 7)
      C                   EVAL      EXSSPTP = *BLANKS
      C                   ENDIF
- 
+
       ** Call program to convert settlement details to screen format.
       ** Broker settlement instructions
      C                   EVAL      PFLAG = 'B'
@@ -369,12 +375,12 @@
      C                   PARM                    TNBR
       ** Instrument currency
      C                   PARM                    OISCY
- 
+
       ** Check if error occurred.
      C                   IF        ReturnCode <> *BLANKS
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Customer settlement instructions
      C                   EVAL      PFLAG = 'C'
      C                   RESET                   ReturnCode
@@ -398,20 +404,20 @@
      C                   PARM                    TNBR
       ** Instrument currency
      C                   PARM                    OISCY
- 
+
       ** Check if error occurred.
      C                   IF        ReturnCode <> *BLANKS
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Place the value of the outputted screen formats into one long
       ** data structure to be used by APLOGTRAN in writing to the
       ** standard log file.
      C                   EVAL      TRANSDTL = EXTRScnFmt + BSETScnFmt +
      C                             CSETScnFmt + EXTRExtDta
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -424,12 +430,12 @@
       *         FFSETLCVT - Settlement convert functions              *
       *                                                               *
       *****************************************************************
- 
+
      C     SROTCTrade    BEGSR
- 
+
       ** Store the value of Last Change type to SACTN field.
      C                   EVAL      OTSACTN = PACTN
- 
+
       ** Call program to convert data from TRANSD to screen format.
      C                   RESET                   ReturnCode
      C                   CALLB     'FFOTCCCVT'
@@ -459,12 +465,12 @@
      C                   PARM                    CFF001
       ** CFF007 Enhancement
      C                   PARM                    CFF007
- 
+
       ** Check if error occurred.
      C                   IF        ReturnCode <> *BLANKS
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Call program to convert settlement details to screen format.
       ** Customer settlement instructions
      C                   EVAL      PFLAG = 'C'
@@ -490,20 +496,20 @@
      C                   PARM                    TNBR
       ** Instrument currency
      C                   PARM                    OISCY
- 
+
       ** Check if error occurred.
      C                   IF        ReturnCode <> *BLANKS
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Place the value of the outputted screen formats into one long
       ** data structure to be used by APLOGTRAN in writing to the
       ** standard log file.
      C                   EVAL      TRANSDTL = OTCCScnFmt + CSETScnFmt +
      C                             OTCCExtDta
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CAP166
       *****************************************************************                       CAP166
@@ -637,33 +643,33 @@
       *         AOSARDR0 - Switchable Features details                *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Return code (10A, returned to caller)
      C                   PARM                    ReturnCode
- 
+
       ** Action Coce
      C                   PARM                    PACTN
- 
+
       ** The format containing the sett details
      C                   PARM                    SETLFilFmt
- 
+
       ** Passed from calling program to indicate if CFF007 is on.
      C                   PARM                    CFF007
- 
+
       ** To be returned to calling program. This holds the converted
       ** trade and settlement details in screen format.
      C                   PARM                    TRANSDTL
- 
+
       **
       ** Access Bank details via access program
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Since we avoid issuing a rollback operation in this program
       ** we have to handle DBerror manually and not within the
       ** Access Object programs because it calls DBERRCTL w/c performs
@@ -674,13 +680,13 @@
      C                   EVAL      DBase = 1
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Get the module flags
      C                   CALLB     'AOMMODR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** If error occurred
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFile = 'SDMMODPD'
@@ -688,7 +694,7 @@
      C                   EVAL      DBase = 2
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Access Dealing ICD
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
@@ -696,7 +702,7 @@
      C                   PARM      '*FIRST '     POPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
       ** If error occurred
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFile = 'SDDEALPD'
@@ -704,14 +710,14 @@
      C                   EVAL      DBase = 3
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
       ** Get the portfolio ICD
      C     BGPFMG        IFEQ      'Y'
      C                   CALLB     'AOPORTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST'      POPTN
      C     SDPORT        PARM      SDPORT        DSFDY
- 
+
       ** If error occurred
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFile = 'SDPORTPD'
@@ -720,14 +726,14 @@
      C                   EXSR      *pssr
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if CFF001 is on
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CFF001'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** An NRF (No Record Found) return code is valid.
       ** Issue database error only for error return codes.
      C                   IF        PRTCD <> *BLANKS AND PRTCD <> '*NRF   '
@@ -736,28 +742,28 @@
      C                   EVAL      DBase = 5
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANK
      C                   EVAL      CFF001 = 'Y'
      C                   ELSE
      C                   EVAL      CFF001 = 'N'
      C                   ENDIF
- 
+
       ** Initialise Transaction Detail and Instrument detail fields
       ** as well as Extension data fields
      C                   CLEAR                   TRANSDTL
      C                   CLEAR                   INSTFilFmt
      C                   CLEAR                   EXTRExtDta
      C                   CLEAR                   OTCCExtDta
- 
+
       **--------------------------------------------------------------+
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------+
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -767,13 +773,13 @@
       ** not be called since the caller will be the one to handle
       ** rollback processing.
      C/COPY ZACPYSRC,PSSR_ILENE
- 
+
       ** Set the return code to indicate to the caller that an
       ** error occurred; do NOT call DBERRCTL, as the caller will
       ** handle rollback processing.
      C                   EVAL      ReturnCode = 'Error'
      C                   RETURN
- 
+
      C                   ENDSR
       **--------------------------------------------------------------+
       *****************************************************************

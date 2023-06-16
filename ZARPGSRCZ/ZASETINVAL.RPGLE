@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057916           Date 18May21               *
-      *  Prev Amend No. CSW221             Date 05Apr21               *
+      *  Last Amend No. MD061359           Date 15May23               *
+      *  Prev Amend No. MD050227           Date 25Apr23               *
+      *                 MD057916           Date 18May21               *
+      *                 CSW221             Date 05Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051567           Date 26Sep20               *
       *                 MD056313           Date 21Sep20               *
@@ -147,6 +149,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061359 - Issue on Customer Details Retrieval               *
+      *  MD050227 - Recipient of Payment Instructions must be blank   *
+      *             when Beneficiary is non-bank.                     *
       *  MD057916 - No defaulting process should be performed during  *
       *             settlement details amendment.                     *
       *  CSW221   - SWIFT Changes 2021                                *
@@ -490,6 +495,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** EXTERNAL DS FOR LONG DUMMY DATA STRUCTURE
       *
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD061359
+                                                                                            MD061359
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** EXTERNAL DS FOR SHORT DUMMY DATA STRUCTURE
                                                                                               219241
@@ -2973,6 +2980,7 @@
      C                   MOVE      *BLANKS       P#PART           10
      C                   MOVE      DDROCN        P#PART
      C                   MOVEL     'NOTALLOW'    @CPNAL            8
+     C                   MOVE      *BLANKS       CHKSTAT           1                        MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
      C                   IF        @RTCD = *BLANKS                                           CSF011A
@@ -3042,6 +3050,7 @@
      C                   MOVE      *BLANKS       P#PART
      C                   MOVE      DDROBN        P#PART
      C                   MOVEL     'NOTALLOW'    @CPNAL
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
      C                   IF        @RTCD = *BLANKS                                           CSF011A
@@ -3169,6 +3178,7 @@
      C                   MOVE      *BLANKS       P#PART
      C                   MOVE      DDRIBN        P#PART
      C                   MOVEL     'ALLOWED '    @CPNAL
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
      C                   IF        @PARTY = 'CUSTNUM'                                        CSF011A
@@ -3566,6 +3576,7 @@
      C                   MOVE      *BLANKS       P#PART
      C                   MOVE      DDRVNO        P#PART
      C                   MOVEL     'NOTALLOW'    @CPNAL
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
       ** Populate Customer details                                                           CSF011A
@@ -4836,6 +4847,7 @@
      C                   MOVE      *BLANKS       P#PART
      C                   MOVE      DDPOCN        P#PART
      C                   MOVEL     'NOTALLOW'    @CPNAL
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
       ** Populate customer details                                                           CSF011A
@@ -4908,6 +4920,7 @@
      C                   MOVE      *BLANKS       P#PART
      C                   MOVE      DDPOBN        P#PART
      C                   MOVEL     'NOTALLOW'    @CPNAL
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
       ** Populate customer details                                                           CSF011A
@@ -5019,6 +5032,7 @@
      C                   MOVE      DDRCRN        P#PART
      C                   MOVEL     'ALLOWED '    @CPNAL
      C/COPY WNCPYSRC,ZAH00018
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
       ** Populate Customer details                                                           CSF011A
@@ -5170,6 +5184,7 @@
      C     DDPSTM        IFEQ      '07'
      C                   MOVEL     'NOTALLOW'    @CPNAL
      C                   END
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
       ** Populate customer details                                                           CSF011A
@@ -5427,6 +5442,7 @@
      C     DDPSTM        IFEQ      '07'
      C                   MOVEL     'NOTALLOW'    @CPNAL
      C                   END
+     C                   MOVE      'Y'           CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
      C                   IF        @PARTY = 'CUSTNUM'                                        CSF011A
@@ -5791,6 +5807,7 @@
      C     DDPSTM        IFEQ      '07'
      C                   MOVEL     'NOTALLOW'    @CPNAL
      C                   END
+     C                   MOVE      *BLANKS       CHKSTAT                                    MD061359
      C                   EXSR      PARTYT
                                                                                              CSF011A
      C                   IF        @PARTY = 'CUSTNUM'                                        CSF011A
@@ -6134,6 +6151,16 @@
      C                   MOVE      'N'           DDBennOK
      C                   END
      C                   END
+      *                                                                                     MD050227
+      ** If Beneficiary is bank, Recipient of Payment must be blank.                        MD050227
+      *                                                                                     MD050227
+     C     @BBNBI        IFEQ      'Y'                                                      MD050227
+     C     DDRVNO        ANDNE     *BLANKS                                                  MD050227
+     C                   ADD       1             Idx                                        MD050227
+     C                   EVAL      FldNameArr(Idx) = 'DDRVNO'                               MD050227
+     C                   EVAL      MsgIDArr(Idx) = 'ESM1958'                                MD050227
+     C                   MOVE      'N'           DDRvnoOK                                   MD050227
+     C                   ENDIF                                                              MD050227
       *
      C                   ENDSR
      C********************************************************************
@@ -7901,16 +7928,28 @@
       *
      C                   MOVE      *BLANKS       @KEY1            10
      C                   MOVEL     P#PART        @KEY1
+     C     CHKSTAT       IFEQ      'Y'                                                      MD061359
+     C                   CALL      'AOCUSTR1'                                               MD061359
+     C                   PARM      *BLANKS       @RTCD                                      MD061359
+     C                   PARM      '*KEY   '     @OPTN                                      MD061359
+     C                   PARM                    @KEY1                                      MD061359
+     C                   PARM      *BLANKS       @KYST                                      MD061359
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
+     C                   ELSE
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @KEY1
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      *BLANKS       DSSDY
+     C                   ENDIF                                                              MD061359
       *
       * CUSTOMER FOUND
       *
      C     @RTCD         IFEQ      *BLANKS
+     C     CHKSTAT       OREQ      'Y'                                                      MD061359
+     C     @RTCD         ANDEQ     *BLANKS                                                  MD061359
+     C     BBCLST        ANDNE     'Y'                                                      MD061359
       *
       ** CUSTOMER NUMBER OR SHORTNAME?
       *
@@ -8382,12 +8421,21 @@
      C     ACCUST        BEGSR
       *
      C/COPY WNCPYSRC,ZASETNVC02
+     C     CHKSTAT       IFEQ      'Y'                                                      MD061359
+     C                   CALL      'AOCUSTR1'                                               MD061359
+     C                   PARM      *BLANKS       @RTCD                                      MD061359
+     C                   PARM      '*KEY   '     @OPTN                                      MD061359
+     C                   PARM                    @CSCN                                      MD061359
+     C                   PARM                    @KYST                                      MD061359
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
+     C                   ELSE
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    @CSCN            10
      C                   PARM                    @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C                   ENDIF                                                              MD061359
       *
      C                   ENDSR
      C*********************************************************************

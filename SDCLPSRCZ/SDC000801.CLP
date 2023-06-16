@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027217           Date 29May14              */
+/*       Last Amend No. MD045457           Date 04May23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD027217           Date 29May14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,6 +20,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD045457 - Automatic Customer Account Closure causing       */
+/*                  database error in Customer Maintenance           */
+/*                  when closing a customer                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027217 - Not possible to authorize customer closure       */
 /*       CSD023 - Automatic Customer Account Closure                 */
@@ -56,6 +60,7 @@
  
              DLTOVR     FILE(SDAULGL0)
              DLTOVR     FILE(ACCNTLXX)
+             DLTOVR     FILE(REIACXX)                                                   /*MD045457*/
  
              SNDPGMMSG  MSG('SDC000801 - Midas SD Automated closure +
                           of Retail A/C') TOMSGQ(MRUNQ)

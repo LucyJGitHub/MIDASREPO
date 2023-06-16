@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058079           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044410           Date 29May23               *
+      *  Prev Amend No. MD058079           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 09May13               *
       *                 AR996631           Date 28Jun12               *
       *                 CAP208             Date 06Dec10               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044410 - Exchange Trades Futures transaction : The last    *
+      *             transaction was not applied to the database       *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
@@ -358,7 +361,8 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
-
+     ITRANSDF                                                                               MD044410
+     I              TMST                        FFTMST                                      MD044410
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦

@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 203070             Date 05May22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR805307           Date 04Apr23               *
+      *  Prev Amend No. 203070             Date 05May22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR887295           Date 15Aug12               *
       *                 CER050             Date 16Jun19               *
@@ -89,6 +90,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR805307 - Facility availability incorrect for non-revolving *
+      *             credit facility. Prevent update of exposure       *
+      *             regardless of autosettlement indicator for a      *
+      *             non-revolving facility. (Child: AR805308)         *
       *  203070 - Repayments for Internal Parts Purchased should not  *
       *           update the drawn amount (CAMD) of the primary       *
       *           facility                                           *
@@ -833,6 +838,7 @@
      I              XUSR                        XUSRF                                        245177A
      I              CHTP                        CHTPF                                        245177A
      I              ORED                        OREDF                                        245177A
+     I              AUTO                        AUTOF                                       AR805307
       *
      I*LTRIX**** NS        1 CH                                                             AR322732
      I**********                        1    1  RECI                                        AR322732
@@ -2806,6 +2812,11 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     AR805307
+      ** Initialise indicators                                                              AR805307
+      *                                                                                     AR805307
+     C                   MOVE      '0'           *IN60                                      AR805307
+     C                   MOVE      '0'           *IN62                                      AR805307
       *
      C     RVCR          IFNE      'Y'
      C     RVCR          OREQ      'Y'                                                       245177A
@@ -2819,6 +2830,8 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   ENDIF                                                               245177A
       *
      C     RPVDAT        IFGT      BJRDNB
+     C     RPVDAT        ORLE      BJRDNB                                                   AR805307
+     C     *IN60         ANDEQ     '1'                                                      AR805307
      C     RPVDAT        ORLE      BJRDNB
      C     PTYP          ANDEQ     66
      C     RCSI          ANDEQ     'Y'
@@ -2833,13 +2846,18 @@ B001 C     RPCHTP        IFEQ      'I'
      C     PTYP          ANDEQ     69
      C     RCSI          ANDEQ     'Y'
       *
+     C     RVCR          IFEQ      'Y'                                                      AR805307
+     C     WRVCRF        ANDEQ     ' '                                                      AR805307
+     C     RVCR          OREQ      'N'                                                      AR805307
+     C     WRVCRF        ANDEQ     'Y'                                                      AR805307
      C     AUTO          IFEQ      'Y'                                                       245227B
      C                   MOVE      *OFF          *IN60                                       245227B
-     C                   MOVE      *OFF          *IN62                                       245227B
+     C**********         MOVE      *OFF          *IN62                              245227B AR805307
      C                   ELSE                                                                245227B
      C                   MOVE      *ON           *IN60                                       245227B
      C                   MOVE      *ON           *IN62                                       245227B
      C                   ENDIF                                                               245227B
+     C                   ENDIF                                                              AR805307
       *                                                                                      245227B
      C     *IN60         IFEQ      *ON
      C                   UNLOCK    FCLTY
@@ -2860,13 +2878,20 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVE      *OFF          *IN60                                       245227A
      C                   ENDIF                                                               BUG3112
      C                   ELSE                                                                245227A
+      *                                                                                     AR805307
+     C     RVCR          IFEQ      'Y'                                                      AR805307
+     C     WRVCRF        ANDEQ     ' '                                                      AR805307
+     C     RVCR          OREQ      'N'                                                      AR805307
+     C     WRVCRF        ANDEQ     'Y'                                                      AR805307
      C     AUTO          IFEQ      'Y'                                                       245227A
      C                   MOVE      *OFF          *IN60                                       245227A
-     C                   MOVE      *OFF          *IN62                                       245227A
+     C**********         MOVE      *OFF          *IN62                              245227A AR805307
      C                   ELSE                                                                245227A
      C                   MOVE      *ON           *IN60                                       245227A
      C                   MOVE      *ON           *IN62                                       245227A
      C                   ENDIF                                                               245227A
+     C                   ENDIF                                                              AR805307
+      *                                                                                     AR805307
      C                   ENDIF
       *                                                                                     AR806351
      C                   IF        CLE134 = 'Y'   AND                                       AR806351

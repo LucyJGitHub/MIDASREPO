@@ -35,8 +35,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CAP208             Date 06Dec10               *
       *                 BUG28010           Date 13Aug10               *
@@ -59,6 +61,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping (Recompile)                          *
+      *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
+      *             due to changes in FFBSETPD.                       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -84,13 +90,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Current transactions (Keyed by transaction number)
      FFFEXTRL0  IF   E           K DISK    INFSR(*pssr)
      F
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -109,33 +115,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -143,90 +149,90 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInEXTR    E DS                  EXTNAME(FFEXTRPD)
- 
+
       * Valid file layout
      D ValidEXTR     E DS                  EXTNAME(FFVTRANPD)
      D                                     PREFIX(V_)
- 
+
       * Current transaction record in file format
      D EXTRFilFmt    E DS                  EXTNAME(FFVTRANPD)
      D                                     PREFIX(D_)
- 
+
       * Current transaction in screen format
      D CurTrEXTR     E DS                  EXTNAME(FFEXTRPD)
      D                                     PREFIX(@)
      D CurCuStScn    E DS                  EXTNAME(FFCSETPD)
       ** Customer settlement instructions (old) in screen format
      D                                     PREFIX(OC)
- 
+
      D CurBrStScn    E DS                  EXTNAME(FFBSETPD)
       ** Broker settlement instructions (old) in screen format
      D                                     PREFIX(OB)
- 
+
      D NewCuStScn    E DS                  EXTNAME(FFCSETPD)
       ** Customer Settlement Instructions (new) in screen format
- 
+
      D NewBrStScn    E DS                  EXTNAME(FFBSETPD)
       ** Broker Settlement Instructions (new) in screen format
- 
+
      D ValidSett     E DS                  EXTNAME(FFVSETLPD) PREFIX(VS)
       ** Valid (new) settlement instructions in file format; prefixed
       ** with VS for settlements.
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Branch Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Midas module flags
- 
+
       * Extra data in file format
      D ExtData       E DS                  EXTNAME(FFETEXPD)
- 
+
       * Error indicators
      D OKTrEXTR      E DS                  EXTNAME(FFEEXTRPD)
- 
+
      D OKCustSet     E DS                  EXTNAME(FFECSETPD)
       ** The customer settlement details OK flags
- 
+
      D OKBrokSet     E DS                  EXTNAME(FFEBSETPD)
       ** The broker settlement details OK flags
- 
+
      D ValidLUX      E DS                  EXTNAME(FFVTNLX1PD)                                CAP191
       ** The valid extended exchange-trade in file format                                     CAP191
                                                                                               CAP191
@@ -241,124 +247,124 @@
                                                                                               CAP191
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** General Ledger ICD
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D  TRADACCD     E                     EXTFLD(QQACCD)                                     CGL029
       ** Trading details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D  DEALACCD     E                     EXTFLD(QQACCD)                                     CGL029
       ** Dealing ICD
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** Portfolio Management ICD
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  RETLACCD     E                     EXTFLD(QQACCD)                                     CGL029
       ** Retail ICD
- 
+
      D SDFODA        E DS                  EXTNAME(SDFODAPD)
      D  FODAACCD     E                     EXTFLD(QQACCD)                                     CGL029
       ** Futures and Options ICD
- 
+
      D InstTypes     E DS                  EXTNAME(INTYPD)
       ** Instrument types
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
      D Trans5003       S            500A
- 
+
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Flag to indicate that the FFEXTRRTV is not being called
       ** as a linked enquiry.
      D LinkEnq         S              1A   INZ('N')
- 
+
       ** Flag indicating whether details for customer or broker are
       ** required.
      D CustBrokFl      S              1A
- 
+
       ** Customer or broker number
      D*CustBrokNo***** S              6S 0                                                    CSD027
      D CustBrokNo      S              6A                                                      CSD027
- 
+
       ** Enhanced OTCs feature flag (not used, but passed as a blank PARM)
      D CFF001          S              1A
- 
+
       ** CFF007 enhancement
      D CFF007          S              1A
- 
+
       ** S01457 enhancement                                                                   222373
      D S01457          S              1A                                                      222373
- 
+
       ** PB customer indicator - broker
      D PPBBFLG         S              1A
- 
+
       ** PB customer indicator - customer
      D PPBCFLG         S              1A
       ** Customer/Broker Flag (Y = Broker, N = Customer)
      D BrokerFlag      S              1A
- 
+
       ** The current trading date
      D CTDATE          S                   LIKE(BJRDNB)
- 
+
       ** Flags to indicate that the broker and/or customer settlements
       ** are in error.
      D BrokSetErr      S              1A   INZ('N')
      D CustSetErr      S              1A   INZ('N')
- 
+
       ** Flags to indicate that the broker and/or customer charges and
       ** commission fields are in error.
      D BrokCCErr       S              1A   INZ('N')
      D CustCCErr       S              1A   INZ('N')
- 
+
       ** Transaction status text field
      D StatusText      S             24A
      D CGL014          S              1                                                       CGL014
      D PRTCD           S              7                                                       CGL014
      D POPTN           S              7                                                       CGL014
      D PSARD           S              6                                                       CGL014
- 
+
       **                                                                                      CAP191
      D PRegData500     S            500A                                                      CAP191
      D @TimeStamp      S             26A                                                      CAP191
@@ -384,13 +390,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -400,7 +406,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -410,14 +416,14 @@
      C                   EVAL      NewCuStScn = Trans5003
      C                   EVAL      RegData = PRegData500                                      CAP191
      C                   EVAL      Extdata = Extdata500
- 
+
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -425,17 +431,17 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Apply the overrides for the FF multimembered files
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FFAPYOVR'
      C                   PARM                    ReturnCode
      C                   PARM                    SMRKT
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         SACTN = 'I'
                                                                                               CAP191
@@ -461,7 +467,7 @@
                                                                                               CAP191
      C                   EXSR      ValidateCC
      C                   EXSR      ValidateSt
- 
+
       * Processing for amends or changes
      C                   WHEN         SACTN = 'A'
      C                   EXSR      SetupAmd
@@ -477,11 +483,11 @@
                                                                                               CAP191
      C                   EXSR      ValidateCC
      C                   EXSR      ValidateSt
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
@@ -490,17 +496,17 @@
      C                   EXSR      UpdateDB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       * Remerge buffer with all relevant data structures
      C**********         EVAL                    Buffer = TranInEXTR                          CAP191
      C                   EVAL      Buffer = TranInEXTR + NewBrStScn + NewCuStScn              CAP191
      C                              + @TimeStamp + AAuth + RegData + ExtData                  CAP191
      C                              + FRNT + AFRT                                             CAP191
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -509,12 +515,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002
@@ -535,7 +541,7 @@
      C                   PARM                    AAuth                                        CAP191
      C                   PARM                    FRNT                                         CAP191
      C                   PARM                    AFRT                                         CAP191
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
@@ -546,19 +552,19 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Get the module flags
      C                   CALLB     'AOMMODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Get the General Ledger ICD
      C**********         CALLB     'AOGELRR0'                                                 CGL029
      C                   CALLB     'AOGELRR1'                                                 CGL029
@@ -566,13 +572,13 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       ** Get the trading details
      C                   CALLB     'AOTRADR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
       ** Get the Dealing ICD
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
@@ -580,8 +586,8 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
- 
+
+
       ** Get the portfolio ICD
      C     BGPFMG        IFEQ      'Y'
      C                   CALLB     'AOPORTR0'
@@ -589,7 +595,7 @@
      C                   PARM      '*FIRST'      @OPTN
      C     SDPORT        PARM      SDPORT        DSFDY
      C                   ENDIF
- 
+
       ** Get the retail ICD
      C     BGRTBN        IFEQ      'Y'
      C     BGIOAC        OREQ      'Y'
@@ -598,7 +604,7 @@
      C                   PARM      '*FIRST '     @OPTN
      C     SDRETL        PARM      SDRETL        DSFDY
      C                   ENDIF
- 
+
       ** Futures and Options ICD
      C                   CALL      'AOFODAR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -626,7 +632,7 @@
      C                   EVAL      CGL014 = 'N'                                               CGL014
      C                   ENDIF                                                                CGL014
                                                                                               CGL014
- 
+
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,FFEXTR01
                                                                                               CAP191
@@ -652,7 +658,7 @@
      C                   ENDIF                                                                CAP191
                                                                                               CAP191
      C                   EVAL      @RTCD = *blanks                                            CAP191
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -668,9 +674,9 @@
       * The Transaction in file format from the Sk database is retrieved
       * as well.
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'FFEXTRRTV'
- 
+
       ** Return code
      C                   PARM                    ReturnCode
       ** Inputs to called procedure
@@ -714,12 +720,12 @@
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index
      C                   PARM                    Idx
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -728,22 +734,22 @@
       *              have been supplied                               *
       *                                                               *
       *****************************************************************
- 
+
      C     DftSettmts    BEGSR
- 
+
       ** If ANY of the Settlements fields have been entered, bypass this
       ** routine.
       ** Otherwise, use modules which will use Standard Settlement
       ** Instructions to apply defaults.
- 
+
      C                   IF            (NewBrStScn = *blank)
      C                             AND (NewCuStScn = *blank)
- 
+
       ** First do broker instructions,
       ** if the broker has been entered, and is not '*'
      C                   IF            SBOCO <> *blanks
      C                             AND %subst(SBOCO : 1 : 1) <> '*'
- 
+
      C                   EVAL      CustBrokFl = 'B'
      C                   EVAL      CustBrokNo = V_BOCO
      C                   RESET                   ReturnCode
@@ -770,16 +776,16 @@
      C                   PARM                    STRTY
       ** Enhanced OTCs feature flag
      C                   PARM                    CFF001
- 
+
      C                   ENDIF
- 
+
       ** Next do customer instructions,
       ** if the customer has been entered.
      C                   IF        SCUSC <> *blanks
- 
+
      C                   EVAL      CustBrokFl = 'C'
      C                   EVAL      CustBrokNo = V_CUSC
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLDFT'
       ** Outputs
@@ -804,13 +810,13 @@
      C                   PARM                    STRTY                                        222373
       ** Enhanced OTCs feature flag
      C                   PARM                    CFF001
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -820,17 +826,17 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For amends, put the complete (pre-existing) transaction into the valid
       * file record - fields in this will be updated during processing
- 
+
      C                   MOVE      EXTRFilFmt    ValidEXTR
- 
+
       * Include all data structures required. If Settle details not included copy FXFXDLVU/MMDEAM
       *
- 
+
       * If API requires a convert insert here...
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -840,10 +846,10 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate transaction details
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'FFEXTRVAL'
       ** Outputs
       ** -------
@@ -879,7 +885,7 @@
      C                   PARM                    PPBBFLG
       ** PB customer indicator - customer
      C                   PARM                    PPBCFLG
- 
+
       ** Inputs
       ** ------
       ** Response mode (1A), from source system common header
@@ -903,12 +909,12 @@
       ** CFF007 enhancement
      C                   PARM                    CFF007
      C                   PARM                    S01457                                       222373
- 
+
       *  If error in validation, fail this input
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   EndIf
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -918,18 +924,18 @@
       *                                                               *
       *****************************************************************
      C     ValidateSt    BEGSR
- 
+
       ** FFSETLVAL is called twice, once for broker settlement instructions
       ** and once for customer settlement instructions.
- 
+
      C                   RESET                   BrokSetErr
      C                   RESET                   CustSetErr
- 
+
       ** 1. Broker (if broker defined)
       ** ---------
      C                   IF        SBOCO <> *blanks
      C                             AND %subst(SBOCO : 1 : 1) <> '*'
- 
+
      C                   EVAL      CustBrokFl = 'B'
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLVAL'
@@ -951,7 +957,7 @@
      C                   PARM                    MsgDtaWArr
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    ValidSett
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Data structure containing broker settlement details
@@ -1000,22 +1006,22 @@
      C                   PARM                    PPBCFLG
       ** Collaterals Processing enhancement                                                   CGL014
      C                   PARM                    CGL014                                       CGL014
- 
+
       ** Record any failure to ensure that the correct details get
       ** written to the invalid files.
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      BrokSetErr = 'Y'
- 
+
       ** Append the array details from the above call onto the general
       ** error arrays
      C                   EXSR      AppendArrs
      C                   ENDIF
      C                   ENDIF
- 
+
       ** 2. Customer (if customer defined)
       ** -----------
      C                   IF        SCUSC <> *blanks
- 
+
      C                   EVAL      CustBrokFl = 'C'
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLVAL'
@@ -1037,7 +1043,7 @@
      C                   PARM                    MsgDtaWArr
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    ValidSett
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Data structure containing broker settlement details
@@ -1086,21 +1092,21 @@
      C                   PARM                    PPBCFLG
       ** Collateral Processing enhancement                                                    CGL014
      C                   PARM                    CGL014                                       CGL014
- 
+
       ** Record any failure to ensure that the correct details get
       ** written to the invalid files.
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      CustSetErr = 'Y'
- 
+
       ** Append the array details from the above call onto the general
       ** error arrays
      C                   EXSR      AppendArrs
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1108,15 +1114,15 @@
       * ValidateCC - Validate the charges and commission details      *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateCC    BEGSR
- 
+
       ** FFVCHGCOM is called twice, once for broker charges and commissions
       ** and once for customer charges and commissions.
- 
+
      C                   RESET                   BrokCCErr
      C                   RESET                   CustCCErr
- 
+
       ** 1. Broker
       ** ---------
      C                   EVAL      BrokerFlag = 'Y'
@@ -1138,7 +1144,7 @@
      C                   PARM                    OKCustSet
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    ValidSett
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Data structure containing customer settlement details
@@ -1163,18 +1169,18 @@
      C                   PARM                    CFF007
       ** PB customer indicator
      C                   PARM                    PPBBFLG
- 
+
       ** Record any failure to ensure that the correct details get
       ** written to the invalid files.
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      BrokCCErr = 'Y'
- 
+
       ** Append the array details from the above call onto the general
       ** error arrays
      C                   EXSR      AppendArrs
      C                   ENDIF
- 
- 
+
+
       ** 2. Customer
       ** -----------
      C                   EVAL      BrokerFlag = 'N'
@@ -1196,7 +1202,7 @@
      C                   PARM                    OKCustSet
       ** The valid settlements file format (data structure, from FFVSETLPD)
      C                   PARM                    ValidSett
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Data structure containing customer settlement details
@@ -1221,19 +1227,19 @@
      C                   PARM                    CFF007
       ** PB customer indicator
      C                   PARM                    PPBCFLG
- 
+
       ** Record any failure to ensure that the correct details get
       ** written to the invalid files.
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      CustCCErr = 'Y'
- 
+
       ** Append the array details from the above call onto the general
       ** error arrays
      C                   EXSR      AppendArrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1242,33 +1248,33 @@
       *              are amendable.                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
+
       * This subroutine calls a procedure which checks whether it
       * was valid to amend any of the fields which have been
       * changed.  Some are never amendable and some depend upon ICD
       * settings as to whether they are amendable.
- 
+
       * To determine what fields have changed, the current fields
       * on file must be converted to a 'screen' format.
- 
+
       * These fields are then compared with the fields on the input
       * transaction.
- 
+
       * Any errors detected by the called procedure take precedence
       * over any errors found during the validation of the complete
       * transaction.  The errors from the called procedure are kept
       * separately and, if any are found, these errors will REPLACE
       * the normal validation errors.
- 
+
       * Convert file format to screen format
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FFEXTRCVT'
- 
- 
- 
+
+
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -1290,10 +1296,10 @@
      C                   PARM                    StatusText
       ** CFF007 enhancement
      C                   PARM                    CFF007
- 
+
       ** FFSETLCVT is called twice, once for broker settlement instructions
       ** and once for customer settlement instructions.
- 
+
      C                   EVAL      CustBrokFl = 'B'
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLCVT'
@@ -1316,7 +1322,7 @@
      C                   PARM                    STNBR
       ** Instrument currency
      C                   PARM                    ISCY
- 
+
      C                   EVAL      CustBrokFl = 'C'
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLCVT'
@@ -1339,7 +1345,7 @@
      C                   PARM                    STNBR
       ** Instrument currency
      C                   PARM                    ISCY
- 
+
       * If any errors overwrite previous error information
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
@@ -1347,7 +1353,7 @@
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1358,31 +1364,31 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrEXTR
- 
+
      C                   MOVE      *ALL'Y'       OKTrEXTR
- 
+
      C                   CLEAR                   ValidEXTR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1392,7 +1398,7 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
      C                   IF        STNBR = *Blanks                                            CAP191
@@ -1425,14 +1431,14 @@
       * Set file field(s) that are needed for all action codes
      C                   EVAL      V_CHTP = SACTN
      C                   EVAL      VSTNBR = V_TNBR
- 
+
       **Include*header*fields*that*need*to*be*o/p*to*the*valid*file****                     BUG26902
      C**********         IF        SACTN <> 'I' and @TimeStamp <> *Blanks            CAP191 BUG26902
      C**********         EVAL      V_TMST = TimeStamp                                       BUG26902
      C**********         ENDIF                                                       CAP191 BUG26902
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1440,9 +1446,9 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
- 
+
       * Update
      C                   CALLB     'FFTRANUPD'
       ** Returned parameters
@@ -1470,7 +1476,7 @@
      C                   PARM                    SDMMOD
       ** Trade and book positions reconcilable flag (from SDFODAPD)
      C                   PARM                    BXTBRC
- 
+
      C                   IF        ULX604 = 'Y'                                               CAP191
      C                   IF        ReturnCode <> 'Error' and                                  CAP191
      C                             ReturnCode <> '*RECUPD'                                    CAP191
@@ -1488,9 +1494,9 @@
      C                   ENDIF                                                                CAP191
                                                                                               CAP191
       ** If no errors, update settlement instructions
- 
+
      C                   IF        ReturnCode <> 'Error'
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FFSETLUPD'
       ** Returned parameters
@@ -1513,10 +1519,10 @@
      C                   PARM                    PPBBFLG
       ** PB customer indicator (Customer)
      C                   PARM                    PPBCFLG
- 
+
       ** End of "If ReturnCode <> 'Error'
      C                   ENDIF
- 
+
       * If there were any errors in the update function, rollback any
       * updates (done in *PSSR) and end this program. Otherwise commit.
      C*****@RTCD         IFNE      *BLANK                                                   BUG28010
@@ -1531,14 +1537,14 @@
       *
       * If update not done due to record being updated by another
       * workstation send message to screen.
- 
+
      C     @RTCD         IFEQ      '*RECUPD'
      C                   MOVEL     '*ANY'        FldNameArr(1)
- 
+
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************                       CAP191
       /EJECT                                                                                  CAP191
@@ -1576,9 +1582,9 @@
       *              the general error and warning arrays.            *
       *                                                               *
       *****************************************************************
- 
+
      C     AppendArrs    BEGSR
- 
+
      C                   CALLB     'APAPNDARRS'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1600,7 +1606,7 @@
      C                   PARM                    WMsgIDArr
       ** Warning message data array (<ArrayMax> x 45A)
      C                   PARM                    WMsgDtaArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Field name array (<ErrArrMax> x 10A)
@@ -1615,9 +1621,9 @@
      C                   PARM                    MsgIDWArr
       ** Warning message data array (<WArrMax> x 45A)
      C                   PARM                    MsgDtaWArr
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

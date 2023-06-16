@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061328           Date 27Apr23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061328 - Fields Created and Enabled indicator are not      *
+      *             populated during insert of new format.            *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CMX013 - Allow Additonal Members                             *
@@ -705,7 +708,8 @@
      C                   MOVEL     MXEXFD        P_MXEXFD
      C******in99         IFEQ      '1'                                                      MD056612
      C     SQLCODE       IFEQ      100                                                      MD056612
-     C                   MOVEL     'Y'           P_EXENAB
+     C**********         MOVEL     'Y'           P_EXENAB                                   MD061328
+     C                   MOVEL     'Y'           EXENAB                                     MD061328
      C**********         WRITE     MXEXFDUPD                                    *           MD056612
      C/exec SQL                                                                             MD056612
      C+ insert into MXEXDBTD                                                                MD056612
@@ -956,9 +960,11 @@
 
       * Release record
 
-     C  N98              MOVEL     'Y'           P_EXFDCR
+     C**N98*****         MOVEL     'Y'           P_EXFDCR                                   MD061328
      C**N98*****         UPDATE    MXEXFDUPD                                    *           MD056612
-     C     *IN98         Ifeq      '0'                                                      MD056612
+     C******IN98         Ifeq      '0'                                             MD056612 MD061328
+     C     SQLCODE       IFEQ      0                                                        MD061328
+     C                   MOVEL     'Y'           P_EXFDCR                                   MD061328
      C/exec SQL                                                                             MD056612
      C+ update MXEXDXTD                                                                     MD056612
      C+ set                                                                                 MD056612

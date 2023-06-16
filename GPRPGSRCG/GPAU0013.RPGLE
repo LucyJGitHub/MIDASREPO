@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas GP Report Layout Maintenance')
+/*EXI *  TEXT('Midas GP Report Layout Maintenance')                   *
       *****************************************************************
       *                                                               *
       *  Midas - Global Processing Module                             *
@@ -11,16 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1058381          Date 11May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGP004  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1058381 - Audit file maintenance crashes on webfaced       *
+      *              screen. Convert hardcoded column header & footer *
+      *              functions in DSPF into variables. Recompiled due *
+      *              to changes in GPAU0013DF. (Child: AR1058383)     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGP004 - Audit Reporting                                     *
@@ -43,6 +48,16 @@
      D CT              S              1    DIM(131) CTDATA PERRCD(80)
      D ERR             S             76    DIM(15) CTDATA PERRCD(1)
  
+     D NARR1           C                   '                                  -            AR1058381
+     D                                                                        -            AR1058381
+     D                                                                        -            AR1058381
+     D                                                               '                     AR1058381
+                                                                                           AR1058381
+     D NARR2           C                   'Rollup, Rolldown,'                             AR1058381
+     D NARR3           C                   'CK/3=Exit, CK/6=Update,'                       AR1058381
+     D NARR4           C                   'CK/12=Abandon'                                 AR1058381
+     D NARR5           C                   'CK/3=Exit,'                                    AR1058381
+                                                                                           AR1058381 
      D                 DS
      D  SS_DATA                1    128
      D  SSEDTW                99    124
@@ -139,6 +154,10 @@
       ********************************************************************
      C     DSPLAY        BEGSR
      C                   EXSR      EDTFAT
+     C                   MOVE      NARR1         FOOTER1                                   AR1058381
+     C                   MOVE      NARR2         FOOTER2                                   AR1058381
+     C                   MOVE      NARR3         FOOTER3                                   AR1058381
+     C                   MOVE      NARR4         FOOTER4                                   AR1058381
      C                   WRITE     MAIN
      C                   READ      MAIN                                   99    *
      C* CK/3
@@ -684,7 +703,9 @@
  
      C** OUTPUT ACTION SCREEN
  
-     C                   WRITE     MESSAG
+     C                   MOVE      NARR5         FOOTER5                                   AR1058381
+     C                   MOVE      NARR4         FOOTER6                                   AR1058381
+     C**********         WRITE     MESSAG                                                  AR1058381
      C                   EXFMT     ACTION
      C                   Z-ADD     *ZERO         ER
      C                   MOVEL     *BLANK        DDERR

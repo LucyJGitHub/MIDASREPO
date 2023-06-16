@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 25May23               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend no. MD053935           Date 08Jun23               *
+      *  Prev Amend No. MD060620           Date 25May23               *
+      *                 MD061418           Date 24May23               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -127,8 +129,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053935 - Default NCHI to have a value even if NBRA is blank*
+      *           - Prevents incorreclty showing up of LEV0288.       *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *           - Applied fix for MD-61250.                         *
+      *  MD061418 - LEV0054 error received on authorisation but not   *
+      *             on completion. Default to the current Rollover    *
+      *             Frequency and Day Number if left blank.           *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2861,6 +2868,12 @@
      C     VRLDT         WHENNE    *ZEROS
      C     VRLFQ         ANDNE     *BLANK
      C     *IN85         ANDEQ     *ON
+     C     VRLDT         ORNE      *ZEROS                                                   MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLFQ        ANDNE     *BLANKS                                                  MD061418
+     C     DDRLDY        ANDNE     *BLANKS                                                  MD061418
+     C     DDACTN        ANDEQ     'A'                                                      MD061418
      C     DDACTN        IFEQ      'A'
      C                   MOVE      DDRLFQB       ZFREQ
      C                   ELSE
@@ -2868,6 +2881,12 @@
      C                   ENDIF
      C                   Z-ADD     VRLDT         ZDAYNO
      C                   Z-ADD     WRLDY         ZMDAY
+     C     DDACTN        IFEQ      'A'                                                      MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C                   EVAL      ZFREQ = DDRLFQ                                           MD061418
+     C                   EVAL      ZMDAY = %DEC(DDRLDY:2:0)                                 MD061418
+     C                   ENDIF                                                              MD061418
      C                   MOVE      CCY           ZCCY
      C                   EXSR      ZFREQB
      C     RetCodeIn     IFEQ      '*ERROR '
@@ -2896,6 +2915,12 @@
      C***********        EVAL      FldNameArr(Idx) = 'DDRLFQB'                                WA0025
      C***********        EVAL      MsgIDArr(Idx) = 'LEV0054'                                  WA0025
      C                   MOVE      'N'           DDRlfqOK
+     C     DDACTN        IFEQ      'A'                                                      MD061418
+     C     DDRLFQB       ANDEQ     *BLANKS                                                  MD061418
+     C     DDRLDYB       ANDEQ     *BLANKS                                                  MD061418
+     C                   EVAL      DDRLFQB = DDRLFQ                                         MD061418
+     C                   EVAL      DDRLDYB = DDRLDY                                         MD061418
+     C                   ENDIF                                                              MD061418
      C                   ENDIF
      C                   ENDIF
      C                   ENDSL
@@ -3923,7 +3948,14 @@
      C     DDNCHIB       WHENEQ    *BLANK
      C     DDNBRAB       ANDEQ     *BLANKS
      C     DDNbraOK      ANDNE     'N'
-     C                   MOVE      ' '           WNCHI                                      AR702532
+     C**********         MOVE      ' '           WNCHI                             AR702532 MD053935
+     C     PTYP          IFEQ      63                                                       MD053935
+     C     PTYP          OREQ      65                                                       MD053935
+     C     PTYP          OREQ      67                                                       MD053935
+     C                   MOVE      'N'           WNCHI                                      MD053935
+     C                   ELSE                                                               MD053935
+     C                   MOVE      'D'           WNCHI                                      MD053935
+     C                   ENDIF                                                              MD053935
       *                                                                                     AR702532
      C     DDNCHIB       WHENEQ    *BLANK                                                   AR702532
      C     DDNBRAB       ANDNE     *BLANKS                                                  AR702532

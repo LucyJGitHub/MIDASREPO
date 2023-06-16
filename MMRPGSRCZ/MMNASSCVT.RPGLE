@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049123           Date 25May23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CGL029             Date 01Sep03               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049123 - Added process for Customer Number formatting.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -42,12 +44,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
       **
@@ -60,85 +62,85 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deal Status
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)
- 
+
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDENSPP)
- 
+
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMNASSPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
                                                                                 CDL011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CDL011
       ** EXTERNAL DS FOR SAR DETAILS                                            CDL011
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -146,14 +148,14 @@
       *****************************************************************
       /EJECT
      C**************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * INITIALISATION
      C                   EXSR      INIT
       *
@@ -233,7 +235,8 @@
      C**  Sale of Deal Number.
      C                   MOVE      HMDADN        DDDADN
      C*
-     C     CDL011        IFEQ      'Y'                                          CDL011
+     C*****CDL011        IFEQ      'Y'                                               CDL011 MD049123
+     C     CustFormat    IFEQ      'S'                                                      MD049123
       *                                                                         CDL011
      C**  Issued by customer                                                    CDL011
      C                   MOVEL     HMISUR        DDISUR                         CDL011
@@ -262,7 +265,7 @@
      C*
      C**  Currency Code.
      C                   MOVE      HMCCY         DDCCY
- 
+
      C*
      C**  Face Value.
      C**  Format Face VAlue, using deal ccy decimal places
@@ -316,7 +319,7 @@
      C*
      C**  Originating Branch
      C                   MOVE      HMORBR        DDORBR
- 
+
       ** Format Parcel Size
       ** If zero, put out blanks; otherwise treat as numeric with no
       ** decimal places.
@@ -331,7 +334,7 @@
       *                                                                                       CDL038
       * Class                                                                                 CDL038
      C                   MOVE      HMCLAS        DDCLAS                                       CDL038
- 
+
      C**  Set up text for deal status.
      C*
      C     HMDSTS        IFEQ      'C'
@@ -421,20 +424,20 @@
      C                   PARM                    DealScnFmt
       * Deal Status
      C                   PARM                    DDSTS            24
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** Access the bank details for the date format (and anything else
       ** that's needed)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access the dealing ICD to get the decimal separator character
      C**********         CALL      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
@@ -442,7 +445,7 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
       *                                                                         CDL011
       ** ACCESS SAR DETAILS FOR Expansion of Customer Number                    CDL011
       *                                                                         CDL011
@@ -463,11 +466,35 @@
      C                   ENDIF                                                  CDL011
      C*                                                                         CDL011
      C     @RTCD         IFEQ      *BLANK                                       CDL011
-     C                   MOVEL     'Y'           CDL011            1            CDL011
+     C********           MOVEL     'Y'           CDL011            1                 CDL011 MD049123
+     C                   MOVEL     'S'           CustFormat        1                        MD049123
      C                   ELSE                                                   CDL011
-     C                   MOVEL     'N'           CDL011                         CDL011
+     C********           MOVEL     'N'           CDL011                              CDL011 MD049123
+     C                   MOVEL     'N'           CustFormat                                 MD049123
      C                   ENDIF                                                  CDL011
- 
+      *                                                                                     MD049123
+      ** ACCESS SAR DETAILS FOR Customer Format                                             MD049123
+      *                                                                                     MD049123
+     C                   CALLB     'AOSARDR0'                                               MD049123
+     C                   PARM      *BLANKS       @RTCD                                      MD049123
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049123
+     C                   PARM      'CDL005'      @SARD             6                        MD049123
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD049123
+      *                                                                                     MD049123
+      * DATABASE ERROR                                                                      MD049123
+      *                                                                                     MD049123
+     C     @RTCD         IFNE      *BLANKS                                                  MD049123
+     C     @RTCD         ANDNE     '*NRF   '                                                MD049123
+     C                   MOVEL     'CDL005'      DBKEY                                      MD049123
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD049123
+     C                   MOVEL     '002'         DBASE                                      MD049123
+     C                   EXSR      *PSSR                                                    MD049123
+     C                   END                                                                MD049123
+     C*                                                                                     MD049123
+     C     @RTCD         IFEQ      *BLANK                                                   MD049123
+     C                   MOVEL     'S'           CustFormat                                 MD049123
+     C                   END                                                                MD049123
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD026616A          Date 09May23               *
+      *  Prev Amend No. MD026616           Date 09May23               *
+      *                 MD026615           Date 08May23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG009             Date 24Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +51,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026616A- Show counterparty name in subfield 9. Loan        *
+      *             counterparty still not present after MD026616 and *
+      *             Distinguish between TS in SE module and TS in DL  *
+      *  MD026616 - Show counterparty name on subfield 9.             *
+      *  MD026615 - Principal Increase Loan events are automatically  *
+      *             tagged as DL transaction. Need to distinguish if  *
+      *             PI event is a DL or LE transaction.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
@@ -119,6 +129,9 @@
                                                                                               216937
      FGLPSTGAL0 IF   E           K DISK                      INFSR(*PSSR)                     216937
       ** Midas GL ostings in Transit - Group Accounts                                         216937
+     FCLOAN     IF   E           K DISK                      INFSR(*PSSR)                  MD026616A
+      ** Midas LE Loans File                                                               MD026616A
+     F                                     INCLUDE(CLOANCLF) PREFIX(CL_)                   MD026616A
      F/COPY WNCPYSRC,GLH00621
 
      FGLRSACPD  O  A E             DISK    COMMIT            INFSR(*PSSR)
@@ -126,6 +139,12 @@
      F***NTRAN1**  IF   E           K DISK                      INFSR(*PSSR)       MD034442 MD036398
      FNTRAN     IF   E           K DISK                      INFSR(*PSSR)                   MD036398
       ** Midas FT Nostro Transfer Transactions.                                             MD034442
+     FDEALS     IF   E           K DISK                      INFSR(*PSSR)                   MD026616
+      ** Midas Dealing File                                                                 MD026616
+     F                                     PREFIX(DL_)                                      MD026616
+     FTRADS     IF   E           K DISK                      INFSR(*PSSR)                  MD026616A
+      ** SE Trades                                                                         MD026616A
+     F                                     PREFIX(SE_)                                     MD026616A
      F/COPY WNCPYSRC,GLH00394
 
       *========================================================================*
@@ -226,7 +245,8 @@
      D*TransType******               50    DIM(60) CTDATA PERRCD(1)                           CRE008
      D*TransType*                    50    DIM(61) CTDATA PERRCD(1)                    CRE008 CAP204
      D/COPY WNCPYSRC,GLH00622
-     D TransType                     50    DIM(63) CTDATA PERRCD(1)                           CAP204
+     D*TransType******               50    DIM(63) CTDATA PERRCD(1)                  CAP204 MD026615
+     D TransType                     50    DIM(64) CTDATA PERRCD(1)                         MD026615
      D/COPY WNCPYSRC,GLH00627
      D    TrType                      2    OVERLAY(TransType)                   Transaction Type
      D      TrFiller1                 1    OVERLAY(TransType:*NEXT)
@@ -282,6 +302,9 @@
      D PRCGLPN         S              1                                         UpdGLPOSTPD MD032299
      D PRCRSMN         S              1                                         UpdGLRSACPD MD032299
      D CMG009          S              1                                         CMG009 flag   CMG009
+     D KeyLNRF         S                   LIKE(CL_LNRF)                                   MD026616A
+     D KeyRCDT         S                   LIKE(CL_RCDT) INZ('A')                          MD026616A
+     D KItemNo         S                   LIKE(DL_DLNO)                                   MD026616A
       ** Input Specs
       ** -----------
 
@@ -553,6 +576,14 @@ e1   C                   Endsl                                                  
      C                   WHEN      TRYP = 'OP'                                  FT Outgoing
      C                             AND FUND <> *BLANKS                          Payment
      C                   EVAL      WkTRYP = 'OF'
+     C                   WHEN      TRYP = 'PI'                                              MD026615
+     C                   MOVE      TNMR          KItemNo                                    MD026615
+     C     KItemNo       CHAIN     DEALS                                                    MD026615
+     C                   IF        %FOUND(DEALS)                                            MD026615
+     C                   EVAL      WkTRYP = 'PI'                                            MD026615
+     C                   ELSE                                                               MD026615
+     C                   EVAL      WkTRYP = 'Px'                                            MD026615
+     C                   ENDIF                                                              MD026615
      C                   OTHER
      C                   EVAL      WkTRYP = TRYP
      C                   ENDSL
@@ -560,6 +591,15 @@ e1   C                   Endsl                                                  
       ** Retrieve Transaction Type details.
 
      C     WkTRYP        LOOKUP    TrType(TrIdx)                          99
+                                                                                           MD026616A
+      ** Check whether TS = Trade Sale (SE) and NOT TS = Treasury Bond Sold (DL)           MD026616A
+     C                   IF        WkTRYP = 'TS'                                           MD026616A
+     C     TNMR          CHAIN     TRADS                                                   MD026616A
+     C                   IF        %FOUND(TRADS) and SE_TDTP = 'TS'                        MD026616A
+     C                   ADD       1             TrIdx                                     MD026616A
+     C     WkTRYP        LOOKUP    TrType(TrIdx)                          99               MD026616A
+     C                   ENDIF                                                             MD026616A
+     C                   ENDIF                                                             MD026616A
 
       *    ----------    -----
      C     @RtvTrType    ENDSR
@@ -606,8 +646,18 @@ e1   C                   Endsl                                                  
      C                   SELECT
      C                   WHEN      TrModule(TrIdx) = 'DL'                       Dealing Module
      C                   EVAL      GLDLREF = 'D' + TNMR                         deal reference
+     C                   MOVE      TNMR          KItemNo                                    MD026616
+     C     KItemNo       CHAIN     DEALS                              99                    MD026616
+     C                   IF        NOT *IN99                                                MD026616
+     C                   EVAL      GLDBCNUM = DL_CNUM                                       MD026616
+     C                   ENDIF                                                              MD026616
      C                   WHEN      TrModule(TrIdx) = 'LE'                       Lending Module
      C                   EVAL      GLDLREF = 'L' + TNMR                         loan reference
+     C                   MOVE      TNMR          KeyLNRF                                   MD026616A
+     C     KeyCLOAN      CHAIN     CLOANCLF                           99                   MD026616A
+     C                   IF        NOT *IN99                                                MD026616
+     C                   EVAL      GLDBCNUM = CL_CNUM                                      MD026616A
+     C                   ENDIF                                                              MD026616
      C                   ENDSL
      C                   EVAL      GLPREF  = FUND                               PAYMENT REF
      C                   IF        TrModule(TrIdx) = 'FT'                       FT Module
@@ -923,6 +973,12 @@ e1   C                   Endsl                                                  
      C     KeyGLPZS      KLIST                                                                CRE008
      C                   KFLD                    XRFI                                         CRE008
      C                   KFLD                    XRFN                                         CRE008
+      *                                                                                    MD026616A
+      ** Key list for CHAIN to CLOAN                                                       MD026616A
+      *                                                                                    MD026616A
+     C     KeyCLOAN      KLIST                                                             MD026616A
+     C                   KFLD                    KeyLNRF                                   MD026616A
+     C                   KFLD                    KeyRCDT                                   MD026616A
 
      C/COPY WNCPYSRC,GLH00402
       *    ------        -----
@@ -1010,6 +1066,7 @@ F2 LE U   GE-LE Fee on Facility
 Hx LE U   GE-LE Lending Module
 Jx LE U   GE-LE Lending Module
 Kx LE U   GE-LE Lending Module
+Px LE U   GE-LE Lending Module                                                              MD026615
 SO SO O   GE-SO Standing Orders
 TP ST S   GE-ST Trade Purchased
 TS ST S   GE-ST Trade Saled

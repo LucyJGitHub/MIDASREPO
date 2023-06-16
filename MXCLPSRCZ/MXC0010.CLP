@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR792326           Date 16Feb23              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR925294           Date 15May23              */
+/*       Prev Amend No. AR792326           Date 16Feb23              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR925294 - Add parameter MBR(*ALL) in OVRDBF command for    */
+/*                  copying multi-member files. (Child: AR925297)    */
 /*       AR792326 - FlatFiles for any format and composite           */
 /*                  (Child: AR830959)                                */
 /*       MD046248 - Finastra Rebranding                              */
@@ -102,8 +105,10 @@
  
 /* Override to driver file */
  
-             OVRDBF     FILE(FILE) TOFILE(&DRIVFL) SHARE(*NO) +
-                          SEQONLY(*YES 200)
+/**********  OVRDBF     FILE(FILE) TOFILE(&DRIVFL) SHARE(*NO) + */                      /*AR925294*/
+/**********               SEQONLY(*YES 200) */                                          /*AR925294*/
+             OVRDBF     FILE(FILE) TOFILE(&DRIVFL) MBR(*ALL) +
+                          SHARE(*NO) SEQONLY(*YES 200)                                  /*AR925294*/
  
  
 /* Clear Performance Data and override */

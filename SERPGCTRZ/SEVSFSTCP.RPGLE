@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 261824             Date 22May20               *
+      *  Last Amend No. MD028295A          Date 09Jun23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 261824             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
@@ -44,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028295A - when sending multiple API with FCPN blank the    *
+      *              FCPN of the first entry is copied to next.Initia-*
+      *              lize PNxtCd before calling ZNCD.                 *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  261824 - Error messages appear which should not be as field  *
       *           being validate is valid when compare to the input - *
@@ -422,6 +426,7 @@
      C                   EVAL      PEvtCd = S1ITLD + 1
      C                   MOVEA     WSCD          PCDArr
      C                   MOVEA     WSCR          PCRArr
+     C                   Z-ADD     0             PNxtCd                                    MD028295A
 
 
      C                   CALLB     'ZNCD'

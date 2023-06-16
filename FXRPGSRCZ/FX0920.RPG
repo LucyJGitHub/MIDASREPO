@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059248           Date 10Jan22               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No  MD031616           Date 02Jun23               *
+      *  Prev Amend No. MD023183A          Date 27Apr23               *
+      *                 MD022778           Date 12Apr23               *
+      *                 MD059248           Date 10Jan22               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD057829           Date 05May21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055401           Date 23Oct20               *
@@ -102,6 +105,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031616 - MT942 includes future valued FX deal postings.    *
+      *             Amend program so that reversals will have same    *
+      *             PTDT as the original posting.                     *
+      *  MD023183A - Net reference should be net number.              *
+      *  MD022778 - Remove date defaulting                            *
       *  MD059248 - FM2021A/A1 FX Netting: Unexpected projections for *
       *             netted FX deals. This is due to MD055401 code in  *
       *             this program. Reverse MD055401 in FX0920 and add  *
@@ -426,16 +434,19 @@
      IDCCYS       DS
      I                                        4   6 DCCYS1
      I                                        7   9 DCCYS2
-      **  Data Structure:  layout of net reference field
-     INETFMT      DS
-     I                                        1  19 DDNETR
-     I                                        1   3 WFBRCA
-     I                                        4   70WFDLVD
-     I                                        8  10 WFCCY
-     I                                       11  16 WFCUSN
-     I                                       11  14 WFGRP#
-     I                                       15  16 GRPREF
-     I                                       17  190WFSEQN
+      ****Data*Structure:**layout*of*net*reference*field***************                    MD023183A
+     I***NETFMT*  DS                                                                       MD023183A
+     I**********                              1  19 DDNETR                                 MD023183A
+     I**********                              1   3 WFBRCA                                 MD023183A
+     I**********                              4   70WFDLVD                                 MD023183A
+     I**********                              8  10 WFCCY                                  MD023183A
+     I**********                             11  16 WFCUSN                                 MD023183A
+     I**********                             11  14 WFGRP#                                 MD023183A
+     I**********                             15  16 GRPREF                                 MD023183A
+     I**********                             17  190WFSEQN                                 MD023183A
+     IAMDCSN      DS                                                                       MD023183A
+     I                                        1   4 WFGRP#                                 MD023183A
+     I                                        5   6 GRPREF                                 MD023183A
      I*
      I** Data area ZMUSER
      IZMUSER      DS                             17
@@ -532,7 +543,9 @@
      I                                       60  65 PPVALD
      I                                       66  67 PPSETM
      I**********                             68  82 PPSEAC                                    CGL029
-     I                                       83  90 PPSEAC                                    CGL029
+     I**********                             83  90 PPSEAC                          CGL029 MD023183A
+     I                                       68  88 PPSEAC                                 MD023183A
+     I                                       89  92 PPCCY                                  MD023183A
       *                                                                                       CSD015
       **  Watch List Fields in Data Structure Format.                                         CSD015
      IWLFDS       DS                                                                          CSD015
@@ -614,6 +627,7 @@
      I                                      166 166 PMBIN                 CDL025
      I                                      167 1670PNBDP                 CDL025
      I                                      168 1820PDBUY                 CDL025
+     I                                      183 1850PSEQN                                  MD023183A
       ** DS for call tp FX0925.                                           CDL025
      ICONV        DS                                                                        MD021333
      I                                        1   2 D#ACSQ                                  MD021333
@@ -867,7 +881,8 @@
      C/COPY WNCPYSRC,FX0920C002
       *
       ** Create Net Reference and Calc. Net Amount.
-     C                     MOVE PLNETR    DDNETR
+     C**********           MOVE PLNETR    DDNETR                                           MD023183A
+     C                     MOVELPLNETR    DDNETR                                           MD023183A
      C                     EXSR FMTNET
      C                     MOVE BBCSSN    PDCSSN 10
      C                     MOVE PLCCY     PDCCY
@@ -876,6 +891,7 @@
      C                     MOVE PLVALD    PDVALD
      C                     MOVE PLVALD    DDVALD
      C                     MOVE PLSEQN    KYSEQN
+     C                     MOVE PLCUSN    WFCUSN  6                                        MD023183A
       *
      C           NETERR    IFEQ 'Y'
       ** Validate Screen Fields.
@@ -996,7 +1012,8 @@
       **                                                                                  CDL025
      C           CDL025    IFEQ 'Y'                                                       CDL025
      C           *INKR     IFEQ *ON                                                       CDL025
-     C                     MOVE DDNETR    SNETR                                           CDL025
+     C**********           MOVE DDNETR    SNETR                                     CDL025 MD023183A
+     C                     MOVELDDNETR    SNETR                                            MD023183A
      C                     MOVE *OFF      *INKR                                           CDL025
      C                     MOVE 'A'       ACTION                                          CDL025
      C                     EXSR SPLIT                                                     CDL025
@@ -1104,6 +1121,8 @@
      C                     ENDIF
      C/COPY WNCPYSRC,FXH00205
      C                     ENDIF
+      ** Do not default Date                                                                MD022778
+     C           1         IFEQ 0                                                           MD022778
      C           PDVALD    IFEQ 0
       * IF BLANK DEFAULT SCREEN DATE TO DATE OF NEXT WORKING DAY
       *     Convert Midas day number to date
@@ -1116,6 +1135,7 @@
      C                     MOVELWQ0007    PDVALD
      C                     MOVELWQ0007    PVDATE
      C                     ENDIF
+     C                     ENDIF                                                            MD022778
       *
      C                     MOVE *LOVAL    KYSEQN
      C                     EXSR LOADSF                     Load Subfile
@@ -1284,9 +1304,13 @@
      C                     MOVE '1'       *IN32
       * SETUP FILE FIELDS FOR DISPLAY
      C                     MOVE ' '       DDSEL
-     C                     MOVE AMNETR    DDNETR
-     C           GRPREF    IFNE '##'
-     C                     MOVE WFCUSN    DDCUSN
+     C**********           MOVE AMNETR    DDNETR                                           MD023183A
+     C                     MOVELAMNETR    DDNETR                                           MD023183A
+     C********** GRPREF    IFNE '##'                                                       MD023183A
+     C           GRPREF    IFNE '  '                                                       MD023183A
+     C**********           MOVE WFCUSN    DDCUSN                                           MD023183A
+     C                     MOVE AMCNUM    DDCUSN                                           MD023183A
+     C                     MOVE AMCNUM    WFCUSN                                           MD023183A
      C                     ELSE
      C                     MOVE *BLANKS   DDCUSN
      C                     ENDIF
@@ -1485,7 +1509,8 @@
      C                     MOVE BBCSSN    WKCSNM
      C                     ENDIF
       ** If part of group display description else customer name and town.
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVE *ON       *IN81
      C                     MOVELD6GPCD    DDGPCD
      C                     MOVELD6GPDS    DDGPDS
@@ -1531,10 +1556,11 @@
      C                     EXSR FMTNET
       *
      C                     MOVELAMNETR    PPNETR
-     C                     MOVELAMNETR    NETFMT
+     C**********           MOVELAMNETR    NETFMT                                           MD023183A
       *
       ** If part of group pass description else customer name and town.
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVELD6GPCD    PPCSSN    P
      C                     MOVELD6GPDS    PPDETS
      C                     ELSE
@@ -1572,7 +1598,8 @@
      C                     MOVEL*OFF      *IN20                           200138
       *
       * Determine whether group or customer.
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVE *ON       *IN81
      C                     MOVELWFGRP#    GRPCDE
      C                     ELSE
@@ -1753,14 +1780,16 @@
       *
      C                     END
      C           *INKP     IFEQ *ON                                       127084
-     C                     MOVE DDNETR    SNETR                           127084
+     C**********           MOVE DDNETR    SNETR                                     127084 MD023183A
+     C                     MOVELDDNETR    SNETR                                            MD023183A
      C                     MOVE *OFF      *INKP                           127084
      C                     EXSR VIEW                                      127084
      C                     ENDIF                                          127084
       **                                                                  CDL025
      C           CDL025    IFEQ 'Y'                                       CDL025
      C           *INKR     IFEQ *ON                                       CDL025
-     C                     MOVE DDNETR    SNETR                           CDL025
+     C**********           MOVE DDNETR    SNETR                                     CDL025 MD023183A
+     C                     MOVELDDNETR    SNETR                                            MD023183A
      C                     MOVE *OFF      *INKR                           CDL025
      C                     MOVE 'A'       ACTION                          CDL025
      C                     EXSR SPLIT                                     CDL025
@@ -1785,7 +1814,8 @@
      C           DELETE    BEGSR
       *
       * Determine whether group or customer.
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVE *ON       *IN81
      C                     MOVELWFGRP#    GRPCDE
      C                     ELSE
@@ -2008,7 +2038,8 @@
      C                     MOVEA'11'      *IN,78
      C                     MOVE 'E'       DDACTN
       * Determine whether group or customer.
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVE *ON       *IN81
      C                     MOVELWFGRP#    GRPCDE
      C                     ELSE
@@ -2065,7 +2096,8 @@
       *                                                                   CDL025
      C                     ELSE
      C           *INKP     IFEQ *ON                                       127084
-     C                     MOVE DDNETR    SNETR                           127084
+     C**********           MOVE DDNETR    SNETR                                     127084 MD023183A
+     C                     MOVELDDNETR    SNETR                                            MD023183A
      C                     MOVE *OFF      *INKP                           127084
      C                     EXSR VIEW                                      127084
      C                     MOVE 'Y'       REDSP                           127084
@@ -2101,7 +2133,8 @@
      C                     MOVE DCCYS2    SCCYP
      C                     MOVE *BLANKS   SGRPC
      C                     MOVE *BLANKS   SCUS#
-     C           GRPREF    IFEQ '##'
+     C********** GRPREF    IFEQ '##'                                                       MD023183A
+     C           GRPREF    IFEQ '  '                                                       MD023183A
      C                     MOVELWFGRP#    SGRPC
      C                     ELSE
      C                     MOVELWFCUSN    SCUS#
@@ -2282,8 +2315,10 @@
      C                     MOVE 'Y'       PMPRCV
      C                     ENDIF
       *
-     C                     MOVELWFCCY     @DLNO   6
-     C                     MOVE WFSEQN    @DLNO
+     C**********           MOVELWFCCY     @DLNO   6                                        MD023183A
+     C**********           MOVE WFSEQN    @DLNO                                            MD023183A
+     C                     MOVELAMCCYD    @DLNO   6                                        MD023183A
+     C                     MOVE AMSEQN    @DLNO                                            MD023183A
      C                     MOVELAMCVMR    PMCVMR
      C                     MOVEL'FXFX'    PMCPGM
      C                     MOVEL'FX'      PMTTYP
@@ -2358,7 +2393,8 @@
       *                                                                   CDL025
       ** SETUP PARAMETERS FOR SPLITTING SETTLEMENT                        CDL025
      C                     MOVE ACTION    PACTN                           CDL025
-     C                     MOVE DDNETR    PNETR                           CDL025
+     C**********           MOVE DDNETR    PNETR                                     CDL025 MD023183A
+     C                     MOVELDDNETR    PNETR                                            MD023183A
      C                     MOVE DDVDAT    P5VDAT                          CDL025
      C                     MOVE BGRTBN    PRTBN                           CDL025
      C                     MOVE DDCUST    P5CUST                          CDL025
@@ -2380,6 +2416,7 @@
      C                     MOVEL'20'      WFVAL8                          CDL025
      C                     END                                            CDL025
      C                     MOVE WFVAL8    CHGDAT                          CDL025
+     C                     MOVE AMSEQN    PSEQN                                            MD023183A
       *                                                                   CDL025
      C                     CALL 'FX0925'                                  CDL025
      C                     PARM           @PARM1  7                       CDL025
@@ -2464,6 +2501,7 @@
      C           @ERR      IFEQ 0
      C                     CALL 'ZA0250'
       *  Clear message queue.
+     C                     EXSR GETDET                                                     MD023183A
      C           DDSEL     CASEQ'P'       PRTDET
      C           DDSEL     CASEQ'E'       ENQIRE
      C           DDSEL     CASEQ'D'       DELETE
@@ -2471,7 +2509,8 @@
      C           *INKN     CASEQ*ON       AMEND
      C                     ENDCS
      C           DDSEL     IFEQ 'V'
-     C                     MOVE DDNETR    SNETR
+     C**********           MOVE DDNETR    SNETR                                            MD023183A
+     C                     MOVELDDNETR    SNETR                                            MD023183A
      C                     EXSR VIEW
      C                     ENDIF
       *  End of selection
@@ -2614,9 +2653,11 @@
      C                     Z-ADDBJRDNB    LCD
      C                     MOVE 'A'       CHTP
      C           ANBSIN    IFEQ 'B'
-     C                     MOVE AMNETR    NETBR
+     C**********           MOVE AMNETR    NETBR                                            MD023183A
+     C                     MOVELAMNETR    NETBR                                            MD023183A
      C                     ELSE
-     C                     MOVE AMNETR    NETSR
+     C**********           MOVE AMNETR    NETSR                                            MD023183A
+     C                     MOVELAMNETR    NETSR                                            MD023183A
      C                     ENDIF
      C                     UPDATDEALSDBF
       *
@@ -2640,9 +2681,11 @@
      C                     Z-ADDBJRDNB    FHLCD
      C                     MOVE SUSER     FHLUID
      C           ANBSIN    IFEQ 'B'
-     C                     MOVE AMNETR    FHNBRF
+     C**********           MOVE AMNETR    FHNBRF                                           MD023183A
+     C                     MOVELAMNETR    FHNBRF                                           MD023183A
      C                     ELSE
-     C                     MOVE AMNETR    FHNSRF
+     C**********           MOVE AMNETR    FHNSRF                                           MD023183A
+     C                     MOVELAMNETR    FHNSRF                                           MD023183A
      C                     ENDIF
      C                     UPDATFXDEALL0
       *                                                                                     MD021333
@@ -3376,10 +3419,10 @@
      C                     ELSE                                                             MD021333
      C                     Z-ADD1         DORC                                              MD021333
      C                     ENDIF                                                            MD021333
-      *                                                                                     MD021333
-      ** Make Posting Date = Rundate                                                        MD021333
-      *                                                                                     MD021333
-     C                     Z-ADDBJRDNB    PTDT                                              MD021333
+      **********                                                                   MD021333 MD031616
+      ***Make*Posting*Date*=*Rundate************************************           MD021333 MD031616
+      **********                                                                   MD021333 MD031616
+     C**********           Z-ADDBJRDNB    PTDT                                     MD021333 MD031616
       *                                                                                     MD021333
       ** Put Net Reference in Other Reference field (OTR1)                                  MD021333
       *                                                                                     MD021333
@@ -3534,7 +3577,11 @@
      C                     MOVEL'000000'  TNMR                                              MD021333
      C                     Z-ADDAMDBUY    MVAM                                              MD021333
      C                     MOVELAMNETR    OTR1                                              MD021333
+     C           AMVALD    IFGT BJRDNB                                                      MD031616
+     C                     Z-ADDAMVALD    PTDT                                              MD031616
+     C                     ELSE                                                             MD031616
      C                     Z-ADDBJRDNB    PTDT                                              MD021333
+     C                     ENDIF                                                            MD031616
      C                     Z-ADDAMVALD    VUDT                                              MD021333
       *                                                                                     MD021333
      C                     MOVELAMCCYD    ##CCY   3                                         MD021333
@@ -3568,7 +3615,11 @@
      C                     MOVEL'000000'  TNMR                                              MD021333
      C                     Z-ADDASDBUY    MVAM                                              MD021333
      C                     MOVELASNETR    OTR1                                              MD021333
+     C           AMVALD    IFGT BJRDNB                                                      MD031616
+     C                     Z-ADDAMVALD    PTDT                                              MD031616
+     C                     ELSE                                                             MD031616
      C                     Z-ADDBJRDNB    PTDT                                              MD021333
+     C                     ENDIF                                                            MD031616
      C                     Z-ADDASVALD    VUDT                                              MD021333
       *                                                                                     MD021333
      C                     MOVELASCCYD    ##CCY                                             MD021333
@@ -3633,10 +3684,10 @@
      C                     ELSE                                                             MD021333
      C                     Z-ADD1         DORC                                              MD021333
      C                     ENDIF                                                            MD021333
-      *                                                                                     MD021333
-      ** Make Posting Date = Rundate                                                        MD021333
-      *                                                                                     MD021333
-     C                     Z-ADDBJRDNB    PTDT                                              MD021333
+      **********                                                                   MD021333 MD031616
+      ***Make*Posting*Date*=*Rundate************************************           MD021333 MD031616
+      **********                                                                   MD021333 MD031616
+     C**********           Z-ADDBJRDNB    PTDT                                     MD021333 MD031616
       *                                                                                     MD021333
       ** Put Net reference in Other Reference field (OTR1)                                  MD021333
       ** Append 'R' and '*' to signify reversal.                                            MD021333
@@ -4577,6 +4628,7 @@
      C                     PARM           BJRDNB  50       RUN DATE
      C                     PARM           CHGDAT  80
      C                     PARM           CCRTRN  8
+     C                     PARM           PLCUSN  6                                        MD023183A
      C/COPY WNCPYSRC,FXH00162
       *  KEY FOR ACCESSING NET MASTER FILE
      C           NETMKY    KLIST
@@ -4909,6 +4961,35 @@
      C                     ENDSR
       *.........................................................................
       /EJECT
+      /TITLE SR/GETDET                                                                     MD023183A
+      *****************************************************************                    MD023183A
+      *                                                               *                    MD023183A
+      *  GETDET - Get details from file                               *                    MD023183A
+      *                                                               *                    MD023183A
+      *  Called By: PROCSF                                            *                    MD023183A
+      *  Calls: None                                                  *                    MD023183A
+      *                                                               *                    MD023183A
+      *****************************************************************                    MD023183A
+     C           GETDET    BEGSR                                                           MD023183A
+      *                                                                                    MD023183A
+     C                     MOVE *OFF      *IN69                                            MD023183A
+     C           DDNETR    CHAINFXNETMPD            N84                                    MD023183A
+      *                                                                                    MD023183A
+     C           *IN84     IFEQ *ON                                                        MD023183A
+      ** Data base error in file (FXNETML1).                                               MD023183A
+     C           *LOCK     IN   LDA                                                        MD023183A
+     C                     SETON                       U7U8                                MD023183A
+     C                     Z-ADD1         DBASE            ***************                 MD023183A
+     C                     MOVEL'FXNETML1'DBFILE           *DB ERROR 01  *                 MD023183A
+     C                     MOVELDDNETR    DBKEY            ***************                 MD023183A
+     C                     OUT  LDA                                                        MD023183A
+     C                     EXSR *PSSR                                                      MD023183A
+     C                     ENDIF                                                           MD023183A
+     C                     MOVE AMCNUM    WFCUSN                                           MD023183A
+      *                                                                                    MD023183A
+     C                     ENDSR                                                           MD023183A
+      *.........................................................................           MD023183A
+      /EJECT                                                                               MD023183A
      C           DBERR     BEGSR
       *=========================================================================
       * Exception/error handler

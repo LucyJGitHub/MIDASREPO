@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041294           Date 19Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022354           Date 06Jun23               *
+      *  Prev Amend No. MD041294           Date 19Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26918           Date 19Jan09               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
+      *             due to changes in FFEXTRRDF.                      *
       *  MD041294 - Customer extension details is missing in          *
       *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *

@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*OVR    OVRDBF FILE(FILES) TOFILE(QAFDBASI)                         */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Drop backup files for PAYplus Transfer')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - SWIFT DIRECT LINK                                   */
+/*                                                                   */
+/*       MSC100005 - Drop backup files  for PAYplus Transfer         */
+/*                   Check if the Backup files for the PAYplus Comm  */
+/*                   are passed the Nr days wich are in the ME ICD   */
+/*                   'drop SWIFT Messages after X days               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*     Last Amend No. CSW101  *CREATE    Date 06Feb23                */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*     CSW101 - PAYplus interface -                                  */
+/*              From FSB028 - MERVA/ESA Interface                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&SYSPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&COMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ATLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ATFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NRDAYS) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&NAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DAY) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MONTH) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&YEAR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DATER) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DATEND) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&DATERD) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DAYAFT) TYPE(*CHAR) LEN(6)
+             /**/
+             DCLF       FILE(QTEMP/FILES)
+             /**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSPRFX) /* +
+                          System Prefix */
+             CHGVAR     VAR(&COMLIB) VALUE(&SYSPRFX *CAT 'COMLIB')
+             /**/
+             DSPFD      FILE(&COMLIB/#*) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/FILES) +
+                          OUTMBR(*FIRST *REPLACE)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDE))
+
+ BEGIN:      RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDE))
+/* go X days from rundate back using MG ICD 'Drop SWIFT MSG after +
+         x number of  Days*/
+
+             CALL PGM(MS100002) PARM(&RTN &DAYAFT)
+
+             IF         COND(&RTN *EQ ' ') THEN(DO)
+             CHGVAR     VAR(&DAY) VALUE(%SST(&DAYAFT 1 2))
+             CHGVAR     VAR(&MONTH) VALUE(%SST(&DAYAFT 3 2))
+             CHGVAR     VAR(&YEAR) VALUE(%SST(&DAYAFT 5 2))
+             CHGVAR     VAR(&DATER) VALUE(&YEAR *CAT &MONTH *CAT &DAY)
+             CHGVAR     VAR(&DATERD) VALUE(&DATER)
+             CHGVAR     VAR(&DATEND) VALUE(&ATFCDT)
+             IF         COND(&DATERD *GT &DATEND) THEN(DO)
+             DLTF       FILE(&ATLIB/&ATFILE) /* Delete the files +
+                          whith old creation date */
+             ENDDO
+             ENDDO
+             /**/
+             GOTO       CMDLBL(BEGIN)
+ ENDE:
+             ENDPGM

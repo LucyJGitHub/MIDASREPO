@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*       Last Amend No. CGL200             Date 17Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
@@ -47,6 +48,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CGL200 - Timestamp on batch items and related postings     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
@@ -121,7 +123,7 @@
              DCL        VAR(&REPNAM) TYPE(*CHAR) LEN(10) VALUE('''GL3572''') +
                           /*MD031966*/
              DCL        VAR(&REPPER) TYPE(*CHAR) LEN(3) VALUE('''N''')                  /*MD031966*/
- 
+
 /**/                                                                                      /*CER001*/
 /** Check if Automatic Batches acceptance is installed. */                                /*CER001*/
 /**/                                                                                      /*CER001*/
@@ -196,7 +198,7 @@
 /************CLRPFM GLBRREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBSREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBTREP*/                              /*S01229*/ /*S01154*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC01001                                     */      /*S01408*/
                                                                                           /*CER001*/
@@ -321,6 +323,14 @@
                 CLRPFM GLJEIXPD                                                           /*CGL013*/
              ENDDO                                                                        /*CGL013*/
 /**/                                                                  /*S01408*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CGL200*/
+             CHGVAR     VAR(&SAR) VALUE('CGL200')                     /*CGL200*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CGL200*/
+             CALL  PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &FMT)          /*CGL200*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CGL200*/
+                CLRPFM    GLJEIPX0                                    /*CGL200*/
+                CLRPFM    GLJENPX0                                    /*CGL200*/
+             ENDDO                                                    /*CGL200*/
 /*/COPY WNCPYSRC,GLC01MPS                                     */      /*S01408*/
                                                                                           /*CER001*/
 /** When feature IBLC 2002 is installe , ensure Ext. file is cleared. */                  /*CER001*/

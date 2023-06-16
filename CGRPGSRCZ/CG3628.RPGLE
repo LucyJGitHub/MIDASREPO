@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 20Jan23               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,7 @@
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 - Add specific header field to CM XML Output          *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG015 - Correspondence Manager Phase 1                      *
@@ -100,8 +102,10 @@
 
       * Entry Parameters
      D RtnCode         S             10
-     D SourceDir       S            100
-     D DestDir         S            100
+     D*SourceDir***    S            100                                                       BA6020
+     D*DestDir*****    S            100                                                       BA6020
+     D SourceDir       S            150                                                       BA6020
+     D DestDir         S            150                                                       BA6020
      D Action          S             10
      D Option          S             50    DIM(15)
      D User            S             20
@@ -112,7 +116,8 @@
      D i               S              2  0
 
       * Work variable
-     D WOpt            S            104
+     D*WOpt*****       S            104                                                       BA6020
+     D WOpt            S            154                                                       BA6020
       *****************************************************************
       /EJECT
       *****************************************************************

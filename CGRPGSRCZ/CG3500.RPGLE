@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6020             Date 18Jan23               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6020 -  Add specific header field to CM XML Output         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -98,6 +100,8 @@
      F                                     INFSR(SRFILE)
      FCGPGENL3  IF   E           K DISK    USROPN
      F                                     INFSR(SRFILE)
+     FA6PGENL3  IF   E           K DISK    USROPN                                             BA6020
+     F                                     INFSR(SRFILE)                                      BA6020
      FCGCORRL0  IF   E           K DISK
      F                                     INFSR(SRFILE)
      FCGCORRL4  IF   E           K DISK    INFSR(SRFILE)                                      CCG024
@@ -307,7 +311,11 @@ I     /EJECT
      C                   READ      CGPGENL2                               50
      C                   ELSE
      C/COPY WNCPYSRC,CG3500C005
+     C     BA6020        IFeq      'Y'                                                        BA6020
+     C                   Read      A6PGENL3                               50                  BA6020
+     C                   Else                                                                 BA6020
      C                   READ      CGPGENL3                               50
+     C                   Endif                                                                BA6020
      C/COPY WNCPYSRC,CG3500C006
      C                   ENDIF
       *
@@ -591,6 +599,19 @@ I     /EJECT
       *
      C                   ENDDO
      C                   ENDDO
+      *                                                                                       BA6020
+     C                   MOVE      'N'           BA6020                                       BA6020
+      *                                                                                       BA6020
+      ** Check if BA6020 is switched on                                                       BA6020
+      *                                                                                       BA6020
+     C                   CALL      'AOSARDR0'                                                 BA6020
+     C                   PARM                    P@RTCD                                       BA6020
+     C                   PARM      '*VERIFY'     P@OPTN                                       BA6020
+     C                   PARM      'BA6020'      P@SARD                                       BA6020
+      *                                                                                       BA6020
+     C     P@RTCD        IFEQ      *BLANKS                                                    BA6020
+     C                   MOVE      'Y'           BA6020            1                          BA6020
+     C                   ENDIF                                                                BA6020
       *
      C/COPY WNCPYSRC,CG3500C004
       ** Open the relevant access path
@@ -598,7 +619,11 @@ I     /EJECT
      C                   OPEN      CGPGENL2
      C                   ELSE
      C/COPY WNCPYSRC,CG3500C007
+     C     BA6020        IFEQ      'Y'                                                        BA6020
+     C                   OPEN      A6PGENL3                                                   BA6020
+     C                   ELSE                                                                 BA6020
      C                   OPEN      CGPGENL3
+     C                   ENDIF                                                                BA6020
      C/COPY WNCPYSRC,CG3500C008
      C                   ENDIF
       *

@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CGL200             Date 17Feb23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. 179753             Date 05Feb01              */
+/*                      179753             Date 05Feb01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CGL200 - Timestamp on batch items and related postings      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       179753 - AUTL MIDAS10 should not be hardcoded               */
 /*       CCB009 - Journal files throughout close of business         */
@@ -38,13 +40,13 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,GLC2601INT                                          */
- 
+
 /* Declare file and variables */
- 
+
              DCLF       FILE(CBCMPNLC)
- 
+
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
                           VALUE('GLC26     ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
@@ -65,77 +67,81 @@
 /*                                                                      CCB009*/
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
- 
+
+             DCL        VAR(&CGL200) TYPE(*CHAR) LEN(7)               /*CGL200*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*/COPY WNCPYSRC,GLC2601MPS                                          */
- 
+
 /* Send message to MRUNQ */
              SNDPGMMSG  MSG('GLC2601 - Batch Transaction File Split +
                           - Start Task Split') TOMSGQ(MRUNQ)
+                                                                      /*CGL200*/
+             CALL       PGM(AOSARDR0) PARM(&CGL200 '*VERIFY' +
+                          'CGL200' &AOFMT)                            /*CGL200*/
 /*                                                                      CCB009*/
 /** Check for Switchable feature CCB009.                                CCB009*/
 /*                                                                      CCB009*/
              CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
                           'CCB009' &AOFMT)                            /*CCB009*/
- 
+
 /* Determine full JLIB and DTAQLIB library name */
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'XLIB')
- 
+
 /* Define journal and receiver name */
- 
+
              CHGVAR     VAR(&JOURNAL) VALUE('J' *CAT &CNAME)
              CHGVAR     VAR(&RECEIVER) VALUE('JR' *CAT &CNAME)
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
              IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
 /* Delete journal */
- 
+
              ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
              MONMSG     MSGID(CPF7032 CPF9801)
- 
+
              DLTJRN     JRN(&JLIB/&JOURNAL)
              MONMSG     MSGID(CPF2105 CPF9801)
- 
+
 /* Delete journal receiver without any display if not fully saved */
- 
+
              CHGJOB     INQMSGRPY(*DFT)
- 
+
              DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
              MONMSG     MSGID(CPF2105 CPF9801)
- 
+
              CHGJOB     INQMSGRPY(*RQD)
- 
+
 /* Create journal/receiver */
- 
+
 /**********  CRTJRNRCV  JRNRCV(&JLIB/&RECEIVER) AUT(MIDAS10)          /*179753*/
 /**********  CRTJRN     JRN(&JLIB/&JOURNAL) JRNRCV(&JLIB/&RECEIVER) +
                           AUT(MIDAS10)                                /*179753*/
              CRTJRNRCV  JRNRCV(&JLIB/&RECEIVER) AUT(*LIBCRTAUT)       /*179753*/
              CRTJRN     JRN(&JLIB/&JOURNAL) JRNRCV(&JLIB/&RECEIVER) +
                           AUT(*LIBCRTAUT)                             /*179753*/
- 
+
              ENDDO                                                    /*CCB009*/
 /* Clear index file */
- 
+
              CLRPFM     FILE(GLJNHIPD)
- 
+
 /* Remove all members from driving and trailer file */
- 
+
              RMVM       FILE(GLBATHPD) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
              RMVM       FILE(GLBATHPA) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
- 
+
 /* Create main data queue */
- 
+
 /**********  CRTDTAQ    DTAQ(&DTAQLIB/BATCHSERVE) MAXLEN(50) +
                           AUT(MIDAS10)                                /*179753*/
              CRTDTAQ    DTAQ(&DTAQLIB/BATCHSERVE) MAXLEN(50) +
@@ -143,19 +149,19 @@
              MONMSG     MSGID(CPF9870) EXEC(DO)
              CALL       PGM(QCLRDTAQ) PARM(BATCHSERVE &DTAQLIB)
              ENDDO
- 
+
 /* Retrieve number of sub-tasks */
- 
+
  CHAIN:      RCVF
              IF         COND(&DHCOTT *NE &CNAME) THEN(DO)
              GOTO       CMDLBL(CHAIN)
              ENDDO
- 
+
 /* Add all members and create data queues */
- 
+
  LOOP:       IF         COND(&LOOP *GT &DHTSNO) THEN(GOTO +
                           CMDLBL(START))
- 
+
              CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
              ADDPFM     FILE(GLBATHPD) MBR(&MEMBER)
              ADDPFM     FILE(GLBATHPA) MBR(&MEMBER)
@@ -165,7 +171,7 @@
              MONMSG     MSGID(CPF9870) EXEC(DO)
              CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
              ENDDO
- 
+
              IF         COND(&LOOP = 1) THEN(DO)
              IF         COND(&DHCSEQ = '00001') THEN(DO)
              CHGVAR     VAR(&NAME2_N) VALUE(01000)
@@ -174,45 +180,63 @@
              CHGVAR     VAR(&NAME2_N) VALUE(02000)
              ENDDO
              ENDDO
- 
+
              CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
              CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
              CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
              GOTO       CMDLBL(LOOP)
- 
+
 /* Start journalling driving/update files */
- 
+
 /**START:******STRJRNPF***FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD) +
                           JRN(&JLIB/&JOURNAL) IMAGES(*BOTH) +
                           OMTJRNE(*OPNCLO)                            *CEU013*/
 /**START:******STRJRNPF***FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD +
                           MANPOAPD GLAPNAPD) JRN(&JLIB/&JOURNAL) +
                           IMAGES(*BOTH) OMTJRNE(*OPNCLO) */   /*CEU013 CGL010*/
- START:      STRJRNPF   FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD +
+/**START:******STRJRNPF***FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD +
                           MANPOAPD GLAPNAPD GLVALPPD) +
                           JRN(&JLIB/&JOURNAL) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)             /*CGL010*/
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)      /*CGL010 CGL200*/
+/*           MONMSG     MSGID(CPF0000 RPG0000 MCH0000)        /*CCB009 CGL200*/
+ START:      IF         COND(&CGL200 *NE '       ') THEN(DO)          /*CGL200*/
+             STRJRNPF   FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD +
+                          MANPOAPD GLAPNAPD GLVALPPD) +
+                          JRN(&JLIB/&JOURNAL) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)              /*CGL010*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
- 
+             ENDDO                                                    /*CGL200*/
+             ELSE       CMD(DO)                                       /*CGL200*/
+             STRJRNPF   FILE(GLBATHPD GLBATHPA GLJNHIPD MANPOPD +
+                          MANPOAPD GLAPNAPD GLVALPPD GLMANPX0) +
+                          JRN(&JLIB/&JOURNAL) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)              /*CGL200*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CGL200*/
+             ENDDO                                                    /*CGL200*/
+
 /* Clear output files and index file */
- 
+
              CLRPFM     FILE(MANPOHH)
              CLRPFM     FILE(MANPOPD)
              CLRPFM     FILE(MANPOAPD)                               /*CEU013*/
              CLRPFM     FILE(MANPOZZ)
- 
+
+             IF         COND(&CGL200 *EQ '       ') THEN(DO)          /*CGL200*/
+             CLRPFM GLMANPX0                                          /*CGL200*/
+             ENDDO                                                    /*CGL200*/
+/*                                                                   */
 /*/COPY WNCPYSRC,GLC2601001                                          */
              GOTO       CMDLBL(END)
- 
- 
+
+
  ABNOR:      SNDPGMMSG  MSG('Program GLC2601 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*/COPY WNCPYSRC,GLC2601END                                          */
- 
+
              ENDPGM

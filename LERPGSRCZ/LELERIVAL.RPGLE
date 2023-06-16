@@ -16,6 +16,7 @@
       *                                                               *
       *  Last Amend No. AR1076352          Date 15Jun23               *
       *  Prev Amend no. MD053935           Date 08Jun23               *
+      *                 MD060620           Date 25May23               *
       *                 MD061418           Date 24May23               *
       *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
@@ -134,6 +135,8 @@
       *              operation. (Child: AR1080330)                    *
       *  MD053935 - Default NCHI to have a value even if NBRA is blank*
       *           - Prevents incorreclty showing up of LEV0288.       *
+      *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
+      *           - Applied fix for MD-61250.                         *
       *  MD061418 - LEV0054 error received on authorisation but not   *
       *             on completion. Default to the current Rollover    *
       *             Frequency and Day Number if left blank.           *
@@ -632,6 +635,19 @@
      D  VNRRDP                        2S 0                                                    CLE172
      D  VNDBAV                        1A                                                      CLE172
       *                                                                                       CLE172
+      ** Check Libor Fields                                                                 MD060620
+     D ChkLiborFlds    DS                                                                   MD060620
+     D  LBNBLRT                       1A                                                    MD060620
+     D  LBNRFRR                      10A                                                    MD060620
+     D  LBNCALM                       4A                                                    MD060620
+     D  LBNBADJ                      13S 0                                                  MD060620
+     D  LBNFLOR                      13S 0                                                  MD060620
+     D  LBNLBDY                       2S 0                                                  MD060620
+     D  LBNLODY                       2S 0                                                  MD060620
+     D  LBNOPSH                       1A                                                    MD060620
+     D  LBNRRDP                       2S 0                                                  MD060620
+     D  LBNDBAV                       1S 0                                                  MD060620
+      *                                                                                     MD060620 
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -1045,10 +1061,25 @@
       *                                                                                     MD059368
      C                   IF        CLE172 = 'N'                                             MD059368
      C                   IF        LeriScnBlrt <> *Blanks                                   MD059368
+      *                                                                                     MD060620
+     C                   CLEAR                   ChkLiborFlds                               MD060620
+     C                   MOVE      LeriScnBlrt   ChkLiborFlds                               MD060620
+     C                   IF        LBNBLRT  <> *BLANKS OR                                   MD060620
+     C                             LBNRFRR  <> *BLANKS OR                                   MD060620
+     C                             LBNCALM  <> *BLANKS OR                                   MD060620
+     C                             LBNBADJ  <> *ZEROS  OR                                   MD060620
+     C                             LBNFLOR  <> *ZEROS  OR                                   MD060620
+     C                             LBNLBDY  <> *ZEROS  OR                                   MD060620
+     C                             LBNLODY  <> *ZEROS  OR                                   MD060620
+     C                             LBNOPSH  <> *BLANKS OR                                   MD060620
+     C                             LBNRRDP  <> *ZEROS  OR                                   MD060620
+     C                             LBNDBAV  <> *ZEROS                                       MD060620
+      *                                                                                     MD060620
      C                   EVAL      DDNBRTOK = 'N'                                           MD059368
      C                   EVAL      Idx = Idx + 1                                            MD059368
      C                   EVAL      FldNameArr(Idx) = 'DDNBRTB'                              MD059368
      C                   EVAL      MsgIDArr(Idx) = '5049527'                                BUG11329
+     C                   ENDIF                                                              MD060620
      C                   ENDIF                                                              MD059368
      C                   ENDIF                                                              MD059368
       *

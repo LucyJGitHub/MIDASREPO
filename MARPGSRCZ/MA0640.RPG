@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054200           Date 11Jun20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6019             Date 09Feb23               *
+      *  Prev Amend No. MD054200           Date 11Jun20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024520           Date 24Jan14               *
       *                 MD021155           Date 08Jul13               *
       *                 CCB020             Date 06Aug12               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6019 - Add 'CONFIDENTIAL' text and retention years to      *
+      *           header for RAPP.                                    *
       *  MD054200 - The dates on the StorQm reports are wrong         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024520 - Archiving job SCC0420 is looping. Producing a     *
@@ -161,6 +164,11 @@
      I                                       91  96 JOBN                  COR001
      I                                       97  97 AST5                  COR001
      I/COPY WNCPYSRC,MAH00010
+     I*                                                               *                       BA6019
+     I                                       98 109 CONF                                      BA6019
+     I                                      110 110 AST14                                     BA6019
+     I                                      111 112 RETN                                      BA6019
+     I                                      113 113 AST15                                     BA6019
       *
       ** Input header record data structure.
       *
@@ -177,6 +185,9 @@
      I                                       49  53 RSEQNO
      I                                       54  63 PRTFNM
      I/COPY WNCPYSRC,MAH00011
+      *                                                               *                       BA6019
+     I                                       64  75 CONFID                                    BA6019
+     I                                       76  77 RETAIN                                    BA6019
       *
       ** Program status data structure.
       *
@@ -213,6 +224,14 @@
      I***DSFDY**   E DSDSFDY                                                       MD021155 MD024520
      IDSSDY     E DSDSSDY                                                                   MD024520
      I/COPY WNCPYSRC,MAH00012
+      *                                                                                       BA6019
+      ** Switchable Features File                                                             BA6019
+     ISCSARD    E DSSCSARDPD                                                                  BA6019
+      *                                                                                       BA6019
+      ** First DS for Access Programs, Short Data Structure                                   BA6019
+     IDSFDY     E DSDSFDY                                                                     BA6019
+      *                                                                                       BA6019
+     I*                                                                                       BA6019
      I/EJECT
       *
       ** Set-up copyright parameter.
@@ -261,6 +280,27 @@
      C                     MOVE PRTFNM    PNAM
      C                     MOVE '*'       AST12
      C/COPY WNCPYSRC,MAH00013
+      *                                                                                       BA6019
+      * Check if BA6019 - Archiving RPT sep. Arch is ON                                       BA6019
+      *                                                                                       BA6019
+     C                     MOVE 'N'       BA6019  1                                           BA6019
+      *                                                                                       BA6019
+     C                     CALL 'AOSARDR0'                                                    BA6019
+     C                     PARM *BLANKS   @RTCD   7                                           BA6019
+     C                     PARM '*VERIFY' @OPTN   7                                           BA6019
+     C                     PARM 'BA6019'  @SARD   6                                           BA6019
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA6019
+      *                                                                                       BA6019
+      *  If feature BA6019 is active                                                          BA6019
+      *                                                                                       BA6019
+     C           @RTCD     IFEQ *BLANKS                                                       BA6019
+     C                     MOVE 'Y'       BA6019                                              BA6019
+      *                                                                                       BA6019
+     C                     MOVE CONFID    CONF                                                BA6019
+     C                     MOVE '*'       AST14                                               BA6019
+     C                     MOVE RETAIN    RETN                                                BA6019
+     C                     MOVE '*'       AST15                                               BA6019
+     C                     ENDIF                                                              BA6019
       *
      C           *NAMVAR   DEFN           SDSTAT                          COR001
       *                                                                   COR001

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23742           Date 09May09               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23742 - Improper handling of Ext Narr from Batch          *
@@ -68,6 +70,10 @@
       *                                                                                       CER030
       **  Midas GL Journal entry Interface - Additional Info                                  CER030
       *                                                                                       CER030
+     FGLJEIPX0O   E                    DISK         KINFSR *PSSR      UC  CGL200
+     F                                              KCOMIT                CGL200
+      **  Timestamp extension file                                        CGL200
+      *                                                                   CGL200
       /EJECT
      E                    CPY@    1   1 80
       ** Array containing Copyright statement
@@ -123,6 +129,31 @@
       *                                                                                       CER030
       ** External data structure for SAR file details                                         CER030
       *                                                                                       CER030
+     IOUTDAT      DS                                                      CGL200
+     I                                        1   4 APIYR                 CGL200
+     I                                        5   6 APIMTH                CGL200
+     I                                        7   8 APIDAY                CGL200
+     I                                        9  10 APIHR                 CGL200
+     I                                       11  12 APIMN                 CGL200
+     I                                       13  14 APISEC                CGL200
+     I                                       15  17 APIMIL                CGL200
+      *                                                                   CGL200
+     ITMSTDS      DS                                                      CGL200
+     I                                        1   4 RETYR                 CGL200
+     I                                        5   5 TMST1                 CGL200
+     I                                        6   7 RETMTH                CGL200
+     I                                        8   8 TMST2                 CGL200
+     I                                        9  10 RETDAY                CGL200
+     I                                       11  11 TMST3                 CGL200
+     I                                       12  13 RETHR                 CGL200
+     I                                       14  14 TMST4                 CGL200
+     I                                       15  16 RETMN                 CGL200
+     I                                       17  17 TMST5                 CGL200
+     I                                       18  19 RETSEC                CGL200
+     I                                       20  20 TMST6                 CGL200
+     I                                       21  23 RETMIL                CGL200
+     I                                       24  26 RETMIC                CGL200
+      *                                                                   CGL200
       *****************************************************************
       *
       **         M A I N    P R O C E S S I N G
@@ -366,6 +397,11 @@
       *
      C                     WRITE@BTREMG
       *                                                                                       CER030
+     C           CGL200    IFEQ 'Y'                                       CGL200
+     C                     EXSR TMSTST                                    CGL200
+     C                     WRITEGLJEIPD0                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
       ** Write the entries in the file GLJEIXD0                                               CER030
       *                                                                                       CER030
      C           CER031    IFEQ 'Y'                                                           CER030
@@ -697,9 +733,84 @@
      C                     ENDIF                                                              CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
+      *                                                                   CGL200
+      ** Access AOSARDR0 to check if CGL200 is installed                  CGL200
+      *                                                                   CGL200
+     C                     CALL 'AOSARDR0'                                CGL200
+     C                     PARM *BLANKS   @RTCD   7                       CGL200
+     C                     PARM '*VERIFY' @OPTN   7                       CGL200
+     C                     PARM 'CGL200'  @SARD   6                       CGL200
+      *                                                                   CGL200
+     C           @RTCD     IFEQ *BLANKS                                   CGL200
+     C                     MOVE 'Y'       CGL200  1                       CGL200
+     C                     OPEN GLJEIPX0                                  CGL200
+     C                     ELSE                                           CGL200
+     C                     MOVE 'N'       CGL200                          CGL200
+     C                     END                                            CGL200
+      *                                                                   CGL200
      C                     ENDSR
       *****************************************************************
      C/EJECT
+      *****************************************************************   CGL200
+      *                                                               *   CGL200
+      *  TMSTST - Time stamp setup                                    *   CGL200
+      *                                                               *   CGL200
+      *****************************************************************   CGL200
+      *                                                                   CGL200
+     C           TMSTST    BEGSR                           *** TMSTST *** CGL200
+      *                                                                   CGL200
+     C                     MOVE *BLANKS   INFMT  10                       CGL200
+     C                     MOVEL'*CURRENT'INFMT                           CGL200
+     C                     MOVE *BLANKS   INVAR   1                       CGL200
+     C                     MOVE *BLANKS   OUTFMT 10                       CGL200
+     C                     MOVEL'*YYMD'   OUTFMT                          CGL200
+      *                                                                   CGL200
+     C                     CALL 'QWCCVTDT'                                CGL200
+      *                                                                   CGL200
+      ** Input format                                                     CGL200
+      *                                                                   CGL200
+     C                     PARM           INFMT                           CGL200
+      *                                                                   CGL200
+      ** Input variable                                                   CGL200
+      *                                                                   CGL200
+     C                     PARM           INVAR                           CGL200
+      *                                                                   CGL200
+      ** Output format                                                    CGL200
+      *                                                                   CGL200
+     C                     PARM           OUTFMT                          CGL200
+      *                                                                   CGL200
+      ** Date/time returned                                               CGL200
+      *                                                                   CGL200
+     C                     PARM           OUTDAT                          CGL200
+      *                                                                   CGL200
+      ** Error structure                                                  CGL200
+      *                                                                   CGL200
+     C                     PARM           QUSEC  32                       CGL200
+      *                                                                   CGL200
+     C                     MOVE '-'       TMST1                           CGL200
+     C                     MOVE '-'       TMST2                           CGL200
+     C                     MOVE '-'       TMST3                           CGL200
+     C                     MOVE '.'       TMST4                           CGL200
+     C                     MOVE '.'       TMST5                           CGL200
+     C                     MOVE '.'       TMST6                           CGL200
+      *                                                                   CGL200
+      ** The OutDate field returned from the API and TimeStamp fiel       CGL200
+      ** returned from this procedure have been broken down by data       CGL200
+      ** structures.  Copy the data from one to the other and exit.       CGL200
+      *                                                                   CGL200
+     C                     MOVE APIYR     RETYR                           CGL200
+     C                     MOVE APIMTH    RETMTH                          CGL200
+     C                     MOVE APIDAY    RETDAY                          CGL200
+     C                     MOVE APIHR     RETHR                           CGL200
+     C                     MOVE APIMN     RETMN                           CGL200
+     C                     MOVE APISEC    RETSEC                          CGL200
+     C                     MOVE APIMIL    RETMIL                          CGL200
+      *                                                                   CGL200
+     C                     MOVELTMSTDS    BTTMST                          CGL200
+      *                                                                   CGL200
+     C                     ENDSR                                          CGL200
+      *****************************************************************   CGL200
+     C/EJECT                                                              CGL200
       *****************************************************************
       *
       ** SRTERM - Termination Processing

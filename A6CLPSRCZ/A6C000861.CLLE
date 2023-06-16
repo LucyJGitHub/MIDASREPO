@@ -1,0 +1,140 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility to Sync GLNW94PD and A6NW94PD')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       A6C000861 - CL program to Sync GLNW94PD and A6NW94PD        */
+/*                                                                   */
+/*       (C) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. BA6026   *CREATE   Date 18Jan23              */
+/*       Prev Amend No. Xxnnnnnn           Date DDMMMYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BA6026 - Structuring Current MT940 and SEPA Compliance.     */
+/*                Include MD058337                                   */
+/*                                                                   */
+/*********************************************************************/
+
+            PGM        PARM(&MODE)
+
+            DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+            DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+            DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+            DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+            DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+            DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2023')
+/* Global monitor message */
+
+               MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR1))
+
+/* Start of program */
+
+             SNDPGMMSG  MSG('A6C000861 program - Syncronize +
+                          GLNW94PD and A6NW94PD.') TOMSGQ(MRUNQ MOPERQ)
+
+/* Create LDA if it does not exist */
+
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+
+/* Check if parameter passed is 'U', 'u', 'A' or 'a' or if invalid */
+
+             IF         COND((&MODE *NE 'A') *AND (&MODE *NE +
+                          'a') *AND (&MODE *NE 'U')  +
+                          *AND (&MODE *NE 'u')) THEN(DO)
+
+             SNDPGMMSG  MSG('Invalid parameter passed to A6C000861 +
+                          program') TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Invalid +
+                          parameter passed. It should either be ''U'' +
+                          or ''u'' for Update and ''A'' or ''a'' for +
+                          Audit') MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/* Get system prefix */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+
+             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u'))  +
+                        THEN(DO)
+
+/* Check if YYA6NW94PD already exist */
+
+             CHKOBJ     OBJ(&DPLIB/YYA6NW94PD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+             DLTF       FILE(YYA6NW94PD)
+
+/* Create backup of PF/OTPAYDQD  */
+
+BACKUP:      CPYF       FROMFILE(&DMLIB/A6NW94PD) +
+                          TOFILE(&DPLIB/YYA6NW94PD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             CLRPFM     FILE(YYA6NW94PD)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in copying PF/A6NW94PD to +
+                          PF/YYA6NW94PD. Process terminated.') +
+                          MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             ENDDO
+
+
+             CHGJOB    SWS(00000000)
+             CHGVAR     VAR(&RUNP) VALUE('YES')
+
+             CALL       PGM(UTGL0861) PARM(&MODE)
+
+/* Error occurred in program */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('A6C000861 program completed normally.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination of the program or */
+/* restore backup if an error occurred in update mode */
+
+ABNOR:       IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) +
+                        THEN(DO)
+             IF         COND(&RUNP *EQ 'YES') THEN(DO)
+
+             CPYF       FROMFILE(&DPLIB/YYA6NW94PD) +
+                        TOFILE(&DMLIB/A6NW94PD) MBROPT(*REPLACE) +
+                        FMTOPT(*NONE)
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in restoring PF/A6NW94PD +
+                          from PF/YYA6NW94PD. Process terminated.  +
+                          Please restore manually PF/A6NW94PD from +
+                          PF/YYA6NW94PD.') +
+                          MSGTYPE(*INFO)
+             ENDDO
+             ENDDO
+             ENDDO
+
+ABNOR1:      SNDPGMMSG  MSG('Error occurred in A6C000861 program.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2023')
+
+             SNDPGMMSG  MSG('End of A6C000861 program') TOMSGQ(MRUNQ MOPERQ)
+
+             ENDPGM

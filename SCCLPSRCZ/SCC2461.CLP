@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. BA6032             Date 09Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CSC038             Date 18Aug08              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       BA6032 - Set savf authorities to Handelsbanken standards    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       CSC038 - Include parameter DTACPR in save commands to reduce*/
@@ -103,6 +105,10 @@
              DCL        VAR(&ASP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CB_RTN_CDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CB_AUTO) TYPE(*CHAR) LEN(111)
+             DCL        VAR(&BA6032) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6032*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*BA6032*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                      /*BA6032*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*BA6032*/
 /*                                                                                        /*CSC018*/
 /* Declare variables for CSC018 - Journaling options for high                             /*CSC018*/
 /* availability.                                                                          /*CSC018*/
@@ -124,6 +130,16 @@
 /*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
                            EXEC(GOTO ABNORMAL)
+/*                                                                                        /*BA6032*/
+/** Check for Switchable feature BA6032.                                                  /*BA6032*/
+/*                                                                                        /*BA6032*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*BA6032*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*BA6032*/
+             CHGVAR     VAR(&SARD) VALUE('BA6032')                                        /*BA6032*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &OPN &SARD)                             /*BA6032*/
+                                                                                          /*BA6032*/
+             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&BA6032) VALUE('Y'))                                     /*BA6032*/
 /**/
 /* Copyright statement defination at runtime */
 /**/
@@ -352,6 +368,12 @@ CSC018END:                                                                      
                           Auto COB') ASP(&ASP)
              MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO                                                                        /*CSC043*/
+                                                                                          /*BA6032*/
+             IF         COND(&BA6032 *EQ 'Y') THEN(DO)                                    /*BA6032*/
+             SETOBJAUT  LIB(&DILIB) OBJECT(&SAVF_NAME) TYPE(*FILE)                        /*BA6032*/
+             MONMSG     MSGID(CPF0000)                                                    /*BA6032*/
+             ENDDO                                                                        /*BA6032*/
+                                                                                          /*BA6032*/
 /**/
 /* Do not save the currently attached reciever.                      */
 /**/

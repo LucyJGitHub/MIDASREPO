@@ -15,8 +15,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. BA6020             Date 29Mar23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG21881           Date 15Dec08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA6020 - Add specific header field Output to CM XML         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*     BUG21881 - CPF0818 on job UDC_IMMEDS. Applied fix BUG12778    */
@@ -66,7 +68,7 @@
              DCL        VAR(&RBCH)        TYPE(*CHAR) LEN(3)
              DCL        VAR(&RPARM)       TYPE(*CHAR) LEN(100)
              DCL        VAR(&RARCH)       TYPE(*CHAR) LEN(1)
- 
+
 /* */
 /* General                                                           */
 /* */
@@ -101,12 +103,23 @@
              DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
                                                                                           /*CSC022*/
+             DCL        VAR(&BA6020) TYPE(*CHAR) LEN(1)                                   /*BA6020*/
+             DCL        VAR(&OPT1) TYPE(*CHAR) LEN(7)                                     /*BA6020*/
+             DCL        VAR(&RTNCD1) TYPE(*CHAR) LEN(7)                                   /*BA6020*/
+             DCL        VAR(&SAR1) TYPE(*CHAR) LEN(6)                                     /*BA6020*/
+             DCL        VAR(&SCSAR1) TYPE(*CHAR) LEN(200)                                 /*BA6020*/
+                                                                                          /*BA6020*/
              CHGVAR     VAR(&CSC022) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&CRSKIP) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&RTNCDE) VALUE('       ')                                     /*CSC022*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC022*/
              CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
                                                                                           /*CSC022*/
+             CHGVAR     VAR(&BA6020) VALUE('N')                                           /*BA6020*/
+             CHGVAR     VAR(&RTNCD1) VALUE('       ')                                     /*BA6020*/
+             CHGVAR     VAR(&OPT1) VALUE('*VERIFY')                                       /*BA6020*/
+             CHGVAR     VAR(&SAR1) VALUE('BA6020')                                        /*BA6020*/
+                                                                                          /*BA6020*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -117,6 +130,14 @@
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
+ /**/                                                                                     /*BA6020*/
+ /** Call AO Switchable features  */                                                      /*BA6020*/
+ /**/                                                                                     /*BA6020*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCD1 &OPT1 &SAR1 &SCSAR1)                   /*BA6020*/
+                                                                                          /*BA6020*/
+             IF         COND(&RTNCD1 *EQ '       ') THEN(DO)                              /*BA6020*/
+             CHGVAR     VAR(&BA6020) VALUE('Y')                                           /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
  /**/                                                                                     /*CSC022*/
  /** Call AO Switchable features  */                                                      /*CSC022*/
  /**/                                                                                     /*CSC022*/
@@ -234,7 +255,12 @@
 /* */
 /* Set up Access path to use                                         */
 /* */
+             IF         COND(&BA6020 *EQ 'Y') THEN(DO)                                    /*BA6020*/
+             CHGVAR     VAR(&ACC_PTH) VALUE('A6PGENL3')                                   /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
+             ELSE       CMD(DO)                                                           /*BA6020*/
              CHGVAR     VAR(&ACC_PTH) VALUE('CGPGENL3')
+             ENDDO                                                                        /*BA6020*/
 /* */
 /* Set up RCF parameters                                             */
 /* */
@@ -303,7 +329,7 @@ ABNORMAL:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO                                                                        /*CSC022*/
                                                                                           /*CSC022*/
- 
+
 /**/
  ENDCLPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

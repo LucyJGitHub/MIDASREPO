@@ -31,8 +31,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL200             Date 17Feb23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL127AY           Date 06Aug12               *
       *                 CCB020             Date 06Aug12               *
       *                 CGL127AB           Date 06Aug12               *
@@ -65,6 +66,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CGL200 - Timestamp on batch items and related postings       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -111,6 +113,11 @@
       * Account postings history file.
       * ------------------------------
      F*                                                                   S01408
+      *                                                                                       CGL200
+     FGLGLAC01UF  E           K        DISK                           UC                      CGL200
+     F            GLAPOSD0                          KRENAMEGLGLACD0                           CGL200
+     F                                              KCOMIT                                    CGL200
+      *                                                                                       CGL200
      F/COPY WNCPYSRC,GL4450FFPG                                           S01408
      F*                                                                   S01408
      F***GLACPHL UF  E           K        DISK                           UC          S01520 CGL127AY
@@ -293,6 +300,29 @@
      C                     KFLD           CCY                                               CGL127AB
      C                     KFLD           ACSQ                                              CGL127AB
      C*                                                                   S01408
+      * Access SAR details for CGL200                                     CGL200
+      *                                                                   CGL200
+     C                     MOVEL'N'       CGL200  1                       CGL200
+     C                     CALL 'AOSARDR0'                                CGL200
+     C                     PARM *BLANKS   P@RTNC                          CGL200
+     C                     PARM '*VERIFY' P@OPTN                          CGL200
+     C                     PARM 'CGL200'  P@SARN  6                       CGL200
+      *                                                                   CGL200
+     C           P@RTNC    IFEQ *BLANK                                    CGL200
+     C                     MOVEL'Y'       CGL200                          CGL200
+     C                     OPEN GLGLAC01                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
+     C           KEY002    KLIST                                          CGL200
+     C                     KFLD           XXBRCA                          CGL200
+     C                     KFLD           XXCNUM                          CGL200
+     C                     KFLD           XXCCY                           CGL200
+     C                     KFLD           XXACOD                          CGL200
+     C                     KFLD           XXACSQ                          CGL200
+     C                     KFLD           XXPSTD                          CGL200
+     C                     KFLD           XXVALD                          CGL200
+     C                     KFLD           XXUNQK                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL4450CCPG                                           S01408
      C*                                                                   S01408
       *
@@ -592,6 +622,19 @@
      C                     SUB  PSTA      @HCFB                           S01520
      C                     ENDIF                                          S01520
      C*                                                                   S01520
+     C           CGL200    IFEQ 'Y'                                       CGL200
+     C                     MOVE BRCA      XXBRCA                          CGL200
+     C                     MOVE CNUM      XXCNUM                          CGL200
+     C                     MOVE CCY       XXCCY                           CGL200
+     C                     MOVE ACOD      XXACOD                          CGL200
+     C                     MOVE ACSQ      XXACSQ                          CGL200
+     C                     MOVE PSTD      XXPSTD                          CGL200
+     C                     MOVE VALD      XXVALD                          CGL200
+     C                     MOVELZZ009     XXUNQK    P                     CGL200
+     C           KEY002    CHAINGLGLAC01             90                   CGL200
+     C  N90                DELETGLGLACD0                                  CGL200
+     C                     ENDIF                                          CGL200
+      *                                                                   CGL200
      C/COPY WNCPYSRC,GL4450C002
      C**********           DELETGLACPHL1                                             S01520 CGL127AB
      C                     DELETGLACPHL5                                                    CGL127AB
@@ -664,6 +707,11 @@
      C                     CLOSEGLACHDPD                                                    CGL127AY
      C                     UNLCKGLACPHL5                                                    CGL127AY
      C                     ENDIF                                                            CGL127AY
+      *                                                                   CGL200
+     C           CGL200    IFEQ 'Y'                                       CGL200
+     C                     CLOSEGLGLAC01                                  CGL200
+     C                     END                                            CGL200
+      *                                                                   CGL200
      C**********           MOVE '1'       *INLR                                             CGL127AY
      C                     RETRN
       /EJECT

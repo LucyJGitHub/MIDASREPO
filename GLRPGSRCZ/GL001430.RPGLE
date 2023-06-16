@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD025421           Date 10Mar23               *
-      *  Prev Amend No. MD057965           Date 28May21               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD025421           Date 10Mar23               *
+      *                 MD057965           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
       *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
@@ -65,6 +66,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Do not zeroise MGTRAT if feature is ON. MGTRAT      *
+      *           will need to be passed to MG00940 for formatting    *
+      *           structured Field 86.                                *
+      *           Include GSH026                                      *
       *  MD025421 - Incorrect Info To A/C Owner output to MT940       *
       *             for an account belonging to a Cash Mgmt group.    *
       *             Use the default at MT940 level if defined.        *
@@ -585,7 +591,12 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *                                                                                       CER030
+      ** Do not zeroise MGTRAT if BA6026 is enabled                                           BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 =  'N'                                              BA6026
      C                   EVAL      MGTRAT = *ZEROS                                            CER030
+     C                   Endif                                                                BA6026
+     C                                                                                        BA6026
      C                   EVAL      PRtcd = *BLANKS                                            CER030
      C                   EVAL      *IN99 = *OFF                                               CER030
       *                                                                                       CER030
@@ -1311,6 +1322,18 @@
      C     SDCMAN        PARM      SDCMAN        DSSDY                                        CRE008
                                                                                               CRE008
      C                   ENDIF                                                                CRE008
+      *                                                                                       BA6026
+      ***  Check if Structured MT940 formatting is ON (BA6026)                                BA6026
+      *                                                                                       BA6026
+     C                   MOVEL     'N'           BA6026            1                          BA6026
+     C                   CALL      'AOSARDR0'                                                 BA6026
+     C                   PARM      *BLANKS       P@RTCD                                       BA6026
+     C                   PARM      '*VERIFY'     P@OPTN                                       BA6026
+     C                   PARM      'BA6026 '     P@SARD                                       BA6026
+      *                                                                                       BA6026
+     C                   IF        P@RTCD = *BLANKS                                           BA6026
+     C                   EVAL      BA6026 = 'Y'                                               BA6026
+     C                   ENDIF                                                                BA6026
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_046                                                             CGL146A
      C/COPY WNCPYSRC,GLH00387

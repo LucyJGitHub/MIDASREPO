@@ -16,12 +16,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA6020             Date 31Mar23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC022             Date 24Feb04              */
+/*                      CSC022             Date 24Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      175941             Date 29Dec00              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA6020 - Add specific header field Output to CM XML         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       175941 - Amend dtaara CGDTA to flag the field when          */
@@ -98,6 +100,11 @@
              DCL        VAR(&CMTJOB9) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
              DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&BA6020) TYPE(*CHAR) LEN(1)                                   /*BA6020*/
+             DCL        VAR(&OPT1) TYPE(*CHAR) LEN(7)                                     /*BA6020*/
+             DCL        VAR(&RTNCD1) TYPE(*CHAR) LEN(7)                                   /*BA6020*/
+             DCL        VAR(&SAR1) TYPE(*CHAR) LEN(6)                                     /*BA6020*/
+             DCL        VAR(&SCSAR1) TYPE(*CHAR) LEN(200)                                 /*BA6020*/
                                                                                           /*CSC022*/
              CHGVAR     VAR(&CSC022) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&CRSKIP) VALUE('N')                                           /*CSC022*/
@@ -105,6 +112,10 @@
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC022*/
              CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
                                                                                           /*CSC022*/
+             CHGVAR     VAR(&BA6020) VALUE('N')                                           /*BA6020*/
+             CHGVAR     VAR(&RTNCD1) VALUE('       ')                                     /*BA6020*/
+             CHGVAR     VAR(&OPT1) VALUE('*VERIFY')                                       /*BA6020*/
+             CHGVAR     VAR(&SAR1) VALUE('BA6020')                                        /*BA6020*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -115,6 +126,14 @@
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
+ /**/                                                                                     /*BA6020*/
+ /** Call AO Switchable features  */                                                      /*BA6020*/
+ /**/                                                                                     /*BA6020*/
+             CALL       PGM(AOSARDR0) PARM(&RTNCD1 &OPT1 &SAR1 &SCSAR1)                   /*BA6020*/
+                                                                                          /*BA6020*/
+             IF         COND(&RTNCD1 *EQ '       ') THEN(DO)                              /*BA6020*/
+             CHGVAR     VAR(&BA6020) VALUE('Y')                                           /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
  /**/                                                                                     /*CSC022*/
  /** Call AO Switchable features  */                                                      /*CSC022*/
  /**/                                                                                     /*CSC022*/
@@ -200,6 +219,13 @@
                           DTAMBRS((CGPGENPD (&MBR_NAME))) +
                           TEXT('Correspondence Items to Print')
              OVRDBF     FILE(&ACC_PATH) MBR(&MBR_NAME)
+/* */
+             IF         COND(&BA6020 *EQ 'Y') THEN(DO)                                    /*BA6020*/
+             ADDLFM     FILE(A6PGENL3) MBR(&MBR_NAME) +
+                          DTAMBRS((CGPGENPD (&MBR_NAME))) +
+                          TEXT('Correspondence Items to Print')                           /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
+/* */
 /*/COPY WNCPYSRC,CGC5200003                                          */
 /* */                                                                 /*088008*/
 /* If print last conf...                      */                      /*088008*/
@@ -324,6 +350,9 @@
              RMVM       FILE(CGPGENL4) MBR(&MBR_NAME)                 /*088008*/
              ENDDO                                                    /*088008*/
              RMVM       FILE(&ACC_PATH) MBR(&MBR_NAME)
+             IF         COND(&BA6020  *EQ 'Y') THEN(DO)                                   /*BA6020*/
+             RMVM       FILE(A6PGENL3) MBR(&MBR_NAME)                                     /*BA6020*/
+             ENDDO                                                                        /*BA6020*/
              DLTOVR     FILE(&ACC_PATH)
              RMVM       FILE(CGPGENPD)  MBR(&MBR_NAME)
 /*/COPY WNCPYSRC,CGC5200004                                          */
@@ -361,7 +390,7 @@ ABNORMAL:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC5200 ended abnormally') MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /**/
  ENDCLPGM:
              CHGDTAARA  DTAARA(CGDTA (357 1)) VALUE('N')              /*175941*/

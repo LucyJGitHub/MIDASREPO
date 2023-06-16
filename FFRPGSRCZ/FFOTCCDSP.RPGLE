@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping (Recompile)                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BG9185 - Correction to CGL029 (Recompile)                    *
@@ -52,12 +55,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFFOTCCDDF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -97,107 +100,107 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FF standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for FF-specific
       ** variables.
      D/COPY FFCPYSRC,DECLAREVAR
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @NAR            S             40    DIM(2) CTDATA PERRCD(1)
- 
+
      D @EI             S              1    DIM(53)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULE DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D FFCSET        E DS                  EXTNAME(FFCSETPD)
       ** EXTERNAL DATA STRUCTURE FOR CUSTOMER SETTLEMENTS FORMAT DEFINITION
- 
+
      D FFECSET       E DS                  EXTNAME(FFECSETPD)
       ** EXTERNAL DATA STRUCTURE FOR CUSTOMER SETTLEMENTS OK FLAGS
- 
+
      D FFOTCC        E DS                  EXTNAME(FFOTCCPD)
       ** EXTERNAL DATA STRUCTURE FOR EXCHANGE-TRADED FORMAT DEFINITION
- 
+
      D FFEOTCC       E DS                  EXTNAME(FFEOTCCPD)
       ** EXTERNAL DATA STRUCTURE FOR EXCHANGE-TRADED OK FLAGS
- 
- 
+
+
      D                 DS
      D  FFFOTX                 1     40
      D  FFSIDN                10     15
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** CFF007 enhancement                                                                   CFF007
      D CFF007          S              1A                                                      CFF007
                                                                                               CFF007
@@ -259,13 +262,13 @@
       ** by the message handler.
      C                   EVAL      TranRef = STNBR
      C                   EVAL      ActionCode = SACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      C/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       *
       * POSITION CURSOR ON ACTION CODE IF IT IS BLANK
       *
@@ -273,12 +276,12 @@
       *
       * ENABLE KEY FIELDS (ACTION CODE & TRANSACTION NUMBER)
      C     @EKYFD        COMP      'Y'                                6969
- 
+
       * ENABLE DETAIL FIELDS (ALL FIELDS EXCEPT ACTION CODE
       * AND TRANSACTION NUMBER)
       *
      C     @EDTFD        COMP      'Y'                                7070
- 
+
       *
       * ENABLE FUNCTION KEYS
       *
@@ -342,21 +345,21 @@
      C                   MOVE      *INKP         @INKP
       *
      C                   ENDSR
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      C/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Parameters
      C     *ENTRY        PLIST
       *
@@ -429,42 +432,42 @@
      C                   PARM                    CFF001                                       CFF007
       ** CFF007 Enhancement                                                                   CFF007
      C                   PARM                    CFF007                                       CFF007
- 
+
       ** Move workstation ID to screen field.
      C                   MOVEL     PsJobName     FFWSID
- 
+
       * Message subfile control
      C                   MOVE      '1'           *IN97
      C                   MOVEL     '*'           FFPGMQ
- 
+
       * SET SCREEN PROTECT/NON-DISPLAY INDICATORS
- 
+
       * Single-branching (protect booking branch)
- 
+
      C     BJSBRC        IFNE      *BLANK
      C                   MOVE      '1'           *IN80
      C                   END
- 
+
       * Originating Branches not used
       *
      C     BKOBRU        IFNE      'Y'
      C     BJSBRC        ORNE      *BLANK
      C                   MOVE      '1'           *IN81
      C                   END
- 
+
       ** Portfolio Management not installed (protect portfolio/PM ins.type)
- 
+
      C     BGPFMG        IFNE      'Y'
      C                   MOVE      '1'           *IN82
      C                   END
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY determines whether the Profit-Centre Accounting
       ** feature is on.  CAC003 is set to 'Y' if CAC003 is on and the
       ** Analytical Accounting module is on (BGN0ST = 'Y').
      C/COPY FFCPYSRC,CAC003CHEK
       **--------------------------------------------------------------------------------------------
- 
+
       *
       * Profit Centres not used or CAC003 installed (protect profit centre)
       *
@@ -472,14 +475,14 @@
      C     CAC003        OREQ      'Y'
      C                   MOVE      '1'           *IN83
      C                   END
- 
+
       *
       * CAC003 not installed (protect book/transaction profit centres)
       *
      C     CAC003        IFNE      'Y'
      C                   MOVE      '1'           *IN84
      C                   END
- 
+
       *                                                                         CPL002
       * CPL002 not installed (protect Spot Price)                               CPL002
       *                                                                         CPL002
@@ -508,15 +511,15 @@
       ** functions for the message handler, ZAMSGHNDLE.
      C/COPY FFCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

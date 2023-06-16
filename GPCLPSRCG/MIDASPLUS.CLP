@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CPK030             Date 11Apr14              */
+/*       Last Amend No. CSC059             Date 10Oct22              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CPK030             Date 11Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG12061            Date 20Sep06              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSC059 - Replace QDLS processing with IFS.                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       BG12061 - Addition of Consumer Banking message file.        */
@@ -37,14 +39,14 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /****COPY*MLCPYSRC,MLCOVRDCL                                        */                    /*CPK022*/
 /*/COPY GPCPYSRCG,MLCOVRDCL                                         */                    /*CPK022*/
- 
+
 /*/COPY WNCPYSRC,MLCOVRRC1                                         */
- 
+
 /*/COPY WNCPYSRC,MLCOVRRC2                                         */
- 
+
 /**********  DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(25)                               */ /*CPK030*/
 /**********  DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(8) +                              */ /*CPK030*/
 /**********               VALUE('PRDR0100')                                            */ /*CPK030*/
@@ -53,47 +55,54 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&ERRDTA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&USRID) TYPE(*CHAR) LEN(10)
- 
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC059*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')                    /*CSC059*/
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7) VALUE('       ')                    /*CSC059*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) VALUE('CSC059')                      /*CSC059*/
+             DCL        VAR(&SARREC) TYPE(*CHAR) LEN(200)                                 /*CSC059*/
+             DCL        VAR(&CSC059) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CSC059*/
+/*/COPY GPCPYSRCG,GPSVALDCL                                          */                   /*CSC059*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
- 
+
              RTVJOBA    USER(&USRID)
- 
+
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ') TEXT('Midas SC Midas +
                           information screen data')
              MONMSG     MSGID(CPF1023)
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           TEXT('Midas SD Local data area')
              MONMSG     MSGID(CPF1023)
- 
+
 /****COPY*MLCPYSRC,MLCOVROVR                                         */                   /*CPK022*/
 /*/COPY GPCPYSRCG,MLCOVROVR                                         */                    /*CPK022*/
- 
+
 /*/COPY WNCPYSRC,MLCOVRRC3                                         */
- 
+
 /*/COPY WNCPYSRC,MLCOVRRC4                                         */
- 
+
 /*****Determine*operating*system*level*                            */ /*               */ /*CPK030*/
- 
+
 /**********  CALL       PGM(QSZRTVPR) PARM(&RCVVAR X'00000019' +                       */ /*CPK030*/
 /**********               &FORMAT &PRDINF X'00000000')                                 */ /*CPK030*/
- 
+
 /**********  CHGVAR     VAR(&OSLVL) VALUE(%SST(&RCVVAR 20 6))                          */ /*CPK030*/
 /**********  CHGVAR     VAR(&OSLVL2) VALUE(%SST(&OSLVL 1 2) *CAT +                     */ /*CPK030*/
 /**********               'DFT')                                                       */ /*CPK030*/
- 
+
 /**GPAFT1PD**/ /*                                                                      */ /*CPK030*/
- 
+
 /**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
 /**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
 /**********  CHKOBJ     OBJ(GPAFT1PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK030*/
@@ -106,11 +115,11 @@
 /**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
 /**********     ENDDO                                                                  */ /*CPK030*/
 /**********  ENDDO                                                                     */ /*CPK030*/
- 
+
 /**********  OVRDBF     FILE(GPAFT1PD) MBR(&AFTMBR)                                    */ /*CPK030*/
- 
+
 /**GPAFT2PD**/ /*                                                                      */ /*CPK030*/
- 
+
 /**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
 /**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
 /**********  CHKOBJ     OBJ(GPAFT2PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK030*/
@@ -123,11 +132,11 @@
 /**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
 /**********     ENDDO                                                                  */ /*CPK030*/
 /**********  ENDDO                                                                     */ /*CPK030*/
- 
+
 /**********  OVRDBF     FILE(GPAFT2PD) MBR(&AFTMBR)                                    */ /*CPK030*/
- 
+
 /**GPAFT3PD**/ /*                                                                      */ /*CPK030*/
- 
+
 /**********  CHGVAR     VAR(&AFTMBR) VALUE('          ')                               */ /*CPK030*/
 /**********  CHGVAR     VAR(&AFTMBR) VALUE(&OSLVL)                                     */ /*CPK030*/
 /**********  CHKOBJ     OBJ(GPAFT3PD) OBJTYPE(*FILE) MBR(&OSLVL)                       */ /*CPK030*/
@@ -140,22 +149,41 @@
 /**********        CHGVAR     VAR(&AFTMBR) VALUE(*FIRST)                               */ /*CPK030*/
 /**********     ENDDO                                                                  */ /*CPK030*/
 /**********  ENDDO                                                                     */ /*CPK030*/
- 
+
 /**********  OVRDBF     FILE(GPAFT3PD) MBR(&AFTMBR)                                    */ /*CPK030*/
- 
+
 /* Create the data area ZMITEM in QTEMP */
- 
+
              CRTDTAARA  DTAARA(QTEMP/ZMITEM) TYPE(*CHAR) LEN(10) +
                           TEXT('Midas SF Menu group/item code')
              MONMSG     MSGID(CPF1023)
- 
+
 /* Create the data area ZIG in QTEMP */
- 
+
              CRTDTAARA  DTAARA(QTEMP/ZIG) TYPE(*CHAR) LEN(1) VALUE(' +
                           ') TEXT('Midas SF Show/remove +
                           menu group code')
              MONMSG     MSGID(CPF1023)
- 
+/*                                                                                        /*CSC059*/
+/*  Get the global IASP system values */                                                  /*CSC059*/
+/*                                                                                        /*CSC059*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC059*/
+/*                                                                                          CSC059*/
+/** Check whether system is in IASP environment.                                            CSC059*/
+/*                                                                                          CSC059*/
+             CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                             /*CSC059*/
+/*                                                                                          CSC059*/
+/*                                                                                        /*CSC059*/
+/* Check if feature CSC059 is on */                                                       /*CSC059*/
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SAR &SARREC)                      /*CSC059*/
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                          VAR(&CSC059) VALUE('Y'))                                        /*CSC059*/
+
 /* Create data area for use in Treasury Management enquiries */                           /*240279*/
                                                                                           /*240279*/
              CRTDTAARA  DTAARA(QTEMP/DLSDS) TYPE(*CHAR) LEN(167) +
@@ -164,7 +192,7 @@
              MONMSG     MSGID(CPF1023)                                                    /*240279*/
                                                                                           /*240279*/
 /* Create data area for use in Exposure Management enquiries */
- 
+
 /**********  CRTDTAARA  DTAARA(QTEMP/EMSDS) TYPE(*CHAR) LEN(161) +
                           TEXT('Midas EM Exposure +
                           Management enquiries') */                                       /*TDA024*/
@@ -172,49 +200,51 @@
                           TEXT('Midas EM Exposure +
                           Management enquiries')                                          /*TDA024*/
              MONMSG     MSGID(CPF1023)
- 
+
 /* Create a temporary file for directory ID and address processing */
- 
+
+             IF         COND(&CSC059  *NE 'Y') THEN(DO)                                   /*CSC059*/
              DSPDIRE    USER(&USRID) OUTPUT(*OUTFILE) +
                           OUTFILE(QTEMP/TEMP)
              MONMSG     MSGID(CPF9006)
- 
+             ENDDO                                                                        /*CSC059*/
+
 /**********  CALL       PGM(GPC000200) */                                                /*BG12061*/
              CALL       PGM(GPC000200) PARM(&MULT)                                       /*BG12061*/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 45)) RTNVAR(&ERRDTA)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&ERRDTA) +
                              TOPGMQ(*EXT)
              ENDDO
- 
+
  SOFF:
                 SIGNOFF    LOG(*NOLIST)
- 
+
 ABNOR:
- 
+
              SNDPGMMSG  MSG('Midas initial program terminated +
                           abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Call SCC0010 to inform the user that an error has occurred */
- 
+
              RTVMSG     MSGID(SCM0072) MSGF(GBMIDASMSG) MSG(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CALL       PGM(SCC0010) PARM('MIDASPLUS' 'ENTER' ' ')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Abnormal termination. */
- 
+
              SIGNOFF    LOG(*LIST)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *                 MD058285           Date 22Jun21               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD055642A          Date 27May20               *
       *                 CMG008             Date 20Feb20               *
@@ -57,6 +59,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Include GSH026, MD-28413 and MD-27371B              *
+      *  MG027371B-  Applied fix MD028413 only if GLTRAT <> 0         *
+      *  MD028413 - Issues with Structured field 86 (related to BA6026*
+      *             Incorrect format for NMSC keyword.                *
+      *  CSW101 - PAYplus Interface.                                  *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
       *           (Recompile)                                         *
@@ -129,6 +137,8 @@
       ** Midas SD Network Transaction Identifier.                                             CGL152
      FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 CMG008
       ** SWIFT Character Conversion file                                                      CMG008
+     FA6RETRL1  IF   E           K DISK                      INFSR(*PSSR)                     BA6026
+      ** Midas Retail Transaction Types - Extension File.                                     BA6026
                                                                                               CMG008
       *****************************************************************
       *                                                               *
@@ -388,6 +398,51 @@
      C                   EVAL      MGDRCR = 'C '                                            BUG26832
      C                   ENDIF                                                              BUG26832
      C                   ENDIF                                                              BUG26832
+      *                                                                                       BA6026
+      ** If BA6026 is ON, retrieve the assigned Tx Type Identification Code                   BA6026
+      ** using posting's RE Transaction Type (GLTRAT).                                        BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   Move      *Blanks       WKSIDC            4                          BA6026
+     C                   Move      *Blanks       WGLTRAT           5                          BA6026
+     C                   Move      GLTRAT        WGLTRAT                                      BA6026
+     C     WGLTRAT       Chain     A6RETRL1                           99                      BA6026
+      *                                                                                       BA6026
+      ** If found, retrieve the defined Tx Type Identification Code (if no code               BA6026
+      ** defined, default to 'NMSC').                                                         BA6026
+     C                   If        *IN99 = *Off And G1SIDC <> *Blanks                         BA6026
+     C                   Eval      WKSIDC = G1SIDC                                            BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Assign equivalent DRCR values.                                                       BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+      *                                                                                       BA6026
+      ** Tx Type Identification Code = 'NRTI'                                                 BA6026
+      *                                                                                       BA6026
+     C                   When      WKSIDC = 'NRTI'                                            BA6026
+     C                   If        GLDRCR = 0                                                 BA6026
+     C                   Eval      MGDRCR = 'RC'                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        GLDRCR = 1                                                 BA6026
+     C                   Eval      MGDRCR = 'RD'                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Tx Type Identification Code <> 'NRTI'                                                BA6026
+      *                                                                                       BA6026
+     C                   When      WKSIDC <> 'NRTI'                                           BA6026
+     C                   If        GLDRCR = 0                                                 BA6026
+     C                   Eval      MGDRCR = 'D '                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        GLDRCR = 1                                                 BA6026
+     C                   Eval      MGDRCR = 'C '                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndSl                                                                BA6026
+     C                   EndIf                                                                BA6026
 
      C                   EVAL      MGSFD6 = *BLANKS                             Sub field 6
      C                   EVAL      MGSFD7 = *BLANKS                             Sub field 7 - Ref to
@@ -616,6 +671,224 @@
       ** Override MGSFD6 if found to exist in SDNTTIPD                                        CGL152
      C                   EXSR      $CGL152SFld6                                               CGL152
      C/COPY WNCPYSRC,GLH00203
+      *                                                                                       CSW101
+      ** Check if switchable feature CSW101 is on, before considering                         CSW101
+      ** transactions coming from PRANG.                                                      CSW101
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+      *                                                                                       CSW101
+      ** Use a specific Transaction Type Identifiction code for                               CSW101
+      ** Transactions coming from PRANG                                                       CSW101
+      *                                                                                       CSW101
+     C                   IF        GLTRAT = 17010                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHG'                                 CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+     C                   IF        GLTRAT = 12000                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+      ** MOKL01  START                                                                        CSW101
+      *                                                                                       CSW101
+     C                   IF        GLTRAT > 11020 AND GLTRAT < 11022                          CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'FEX'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 11999 AND GLTRAT <  12002                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12009 AND GLTRAT <  12012                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12012                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12013                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12014                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'VAT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12019 AND GLTRAT <  12022                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHK'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12029 AND GLTRAT <  12032                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'DDT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12032                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12039 AND GLTRAT <  12042                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'STO'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12049 AND GLTRAT <  12052                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12069 AND GLTRAT <  12072                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12079 AND GLTRAT <  12082                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'DDT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12084                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'DDT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12086                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12088                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12089 AND GLTRAT <  12092                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'STO'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12092                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'DDT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12094                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'DDT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 12096                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 12999 AND GLTRAT <  13002                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'BOE'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 13002 AND GLTRAT <  13005                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 13009 AND GLTRAT <  13012                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'BOE'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 14019 AND GLTRAT <  14022                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'BOE'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 14029 AND GLTRAT <  14032                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 14059 AND GLTRAT <  14062                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'INT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 15000 AND GLTRAT <  15011                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 15999 AND GLTRAT <  16002                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CLR'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 16009 AND GLTRAT <  16012                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CLR'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 16019 AND GLTRAT <  16022                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 16039 AND GLTRAT <  16042                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 16999 AND GLTRAT < 17002                          CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 17009 AND GLTRAT <  17012                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHG'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 17012                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 17014                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 17016                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 17018                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'VAT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 17019 AND GLTRAT <  17022                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHG'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 17029 AND GLTRAT <  17032                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 17049 AND GLTRAT <  17052                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 17059 AND GLTRAT <  17062                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 18009 AND GLTRAT <  18012                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'INT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 18019  AND GLTRAT <  18022                        CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 18059 AND GLTRAT <  18062                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHG'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 19989 AND GLTRAT <  19992                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 91000                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'STO'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 91005                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 91050                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHG'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 91060                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'INT'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 91070                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 92099 AND GLTRAT <  92201                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 93000                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 94049  AND GLTRAT <  99516                        CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 99528 AND GLTRAT <  99531                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CLR'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 99533 AND GLTRAT <  99536                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CHK'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 99539 AND GLTRAT <  99540                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'CLR'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 99564  AND GLTRAT <  99567                        CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'TRF'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT = 99590                                             CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'RTI'                                 CSW101
+     C                   ENDIF                                                                CSW101
+     C                   IF        GLTRAT > 99593 AND GLTRAT <  99596                         CSW101
+     C                   EVAL      %SUBST(MGSFD6:2:3) = 'COM'                                 CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       CSW101
+      ** MOKL01 END                                                                           CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
+      *                                                                                       BA6026
+      ** Update Subfield 6 of MT940 Gen. Extract File (Posting Detail).                       BA6026
+      ** If no Identification Code defined, default to 'NMSC' (miscellaneous).                BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   If        WKSIDC = *Blanks                                           BA6026
+     C                   Eval      MGSFD6 = 'NMSC'                                            BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      MGSFD6 = WKSIDC                                            BA6026
+      *                                                                                       BA6026
+      ** If WKSIDC is 'NCHG', also pass GLPNAR (posting narrative)                            BA6026
+     C                   If        WKSIDC = 'NCHG'                                            BA6026
+     C                   Movel     GLPNAR        MG8620                                       BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
 
       *    --------      -----
      C     @SubFld6      ENDSR
@@ -675,6 +948,21 @@
      C/COPY WNCPYSRC,GLH00630
 
      C                   ENDSL
+      *                                                                                       BA6026
+     C                   IF        BA6026 = 'Y'                                               BA6026
+     C                   EVAL      MGTRAT = *ZEROS                                            BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+      ** Update Subfield 7 of MT940 Gen. Extract File (Posting Detail)                        BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And WKSIDC <> *Blanks                         BA6026
+     C                             or BA6026 = 'Y' and MGSFD6 = 'NMSC'                        BA6026
+     C                             and GLTRAT <> 0 and MGSFD6 = 'NMSC'                        BA6026
+     C                   Eval      MGSFD7 = WGLTRAT                                           BA6026
+      *                                                                                       BA6026
+      ** also populate MGTRAT with RE Transaction Type                                        BA6026
+     C                   Z-Add     GLTRAT        MGTRAT                                       BA6026
+     C                   EndIf                                                                BA6026
 
       ** If CMG008 is ON, convert French characters based on translation table.               CMG008
       ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
@@ -904,6 +1192,9 @@
      C                   EVAL      MG8664 = BAEX20                                          BUG25147
      C                   EVAL      MG8665 = BAEX21                                          BUG25147
      C**********         EVAL      MG8632 = BAEX22                                BUG25147 MD055642A
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                   EVAL      MG8632 = BAEX22                                            BA6026
+     C                   Endif                                                                BA6026
      C                   EVAL      MG8635 = 'Y'                                             BUG25311
      C                   ELSE                                                               BUG25147
 
@@ -951,6 +1242,18 @@
       **  Cash Management Group Accounting replicated posting                                 216937
      C                   WHEN      GLXRFI = 'GA '                                             216937
      C/COPY WNCPYSRC,GLH00205
+      *                                                                                       CSW101
+     C                             AND CSW101 = 'N'                                           CSW101
+      *                                                                                       CSW101
+     C                             OR  GLXRFI = 'GA '                                         CSW101
+     C                             AND CSW101 = 'Y'                                           CSW101
+     C                             AND GLMGADI1 = *Blanks                                     CSW101
+     C                             AND GLMGADI2 = *Blanks                                     CSW101
+     C                             AND GLMGADI3 = *Blanks                                     CSW101
+     C                             AND GLMGADI4 = *Blanks                                     CSW101
+     C                             AND GLMGADI5 = *Blanks                                     CSW101
+     C                             AND GLMGADI6 = *Blanks                                     CSW101
+      *                                                                                       CSW101
      C                   EVAL      MGADI1 = *blank                                            216937
      C                   EVAL      MGADI2 = *blank                                            216937
      C                   EVAL      MGADI3 = *blank                                            216937
@@ -959,6 +1262,15 @@
      C                   EVAL      MGADI6 = *blank                                            216937
      C                   EVAL      MGADI1 = GLMGSRCA                                          216937
      C/COPY WNCPYSRC,GLH00206
+      *                                                                                       CSW101
+     C                   WHEN      GLXRFI = 'GA '                                             CSW101
+     C                             AND CSW101 = 'Y'                                           CSW101
+     C                   EVAL      MGADI1 = GLMGSRCA                                          CSW101
+     C                   EVAL      MGADI2 = GLMGADI1                                          CSW101
+     C                   EVAL      MGADI3 = GLMGADI2                                          CSW101
+     C                   EVAL      MGADI4 = GLMGADI3                                          CSW101
+     C                   EVAL      MGADI5 = GLMGADI4                                          CSW101
+     C                   EVAL      MGADI6 = GLMGADI5                                          CSW101
 
       ** If ERI Indicator = ' ' and ERI Information exists, it should be in first line.
 
@@ -1026,6 +1338,61 @@
       *                                                                                     BUG25147
      C                   ENDIF                                                              BUG25147
      C/COPY WNCPYSRC,GLH00207
+      *                                                                                       CSW101
+     C                   IF        CSW101 = 'Y'                                               CSW101
+      *                                                                                       CSW101
+      ** Leading '-' or ':' not accepted by Swift: replace by '.'                             CSW101
+      *                                                                                       CSW101
+     C     MGADI1        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI1        CHAR1             1                          CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI1                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI2        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI2        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI2                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI3        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI3        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI3                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI4        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI4        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI4                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI5        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI5        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI5                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+     C     MGADI6        IFNE      *BLANKS                                                    CSW101
+     C                   MOVEL     MGADI6        CHAR1                                        CSW101
+     C     CHAR1         IFEQ      '-'                                                        CSW101
+     C     CHAR1         OREQ      ':'                                                        CSW101
+     C     CHAR1         OREQ      ' '                                                        CSW101
+     C                   MOVEL     '.'           MGADI6                                       CSW101
+     C                   END                                                                  CSW101
+     C                   END                                                                  CSW101
+      *                                                                                       CSW101
+     C                   ENDIF                                                                CSW101
       *                                                                                       223783
       ** Check if we have ti use IBAN.                                                        223783
       *                                                                                       223783
@@ -1364,6 +1731,36 @@
      C/COPY WNCPYSRC,GLH00430
 
      C/COPY WNCPYSRC,GLH00208
+      *                                                                                       CSW101
+      ** Check if feature CSW101 (PAYplus Interface) is installed                             CSW101
+                                                                                              CSW101
+     C                   MOVEL     'N'           CSW101            1                          CSW101
+                                                                                              CSW101
+     C                   CALLB     'AOSARDR0'                                                 CSW101
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CSW101
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CSW101
+     C                   PARM      'CSW101 '     P@SARD                         Feature Ref.  CSW101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW101
+                                                                                              CSW101
+     C                   IF        P@RTCD = *BLANKS                                           CSW101
+     C                   EVAL      CSW101 = 'Y'                                               CSW101
+     C                   ENDIF                                                                CSW101
+                                                                                              CSW101
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Move      'N'           BA6026            1                          BA6026
+     C                   CallB     'AOSARDR0'                                                 BA6026
+     C                   Parm      *Blanks       P@RTCD                                       BA6026
+     C                   Parm      '*VERIFY'     P@OPTN                                       BA6026
+     C                   Parm      'BA6026'      P@SARD                                       BA6026
+      *                                                                                       BA6026
+      ** Set BA6026 variable to 'Y' if feature is installed.                                  BA6026
+      *                                                                                       BA6026
+     C                   If        P@RTCD = *BLANKS                                           BA6026
+     C                   Move      'Y'           BA6026                                       BA6026
+     C                   EndIf                                                                BA6026
+     C                                                                                        BA6026
       *    ------        -----
      C     @INZSR        ENDSR
 

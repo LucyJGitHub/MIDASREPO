@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD061489           Date 06Jun23               *
+      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
+      *             JAVA mapping (Recompile)                          *
+      *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
+      *             due to changes in FFBSETPD.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -491,7 +497,7 @@
       *             SRP006 - Cancel on Main Details Screen            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRP004        BEGSR
       *
       ** Write/read display screen

@@ -20,18 +20,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046480           Date 15Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CGL114  *CREATE    Date 04Jan10               *
+      *                 CGL114  *CREATE    Date 04Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046480 - File locking on GLSLACPD                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL114 - Account Transfer Utility                            *
       *                                                               *
       *****************************************************************
  
-     FGLSLACL8  UF   E           K DISK    INFSR(*PSSR)
+     F***GLSLACL8  UF   E           K DISK    INFSR(*PSSR)                                  MD046480
+     FGLSLACL8  IF   E           K DISK    INFSR(*PSSR)                                     MD046480
  
      FGL000572P1O    E             PRINTER INFSR(*PSSR) USROPN
      F                                     INFDS(SPOOL1)

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend no. MD053935           Date 08Jun23               *
-      *  Prev Amend No. MD060620           Date 25May23               *
+      *  Last Amend No. AR1076352          Date 15Jun23               *
+      *  Prev Amend no. MD053935           Date 08Jun23               *
+      *                 MD060620           Date 25May23               *
       *                 MD061418           Date 24May23               *
       *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
@@ -129,6 +130,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1076352 - Allow amendment of rollover date and removal of  *
+      *              rollover frequency and day number in one         *
+      *              operation. (Child: AR1080330)                    *
       *  MD053935 - Default NCHI to have a value even if NBRA is blank*
       *           - Prevents incorreclty showing up of LEV0288.       *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
@@ -630,7 +634,7 @@
      D  VNOPSH                        1A                                                      CLE172
      D  VNRRDP                        2S 0                                                    CLE172
      D  VNDBAV                        1A                                                      CLE172
-      *                                                                                     MD060620
+      *                                                                                       CLE172
       ** Check Libor Fields                                                                 MD060620
      D ChkLiborFlds    DS                                                                   MD060620
      D  LBNBLRT                       1A                                                    MD060620
@@ -643,7 +647,7 @@
      D  LBNOPSH                       1A                                                    MD060620
      D  LBNRRDP                       2S 0                                                  MD060620
      D  LBNDBAV                       1S 0                                                  MD060620
-      *                                                                                     MD060620
+      *                                                                                     MD060620 
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -2521,7 +2525,60 @@
      C     WRLDT1        IFNE      '*'
      C     WRLFQ1        ANDNE     '*'
      C     WRLDY1        ANDNE     '*'
+     C     WRLDT1        ORNE      '*'                                                     AR1076352
+     C     WRLFQ1        ANDEQ     '*'                                                     AR1076352
+     C     WRLDY1        ANDEQ     '*'                                                     AR1076352
+     C     WNROD1        ANDEQ     '*'                                                     AR1076352
      C                   ELSE
+     C     DDRldtOK      IFNE      'N'                                                     AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       IFNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     DDNRODB       ANDNE     '      '                                                AR1076352
+     C     WRLFQ1        ANDEQ     '*'                                                     AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       ORNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     DDNRODB       ANDNE     '      '                                                AR1076352
+     C     WRLDY1        ANDEQ     '*'                                                     AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       ORNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     DDNRODB       ANDEQ     '      '                                                AR1076352
+     C     WRLFQ1        ANDEQ     '*'                                                     AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       ORNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     DDNRODB       ANDEQ     '      '                                                AR1076352
+     C     WRLDY1        ANDEQ     '*'                                                     AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       ORNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     WNROD1        ANDEQ     '*'                                                     AR1076352
+     C     WRLFQ1        ANDEQ     '*'                                                     AR1076352
+     C     DDRLDYB       ANDEQ     '  '                                                    AR1076352
+      *                                                                                    AR1076352
+     C     DDRLDTB       ORNE      '      '                                                AR1076352
+     C     WRLDT1        ANDNE     '*'                                                     AR1076352
+     C     WNROD1        ANDEQ     '*'                                                     AR1076352
+     C     WRLDY1        ANDEQ     '*'                                                     AR1076352
+     C     DDRLFQB       ANDEQ     ' '                                                     AR1076352
+      *                                                                                    AR1076352
+     C     WRLFQ1        IFEQ      '*'                                                     AR1076352
+     C                   ADD       1             Idx                                       AR1076352
+     C                   EVAL      FldNameArr(Idx) = 'DDRLFQB'                             AR1076352
+     C                   EVAL      MsgIDArr(Idx) = 'LEV9100'                               AR1076352
+     C                   MOVE      'N'           DDRlfqOK                                  AR1076352
+     C                   ENDIF                                                             AR1076352
+     C     WRLDY1        IFEQ      '*'                                                     AR1076352
+     C                   ADD       1             Idx                                       AR1076352
+     C                   EVAL      FldNameArr(Idx) = 'DDRLDYB'                             AR1076352
+     C                   EVAL      MsgIDArr(Idx) = 'LEV9100'                               AR1076352
+     C                   MOVE      'N'           DDRldyOK                                  AR1076352
+     C                   ENDIF                                                             AR1076352
+      *                                                                                    AR1076352
+     C                   ELSE                                                              AR1076352
+      *                                                                                    AR1076352
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDRLDTB'
      C                   EVAL      MsgIDArr(Idx) = 'LEV0284'
@@ -2536,6 +2593,9 @@
      C***********        EVAL      FldNameArr(Idx) = 'DDRLDYB'                                WA0025
      C***********        EVAL      MsgIDArr(Idx) = 'LEV0284'                                  WA0025
      C                   MOVE      'N'           DDRldyOK
+      *                                                                                    AR1076352
+     C                   ENDIF                                                             AR1076352
+     C                   ENDIF                                                             AR1076352
      C                   ENDIF
      C                   ENDIF
       *

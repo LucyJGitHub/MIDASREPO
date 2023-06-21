@@ -9,14 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 260765             Date 29Jun09              */
+/*       Last Amend No. 255269             Date 02Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      260765             Date 29Jun09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      095907 *C *CREATE  Date 02Dec05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       255269 - Remove all journal processing since it is already  */
+/*                catered on the called program.                     */
+/*                Applied for MD061344.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       260765 - Partially applied fix 182818.                      */
 /*                Removed DSPFD command and moved it to CL/SEC1004.  */
@@ -352,12 +356,12 @@
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(SECORSPD))                               /*227749*/
  
-             STRJRNPF   FILE(SECODRPD SECODPPD SECOALPD SECOREPD +
-                          SECOEXPD SECOFRPD SECOCEPD SECONFPD +
-                          SECONCPD SECODVPD SECORGPD SECOOFPD +
-                          SECOCRPD SECOCCPD SECORBPD SECORSPD) +
-                          JRN(ICJRN) IMAGES(*BOTH) OMTJRNE(*OPNCLO)     /*227749*/
-              MONMSG     (CPF0000)                                      /*227749*/
+/**********  STRJRNPF   FILE(SECODRPD SECODPPD SECOALPD SECOREPD + */                     /*255269*/
+/**********               SECOEXPD SECOFRPD SECOCEPD SECONFPD + */                        /*255269*/
+/**********               SECONCPD SECODVPD SECORGPD SECOOFPD + */                        /*255269*/
+/**********               SECOCRPD SECOCCPD SECORBPD SECORSPD) + */                       /*255269*/
+/**********               JRN(ICJRN) IMAGES(*BOTH) OMTJRNE(*OPNCLO) */             /*227749 255269*/
+/**********   MONMSG     (CPF0000) */                                              /*227749 255269*/
  
  END10:      CPYF       FROMFILE(*LIBL/XSEBLKPPD) TOFILE(SEBLKPPD) +
                           MBROPT(*REPLACE) FMTOPT(*NONE)                /*227749*/
@@ -371,9 +375,9 @@
                           FILE(SECOBKPD))                               /*227749*/
              ENDDO                                                      /*227749*/
                                                                         /*227749*/
-             STRJRNPF   FILE(SEBLKPPD SECOBKPD) JRN(ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)                /*227749*/
-             MONMSG     (CPF0000)                                       /*227749*/
+/**********  STRJRNPF   FILE(SEBLKPPD SECOBKPD) JRN(ICJRN) + */                           /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                        /*227749 255269*/
+/**********  MONMSG     (CPF0000) */                                               /*227749 255269*/
                                                                         /*227749*/
  /***END9:   CPYF       FROMFILE(*LIBL/XSEERRFPD) TOFILE(SEERRPFD) +
                           MBROPT(*REPLACE) FMTOPT(*NONE)           227749 243026*/
@@ -388,9 +392,9 @@
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(SEERALPD))                               /*227749*/
                                                                         /*227749*/
-             STRJRNPF   FILE(SEERRFPD SEERDPPD SEERALPD) JRN(ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)                /*227749*/
-             MONMSG     (CPF0000)                                       /*227749*/
+/**********  STRJRNPF   FILE(SEERRFPD SEERDPPD SEERALPD) JRN(ICJRN) + */                  /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                        /*227749 255269*/
+/**********  MONMSG     (CPF0000) */                                               /*227749 255269*/
                                                                         /*227749*/
  /***END8:   CPYF       FROMFILE(*LIBL/XSEOCFSPD) +
                           TOFILE(*LIBL/SEOCFSPD) MBROPT(*REPLACE)  227749 243026*/
@@ -428,9 +432,9 @@ END6:        CPYF       FROMFILE(XSEPCA) TOFILE(SEPCA) +
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(SEPCCD))
  
-             STRJRNPF   FILE(SEPCA SEPCBD SEPCCD) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(SEPCA SEPCBD SEPCCD) JRN(&JLIB/ICJRN) + */                   /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
 END5:        CPYF       FROMFILE(XPOSETA) TOFILE(POSETA) +
                         FROMMBR(POSETA) MBROPT(*REPLACE) +
@@ -456,18 +460,18 @@ END5:        CPYF       FROMFILE(XPOSETA) TOFILE(POSETA) +
                           FILE(POSETDX2))                             243026*/
                    ENDDO
  
-             STRJRNPF   FILE(POSETA POSETD) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(POSETA POSETD) JRN(&JLIB/ICJRN) + */                         /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(POSETDX1) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(POSETDX2) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             ENDDO
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO) */                                   /*255269*/
+/**********  STRJRNPF   FILE(POSETDX1) JRN(&JLIB/ICJRN) +*/                               /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  STRJRNPF   FILE(POSETDX2) JRN(&JLIB/ICJRN) +*/                               /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  ENDDO */                                                                     /*255269*/
  
 END4:        CPYF       FROMFILE(XDPOSNA) TOFILE(DPOSNA) +
                         MBROPT(*REPLACE) FMTOPT(*NONE)
@@ -550,12 +554,12 @@ END4:        CPYF       FROMFILE(XDPOSNA) TOFILE(DPOSNA) +
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(BPACHD))
  
-             STRJRNPF   FILE(DPOSNA DPOSND UDEPPA UDEPPD CDEPPA +
-                          CDEPPD CPOSNA CPOSND BKPHDA BKPHDD BKPHHA +
-                          BKPHHD BKPOSA BKPOSD BPACHA BPACHD) +
-                          JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(DPOSNA DPOSND UDEPPA UDEPPD CDEPPA + */                      /*255269*/
+/**********               CDEPPD CPOSNA CPOSND BKPHDA BKPHDD BKPHHA + */                  /*255269*/
+/**********               BKPHHD BKPOSA BKPOSD BPACHA BPACHD) + */                        /*255269*/
+/**********               JRN(&JLIB/ICJRN) IMAGES(*BOTH) + */                             /*255269*/
+/**********               OMTJRNE(*OPNCLO) */                                             /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
 END3:        CPYF       FROMFILE(XDPTMVA) TOFILE(DPTMVA) +
                         MBROPT(*REPLACE) FMTOPT(*NONE)
@@ -577,18 +581,18 @@ END3:        CPYF       FROMFILE(XDPTMVA) TOFILE(DPTMVA) +
                           FILE(DPTMVDX2))
                    ENDDO
  
-             STRJRNPF   FILE(DPTMVA DPTMVD) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(DPTMVA DPTMVD) JRN(&JLIB/ICJRN) + */                         /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(DPTMVDX1) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(DPTMVDX2) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-                   ENDDO
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO) */                                   /*255269*/
+/**********  STRJRNPF   FILE(DPTMVDX1) JRN(&JLIB/ICJRN) + */                              /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  STRJRNPF   FILE(DPTMVDX2) JRN(&JLIB/ICJRN) + */                              /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********        ENDDO */                                                               /*255269*/
  
 END2:        CPYF       FROMFILE(XHSTTRA) TOFILE(HSTTRA) +
                         MBROPT(*REPLACE) FMTOPT(*NONE)
@@ -635,22 +639,22 @@ END2:        CPYF       FROMFILE(XHSTTRA) TOFILE(HSTTRA) +
                           FILE(TRADSDX2))
                    ENDDO
  
-             STRJRNPF   FILE(HSTTRA HSTTRD SETLEA SETLED TRAUTD +
-                          TRATXD) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(TRADSD) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
- 
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(TRADSDX1) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(TRADSDX2) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-                   ENDDO
+/**********  STRJRNPF   FILE(HSTTRA HSTTRD SETLEA SETLED TRAUTD + */                      /*255269*/
+/**********               TRATXD) JRN(&JLIB/ICJRN) + */                                   /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  STRJRNPF   FILE(TRADSD) JRN(&JLIB/ICJRN) + */                                /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/********** */                                                                            /*255269*/
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO) */                                   /*255269*/
+/**********  STRJRNPF   FILE(TRADSDX1) JRN(&JLIB/ICJRN) + */                              /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  STRJRNPF   FILE(TRADSDX2) JRN(&JLIB/ICJRN) + */                              /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                               /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********        ENDDO */                                                               /*255269*/
  
 END1:        CPYF       FROMFILE(XSECTYA) TOFILE(SECTYA) +
                         MBROPT(*REPLACE) FMTOPT(*NONE)
@@ -688,10 +692,10 @@ END1:        CPYF       FROMFILE(XSECTYA) TOFILE(SECTYA) +
 /***         STRJRNPF   FILE(SECTYA SECTYD SNDEVA SNDEVD SEDEVA +
                           SEDEVD SESWHTPD SECTYDX7) JRN(&JLIB/ICJRN) +
                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)                243026*/
-             STRJRNPF   FILE(SECTYA SECTYD SNDEVA SNDEVD SEDEVA +
-                          SEDEVD SESWHTPD ) JRN(&JLIB/ICJRN) +
-                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)              /*243026*/
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(SECTYA SECTYD SNDEVA SNDEVD SEDEVA + */                      /*255269*/
+/**********               SEDEVD SESWHTPD ) JRN(&JLIB/ICJRN) + */                         /*255269*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO) */                        /*243026 255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
 MESSAGE:     CHGVAR     VAR(&MSG) VALUE('SECDROP ended abnormally')
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
@@ -871,43 +875,43 @@ ENDPGM:      DLTF       FILE(XSECTYA)
                           SEPCA SEPCBD SEPCCD SECTYDX7) +
                           JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
                           OMTJRNE(*OPNCLO)                          227749 243026*/
-             STRJRNPF   FILE(SECTYA SECTYD SNDEVA SNDEVD SEDEVA +
-                          SEDEVD SESWHTPD HSTTRA HSTTRD SETLEA +
-                          SETLED TRAUTD TRATXD DPTMVA DPTMVD DPOSNA +
-                          DPOSND UDEPPA UDEPPD CDEPPA CDEPPD CPOSNA +
-                          CPOSND BKPHDA BKPHDD BKPHHA BKPHHD BKPOSA +
-                          BKPOSD BPACHA BPACHD POSETA POSETD TRADSD +
-                          SEPCA SEPCBD SEPCCD ) +
-                          JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)                              /*243026*/
-             MONMSG     (CPF0000)
+/**********  STRJRNPF   FILE(SECTYA SECTYD SNDEVA SNDEVD SEDEVA + */                      /*255269*/
+/**********               SEDEVD SESWHTPD HSTTRA HSTTRD SETLEA + */                       /*255269*/
+/**********               SETLED TRAUTD TRATXD DPTMVA DPTMVD DPOSNA + */                  /*255269*/
+/**********               DPOSND UDEPPA UDEPPD CDEPPA CDEPPD CPOSNA + */                  /*255269*/
+/**********               CPOSND BKPHDA BKPHDD BKPHHA BKPHHD BKPOSA + */                  /*255269*/
+/**********               BKPOSD BPACHA BPACHD POSETA POSETD TRADSD + */                  /*255269*/
+/**********               SEPCA SEPCBD SEPCCD ) + */                                      /*255269*/
+/**********               JRN(&JLIB/ICJRN) IMAGES(*BOTH) + */                             /*255269*/
+/**********               OMTJRNE(*OPNCLO) */                                      /*243026 255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
  
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(TRADSDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(TRADSDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-                   ENDDO
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO) */                                   /*255269*/
+/**********  STRJRNPF   FILE(TRADSDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) + */                /*255269*/
+/**********               OMTJRNE(*OPNCLO) */                                             /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********  STRJRNPF   FILE(TRADSDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) + */                /*255269*/
+/**********               OMTJRNE(*OPNCLO) */                                             /*255269*/
+/**********  MONMSG     (CPF0000) */                                                      /*255269*/
+/**********        ENDDO */                                                               /*255269*/
  
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(DPTMVDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(DPTMVDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-                   ENDDO
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO)                                      /*255269*/
+/**********  STRJRNPF   FILE(DPTMVDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +                   /*255269*/
+/**********               OMTJRNE(*OPNCLO)                                                /*255269*/
+/**********  MONMSG     (CPF0000)                                                         /*255269*/
+/**********  STRJRNPF   FILE(DPTMVDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +                   /*255269*/
+/**********               OMTJRNE(*OPNCLO)                                                /*255269*/
+/**********  MONMSG     (CPF0000)                                                         /*255269*/
+/**********        ENDDO                                                                  /*255269*/
  
-                   IF COND(&S01401 *EQ 'Y') THEN(DO)
-             STRJRNPF   FILE(POSETDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             STRJRNPF   FILE(POSETDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)
-             MONMSG     (CPF0000)
-             ENDDO
+/**********        IF COND(&S01401 *EQ 'Y') THEN(DO)                                      /*255269*/
+/**********  STRJRNPF   FILE(POSETDX1) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +                   /*255269*/
+/**********               OMTJRNE(*OPNCLO)                                                /*255269*/
+/**********  MONMSG     (CPF0000)                                                         /*255269*/
+/**********  STRJRNPF   FILE(POSETDX2) JRN(&JLIB/ICJRN) IMAGES(*BOTH) +                   /*255269*/
+/**********               OMTJRNE(*OPNCLO)                                                /*255269*/
+/**********  MONMSG     (CPF0000)                                                         /*255269*/
+/**********  ENDDO                                                                        /*255269*/
  
 /* RESET SESTAT POS.81 TO AVOID DOUBLE RUN, SEQUENCE '00003' IS CONDITIONNED  */
 /* BY THIS VALUE IN EACH SEC100X                                              */
@@ -999,10 +1003,10 @@ OUT:        CHGJOB SWS(00000000)
                                                                                  /*237236*/
              CHGDTAARA  DTAARA(SESTAT (81 1)) VALUE('N')                /*227749*/
                                                                         /*227749*/
-             IF COND(&S01513 *EQ 'Y') THEN(DO)                          /*227749*/
-                ENDJRNPF   FILE(*ALL) JRN(ICJRN)                        /*227749*/
-                MONMSG     MSGID(CPF0000)                               /*227749*/
-             ENDDO                                                      /*227749*/
+/**********  IF COND(&S01513 *EQ 'Y') THEN(DO)                                     /*227749 255269*/
+/**********     ENDJRNPF   FILE(*ALL) JRN(ICJRN)                                   /*227749 255269*/
+/**********     MONMSG     MSGID(CPF0000)                                          /*227749 255269*/
+/**********  ENDDO                                                                 /*227749 255269*/
                                                                         /*227749*/
 ENDDROP:     ENDPGM
  

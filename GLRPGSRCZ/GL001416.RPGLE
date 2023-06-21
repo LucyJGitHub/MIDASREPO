@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026616A          Date 09May23               *
-      *  Prev Amend No. MD026616           Date 09May23               *
+      *  Last Amend No. MD061244           Date 16Jun23               *
+      *  Prev Amend No. MD026616A          Date 09May23               *
+      *                 MD026616           Date 09May23               *
       *                 MD026615           Date 08May23               *
       *                 CSD103             Date 10Aug20               *
       *                 223783 (Reopen)    Date 28May12               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061244 - Missing Tag 61 Securities Narrative in MT-942     *
       *  MD026616A- Show counterparty name in subfield 9. Loan        *
       *             counterparty still not present after MD026616 and *
       *             Distinguish between TS in SE module and TS in DL  *
@@ -246,7 +248,8 @@
      D*TransType*                    50    DIM(61) CTDATA PERRCD(1)                    CRE008 CAP204
      D/COPY WNCPYSRC,GLH00622
      D*TransType******               50    DIM(63) CTDATA PERRCD(1)                  CAP204 MD026615
-     D TransType                     50    DIM(64) CTDATA PERRCD(1)                         MD026615
+     D*TransType******               50    DIM(64) CTDATA PERRCD(1)                MD026615 MD061244
+     D TransType                     50    DIM(65) CTDATA PERRCD(1)                         MD061244
      D/COPY WNCPYSRC,GLH00627
      D    TrType                      2    OVERLAY(TransType)                   Transaction Type
      D      TrFiller1                 1    OVERLAY(TransType:*NEXT)
@@ -600,6 +603,12 @@ e1   C                   Endsl                                                  
      C     WkTRYP        LOOKUP    TrType(TrIdx)                          99               MD026616A
      C                   ENDIF                                                             MD026616A
      C                   ENDIF                                                             MD026616A
+                                                                                            MD061244
+      ** Check whether CP = Coupon (SE) and NOT CP = Cheque to be paid (FT)                 MD061244
+     C                   IF        WkTRYP = 'CP' and FUND = *BLANKS                         MD061244
+     C                   ADD       1             TrIdx                                      MD061244
+     C     WkTRYP        LOOKUP    TrType(TrIdx)                          99                MD061244
+     C                   ENDIF                                                              MD061244
 
       *    ----------    -----
      C     @RtvTrType    ENDSR
@@ -1070,6 +1079,7 @@ Px LE U   GE-LE Lending Module                                                  
 SO SO O   GE-SO Standing Orders
 TP ST S   GE-ST Trade Purchased
 TS ST S   GE-ST Trade Saled
+CP ST S   GE-ST Coupon                                                                      MD061244
 TT TT N   GE-TT Teller Transaction
 CO DL T   GE-DL Interest Rate Floors
 ZS RE     GE-CX Cash Mgt Zero Bal/Sweeping                                                    CRE008

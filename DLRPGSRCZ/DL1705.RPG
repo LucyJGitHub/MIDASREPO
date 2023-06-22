@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051539           Date 12Apr23               *
-      *  Prev Amend No. 203695             Date 21Feb23               *
+      *  Last Amend No. MD052119           Date 20Jun23               *      
+      *  Prev Amend No. MD051539           Date 12Apr23               *
+      *                 203695             Date 21Feb23               *
       *                 178272             Date 21Feb23               *
       *                 261302             Date 21Feb23               *
       *                 MD058815           Date 28Sep21               *
@@ -219,6 +220,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD052119 - COB Failure in component DLC0604                  *      
       *  MD051539 - MM rollover deal does not produce MT202 when auto *
       *             rollover changed to No.                           *
       *  203695 - Pay/receive message should be generated for the     *
@@ -7424,10 +7426,45 @@
      C                     END                                                               BUG6479
      C**   IF AMOUNT NEGATIVE
      C           EAMT      COMP 0                      45
-     C   45      PAYREC    COMP 'P'                      43REVERSE TX IF
-     C   45 43             MOVE 'R'       PAYREC           NEGATIVE
-     C   45N43             MOVE 'P'       PAYREC
-     C   45                Z-SUBEAMT      EAMT
+      *                                                                                     MD052119
+     C***45***** PAYREC    COMP 'P'                      43REVERSE TX IF                    MD052119
+     C***45*43**           MOVE 'R'       PAYREC           NEGATIVE                         MD052119
+     C***45N43**           MOVE 'P'       PAYREC                                            MD052119
+     C***45*****           Z-SUBEAMT      EAMT                                              MD052119
+      *                                                                                     MD052119
+     C           *IN45     IFEQ *ON                                                         MD052119
+      *                                                                                     MD052119
+     C           PAYREC    IFEQ 'P'                                                         MD052119
+     C                     MOVE 'R'       PAYREC                                            MD052119
+     C                     ELSE                                                             MD052119
+     C           PAYREC    IFEQ 'R'                                                         MD052119
+     C                     MOVE 'P'       PAYREC                                            MD052119
+     C                     ENDIF                                                            MD052119
+     C                     ENDIF                                                            MD052119
+      *                                                                                     MD052119
+     C           IPDS      IFEQ 'Y'                                                         MD052119
+     C           IMET      ANDNE*BLANKS                                                     MD052119
+     C                     ELSE                                                             MD052119
+      *                                                                                     MD052119
+     C                     SELEC                                                            MD052119
+     C           PAYREC    WHEQ 'R'                                                         MD052119
+     C                     MOVE RSTM      SETTLE                                            MD052119
+     C                     MOVE RONS      OURAG                                             MD052119
+     C                     MOVE ROBR      OURSB                                             MD052119
+     C                     MOVE TMAN      THRAG                                             MD052119
+      *                                                                                     MD052119
+     C           PAYREC    WHEQ 'P'                                                         MD052119
+     C                     MOVE PSTM      SETTLE                                            MD052119
+     C                     MOVE PONS      OURAG                                             MD052119
+     C                     MOVE POBR      OURSB                                             MD052119
+     C                     MOVE TSTN      THRAG                                             MD052119
+     C                     ENDSL                                                            MD052119
+      *                                                                                     MD052119
+     C                     Z-SUBEAMT      EAMT                                              MD052119
+      *                                                                                     MD052119
+     C                     ENDIF                                                            MD052119
+     C                     ENDIF                                                            MD052119
+      *                                                                                     MD052119     
      C* IF AMOUNT NEGATIVE SETON '45'
      C*
      C* SUPPRESS OUTPUT IF NULL EAMT OR REQUIRED BRANCH CODE NOT FOUND.

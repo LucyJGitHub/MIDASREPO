@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL088             Date 07Jul15               *
+      *  Last Amend No. MD061467           Date 07Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL088             Date 07Jul15               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -57,6 +58,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061467 - Deal Amendment type Spread Change not allowed for *
+      *             deals with dealtype "CI".                         *
+      *           - Repositioned GEMS fix 245960.                     *
+      *           - Also added deal type 'CI'.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL088 - Allow Spread Change for Negotiable Assets           *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -91,7 +96,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +----------------------------+
       ** ¦ Manually Included F-Specs  ¦
@@ -123,49 +128,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D INFDS           DS
       **  Data structure for file status of MM deals file.
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL088
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDL088
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** External data structure for access programs (short)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -174,102 +179,102 @@
      D PSysVal1        C                   Const('AllowPIPDforITIPD')                         240942
      D PSysVal2        C                   Const('AllowSCforFiXD'   )                         245960
      D PSysVal3        C                   Const('AllowCIforTDTI'   )                         250892
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MSGID)
- 
+
       ** Error message code 2 received as a parameter
      D Msgid2          S                   LIKE(#MSGID)
- 
+
       ** Error message code 3 received as a parameter
      D Msgid3          S                   LIKE(#MSGID)
- 
+
       ** Error message code 4 received as a parameter
      D Msgid4          S                   LIKE(#MSGID)
- 
+
       ** Error message code 5 received as a parameter
      D Msgid5          S                   LIKE(#MSGID)
- 
+
       ** Error message code 6 received as a parameter
       ** (for errors relating to Value Date)
      D Msgid6          S                   LIKE(#MSGID)
- 
+
       ** Error message code 7 received as a parameter
       ** (for errors relating to Deal Number)
      D Msgid7          S                   LIKE(#MSGID)
- 
+
       ** Warning message code 2 received as a parameter                                     BUG16257
      D WMsgid2         S                   LIKE(#MSGID)                                     BUG16257
                                                                                             BUG16257
       ** Deal Amendment Type received as a parameter
      D DDMTYP          S              2A
- 
+
       ** Deal Number received as a parameter
      D DDDLNO          S              6A
- 
+
       ** Associated Deal Number from original deal received as a parameter
      D H@DADN          S              6A
- 
+
       ** Value Date from original deal received as a parameter
      D H@VDAT          S              8S 0
- 
+
       ** Start/Last Interest date from original deal received as a parameter
      D H@SLDT          S              8S 0
- 
+
       ** Interest Accrual date from original deal received as a parameter
      D H@IADT          S              8S 0
- 
+
       ** Record ID from original deal received as a parameter
      D H@RCID          S              2A
- 
+
       ** Interest Capitalisation indicator from original deal
       ** received as a parameter
      D H@CPTI          S              1A
- 
+
       ** Deal Type from original deal received as a parameter
      D H@MTYP          S              2A
- 
+
       ** Interest Payment Frequency indicator from original deal
       ** received as a parameter
      D H@IPFQ          S              1A
- 
+
       ** Next Interest Payment Date from original deal
       ** received as a parameter
      D H@NIDT          S              8S 0
- 
+
       ** Deal Type passed back to calling program received as a parameter
      D IGMTYP          S              2A
- 
+
       ** Value Date in Midas Day No. format received as a parameter
      D @VDYNO          S              5  0
- 
+
       ** Start/Last Interest Date in Midas Day Number format
       ** received as a parameter
      D @SLDYN          S              5  0
- 
+
       ** Interest Accrual Date in Midas Day Number format
       ** received as a parameter
      D @IADYN          S              5  0
- 
+
       ** Value Date in error flag received as a parameter
      D DDVdatOK        S              1A
- 
+
       ** Deal Number in error flag received as a parameter
      D DDDlnoOK        S              1A
- 
+
       ** Date fields used in call to ZDATE10
      D DateIn          S              8S 0
      D ZZMDNO          S              5  0
- 
+
       ** Key for chain to MMDEALLL
      D @DLKEY          S              6S 0
      D CDL006          S              1A   IMPORT                               CDL006
- 
+
      D PSysVal01       S             20A                                                      240942
      D PCurSet01       S            200A                                                      240942
      D PSysVal02       S             20A                                                      240942
@@ -297,7 +302,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -305,7 +310,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -339,7 +344,7 @@
      C     DDMTYP        ANDNE     'SI'
      C     DDMTYP        ANDNE     'EM'                                                       CDL017
      C     DDMTYP        ANDNE     'BC'                                                       CDL022
- 
+
      C                   MOVE      'Y'           ErrorFound
      C****************** MOVEL     'MMM0298'     Msgid1                                       CDL017
      C                   MOVEL     'MMM0318'     Msgid1                                       CDL022
@@ -373,9 +378,9 @@
      C                   END
      C*
      C*  For type SI
- 
+
      C     DDMTYP        IFEQ      'SI'
- 
+
      C*
      C** If there is a NAS deal number in the deal associated
      C** deal number field, retrieve NAS details.
@@ -498,6 +503,7 @@
      C     H@MTYP        AndNe     'IP'                                         CDL019
      C     H@MTYP        AndNe     'TD'                                         CDL019
      C     H@MTYP        AndNe     'IT'                                         CDL019
+     C     H@MTYP        AndNe     'CI'                                                     MD061467
       *                                                                         CDL019
       * Do not allow PI/PD for IT/IP dealtypes unless                                         240942
       * system value AllowPIPDforITIPD = 'Y'                                                  240942
@@ -524,6 +530,33 @@
      C     H@MTYP        OrEq      'TI'                                                       250892
      C     DDMTYP        AndEq     'CI'                                                       250892
      C     AllowCI       AndEq     'N'                                                        250892
+      *                                                                                     MD061467
+      ** Do not allow SC amendments for Fix term deposits unless                            MD061467
+      ** system value AllowSCforFiXD = "Y".                                                 MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TD'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TI'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'IP'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'TD'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'IT'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
+      *                                                                                     MD061467
+     C     DDMTYP        OREQ      'SC'                                                     MD061467
+     C     H@MTYP        ANDEQ     'CI'                                                     MD061467
+     C     PRNINTB       ANDEQ     'N'                                                      MD061467
       *                                                                                       CDL088
      C                   IF         CDL088 <> 'Y'                                             CDL088
      C                             OR  (H@MTYP <> 'BD' AND                                    CDL088
@@ -539,21 +572,21 @@
      C                   END
      C                   END
       *
-      ** Do not allow SC amendments for Fix term deposits unless                              245960
-      ** system value AllowSCforFiXD = "Y".                                                   245960
+      ***Do*not*allow*SC*amendments*for*Fix*term*deposits*unless*******              245960 MD061467
+      ***system*value*AllowSCforFiXD*=*"Y".****************************              245960 MD061467
       *                                                                                       245960
-     C     DDMTYP        IFEQ      'SC'                                                       245960
-     C     PRNINTB       AndEq     'N'                                                        245960
+     C*****DDMTYP        IFEQ      'SC'                                              245960 MD061467
+     C*****PRNINTB       AndEq     'N'                                               245960 MD061467
       *                                                                                       245960
-     C     H@MTYP        IFeq      'TI'                                                       245960
-     C     H@MTYP        OReq      'IP'                                                       245960
-     C     H@MTYP        OReq      'TD'                                                       245960
-     C     H@MTYP        Oreq      'IT'                                                       245960
-     C                   MOVE      'Y'           ErrorFound                                   245960
-     C                   MOVEL     'MMM0302'     Msgid2                                       245960
-     C                   END                                                                  245960
+     C*****H@MTYP        IFeq      'TI'                                              245960 MD061467
+     C*****H@MTYP        OReq      'IP'                                              245960 MD061467
+     C*****H@MTYP        OReq      'TD'                                              245960 MD061467
+     C*****H@MTYP        Oreq      'IT'                                              245960 MD061467
+     C**********         MOVE      'Y'           ErrorFound                          245960 MD061467
+     C**********         MOVEL     'MMM0302'     Msgid2                              245960 MD061467
+     C**********         END                                                         245960 MD061467
       *                                                                                       245960
-     C                   END                                                                  245960
+     C**********         END                                                         245960 MD061467
      C*
      C** For deam type CI or SI next interest date must not be zero
      C**  if interest frequency is not blank
@@ -671,7 +704,7 @@
      C                   ENDIF                                                              BUG16257
      C*                                                                                     BUG16257
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -683,9 +716,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    Msgid1
@@ -713,7 +746,7 @@
      C                   PARM                    @IADYN
      C                   PARM                    DDVdatOK
      C                   PARM                    DDDlnoOK
- 
+
       ** Check whether this program should also update spot rates                             240942
      C                   CALLB     'AOSVALR0'                                                 240942
      C                   PARM      *BLANKS       PRtCd             7                          240942
@@ -772,14 +805,14 @@
      C                   MOVE      'Y'           CDL088                                       CDL088
      C                   ENDIF                                                                CDL088
       *                                                                                       CDL088
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

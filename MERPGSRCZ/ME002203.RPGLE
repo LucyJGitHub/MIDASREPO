@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR657731           Date 19Jun23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -35,6 +36,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR657731 - The requested ME002203 report cannot be viewed via*
+      *           the Todays Reporting Enquiry of the Report Control  *
+      *           Facility. Ensure that the generated Report Sequence *
+      *           Number is passed when ME002203 printer files are    *
+      *           recorded to the Report Control Facility.            *
+      *           - Applied for MD-41788.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -670,7 +677,8 @@
       * $RCFP1 - Record the ME002203P1 printer file into RCF          *
       *****************************************************************
      C     $RCFP1        BEGSR
-
+      *                                                                                     AR657731
+     C                   MOVEL     @Sequence     PSeq                                       AR657731
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      @Entity       PSenty

@@ -52,7 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD061244 - Missing Tag 61 Securities Narrative in MT-942     *
+      *  MD061244 - Missing Tag 61 Securities Narrative in MT-942.    *
+      *             Identify if CP in SE module or CP in FT module    *
       *  MD026616A- Show counterparty name in subfield 9. Loan        *
       *             counterparty still not present after MD026616 and *
       *             Distinguish between TS in SE module and TS in DL  *

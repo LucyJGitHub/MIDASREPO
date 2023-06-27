@@ -13,11 +13,15 @@
       *                                                               *
       *  ((c) Finastra International Limited 2013                     *
       *                                                               *
-      *  Last Amend No. MD057519           Date 10Mar21               *
-      *  Prev Amend No. MD021351  *CREATE  Date 19Jul13               *
+      *  Last Amend No. MD057545           Date 27Jun23               *
+      *  Prev Amend No. MD057519           Date 10Mar21               *
+      *                 MD021351  *CREATE  Date 19Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD057545 - COB: LEC000460 not flagged as failed. Set on U7   *
+      *             and U8 indicators in *PSSR.                       *
+      *           - Applied for MD061478                              *
       *  MD057519 - Issue with high number of locks.                  *
       *           - Remove the use of array in retrieving the User    *
       *             Space details of the List Object Locks (QWCLOBJL) *
@@ -389,6 +393,7 @@
       *****************************************************************
      C     *PSSR         BEGSR
 
+     C                   SETON                                          U7U8                MD057545
      C                   DUMP
      C                   SETON                                            LR
      C                   RETURN

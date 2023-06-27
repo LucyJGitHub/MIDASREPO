@@ -14,12 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060386           Date 22Aug22               *
-      *  Prev Amend No. MD060362           Date 19Aug22               *
+      *  Last Amend No. MD061544           Date 27Jun23               *
+      *  Prev Amend No. MD060386           Date 22Aug22               *
+      *                 MD060362           Date 19Aug22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061544 - Allow CPF messages while restoring as long as     *
+      *             all objects have been restored                    *
       *  MD060386 - 1) monitor authority issues when restoring, 2)    *
       *             correct library name for *U library               *
       *  MD060362 - DSPF does not compile                             *
@@ -1252,8 +1255,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK2) + 'B'
@@ -1273,8 +1285,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK2) + 'D'
@@ -1294,8 +1315,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK2) + 'M'
@@ -1315,8 +1345,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK2) + 'N'
@@ -1336,8 +1375,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK2) + 'P'
@@ -1357,8 +1405,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'U'
@@ -1378,8 +1435,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'G'
@@ -1399,8 +1465,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'Q'
@@ -1420,8 +1495,17 @@
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
 
+      ** if CPF3773, allow '0 not restored'                                                 MD061544
+     C                   eval      X_CHK = *blanks                                          MD061544
+     C                   If        PSExcpNo = '3773'                                        MD061544
+     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
+     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
+     C                   ENDIF                                                              MD061544
+                                                                                            MD061544
       ** if error
      C                   If        PSExcpNo <> '    '
+     C                             and PSExcpNo <> '3773'                                   MD061544
+     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6007'
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'Z'

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD049486           Date 16Jun23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050882           Date 23Jun23               *
+      *  Prev Amend No. MD049486           Date 16Jun23               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027191           Date 26May14               *
       *                 AR696350           Date 16May14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050882 - Add authorization step to 'Delete by Year' action *
       *  MD049486 -  DB error when a user tried to authorise an       *
       *              uncommitted amendment to the Currency Holiday    *
       *              details                                          *
@@ -75,6 +77,12 @@
      F                                     COMMIT
       ** Midas SD Authorisation Log - by Key (Upd)
 
+     FSDHOLL9   IF   E           K DISK    INFSR(*PSSR)                                     MD050882
+      ** Midas SD Holiday Details - by Year (Rtv)                                           MD050882
+                                                                                            MD050882
+     FSDHOSHL9  IF   E           K DISK    INFSR(*PSSR)                                     MD050882
+     F                                     COMMIT                                           MD050882
+      ** Midas SD Holiday Details Shadow file - by Year (Rtv)                               MD050882
      F/COPY WNCPYSRC,SDHOLIF001
 
       *****************************************************************
@@ -215,6 +223,10 @@
      D RUNDAT          DS            13
      D  RDNB                   8     10P 0
 
+     D HKEY            DS                                                                   MD050882
+     D  HCYCD                  1      3                                                     MD050882
+     D  HLCCD                  4      6                                                     MD050882
+     D  HYRNB                  7     10                                                     MD050882
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -357,16 +369,53 @@
      C                   ENDIF
 
       ** Delete record from Shadow file
+      ** If action is Delete by Year                                                        MD050882
+     C                   IF        KCYCD = '***' AND KLCCD = '***'                          MD050882
+     C                   EXSR      SRDltByYrSh                                              MD050882
+     C                   ELSE                                                               MD050882
      C     KKEY1         CHAIN     SDHOSHL0                           80
       *
      C                   IF        *IN80 = '0'
      C                   DELETE    SDHOSHD0
      C                   ENDIF
+     C                   ENDIF                                                              MD050882
      C                   ENDIF                                                             MD049486
 
      C/COPY WNCPYSRC,SDHOLIC003
 
      C                   ENDSR
+      /EJECT                                                                                MD050882
+      *****************************************************************                     MD050882
+      * SRDltByYrSh - Delete all holidays from Shadow file            *                     MD050882
+      *                                                               *                     MD050882
+      * Called by: SRDelete                                           *                     MD050882
+      * Calls    :                                                    *                     MD050882
+      *****************************************************************                     MD050882
+     C     SRDltByYrSh   BEGSR                                                              MD050882
+                                                                                            MD050882
+     C     KKEY2         SETLL     SDHOSHL9                                                 MD050882
+     C     KKEY2         READE     SDHOSHL9                               81                MD050882
+                                                                                            MD050882
+     C                   IF        *IN81 = '1'                                              MD050882
+     C     *LOCK         IN        LDA                                                      MD050882
+     C                   MOVEL     'SDHOSHPD'    DBFILE                                     MD050882
+     C                   MOVEL     '010'         DBASE                                      MD050882
+     C                   MOVEL     KYRNB         DBKEY                                      MD050882
+     C                   OUT       LDA                                                      MD050882
+     C                   EXSR      *PSSR                                                    MD050882
+                                                                                            MD050882
+     C                   ELSE                                                               MD050882
+     C     *IN81         DOWEQ     '0'                                                      MD050882
+     C     KKEY3         CHAIN     SDHOSHL0                           80                    MD050882
+                                                                                            MD050882
+     C                   IF        *IN80 = '0'                                              MD050882
+     C                   DELETE    SDHOSHD0                                                 MD050882
+     C                   ENDIF                                                              MD050882
+                                                                                            MD050882
+     C     KKEY2         READE     SDHOSHL9                               81                MD050882
+     C                   ENDDO                                                              MD050882
+     C                   ENDIF                                                              MD050882
+     C                   ENDSR                                                              MD050882
       /EJECT
       *****************************************************************
       * SRUpdate - Update master file with shadow file details        *
@@ -380,6 +429,12 @@
       ** --------------------------------
 
      C                   IF        ALACTN = 'D'
+
+      ** If action is 'Delete by Year'                                                      MD050882
+     C                   IF        KCYCD = '***' AND KLCCD = '***'                          MD050882
+     C                   EXSR      SRDltByYear                                              MD050882
+     C                   ELSE                                                               MD050882
+                                                                                            MD050882
      C*****KKEY1         CHAIN     SDHOLL0                            80                    MD049486
      C     KKEY1         CHAIN     SDHOLL0                            8081                  MD049486
      C                   IF        *IN81 = '1'                                              MD049486
@@ -401,6 +456,7 @@
      C                   EXSR      SRStdCtl
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD050882
      C                   ENDIF                                                              MD049486
 
       ** If action is 'I', Insert record.
@@ -473,6 +529,58 @@
      C/COPY WNCPYSRC,SDHOLIC004
 
      C                   ENDSR
+      /EJECT                                                                                MD050882
+      *****************************************************************                     MD050882
+      * SRDltByYear - Delete all holidays                             *                     MD050882
+      *                                                               *                     MD050882
+      * Called by: SRUpdate                                           *                     MD050882
+      * Calls    :                                                    *                     MD050882
+      *****************************************************************                     MD050882
+     C     SRDltByYear   BEGSR                                                              MD050882
+                                                                                            MD050882
+     C     KKEY2         SETLL     @HOLPIF                                                  MD050882
+     C     KKEY2         READE     @HOLPIF                                81                MD050882
+                                                                                            MD050882
+     C                   IF        *IN81 = '1'                                              MD050882
+     C     *LOCK         IN        LDA                                                      MD050882
+     C                   MOVEL     'SDHOLPD'     DBFILE                                     MD050882
+     C                   MOVEL     '009'         DBASE                                      MD050882
+     C                   MOVEL     KYRNB         DBKEY                                      MD050882
+     C                   OUT       LDA                                                      MD050882
+     C                   EXSR      *PSSR                                                    MD050882
+                                                                                            MD050882
+     C                   ELSE                                                               MD050882
+                                                                                            MD050882
+     C     *IN81         DOWEQ     '0'                                                      MD050882
+                                                                                            MD050882
+     C                   EVAL      DGYRNB = KYRNB                                           MD050882
+     C                   EVAL      HCYCD = DGCYCD                                           MD050882
+     C                   EVAL      HLCCD = DGLCCD                                           MD050882
+     C                   EVAL      HYRNB = DGYRNB                                           MD050882
+                                                                                            MD050882
+     C     KKEY3         CHAIN     SDHOLL0                            80                    MD050882
+                                                                                            MD050882
+     C                   IF        *IN80 = '1'                                              MD050882
+     C     *LOCK         IN        LDA                                                      MD050882
+     C                   MOVEL     'SDHOLPD'     DBFILE                                     MD050882
+     C                   MOVEL     '004'         DBASE                                      MD050882
+     C                   MOVEL     HKEY          DBKEY                                      MD050882
+     C                   OUT       LDA                                                      MD050882
+     C                   EXSR      *PSSR                                                    MD050882
+                                                                                            MD050882
+     C                   ELSE                                                               MD050882
+     C                   DELETE    @HOLPHG                                                  MD050882
+      *                                                                                     MD050882
+     C                   EXSR      SRDltRecUpd                                              MD050882
+     C                   EXSR      SRStdCtl                                                 MD050882
+     C                   ENDIF                                                              MD050882
+                                                                                            MD050882
+     C     KKEY2         READE     @HOLPIF                                81                MD050882
+     C                   ENDDO                                                              MD050882
+     C                   ENDIF                                                              MD050882
+                                                                                            MD050882
+     C                   ENDSR                                                              MD050882
+      /EJECT                                                                                MD050882
       /EJECT
       *****************************************************************
       * SRDltRecUpd - Write Deleted record to Deleted records file    *
@@ -627,6 +735,13 @@
      C                   KFLD                    KLCCD             3
      C                   KFLD                    KYRNB             4
       *
+     C     KKEY2         KLIST                                                              MD050882
+     C                   KFLD                    KYRNB                                      MD050882
+      *                                                                                     MD050882
+     C     KKEY3         KLIST                                                              MD050882
+     C                   KFLD                    DGCYCD                                     MD050882
+     C                   KFLD                    DGLCCD                                     MD050882
+     C                   KFLD                    DGYRNB                                     MD050882
      C/COPY WNCPYSRC,SDHOLIC001
 
      C                   ENDSR

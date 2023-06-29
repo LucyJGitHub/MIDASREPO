@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD061274             Date 09May23             *
-      *  Prev Amend No. MD060877             Date 01Jan23             *
+      *  Last Amend No. MD061461             Date 01Jun23             *
+      *  Prev Amend No. MD061274             Date 09May23             *
+      *                 MD060877             Date 01Jan23             *
       *                 CSW101               Date 03Feb23             *
       *                 MD060964             Date 24Jan23             *
       *                 MD060352             Date 22Aug22             *
@@ -105,6 +106,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061461 - Include BTD and XTD update                        *
       *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  CSW101 - PAYplus Interface.                                  *
@@ -1071,6 +1073,7 @@
      C**********         Endif                                                     MD055242 MD057035
                                                                                    MD055242 MD057035
      C                   If        %SUBST(Member:6:3) =  'CTD'                              MD057035
+     C                             or %SUBST(Member:6:3) =  'BTD'                           MD061461
       ** Check if the file has an '*XTD' equivalent; this means it is using
       **  the new Deliverable Data Split.
      C                   EVAL      ChkFile = %SUBST(Member:1:5) + 'XTD'

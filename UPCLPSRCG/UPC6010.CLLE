@@ -13,10 +13,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD061004 *CREATE   Date 02Feb23              */
+/*       Last Amend No. MD061547           Date 27Jun23              */
+/*       Prev Amend No. MD061004 *CREATE   Date 02Feb23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061547 - Allow delivery of DSPF UP6010GF                  */
 /*       MD061004 - Adding CCSID for database objects                */
 /*                                                                   */
 /*********************************************************************/
@@ -39,6 +41,7 @@
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GINVLIB) TYPE(*CHAR) LEN(10)                               /*MD061547*/
 
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
@@ -119,9 +122,19 @@ SELECT:
              RMVPFTRG FILE(SDSVLXTD)
              MONMSG     MSGID(CPF0000)
 
+/* Create duplicate version of UP6010GF as it may be restored during process */         /*MD061547*/
+             CHGVAR     VAR(&GINVLIB) VALUE(&GPFX *TCAT 'GINVLIB')                      /*MD061547*/
+             DLTOBJ     OBJ(&GINVLIB/UP6010GF) OBJTYPE(*FILE)                           /*MD061547*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061547*/
+             CRTDUPOBJ  OBJ(UP6010GF) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(&GINVLIB)                                               /*MD061547*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061547*/
+                                                                                        /*MD061547*/
 /* Call program to select layers */
              CHGVAR     VAR(&ERRPGM) VALUE('UP6000')
              CALL       PGM(UP6010) PARM(&RETURN)
+             DLTOBJ     OBJ(&GINVLIB/UP6010GF) OBJTYPE(*FILE)                           /*MD061547*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061547*/
              IF         COND(&RETURN *EQ '*Exit     ') THEN(GOTO +
                           ENDPGM)
              IF         COND(&RETURN *EQ '*Error    ') THEN(GOTO +

@@ -462,6 +462,7 @@
      D PSysVal10       S             20A                                                    MD060855
      D PCurSet10       S            200A                                                    MD060855
      D WSysVal01       S              2A                                                    MD060855
+     D CFT004          S              1A                                                    MD060855
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2188,8 +2189,15 @@
      C                   IF        NSFLAG <> 'D'                                            MD047319
      C                             AND A4ISOC <> WSysVal01                                  MD060855
      C**********         EVAL      A4BBRL= M3BILN                                           MD023678
+      ** Populate BBAN fields if CFT004 is ON                                               MD060855
+     C                   IF        CFT004 = 'Y'                                             MD060855
      C                   EVAL      A4BBRL= M3TBLN                                           MD023678
      C                   EVAL      A4BBAN = M3BBLN
+     C                   ELSE                                                               MD060855
+     C                   EVAL      A4BBRL= 0                                                MD060855
+     C                   EVAL      A4BBAN = 0                                               MD060855
+     C                   ENDIF                                                              MD060855
+      *                                                                                     MD060855
      C                   ELSE
      C                   EVAL      A4BBRL= 0
      C                   EVAL      A4BBAN = 0
@@ -2777,6 +2785,29 @@
      C                   MOVEL     PCurSet01     WSysVal01                                  MD060855
      C                   ENDIF                                                              MD060855
       *                                                                                     MD060855
+      ** Check if CFT004 is ON                                                              MD060855
+      *                                                                                     MD060855
+     C                   CALL      'AOSARDR0'                                               MD060855
+     C                   PARM      *BLANKS       @RTCD                                      MD060855
+     C                   PARM      '*VERIFY '    @OPTN                                      MD060855
+     C                   PARM      'CFT004'      @SARD                                      MD060855
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD060855
+      *                                                                                     MD060855
+     C     @RTCD         IFNE      *BLANKS                                                  MD060855
+     C     @RTCD         ANDNE     '*NRF'                                                   MD060855
+     C     *LOCK         IN        LDA                                                      MD060855
+     C                   Z-ADD     36            DBASE                                      MD060855
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD060855
+     C                   EVAL      DBKEY = '*VERIFY '                                       MD060855
+     C                   OUT       LDA                                                      MD060855
+     C                   EXSR      *PSSR                                                    MD060855
+     C                   ENDIF                                                              MD060855
+      *                                                                                     MD060855
+     C     @RTCD         IFEQ      *BLANKS                                                  MD060855
+     C                   MOVE      'Y'           CFT004                                     MD060855
+     C                   ELSE                                                               MD060855
+     C                   MOVE      'N'           CFT004                                     MD060855
+     C                   ENDIF                                                              MD060855
      C                   ENDSR
       *****************************************************************
       /EJECT

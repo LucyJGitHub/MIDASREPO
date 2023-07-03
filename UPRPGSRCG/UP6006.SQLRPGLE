@@ -15,8 +15,7 @@
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
       *  Last Amend No. MD061544           Date 27Jun23               *
-      *  Prev Amend No. MD061351           Date 03May23               *
-      *                 MD060386           Date 22Aug22               *
+      *  Prev Amend No. MD060386           Date 22Aug22               *
       *                 MD060362           Date 19Aug22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
@@ -24,8 +23,6 @@
       *                                                               *
       *  MD061544 - Allow CPF messages while restoring as long as     *
       *             all objects have been restored                    *
-      *  MD061351 - *U library for client package can be either core  *
-      *             or client                                         *
       *  MD060386 - 1) monitor authority issues when restoring, 2)    *
       *             correct library name for *U library               *
       *  MD060362 - DSPF does not compile                             *
@@ -54,7 +51,6 @@
       ** Declared Variables
      D ErrInd          S             10A
      D SAVF            S             10A
-     D SAVFU           S             10A                                                    MD061351
      D DBASE           S              3A
      D Member          S             10A
      D sqlStat         S           5000A
@@ -614,10 +610,8 @@
      C                             ' compatibility Zone objects library'
      C                   eval      #LIBCP = XPACK2 + 'P - Cumulative and' +
      C                             ' compatibility Installer package library'
-     C**********         eval      #LIBCU = XPACK + 'U - Cumulative Upgrade' +              MD061351
-     C**********                   ' library'                                               MD061351
-     C                   eval      #LIBCU = %trim(XPACK2) + 'U/' + %trim(XPACK)+            MD061351
-     C                             'U -  Cumulative Upgrade library'                        MD061351
+     C                   eval      #LIBCU = XPACK + 'U - Cumulative Upgrade' +
+     C                             ' library'
      C                   eval      #LIBCG = XPACK + 'G - Cumulative Global ' +
      C                             'objects library'
      C                   eval      #LIBCQ = XPACK + 'Q - Cumulative Stored ' +
@@ -915,7 +909,6 @@
      C                   else
 
       * Check that SAVF exists in the library
-      * Check first core SAVF using XPACK                                                   MD061351
      C                   eval      SAVF = XPACK + 'U'
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD
@@ -926,27 +919,13 @@
       *
       * If libary does not exist in the library list, send message
      C     RTNCOD        IFNE      'Exist'
-      * Then check client SAVF using XPACK2                                                 MD061351
-     C                   eval      SAVF = XPACK2 + 'U'                                      MD061351
-     C                   CALL      'UTCHKOBJ'                                               MD061351
-     C                   PARM      *BLANK        RTNCOD                                     MD061351
-     C                   PARM      SAVF          P2OBNM                                     MD061351
-     C                   PARM      #LIBCUN       P2TLIB                                     MD061351
-     C                   PARM      '*FILE'       P2OBTP                                     MD061351
-     C                   PARM      *blanks       CHKMBR                                     MD061351
-     C     RTNCOD        IFNE      'Exist'                                                  MD061351
-      *                                                                                     MD061351
      C                   seton                                        56
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6006'
      C                   EVAL      ZAMSDA = SAVF
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
-     C                   ENDIF                                                              MD061351
      C                   ENDIF
-     C                   eval      SAVFU = SAVF                                             MD061351
-     C                   eval      #LIBCU = SAVFU + ' - Cumulative Upgrade' +               MD061351
-     C                             ' library'                                               MD061351
      C                   ENDIF
      C                   ENDIF
 
@@ -1417,16 +1396,11 @@
 
       * *U library
      C                   eval      PSExcpNo = '    '
-     C**********         EVAL      Cmd_String = 'RSTLIB SAVLIB(' +                          MD061351
-     C**********                   %trimr(XPACK) + 'U) DEV(*SAVF) SAVF(' +                  MD061351
-     C**********                   %trim(#LIBCUN) + '/' +                                   MD061351
-     C**********                   %trimr(XPACK) + 'U) RSTLIB(' +                           MD061351
-     C**********                   %trimr(XPACK) + 'U) OUTPUT(*PRINT)'                      MD061351
-     C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +                          MD061351
-     C                             %trimr(SAVFU) + ')  DEV(*SAVF) SAVF(' +                  MD061351
-     C                             %trim(#LIBCUN) + '/' +                                   MD061351
-     C                             %trimr(SAVFU) + ')  RSTLIB(' +                           MD061351
-     C                             %trimr(SAVFU) + ')  OUTPUT(*PRINT)'                      MD061351
+     C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
+     C                             %trimr(XPACK) + 'U) DEV(*SAVF) SAVF(' +
+     C                             %trim(#LIBCUN) + '/' +
+     C                             %trimr(XPACK) + 'U) RSTLIB(' +
+     C                             %trimr(XPACK) + 'U) OUTPUT(*PRINT)'
      C                   CALL      'QCMDEXC'                            20
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len

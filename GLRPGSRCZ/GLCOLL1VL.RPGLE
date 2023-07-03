@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -304,10 +306,12 @@
      C     DDENTYOK      IFEQ      'Y'
      C     DDACTN        ANDEQ     'A'
      C     DDENTY        ANDNE     CDENTY
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   MOVEL     'N'           DDENTYOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDENTY'      FldNameArr(Ix)
      C                   MOVEL     'COL0028'     MsgIdArr(Ix)
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
       *
      C                   ENDSR
@@ -382,14 +386,19 @@
      C     DDENTYOK      IFEQ      'Y'
      C     DDENTY        ANDNE     'B'
      C     DDBRCA        ANDNE     *Blanks
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   MOVEL     'N'           DDBRCAOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDBRCA'      FldNameArr(Ix)
      C                   MOVEL     'COL0031'     MsgIdArr(Ix)
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
       *
      C     DDBRCAOK      IFEQ      'Y'
      C     DDENTY        ANDEQ     'B'
+     C     BA6045        ANDEQ     'N'                                                        BA6045
+     C     DDBRCAOK      OREQ      'Y'                                                        BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
       *
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
@@ -457,10 +466,12 @@
      C     DDACTN        IFEQ      'A'
      C     DDCOLT        ANDNE     CDCOLT
      C     CDCOPT        ANDNE     CTCOPT
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   MOVE      'N'           DDCOLTOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDCOLT'      FldNameArr(Ix)
      C                   MOVEL     'COL0124'     MsgIdArr(Ix)
+     C                   ENDIF                                                                BA6045
      C                   ELSE
      C                   MOVE      CTCOPT        CDCOPT
      C                   ENDIF
@@ -638,6 +649,15 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDEDAT'      FldNameArr(Ix)
      C                   MOVEL     'COL0044'     MsgIdArr(Ix)
+     C                   ELSE                                                                 BA6045
+     C                   IF        BA6045 = 'Y'                                               BA6045
+     C     WWEDAT        IFLT      BJRDNB                                                     BA6045
+     C                   MOVE      'N'           DDEDATOK                                     BA6045
+     C                   ADD       1             Ix                                           BA6045
+     C                   MOVEL     'DDEDAT'      FldNameArr(Ix)                               BA6045
+     C                   MOVEL     'COL0043'     MsgIdArr(Ix)                                 BA6045
+     C                   ENDIF                                                                BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -808,6 +828,7 @@
       *****************************************************************
       *                                                               *
       *  SRUNIT - Number of Units Validation process                  *
+      ** NUMBER OF UNITS IS NOW THE NOMINAL AMOUNT                    *                       BA6045
       *                                                               *
       *****************************************************************
      C     SRUNIT        BEGSR
@@ -820,19 +841,27 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDUNIT'      FldNameArr(Ix)
      C                   MOVEL     'COL0052'     MsgIdArr(Ix)
+      ** COL0052: 'Nominal/Amount' is prohibited if Amount/Percentage Indicator is 'P'.       BA6045
      C                   ELSE
       *
      C                   MOVEL     *Blanks       ZFIELD
      C                   MOVEL     DDUNIT        ZFIELD
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   Z-ADD     0             ZADEC
+     C                   ELSE                                                                 BA6045
+     C                   Z-ADD     A6NBDP        ZADEC                                        BA6045
+     C                   ENDIF                                                                BA6045
      C                   Z-ADD     13            ZADIG
      C                   EXSR      SRZALIGN
       *
+      ** 'Nominal/Amount' should be entered.                                                  BA6045
+      ** (Currency decimla places should be of collateral currency)                           BA6045
      C     ZALIGNOK      IFNE      'Y'
      C                   MOVE      'N'           DDUNITOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDUNIT'      FldNameArr(Ix)
      C                   MOVEL     'COL0053'     MsgIdArr(Ix)
+      ** COL0053: 'Invalid Nominal/Amount'                                                    BA6045
      C                   ELSE
      C                   MOVE      ZFIELD        WWUNIT
      C                   ENDIF
@@ -889,6 +918,8 @@
       *****************************************************************
       *                                                               *
       *  SRUAMT - Unit Amount Validation process                      *
+      ** UNIT ANOUNT IS NOW THE UNIT PRICE                            *                       BA6045
+      ** UNIT PRICE ONLY ALLOWED WITH COLLATERAL PROT = 'P' - PLEDGES *                       BA6045
       *                                                               *
       *****************************************************************
      C     SRUAMT        BEGSR
@@ -896,17 +927,34 @@
      C                   Z-ADD     0             WWUAMT
       *
      C     DDAPCT        IFEQ      'P'
+     C     BA6045        ANDEQ     'N'                                                        BA6045
      C     DDUAMT        IFNE      *BLANKS
      C                   MOVE      'N'           DDUAMTOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDUAMT'      FldNameArr(Ix)
      C                   MOVEL     'COL0056'     MsgIdArr(Ix)
      C                   ENDIF
+      ** COL0056: Unit Price must be blank if collateral processing type <> 'P''              BA6045
      C                   ELSE
+     C     DDUAMT        IFNE      *BLANKS                                                    BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
+     C     CDCOPT        ANDNE     'P'                                                        BA6045
+     C                   MOVE      'N'           DDUAMTOK                                     BA6045
+     C                   ADD       1             Ix                                           BA6045
+     C                   MOVEL     'DDUAMT'      FldNameArr(Ix)                               BA6045
+     C                   MOVEL     'COL0056'     MsgIdArr(Ix)                                 BA6045
+     C                   ELSE                                                                 BA6045
       *
+     C     DDUAMT        IFNE      *BLANKS                                                    BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
+     C     BA6045        OREQ      'N'                                                        BA6045
      C                   MOVEL     *Blanks       ZFIELD
      C                   MOVEL     DDUAMT        ZFIELD
+     C     BA6045        IFEQ      'N'                                                        BA6045
      C                   Z-ADD     A6NBDP        ZADEC
+     C                   ELSE                                                                 BA6045
+     C                   Z-ADD     8             ZADEC                                        BA6045
+     C                   ENDIF                                                                BA6045
      C     15            SUB       ZADEC         ZADIG
      C                   EXSR      SRZALIGN
       *
@@ -916,9 +964,12 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDUAMT'      FldNameArr(Ix)
      C                   MOVEL     'COL0057'     MsgIdArr(Ix)
+      ** COL0057: 'Invalid Unit Price.'                                                       BA6045
      C                   ELSE
      C                   MOVE      ZFIELD        WWUAMT
      C                   ENDIF
+     C                   ENDIF                                                                BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
       *
      C                   ENDSR
@@ -977,6 +1028,16 @@
       *
      C     ZALIGNOK      IFNE      'Y'
      C     ZFIELD        OREQ      *ZEROS
+     C     BA6045        ANDEQ     'N'                                                        BA6045
+      ** Valuation amount needed for collateral ext. to MIDAS or where revaluation is manual  BA6045
+     C     DDVAMT        OREQ      *BLANK                                                     BA6045
+     C     CTCOPT        ANDNE     'A'                                                        BA6045
+     C     CTCOPT        ANDNE     'D'                                                        BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
+     C     DDVAMT        OREQ      *BLANK                                                     BA6045
+     C     CTRVLM        ANDEQ     'M'                                                        BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
+      ** Valuation amount can be zero                                                         BA6045
      C                   MOVE      'N'           DDVAMTOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDVAMT'      FldNameArr(Ix)
@@ -1187,7 +1248,11 @@
       *
      C     DDMARG        IFEQ      *BLANKS
      C                   MOVEL     *BLANKS       ZFIELD
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   MOVE      CTMPCT        ZFIELD
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      10000         ZFIELD                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   Z-ADD     2             ZADEC
      C                   EXSR      SRZEDIT
      C                   MOVE      ZFIELD        DDMARG
@@ -1374,27 +1439,51 @@
      C                   MOVEL     DDRNEW        CDRNEW
      C     DDRVDT        IFNE      *BLANKS
      C                   Z-ADD     WWRVDT        CDRVDT
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDRVDT                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C                   MOVEL     DDRFRQ        CDRFRQ
      C     DDRDNO        IFNE      *BLANKS
      C                   MOVEL     DDRDNO        CDRDNO
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDRDNO                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C                   MOVEL     DDCCY         CDCCY
      C                   MOVEL     DDAPCT        CDAPCT
      C     DDUNIT        IFNE      *BLANKS
      C**********         Z-ADD     WWUNIT        CDUNIT                                       CGL014
      C                   Z-ADD     WWUNIT        CDNAMT                                       CGL014
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDNAMT                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDPCNT        IFNE      *BLANKS
      C                   Z-ADD     WWPCNT        CDPCNT
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDPCNT                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDUAMT        IFNE      *BLANKS
      C**********         Z-ADD     WWUAMT        CDUAMT                                       CGL014
      C                   Z-ADD     WWUAMT        CDUPRC                                       CGL014
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDUPRC                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDMAMT        IFNE      *BLANKS
      C**********         Z-ADD     WWMAMT        CDMAMT                                       CGL014
      C                   Z-ADD     WWMAMT        CDMXNA                                       CGL014
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDMXNA                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDVAMT        IFNE      *BLANKS
      C                   Z-ADD     WWVAMT        CDVAMT
@@ -1411,19 +1500,35 @@
       *
      C     DDVLDT        IFNE      *BLANKS
      C                   Z-ADD     WWVLDT        CDVLDT
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDVLDT                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDNVDT        IFNE      *BLANKS
      C                   Z-ADD     WWNVDT        CDNVDT
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDNVDT                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C                   MOVEL     DDVFRQ        CDVFRQ
      C     DDVDNO        IFNE      *BLANKS
      C                   MOVEL     DDVDNO        CDVDNO
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   Z-ADD     0             CDVDNO                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C     DDMARG        IFNE      *BLANKS
      C                   Z-ADD     WWMARG        CDMARG
      C                   ENDIF
      C     DDHCNM        IFNE      *BLANKS
      C                   MOVEL     DDHCNM        CDHCNM
+     C                   ELSE                                                                 BA6045
+     C     BA6045        IFEQ      'Y'                                                        BA6045
+     C                   MOVEL     *blank        CDHCNM                                       BA6045
+     C                   ENDIF                                                                BA6045
      C                   ENDIF
      C                   MOVEL     DDCOLO        CDCOLO
      C     DDLAMT        IFNE      *BLANKS
@@ -1510,6 +1615,18 @@
      C                   Z-ADD     001           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                             BA6045
+      ** Check if BA6045 is installed                                                        BA6045
+                                                                                             BA6045
+     C                   MOVE      'N'           BA6045            1                         BA6045
+     C                   CALL      'AOSARDR0'                                                BA6045
+     C                   PARM      *BLANKS       PRTCD                                       BA6045
+     C                   PARM      '*VERIFY'     POPTN                                       BA6045
+     C                   PARM      'BA6045'      PSARD             6                         BA6045
+                                                                                             BA6045
+     C                   IF        PRTCD = *BLANKS                                           BA6045
+     C                   EVAL      BA6045 = 'Y'                                              BA6045
+     C                   ENDIF                                                               BA6045
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,7 @@
       *                 CGL011  *CREATE    Date 20Sep99               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -51,7 +53,7 @@
       *  CGL011 - Collateral Processing for Midas DBA.                *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ! Automatically included D-specs       !
@@ -70,77 +72,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ! End of automatically included D-specs!
       ** ! =====================================!
       ** +--------------------------------------+
- 
+
       ** Collateral Allocation File Format
      D CrCAFilFmt    E DS                  EXTNAME(GLCOLAPD)
- 
+
       ** Collateral Allocation Old File Format
      D OldCAFilFmt   E DS                  EXTNAME(GLCOLAPD)
      D                                     PREFIX(O)
- 
+
       ** Collateral Allocation Screen Format(Current)
      D CrCAScnFmt    E DS                  EXTNAME(GLSCLAPD)
- 
+
       ** Collateral Allocation Screen Errors Format
      D CAESFL        E DS                  EXTNAME(GLECLAPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Dealing ICD
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** SAR descriptions                                                                     CGL018
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL018
- 
+
       ** DS for Access Object Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Object Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Response mode, for SPF validation
      D RespMode        S              1A   INZ('S')
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Program process indicator
      D WScrn           S              1A
- 
+
       ** General Work indicators
      D W@TotAmt        S             15P 0
      D W@LeVal         S             15P 0
      D W@TotPct        S             10P 7
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -151,26 +153,26 @@
       ** ! executed at program activation.                                !
       ** !                                                                !
       ** +----------------------------------------------------------------+
- 
+
       ** Maintenance mode
- 
+
      C     WScrn         DowEq     'M'
      C                   ExSr      SrScrnM
      C                   EndDo
- 
+
       ** Update mode
- 
+
      C                   If        WScrn = 'U'
      C                   ExSr      SrUpdate
      C                   EndIf
- 
+
       ** Terminate mode
- 
+
      C                   If        WScrn = 'T'
      C                   Eval      *INLR = *On
      C                   Return
      C                   EndIf
- 
+
       *****************************************************************
       *                                                               *
       * SR/*InzSr: Initialisation Routine                             *
@@ -182,16 +184,18 @@
       * SrConvAmt- Convert amount of collateral statistics            *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
       ** Entry Parameters
- 
+
      C     *Entry        PList
      C                   Parm                    PRetCode          7
      C                   Parm                    PAloActn          1
      C                   Parm                    PColRef          10
      C                   Parm                    PColCur           3
+     C                   Parm                    PColEnty          1                          BA6045
+     C                   Parm                    PColBrca          3                          BA6045
      C                   Parm                    PPctAlo          11
      C                   Parm                    PLenVal          16
      C                   Parm                    OLenVal          16
@@ -200,9 +204,9 @@
      C                   Parm                    PNarSelec         1
      C                   Parm                    PF3Taken          1
      C                   Parm                    PRWASEL           1                          CGL018
- 
+
       ** Parameter list for GLCOLADSP
- 
+
      C     PGlColaDsp    PList
      C                   Parm      *Blank        RetCodeOut
      C                   Parm                    PColRef
@@ -229,9 +233,9 @@
      C                   Parm                    SBlank            1
      C                   Parm                    WchgDel           1
      C                   Parm      '0'           W@INKR            1                          CGL018
- 
+
       ** Parameter list for GLCOLAVAL
- 
+
      C     PGlColaVal    PList
      C                   Parm                    RespMode
      C                   Parm                    CrCAScnFmt
@@ -247,26 +251,28 @@
      C                   Parm                    CrCAFilFmt
      C                   Parm                    PColRef
      C                   Parm                    PColCur
+     C                   Parm                    PColEnty                                     BA6045
+     C                   Parm                    PColBrca                                     BA6045
      C                   Parm                    SBlank
      C                   Parm                    WchgDel
      C                   Parm                    CGL072                                       CGL072
- 
+
       ** Parameter list for GLCOLAUPD
- 
+
      C     PGlColaUpd    PList
      C                   Parm                    RetCode           7
      C                   Parm                    CrCAFilFmt
      C                   Parm                    PColCur
- 
+
       ***Parameter*list*for GLCOLARTV                                                         CAP084
       ******                                                                                  CAP084
      C*****PGlColaRtv    PList                                                                CAP084
      C******             Parm      *Blank        RetCode           7                          CAP084
      C******             Parm                    CrCAFilFmt                                   CAP084
      C******             Parm                    OldCAFilFmt                                  CAP084
- 
+
       ** Parameter list for ZA0840
- 
+
      C     PZA0840       PList
      C                   Parm                    RetCodeOut
      C                   Parm                    W@ALPH           16
@@ -276,9 +282,9 @@
      C                   Parm                    W@ERCD            1 0
      C                   Parm                    W@AMT            15 0
      C                   Parm                    BNDCSP
- 
+
       ** Parameter list for ZA0921
- 
+
      C     PZA0921       PList
      C                   Parm                    RetCodeOut
      C                   Parm                    WAMOUNT          15 0
@@ -286,7 +292,7 @@
      C                   Parm                    BNDCSP
      C                   Parm                    W@AMTP           16
      C                   Parm                    W@AMTD           17
- 
+
       *
       ** Access SAR details file to determine if CGL018 is on.                                CGL018
       *                                                                                       CGL018
@@ -324,17 +330,40 @@
      C                   ELSE                                                                 CGL072
      C                   MOVE      'N'           CGL072                                       CGL072
      C                   END                                                                  CGL072
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       @RTCD                                        BA6045
+     C                   PARM      '*VERIFY'     @OPTN                                        BA6045
+     C                   PARM      'BA6045'      @SARD                                        BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6045
+      *                                                                                       BA6045
+      ** Database Error                                                                       BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFNE      *BLANKS                                                    BA6045
+     C     @RTCD         ANDNE     '*NRF   '                                                  BA6045
+     C                   MOVEL     'SCSARDPD'    DBFILE                         ************  BA6045
+     C                   Z-ADD     8             DBASE                          * DBERR 08 *  BA6045
+     C                   MOVEL     'BA6045'      DBKEY                          ************  BA6045
+     C                   EXSR      *PSSR                                                      BA6045
+     C                   END                                                                  BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
       ** Program Name
- 
+
      C                   Eval      DbPgm = 'GLCOLASIN'
- 
+
       ** Access Bank Details via Access Object AOBANKR0
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      '*DBERR '     @RtCd
      C                   Parm      '*FIRST '     @Optn
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
      C     @RtCd         IfNe      *BLANKS
      C     *Lock         In        LDA
      C                   Move      *ON           *INU7
@@ -345,29 +374,29 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Maintenance
- 
+
      C                   Eval      WScrn =  'M'
- 
+
       ** Build Subfile
- 
+
      C                   Eval      SflAction = 'BS'
- 
+
      C                   If        (PAloActn = 'E') Or (PAloActn = 'D') Or
      C                             (PAloActn = 'X')
      C                   Eval      WriteOnly = 'Y'
      C                   Else
      C                   Eval      WriteOnly = 'N'
      C                   Endif
- 
+
       ** Convert collateral statistics
- 
+
      C                   Movel     'N'           WConvert          1
      c                   ExSr      SrConvAmt
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrScrnM: Maintenance Processing Routine                    *
@@ -378,17 +407,17 @@
       * GLCOLADSP - Screen Display Function Module                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SrScrnM       BegSr
- 
+
       ** Write/Read Display Screen
- 
+
      C                   CallB     'GLCOLADSP'   PGlColaDsp
- 
+
       ** Reset Error fields
- 
+
      C                   ExSr      SRResetErr
- 
+
      C                   If        (W@INKC = *On) Or (W@INKL = *On) Or
      C                             (W@INKP = *On) Or (W@INKQ = *On) Or
      C                             (Writeonly = 'Y')
@@ -398,9 +427,9 @@
      C                   ExSr      SrVal
      C                   EndIf
      C                   Endif
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrEndPr:  Termination Routine                              *
@@ -410,46 +439,46 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrEndPr       BegSr
- 
+
      C                   Eval      WScrn = 'T'
      C                   Eval      PGenAloUpd = 'N'
- 
+
      C                   If        W@INKC = '1'
      C                   Eval      PRetCode = 'Y2U9999'
      C                   Eval      PF3Taken = 'Y'
      C                   Eval      PNarSelec = 'N'
      C                   Endif
- 
+
      C                   If        W@INKL = '1'
      C                   Eval      PRetCode = 'USR0790'
      C                   Eval      PF3Taken = 'N'
      C                   Eval      PNarSelec = 'N'
      C                   Endif
- 
+
      C                   If        W@INKP = '1'
      C                   Eval      PRetCode = *Blanks
      C                   Eval      PF3Taken = 'N'
      C                   Eval      PNarSelec = 'N'
      C                   Endif
- 
+
      C                   If        W@INKQ = '1'
      C                   Eval      PRetCode = *Blanks
      C                   Eval      PF3Taken = 'N'
      C                   Eval      PNarSelec = 'Y'
      C                   Endif
- 
+
      C                   If        W@INKR = '1'                                               CGL018
      C                   Eval      PRetCode = *Blanks                                         CGL018
      C                   Eval      PF3Taken = 'N'                                             CGL018
      C                   Eval      PRWASEL = 'Y'                                              CGL018
      C                   Endif                                                                CGL018
- 
+
      C                   ROLBK
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrVal:  Validation Processing                              *
@@ -461,41 +490,41 @@
       * GLCOLAVAL - Validation Module                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SrVal         BegSr
- 
+
       ** Reset Screen Field Error Indicators
- 
+
      C                   Eval      CAESFL = 'YYYYYYYYYYY'
      C                   Z-Add     *Zero         Idx
      C                   Z-Add     *Zero         WIdx
- 
+
       ** Retrieve one record from subfile ("RC" Read Change)
- 
+
      C                   Eval      SFLAction = 'RC'
- 
+
      C                   CallB     'GLCOLADSP'   PGlColaDsp
- 
+
       ** Validate Record retrieved from subfile until SFLEOF equal 1
- 
+
      C     SFLEOF        DoWEq     '0'
- 
+
       ** Call validation module only if screen not blank
- 
+
      C                   If        CrCAScnFmt <> *Blank
      C                   CallB     'GLCOLAVAL'   PGlColaVal
      C                   EndIf
- 
+
       ** Retrieve one record from subfile ("UC" Read Next Change)
- 
+
      C                   Eval      SFLAction = 'UC'
- 
+
      C                   CallB     'GLCOLADSP'   PGlColaDsp
- 
+
      C                   EndDo
- 
+
       ** If Warning messages appears already, do not redisplay messages
- 
+
      C                   If        (Idx = 0) And (WIdx <> 0)
      C                   If        WCount = 1
      C                   Movel     'N'           WDspWrn           1
@@ -503,27 +532,27 @@
      C                   Movel     'Y'           WDspWrn
      C                   EndIf
      C                   EndIf
- 
+
       ** Error found on validation routine ("RS" Redisplay Subfile)
- 
+
      C                   If        (Idx <> 0) Or
      C                             (Idx = 0) And (WIdx <> 0) And
      C                             (WDspWrn = 'Y')
      C                   Eval      SFLAction = 'RS'
- 
+
      C                   If        (Idx = 0) And (WIdx <> 0)
      C                   Add       1             WCount            1 0
      C                   Else
      C                   Z-Add     0             WCount
      C                   EndIf
- 
+
      C                   Else
      C                   Eval      WScrn = 'U'
      C                   Eval      SFLAction = 'RD'
      C                   Endif
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrUpdate: Update Processing Routine                        *
@@ -538,52 +567,56 @@
       * SrUpdSt   - Update of collateral statistics                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdate      BegSr
- 
+
       ** Retrieve one record from subfile
- 
+
      C                   CallB     'GLCOLADSP'   PGlColaDsp
- 
+
       ** Update Allocation file format via validate module
- 
+
      C     SFLEOF        DoWEq     '0'
- 
+
       ** Call validation module only if screen not blank, otherwise skip
- 
+
      C                   If        CrCAScnFmt <> *Blank
      C                   CallB     'GLCOLAVAL'   PGlColaVal
- 
+                                                                                              BA6045
+     C                   IF        BA6045 = 'Y'                                               BA6045
+     C                   MOVEL     PColRef       CACREF                                       BA6045
+     C                   ENDIF                                                                BA6045
+
       ** Insert/Update one record to Allocation file
- 
+
      C                   CallB     'GLCOLAUPD'   PGlColaUpd
- 
+
      C                   If        RetCode <> *Blank
      C                   Eval      PRetCode = 'Y2U0032'
      C                   Eval      PGenAloUpd = 'N'
      C                   Eval      WScrn = 'T'
      C                   Eval      SFLEOF = '1'
      C                   Else
- 
+
       ** Retrieve one record from subfile ("RN" Read next sfl entry)
- 
+
      C                   Eval      SFLAction = 'RN'
- 
+
      C                   CallB     'GLCOLADSP'   PGlColaDsp
- 
+
      C                   EndIf
- 
+
       ** Screen Blanks, skip record
- 
+
      C                   Else
      C                   Eval      SFLAction = 'RN'
      C                   CallB     'GLCOLADSP'   PGlColaDsp
      C                   EndIf
- 
+
      C                   EndDo
- 
+
       ** No error found on update/insert
- 
+
      C                   If        Idx = 0
       *
      C                   CALLB     'GLCOLAUPS'
@@ -625,9 +658,9 @@
      C                   ENDIF
       *
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrConvAmt: Amount conversion of Collateral Statistics      *
@@ -639,17 +672,17 @@
       * AODEALR0   Access Object                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SrConvAmt     BegSr
- 
+
       ** Get currency number of decimal places
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       @Rtcd
      C                   Parm      '*KEY   '     @Optn
      C                   Parm      PColCur       WAjcd             3
      C     SdCurr        Parm      SdCurr        Dssdy
- 
+
      C     @Rtcd         IfNe      *BLANK
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -660,16 +693,16 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Access Dealing ICD
- 
+
      C**********         Call      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
      C                   Parm      '*DBERR '     @Rtcd
      C                   Parm      '*FIRST '     @Optn
      C*****SDDEAL        Parm      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C     @Rtcd         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -680,25 +713,25 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      ** Convert amount to numeric
- 
+
      C                   If        WConvert = 'N'
- 
+
       ** Set up parameter for ZA0840
- 
+
      C                   Z-Add     A6NBDP        W@IDP
      C     15            Sub       W@IDP         W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     PLenVal       W@ALPH
      C                   Move      'N'           W@MTID
- 
+
       ** Convert lending value amount field from char to numeric
- 
+
      C                   CallB     'ZA0840'      PZA0840
- 
+
       ** No error found on conversion
- 
+
      C                   If        W@ERCD = 0
      C                   Z-Add     W@AMT         W@LEVAL
      C                   Else
@@ -711,16 +744,16 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Convert Total allocated amount field from char to numeric
- 
+
      C                   Move      *Blanks       W@ALPH
      C                   Movel     PTotAlo       W@ALPH
- 
+
      C                   CallB     'ZA0840'      PZA0840
- 
+
       ** No error found on conversion
- 
+
      C                   If        W@ERCD = 0
      C                   Z-Add     W@AMT         W@TOTAMT
      C                   Else
@@ -733,18 +766,18 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Convert Allocation percentage field from char to numeric
- 
+
      C                   Z-Add     7             W@IDP
      C                   Z-ADD     3             W@IINT
      C                   Move      *Blanks       W@ALPH
      C                   Movel     PPctAlo       W@ALPH
- 
+
      C                   CallB     'ZA0840'      PZA0840
- 
+
       ** No error found on conversion
- 
+
      C                   If        W@ERCD = 0
      C     W@AMT         Div       10000000      W@TotPct
      C                   Else
@@ -758,44 +791,44 @@
      C                   Exsr      *PSSR
      C                   EndIf
      C                   EndIf
- 
+
       ** Convert from numeric to char
- 
+
      C                   If        WConvert = 'C'
- 
+
       ** Set up parameter for ZA0921
- 
+
      C                   Z-Add     A6NBDP        W@CDP
- 
+
       ** Lending Value
- 
+
      C                   Eval      WAMOUNT = W@LEVAL
- 
+
      C                   CallB     'ZA0921'      PZA0921
- 
+
      C                   Eval      PLenVal = W@AMTP
- 
+
       ** Total Allocated
- 
+
      C                   Eval      WAMOUNT = W@TOTAMT
- 
+
      C                   CallB     'ZA0921'      PZA0921
- 
+
      C                   Eval      PTotAlo = W@AMTP
- 
+
       ** Percentage Allocation
- 
+
      C     W@TotPct      Mult      10000000      W@PCT5           15 0
      C                   Eval      WAMOUNT = W@PCT5
      C                   Z-Add     7             W@CDP
- 
+
      C                   CallB     'ZA0921'      PZA0921
- 
+
      C                   Move      W@AMTP        PPctAlo
      C                   EndIf
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       *                                                               *
       * SR/SrResetErr: Reset Error fields.                            *
@@ -804,16 +837,16 @@
       *                                                               *
       *****************************************************************
      C     SRRESETERR    BEGSR
- 
+
      C                   Eval      FldNameArr = *Blanks
      C                   Eval      MsgIdArr = *Blanks
      C                   Eval      MsgDtaArr = *Blanks
      C                   Eval      WFldNamArr = *Blanks
      C                   Eval      WMsgIdArr = *Blanks
      C                   Eval      WmsgDtaArr = *Blanks
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

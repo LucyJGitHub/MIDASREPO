@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -106,6 +108,8 @@
      F                                     RENAME(GLCOLAD0:GLCOLAD5)
      FGLCOLAL6  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLCOLAD0:GLCOLAD6)
+     FGLCOLAL7  IF   E           K DISK    INFSR(*PSSR) PREFIX(X_)                            BA6045
+     F                                     RENAME(GLCOLAD0:GLCOLAD7)                          BA6045
      FGLCOLLL2  IF   E           K DISK    INFSR(*PSSR)
      FGLCOLLL3  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLCOLLD0:GLCOLLD3)
@@ -196,6 +200,10 @@
 
       ** Timestamp field
      D PtimeStamp      S               Z
+                                                                                              BA6045
+     D                 DS                                                                     BA6045
+     D WrkSEQN                 1      2S 0                                                    BA6045
+     D WrkSEQA                 1      2A                                                      BA6045
 
       *****************************************************************
       /EJECT
@@ -385,6 +393,19 @@
      C                   Kfld                    @CASSEQ
      C                   Kfld                    @CASBRC
 
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       @RtCd                                        BA6045
+     C                   PARM      '*VERIFY'     @Optn                                        BA6045
+     C                   PARM      'BA6045'      @Sard             6                          BA6045
+      *                                                                                       BA6045
+     C     @RtCd         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
+     C                                                                                        BA6045
      C                   EndSr
 
       *****************************************************************
@@ -416,6 +437,9 @@
      C                   OUT       COALLO                                                     CAP084
                                                                                               CAP084
      C                   Eval      CAFRNT = WORK20                                            CAP084
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   EXSR      SET_FRNT                                                   BA6045
+     C                   EndIf                                                                BA6045
 
       ** Generate timestamp
 
@@ -423,6 +447,12 @@
      C                   Parm                    PtimeStamp
 
      C                   Movel     PtimeStamp    CATMST
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                             or BA6045 <> 'Y'                                           EMGFIX
+     C                   Movel     PtimeStamp    CATSTP                                       BA6045
+                                                                                              BA6045
+     C                   EVAL      CAACMT = 0                                                 BA6045
+     C                   EndIf                                                                BA6045
 
       ** Write record to GLCOLAPD
 
@@ -440,6 +470,54 @@
      C                   EndIf
 
      C                   EndSr
+      *****************************************************************                       BA6045
+     C     SET_FRNT      BegSr                                                                BA6045
+     C                   MOVE      *BLANK        S_SF              2                          BA6045
+     C                   MOVE      *BLANK        X_SF              2                          BA6045
+                                                                                              BA6045
+     C                   EVAL      X_CAFRNT = CACREF                                          BA6045
+     C     X_CAFRNT      SETLL     GLCOLAD7                                                   BA6045
+     C                   READ      GLCOLAD7                               99                  BA6045
+     C                   IF        %Subst(X_CAFRNT:1:10) <> CACREF              No rec presentBA6045
+     C                             OR *IN99 = *ON                                             BA6045
+     C                   EVAL      CAFRNT = CACREF + '1'                                      BA6045
+     C                   GOTO      E_SET_FRNT                                                 BA6045
+     C                   ENDIF                                                                BA6045
+     C                   MOVEL     X_CAFRNT      S_CAFRNT         20                          BA6045
+                                                                                              BA6045
+     C                   DOW       *IN99 = *OFF and                                           BA6045
+     C                             %Subst(X_CAFRNT:1:10) = CACREF                             BA6045
+     C                   IF        %Subst(S_CAFRNT:12:1) <> ' '                               BA6045
+     C                   EVAL      S_SF = %Subst(S_CAFRNT:11:2)                               BA6045
+     C                   ELSE                                                                 BA6045
+     C                   EVAL      S_SF = '0' + %Subst(S_CAFRNT:11:1)                         BA6045
+     C                   ENDIF                                                                BA6045
+     C                   IF        %Subst(X_CAFRNT:12:1) <> ' '                               BA6045
+     C                   EVAL      X_SF = %Subst(X_CAFRNT:11:2)                               BA6045
+     C                   ELSE                                                                 BA6045
+     C                   EVAL      X_SF = '0' + %Subst(X_CAFRNT:11:1)                         BA6045
+     C                   ENDIF                                                                BA6045
+     C                   IF        X_SF > S_SF                                                BA6045
+     C                   MOVEL     X_CAFRNT      S_CAFRNT                                     BA6045
+     C                   ENDIF                                                                BA6045
+     C                   READ      GLCOLAD7                               99                  BA6045
+     C                   ENDDO                                                                BA6045
+                                                                                              BA6045
+     C                   Z-ADD     0             WrkSeqN                                      BA6045
+     C                   IF        %Subst(S_CAFRNT:12:1) <> ' '                               BA6045
+     C                   EVAL      WrkSeqA = %Subst(S_CAFRNT:11:2)                            BA6045
+     C                   ELSE                                                                 BA6045
+     C                   EVAL      %Subst(WrkSeqA:2:1) = %Subst(S_CAFRNT:11:1)                BA6045
+     C                   ENDIF                                                                BA6045
+     C                   ADD       1             WrkSEQN                                      BA6045
+     C                   IF        WrkSEQN >= 10                                              BA6045
+     C                   EVAL      CAFRNT = CACREF + WrkSEQA                                  BA6045
+     C                   ELSE                                                                 BA6045
+     C                   EVAL      CAFRNT = CACREF + %Subst(WrkSeqA:2:1)                      BA6045
+     C                   ENDIF                                                                BA6045
+                                                                                              BA6045
+     C     E_SET_FRNT    EndSr                                                                BA6045
+      *****************************************************************                       BA6045
 
       *****************************************************************
       *                                                               *
@@ -471,7 +549,13 @@
      C                   Return
      C                   Else
      C                   Movel     CAAMT         WOldAmt          15 0
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   EVAL      X_CAFRNT = CAFRNT                                          BA6045
+     C                   EndIf                                                                BA6045
      C                   Eval      ValidRec = RecToAmend
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   EVAL      CAFRNT   = X_CAFRNT                                        BA6045
+     C                   EndIf                                                                BA6045
 
       ** Generate timestamp
 
@@ -479,6 +563,11 @@
      C                   Parm                    PtimeStamp
 
      C                   Movel     PtimeStamp    CATMST
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   Movel     PtimeStamp    CATSTP                                       BA6045
+                                                                                              BA6045
+     C                   EVAL      CAACMT = 0                                                 BA6045
+     C                   EndIf                                                                BA6045
 
       ** Update Record
 

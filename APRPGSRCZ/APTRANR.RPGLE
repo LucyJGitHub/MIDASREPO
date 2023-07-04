@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. AR994776           Date 04Apr19               *
+      *  Last Amend No. AR747368           Date 21Jun23               *      
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 AR994776           Date 04Apr19               *
       *                 MD054906           Date 15Jan20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
@@ -83,6 +84,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR747368 - Midas Cash Management Interest Enquiry does not   *
+      *             show debit and credit interest statement details. *
+      *             Amend program to use TransID instead of BUFFER in *
+      *             the values passed to I_R_DR_CR and I_SPnt field.  *
+      *             Applied GEMS fix 253372. (Child: AR747369)        *      
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -1518,8 +1524,10 @@
      C     TransTYPE     WHENEQ    'RISL'                                                    BUG6417
                                                                                              BUG6417
      C                   MOVEL     TransID       I_RACCID                                    BUG6417
-     C                   EVAL      I_R_DR_CR = %subst(Buffer: 1 : 1 )                        BUG6417
-     C                   EVAL      I_SPnt    = %subst(Buffer: 2 : 5 )                        BUG6417
+     C**********         EVAL      I_R_DR_CR = %subst(Buffer: 1 : 1 )               BUG6417 AR747368
+     C**********         EVAL      I_SPnt    = %subst(Buffer: 2 : 5 )               BUG6417 AR747368
+     C                   EVAL      I_R_DR_CR = %subst(TransID: 25 : 25 )                    AR747368
+     C                   EVAL      I_SPnt    = %subst(TransID: 26 : 30 )                    AR747368
                                                                                              BUG6417
      C                   CALL      'RE104001'                                                BUG6417
      C                   PARM                    I_RACCID         24                         BUG6417

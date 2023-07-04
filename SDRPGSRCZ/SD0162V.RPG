@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD050882           Date 23Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       *                 CSC043             Date 18Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD050882 - Add authorization step to 'Delete by Year' action *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -90,6 +92,23 @@
      F                                              KINFSR *PSSR                              CSD031
      FGPZONEL0IF  E           K        DISK                                                   CSD031
       *                                                                                       CSD031
+     FSDHOSHL0UF  E           K        DISK                      A    UC                    MD050882
+     F                                              KCOMIT                                  MD050882
+     F                                              KINFDS ID0008                           MD050882
+     F                                              KINFSR *PSSR                            MD050882
+      * UPD : Holidays Shadow file                                                          MD050882
+      *                                                                                     MD050882
+     FSDAULGL1UF  E           K        DISK                      A    UC                    MD050882
+     F                                              KCOMIT                                  MD050882
+     F                                              KINFDS ID0009                           MD050882
+     F                                              KINFSR *PSSR                            MD050882
+      * UPD : Authorisation Log - by Key                                                    MD050882
+     FSDAULGL2IF  E           K        DISK                           UC                    MD050882
+     F                                              KCOMIT                                  MD050882
+     F                                              KINFDS ID0010                           MD050882
+     F                                              KINFSR *PSSR                            MD050882
+     F            SDAULGD0                          KRENAMESDAUL2                           MD050882
+      * UPD : Authorisation Log - by Key                                                    MD050882
      E* Description     : Copyright notice for inclusion in all programs
      E*
      E********************************************************************
@@ -155,6 +174,15 @@
      IID0007      DS                            528                                           CSD031
       * File information data structure                                                       CSD031
       *                                                                                       CSD031
+     IID0008      DS                            528                                         MD050882
+      * File information data structure                                                     MD050882
+      *                                                                                     MD050882
+     IID0009      DS                            528                                         MD050882
+      * File information data structure                                                     MD050882
+      *                                                                                     MD050882
+     IID0010      DS                            528                                         MD050882
+      * File information data structure                                                     MD050882
+      *                                                                                     MD050882
       /EJECT
       * Parameter declarations
      IP1PARM      DS
@@ -552,6 +580,33 @@
       *                                                                                       CSD031
      I**********    'XLIB/SDCSNDDTQ'      C         PGMB                               CSD031 CSC043
      I              'XPLIB/SDCSNDDTQ'     C         PGMB                                      CSC043
+      *                                                                                     MD050882
+      ** Local data area for database error details                                         MD050882
+     ILDA       E DSLDA                         256                                         MD050882
+     I              SPARE                           SPAREX                                  MD050882
+     IK1HOL       DS                             26                                         MD050882
+     I                                        1   3 K1CYCD                                  MD050882
+     I                                        4   6 K1LCCD                                  MD050882
+     I                                        7  10 K1YRNB                                  MD050882
+      *                                                                                     MD050882
+      ** Data structure for AOSVALR0 string                                                 MD050882
+     I            DS                                                                        MD050882
+     I                                        1 200 SVAL1                                   MD050882
+     I                                        1   1 SVAL11                                  MD050882
+      *                                                                                     MD050882
+      ** System Value                                                                       MD050882
+     I            DS                                                                        MD050882
+     I I            'AuthReqHolidaysMaint'    1  20 SVALK1                                  MD050882
+      *                                                                                     MD050882
+      ** Function Description                                                               MD050882
+     I            DS                                                                        MD050882
+     I I            'HOLIDAY DETAILS'         1  21 FUNCD                                   MD050882
+      *                                                                                     MD050882
+      ** Data structure for ALKEY field in SDAULGPD                                         MD050882
+     IAULGKY      DS                             26                                         MD050882
+     I                                        1   3 AUCYCD                                  MD050882
+     I                                        4   6 AULCCD                                  MD050882
+     I                                        7  10 AUYRNB                                  MD050882
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -650,6 +705,13 @@
      C                     EXSR SRSDTQ                                                        CSD031
      C                     ENDIF                                                              CSD031
      C                     COMIT
+     C                     ELSE                                                             MD050882
+     C           W0RTN     IFEQ 'USR9484'                                                   MD050882
+     C           W0RTN     OREQ 'USR9485'                                                   MD050882
+     C           W0RTN     OREQ 'USR9486'                                                   MD050882
+     C                     MOVELW0RTN     P0RTN                                             MD050882
+     C                     EXSR ZYEXPG                                                      MD050882
+     C                     ENDIF                                                            MD050882
      C                     END                             *FI
      C                     ELSE
       * CASE: DTL.*CMD key is CF12
@@ -770,6 +832,40 @@
      C                     KFLD           WQSA01           Year Number
       * Move fields to key list
      C                     MOVELP1YRNB    WQSA01           Year Number
+     C                     MOVELP1YRNB    K1YRNB                                            MD050882
+     C                     MOVEL'***'     K1CYCD                                            MD050882
+     C                     MOVEL'***'     K1LCCD                                            MD050882
+      *                                                                                     MD050882
+      ** Check if there is a existing deletion by year                                      MD050882
+     C           KAULG     CHAINSDAULGL1             90                                     MD050882
+     C           *IN90     IFEQ '0'                                                         MD050882
+     C                     MOVEL'USR9484' W0RTN                                             MD050882
+     C                     GOTO SAEXIT                                                      MD050882
+     C                     ENDIF                                                            MD050882
+      *                                                                                     MD050882
+     C                     MOVEL'N'       WYRFND  1                                         MD050882
+     C                     MOVELFUNCD     K1FUNC                                            MD050882
+      *                                                                                     MD050882
+      ** Check if there is an existing amendment or deletion of the same year               MD050882
+     C           KFUNCD    SETLLSDAUL2                                                      MD050882
+     C           KFUNCD    READESDAUL2                   90                                 MD050882
+     C           *IN90     DOWEQ'0'                                                         MD050882
+     C           WYRFND    ANDEQ'N'                                                         MD050882
+     C                     MOVELALKEY     AULGKY                                            MD050882
+     C           AUYRNB    IFEQ P1YRNB                                                      MD050882
+     C           ALACTN    IFEQ 'A'                                                         MD050882
+     C                     MOVEL'USR9485' W0RTN                                             MD050882
+     C                     ELSE                                                             MD050882
+     C           ALACTN    IFEQ 'D'                                                         MD050882
+     C                     MOVEL'USR9486' W0RTN                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C                     ENDIF                                                            MD050882
+     C                     MOVEL'Y'       WYRFND                                            MD050882
+     C                     GOTO SAEXIT                                                      MD050882
+     C                     ENDIF                                                            MD050882
+     C                     READESDAUL2                   90                                 MD050882
+     C                     ENDDO                                                            MD050882
+      *                                                                                     MD050882
      C           *INU1     IFEQ *ON                                                           CSD031
      C           KRSSA     SETLLGPHOLID0                   *                                  CSD031
      C           KRSSA     READEGPHOLID0                 90*                                  CSD031
@@ -779,6 +875,7 @@
      C                     ENDIF                                                              CSD031
       * Data record not found
      C   90                MOVEL'USR0657' W0RTN   7
+     C                     MOVEL*BLANKS   WDAUTH  1                                         MD050882
      C           *IN90     DOWEQ'0'
       * USER: Process Data record
       * Delete all Holidays - Holidays  *
@@ -830,6 +927,42 @@
      C                     END
       *
       *................................................................
+      ** If CSD012 is ON, Holidays is ON, output details                                    MD050882
+      ** to shadow file and authorization log, then exit.                                   MD050882
+     C           CSD012    IFEQ 'Y'                                                         MD050882
+     C           SVAL11    ANDEQ'Y'                                                         MD050882
+     C           KLDLSB    CHAINSDHOSHL0             90                                     MD050882
+     C           *IN90     IFEQ '1'                                                         MD050882
+     C                     MOVEL'D'       DGTYLC                                            MD050882
+     C                     WRITESDHOSHD0               91                                   MD050882
+      *                                                                                     MD050882
+     C           *IN91     IFEQ '1'                                                         MD050882
+      ** Write error detected                                                               MD050882
+     C                     MOVEL'Y2U0004' W0RTN                                             MD050882
+     C                     ELSE                                                             MD050882
+      ** Write to shadow file successful.                                                   MD050882
+      ** Output record to authorisation log once if at least                                MD050882
+      ** one record is written to shadow file.                                              MD050882
+     C           WDAUTH    IFEQ *BLANKS                                                     MD050882
+     C                     MOVEL'***'     K1CYCD                                            MD050882
+     C                     MOVEL'***'     K1LCCD                                            MD050882
+     C                     MOVEL#1YRNB    K1YRNB                                            MD050882
+     C           KAULG     CHAINSDAULGL1             90                                     MD050882
+      ** If record does not exist, write details to authoristion log                        MD050882
+     C           *IN90     IFEQ '1'                                                         MD050882
+     C                     MOVELK1HOL     ALKEY                                             MD050882
+     C                     MOVELFUNCD     ALFUNC                                            MD050882
+     C                     MOVE 'D'       ALACTN                                            MD050882
+     C                     MOVE ##USR     ALUSER                                            MD050882
+     C                     WRITESDAULGD0                                                    MD050882
+     C                     MOVEL'Y'       WDAUTH                                            MD050882
+     C                     ENDIF                                                            MD050882
+     C                     ENDIF                                                            MD050882
+     C                     ENDIF                                                            MD050882
+     C                     ENDIF                                                            MD050882
+     C                     GOTO SBEXIT                                                      MD050882
+     C                     ELSE                                                             MD050882
+      *                                                                                     MD050882
      C           *INU1     IFEQ *ON                                                           CSD031
      C                     DELETSDHOLD0                91  *                                  CSD031
      C                     ELSE                                                               CSD031
@@ -854,6 +987,7 @@
      C                     ENDIF                                                              CSD031
      C                     ENDIF                                                              CSD031
      C                     END
+     C                     ENDIF                                                            MD050882
       *================================================================
      CSR         SBEXIT    ENDSR
       /EJECT
@@ -1181,6 +1315,10 @@
      C                     MOVEL'Y2U9999' P0RTN            *Return code
      C                     EXSR ZYEXPG
      C                     END                             *FI
+     C           WDAUTH    IFEQ 'Y'                                                         MD050882
+     C                     MOVEL'AUTHRQD' P0RTN                                             MD050882
+     C                     EXSR ZYEXPG                                                      MD050882
+     C                     ENDIF                                                            MD050882
      C                     MOVEL*BLANK    P0RTN
      C                     EXSR ZYEXPG
       *================================================================
@@ -1206,6 +1344,7 @@
       *================================================================
       * Initialisation
       *================================================================
+     C           *NAMVAR   DEFN           LDA                                               MD050882
      C           W0ICL     IFEQ *BLANK
      C                     MOVEL'Y'       W0ICL   1        *Initial call
      C                     ELSE
@@ -1292,6 +1431,9 @@
      C                     OPEN SDHOLL0
      C                     ENDIF                                                              CSD031
      C                     OPEN SDFCTLL0
+     C                     OPEN SDHOSHL0                                                    MD050882
+     C                     OPEN SDAULGL1                                                    MD050882
+     C                     OPEN SDAULGL2                                                    MD050882
      C                     MOVEL'N'       W0PMT   1
      C                     MOVEL*BLANK    W0GRP   1
       * USER: Initialize program
@@ -1317,6 +1459,93 @@
      C/COPY WNCPYSRC,SD0162VCPG
       * 00/Copy Member SD0162VOPG - Holidays  *
      C                     END                             *FI
+      *                                                                                     MD050882
+      ** Define keylist for SDAULGL1                                                        MD050882
+     C           KAULG     KLIST                                                            MD050882
+     C                     KFLD           K1HOL  26                                         MD050882
+      *                                                                                     MD050882
+      ** Define keylist for SDAULGL2                                                        MD050882
+     C           KFUNCD    KLIST                                                            MD050882
+     C                     KFLD           K1FUNC 21                                         MD050882
+      *                                                                                     MD050882
+      ** Check if CSD012 is switched on                                                     MD050882
+     C                     CALL 'AOSARDR0'                                                  MD050882
+     C                     PARM           PRTCD                                             MD050882
+     C                     PARM '*VERIFY' POPTN                                             MD050882
+     C                     PARM 'CSD012'  PSARD                                             MD050882
+      *                                                                                     MD050882
+     C                     MOVE 'N'       CSD012  1                                         MD050882
+     C           PRTCD     IFEQ *BLANKS                                                     MD050882
+     C                     MOVE 'Y'       CSD012  1                                         MD050882
+     C                     ENDIF                                                            MD050882
+      *                                                                                     MD050882
+      ** Check if Holiday Authorisation is on                                               MD050882
+     C           CSD012    IFEQ 'Y'                                                         MD050882
+      *                                                                                     MD050882
+     C                     CALL 'AOSVALR0'                                                  MD050882
+     C                     PARM *BLANKS   RTNCDE  7                                         MD050882
+     C                     PARM           SVALK1 20                                         MD050882
+     C                     PARM           SVAL1 200                                         MD050882
+     C                     PARM           SVALK2 20                                         MD050882
+     C                     PARM           SVAL2 200                                         MD050882
+     C                     PARM           SVALK3 20                                         MD050882
+     C                     PARM           SVAL3 200                                         MD050882
+     C                     PARM           SVALK4 20                                         MD050882
+     C                     PARM           SVAL4 200                                         MD050882
+     C                     PARM           SVALK5 20                                         MD050882
+     C                     PARM           SVAL5 200                                         MD050882
+     C                     PARM           SVALK6 20                                         MD050882
+     C                     PARM           SVAL6 200                                         MD050882
+     C                     PARM           SVALK7 20                                         MD050882
+     C                     PARM           SVAL7 200                                         MD050882
+     C                     PARM           SVALK8 20                                         MD050882
+     C                     PARM           SVAL8 200                                         MD050882
+     C                     PARM           SVALK9 20                                         MD050882
+     C                     PARM           SVAL9 200                                         MD050882
+     C                     PARM           SVALK0 20                                         MD050882
+     C                     PARM           SVAL10200                                         MD050882
+      *                                                                                     MD050882
+     C           RTNCDE    IFNE *BLANKS                                                     MD050882
+     C           SVAL10    IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK0    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL9     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK9    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL8     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK8    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL7     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK7    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL6     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK6    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL5     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK5    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL4     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK4    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL3     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK3    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL2     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK2    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           SVAL1     IFEQ '*NRF'                                                      MD050882
+     C                     MOVE SVALK1    DBKEY                                             MD050882
+     C                     ENDIF                                                            MD050882
+     C           *LOCK     IN   LDA                                                         MD050882
+     C                     Z-ADD1         DBASE                                             MD050882
+     C                     MOVE 'SDSVALPD'DBFILE                                            MD050882
+     C                     MOVE 'SD0162V' DBPGM                                             MD050882
+     C                     OUT  LDA                                                         MD050882
+     C                     EXSR *PSSR                                                       MD050882
+     C                     ENDIF                                                            MD050882
+      *                                                                                     MD050882
+     C                     ENDIF                                                            MD050882
+      *                                                                                     MD050882
       *                                                                                       CSD031
       ** Check if CSD041 is switched on                                                       CSD031
       *                                                                                       CSD031

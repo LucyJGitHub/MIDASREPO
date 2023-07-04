@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR902158           Date 04May23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD040422           Date 21Jun23               *
+      *  Prev Amend No. AR902158           Date 04May23               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040422 - 1 cent difference PPCA+MPCA <--> SIRONL           *
+      *             transactions                                      *
       *  AR902158 - Start position out of range when field length     *
       *             being exported is 20,0.  (Child: AR902159)        *
       *  MD046248 - Finastra Rebranding                               *
@@ -321,7 +324,8 @@
      C     fmDecPos      WHENEQ    8
      C                   EVAL      InNumber    = InNumber  /100000000
      C                   OTHER
-     C                   EVAL      InNumber    = InNumber  /(10**fmDecPos)
+     C**********         EVAL      InNumber    = InNumber  /(10**fmDecPos)                  MD040422
+     C                   EVAL(H)   InNumber    = InNumber  /(10**fmDecPos)                  MD040422
      C                   endsl
  
      C                   EXSR      RPPSIGN
@@ -423,7 +427,8 @@
      C     fmDecPos      WHENEQ    8
      C                   EVAL      InNumber    = InNumber  /100000000
      C                   OTHER
-     C                   EVAL      InNumber    = InNumber  /(10**fmDecPos)
+     C**********         EVAL      InNumber    = InNumber  /(10**fmDecPos)                  MD040422
+     C                   EVAL(H)   InNumber    = InNumber  /(10**fmDecPos)                  MD040422
      C                   endsl
  
      C                   EXSR      RPPSIGN

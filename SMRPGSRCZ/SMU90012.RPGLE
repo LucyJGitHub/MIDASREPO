@@ -303,7 +303,7 @@
       ** INITIALISE LDA VARIABLES
       *
      C     *LOCK         IN        LDA
-     C                   MOVE      'UTRE0772'    DBPGM
+     C                   MOVE      'SMU90012'    DBPGM
      C                   MOVE      *BLANKS       DBFILE
      C                   MOVE      *BLANKS       DBKEY
      C                   OUT       LDA

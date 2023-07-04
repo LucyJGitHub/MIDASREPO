@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057739           Date 28Apr22               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. MD055649           Date 16Aug22               *      
+      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -239,6 +240,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055649 - Authorised corrective batch was not copied to     *
+      *             PEA system. Introduced New Field BPAUTH           *      
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
@@ -2003,6 +2006,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    VDFLTF            1                        MD052075
      C                   ADD       1             Bfp                                        MD052075
      C
+     C     1             SUBST     BUFFER:Bfp    BPAUTH            1                        MD055649
+     C                   ADD       1             Bfp                                        MD055649
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
@@ -2019,6 +2024,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C/COPY OFCPYSRCZ,CGL135_044                                                             CGL135A
       ** CGL150 Default Value Date 'Y'                                                      MD052075
      C                   PARM                    VDFLTF                                     MD052075
+     C                   PARM                    BPAUTH                                     MD055649
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
      C                   PARM                    FldNameArr

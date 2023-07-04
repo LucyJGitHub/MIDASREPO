@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -74,11 +76,11 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,114 +99,114 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInCOLA    E DS                  EXTNAME(GLSCLAPD)
- 
+
       * Valid file layout
      D ValidCOLA     E DS                  EXTNAME(GLCOLAPD)
      D                                     PREFIX(V_)
- 
+
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions
      D RecSttmt      E DS                  EXTNAME(SDESSRPD)
       * Receive Settlement Instructions
- 
+
       * Current transaction record in file format
      D COLAFilFmt    E DS                  EXTNAME(GLCOLAPD)
- 
+
       ** Deal in File Format from the file where original transactions are written to
      D COLLFilFmt    E DS                  EXTNAME(GLCOLLPD)
      D QQSAC1        E                     EXTFLD(QQSACD)                                     CGL029
- 
+
       * Error indicators
      D OKGLCOLA      E DS                  EXTNAME(GLECLAPD)
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 status dataarea
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** DS for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10
@@ -215,36 +217,36 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       * Field (500A) to receive the incoming Extra Data
      D InfData500      S            500A
- 
+
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D*Ix*******       S              3P 0
      D*Iy*******       S              3P 0
- 
+
      D Object          S             10A   INZ('GLCOLAUPD')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A
@@ -253,36 +255,37 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D CSC011          S              1A   INZ('N')
      D WProcDate       S                   LIKE(BJRDNB)
      D PRTCD           S              7A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepCOLA         S              1A   INZ('N')
- 
+                                                                                              BA6045
+     D BA6045          S              1A   INZ('N')                                           BA6045
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -292,14 +295,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields - load them into
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInCOLA
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -307,40 +310,40 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         ADACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       * Processing for amends or changes
      C                   WHEN         ADACTN = 'A'
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
- 
+
       * Processing for deletes
      C                   WHEN         ADACTN = 'D'
      C                   EXSR      SetupAmd
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       * Remerge buffer with all relevant data structures
      C                   EVAL                    Buffer = TranInCOLA
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -349,12 +352,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    PaySttmt
@@ -371,12 +374,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLCOLA02
       *
@@ -386,7 +389,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -400,13 +403,13 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
- 
+
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
@@ -416,7 +419,7 @@
      C                   ELSE
      C                   EVAL      WProcDate = BJRDNB
      C                   ENDIF
- 
+
      C                   ELSE
       ** Database error
      C                   IF        PRTCD <> '*NRF'
@@ -428,15 +431,15 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if Collateral Authorisations is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL012'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS AND
      C                             @RTCD <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -446,7 +449,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CGL012 = 'Y'
      C                   ELSE
@@ -466,6 +469,20 @@
      C                   ELSE                                                                CGL072
      C                   EVAL      CGL072 = 'N'                                              CGL072
      C                   ENDIF                                                               CGL072
+                                                                                             BA6045
+      ** Check if BA6045 is installed                                                        BA6045
+                                                                                             BA6045
+     C                   CALL      'AOSARDR0'                                                BA6045
+     C                   PARM      *BLANKS       @RTCD                                       BA6045
+     C                   PARM      '*VERIFY'     @OPTN                                       BA6045
+     C                   PARM      'BA6045'      @SARD                                       BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                       BA6045
+                                                                                             BA6045
+     C                   IF        @RTCD = *BLANKS                                           BA6045
+     C                   EVAL      BA6045 = 'Y'                                              BA6045
+     C                   ELSE                                                                BA6045
+     C                   EVAL      BA6045 = 'N'                                              BA6045
+     C                   ENDIF                                                               BA6045
       *
       * Overrride GLCOLAL0
       *
@@ -476,7 +493,7 @@
       *
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,GLCOLA01
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -492,7 +509,7 @@
       * The Transaction in file format from the Sk database is retrieved
       * as well.
      C                   RESET                   RetCodeIn
- 
+
      C                   CALLB     'GLCOLARTV'
       *
       * INPUTS
@@ -502,7 +519,7 @@
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action and screen fields
      C                   PARM                    ADACTN            1
      C                   PARM                    ADBRCA            3
@@ -517,7 +534,7 @@
       * OUTPUTS
       * Assignment Details in file format
      C                   PARM                    COLAFilFmt
- 
+
       * Action and customer OK indicators
      C                   PARM                    S#ACTNok          1
       *
@@ -544,11 +561,11 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
- 
+
      C     GLCOLLRTV     BEGSR
       *
      C                   CALLB     'GLCOLLRTV'
@@ -623,7 +640,7 @@
      C                   MOVEL     'ADCREF    '  FldNameArr(I)
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -635,16 +652,16 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For amends or deletes, put the complete (pre-existing) transaction
       * file record.
- 
+
      C                   MOVE      COLAFilFmt    ValidCOLA
- 
+
       * Ensure that CHTP is correctly set for amends and deletes.
- 
+
      C                   EVAL      V_CACHTP = ADACTN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -654,44 +671,46 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate transaction details
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'GLCOLAVAL'
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Collateral Allocations Details
      C                   PARM                    TranInCOLA
       * Outputs
       *
       ** Collateral Allocations Details OK inds
      C                   PARM                    OKGLCOLA
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
       * Valid Collateral Allocations (DS) from/to caller
      C                   PARM                    ValidCOLA
- 
+
      C                   PARM                    PColRef          10
      C                   PARM                    PColCur           3
+     C                   Parm      CDENTY        PColEnty          1                          BA6045
+     C                   Parm      CDBRCA        PColBrca          3                          BA6045
      C                   PARM                    SBlank            1
      C                   PARM                    WchgDel           1
      C                   PARM                    CGL072            1                          CGL072
@@ -699,6 +718,9 @@
       *  For an Insert Ensure Collateral Reference chosen is of a General type.
      C                   IF           ADACTN = 'I'
      C     CDCOPT        IFNE      'G'
+     C     BA6045        ANDEQ     'N'                                                        BA6045
+     C     CDGNSP        ORNE      'G'                                                        BA6045
+     C     BA6045        ANDEQ     'Y'                                                        BA6045
      C                   MOVEL     'ADCREF'      FldNameArr(1)
      C                   MOVEL     'COL0132'     MsgIdArr(1)
      C                   Add       1             Idx
@@ -709,7 +731,7 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   EndIf
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -720,29 +742,29 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       OKGLCOLA
- 
+
      C                   CLEAR                   ValidCOLA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -751,11 +773,11 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
      C                   CALLB     'GLCOLAUPD'
- 
+
       * Ensure correct parameters for this UPD function
      C                   PARM      *BLANK        @RTCD
      C                   PARM                    ValidCOLA
@@ -772,22 +794,22 @@
       *
       * If update not done due to record being updated by another
       * workstation send message to screen.
- 
+
      C     @RTCD         IFEQ      '*RECUPD'
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'APM1000'     MsgIdArr(1)
- 
+
      C                   EndIf
- 
+
       * If duplicate access path occurred during update, send message
       * to screen indicating record already exist.
- 
+
      C     @RTCD         IFEQ      'Y2U0032'
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'CSF9143'     MsgIdArr(1)
      C                   Add       1             Idx
      C                   Endif
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

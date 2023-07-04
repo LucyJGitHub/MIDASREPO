@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD040181           Date 16Jun19              */
-/*       Prev Amend No. CER050             Date 16Jun19              */
+/*       Last Amend No. BA6048             Date 28Feb23              */
+/*       Prev Amend No. MD040181           Date 16Jun19              */
+/*                      CER050             Date 16Jun19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD052820           Date 21Feb19              */
 /*                      MD049309           Date 14Feb18              */
@@ -68,6 +69,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     BA6048 - New Special Instructions for LE Loans               */
 /*     MD040181 - CER050 error. Changed file XLEPARHTD to XLEAPRHTD.*/
 /*     CER050 - Annualised Percentage Rate                          */
 /*     MD020934 - COB component LERC135 failed due to CDL045.       */
@@ -200,6 +202,9 @@
              DCL        VAR(&CER050) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CER050*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,LEC0605DCL                                           /*S01408*/
+
+             DCL        VAR(&BA6048) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BA6048*/
+
 /**/                                                                  /*082177*/
              DCLF       FILE(SDMMODPD)                                /*082177*/
 /**/                                                                  /*091793*/
@@ -332,6 +337,25 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CAS009) VALUE('Y'))                                        /*CAS009*/
 /*/COPY WNCPYSRC,LEC0605015                                          */
+/**/                                                                                      /*BA6048*/
+/* Check if BA6048 is installed */                                                        /*BA6048*/
+/**/                                                                                      /*BA6048*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6048*/
+             CHGVAR     VAR(&SARD) VALUE('BA6048')                                        /*BA6048*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*BA6048*/
+                                                                                          /*BA6048*/
+             IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                          '*NRF   ') THEN(DO)                                             /*BA6048*/
+             SNDPGMMSG  MSG('AOSARDR0 - PROGRAM ERROR') +
+                                TOMSGQ(MOPERQ)                                            /*BA6048*/
+             CHGJOB (XXXXXX11)                                                            /*BA6048*/
+             RETURN                                                                       /*BA6048*/
+             ENDDO                                                                        /*BA6048*/
+                                                                                          /*BA6048*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&BA6048) VALUE('Y'))                                        /*BA6048*/
+                                                                                          /*BA6048*/
+
 /**/                                                                                      /*CLE038*/
 /* Check if CLE038 is installed */                                                        /*CLE038*/
 /**/                                                                                      /*CLE038*/
@@ -489,6 +513,14 @@
                   CLRPFM     FILE(LKEY3DP)                            /*CLE005*/
                   CLRPFM     FILE(LKEY3ZZ)                            /*CLE005*/
                 ENDDO                                                 /*CLE005*/
+/**/                                                                                      /*BA6048*/
+             IF         COND(&BA6048 *EQ 'Y') THEN(DO)                                    /*BA6048*/
+                  CPYF       FROMFILE(A6CLIPX0) TOFILE(A6CLIPX1) +
+                          MBROPT(*REPLACE)                                                /*BA6048*/
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(A6CLIPX1))                                                 /*BA6048*/
+             ENDDO                                                                        /*BA6048*/
+
 /**/                                                                                      /*CLE038*/
                 IF         COND(&CLE038 *EQ 'Y') THEN(DO)                                 /*CLE038*/
                   CLRPFM     FILE(XESTALPD)                                               /*CLE038*/
@@ -857,6 +889,13 @@
              MONMSG     MSGID(CPF2817)                                                    /*CER001*/
              ENDDO                                                                        /*CER001*/
                                                                       /*S01408*/
+
+             IF         COND(&BA6048 = 'Y') THEN(DO)                                      /*BA6048*/
+             CPYF       FROMFILE(A6CLIPX1) TOFILE(A6CLIPX0) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)                                 /*BA6048*/
+             MONMSG     MSGID(CPF2817)                                                    /*BA6048*/
+             ENDDO                                                                        /*BA6048*/
+
 /**/                                                                  /*S01098*/
                    DLTOVR     FILE(NLAMSDK)                           /*S01098*/
                    MONMSG     MSGID(CPF9841)                                              /*CLE134*/
@@ -989,6 +1028,11 @@
 /**********        CLRPFM     FILE(NCLONZ1)                          */                  /*CCB022B*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,LEC0605003                                           /*S01408*/
+
+             IF         COND(&BA6048 = 'Y') THEN(DO)                                      /*BA6048*/
+                   CLRPFM     FILE(A6CLIPX1)                                              /*BA6048*/
+             ENDDO                                                                        /*BA6048*/
+
              IF         COND(&ULX004 = 'Y') THEN(DO)                                      /*CER001*/
                    CLRPFM     FILE(LENCX1PD)                                              /*CER001*/
              ENDDO                                                                        /*CER001*/

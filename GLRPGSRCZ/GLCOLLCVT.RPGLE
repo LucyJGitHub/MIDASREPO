@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CGL072 - Allow GL Accounts in Collateral                     *
@@ -309,7 +311,11 @@
      C                   MOVEL     *BLANKS       ZFIELD
      C**********         MOVE      CDUNIT        ZFIELD                                       CGL014
      C                   MOVE      CDNAMT        ZFIELD                                       CGL014
+     C                   IF        BA6045 = 'N'                                               BA6045
      C                   Z-ADD     0             ZADEC
+     C                   ELSE                                                                 BA6045
+     C                   Z-ADD     A6NBDP        ZADEC                                        BA6045
+     C                   ENDIF                                                                BA6045
      C                   EXSR      SRZEDIT
      C                   MOVE      ZFIELD        DDUNIT
      C                   ENDIF
@@ -628,6 +634,20 @@
      C                   ELSE                                                                 CGL072
      C                   MOVE      'N'           CGL072                                       CGL072
      C                   END                                                                  CGL072
+      *                                                                                       BA6045
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       @RTCD                                        BA6045
+     C                   PARM      '*VERIFY'     @OPTN                                        BA6045
+     C                   PARM      'BA6045'      @SARD                                        BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

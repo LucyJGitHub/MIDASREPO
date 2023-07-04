@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD060782           Date 02Feb23              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CGL165             Date 17Feb15              */
 /*                      AR719317           Date 19Jul11              */
 /*                      BUG28073           Date 26Aug10              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL147 - Account Transfer Utility                           */
 /*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
@@ -41,7 +43,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
@@ -75,12 +77,12 @@
              DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)                              /*AR719317*/
              DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)                                /*AR719317*/
              DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)                              /*AR719317*/
- 
+
 /** Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
@@ -89,35 +91,35 @@
                           Equivalent') AUT(*USE))
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
              SNDMSG     MSG('GLC003700 - Account Transfer Conversion +
                           Utility-Phase 2 started') TOMSGQ(MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RTVDTAARA  DTAARA(GLDA10) RTNVAR(&GLDA10)
- 
+
              CHGVAR     VAR(&@RTCD) VALUE('       ')
              CHGVAR     VAR(&@OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&@SARD) VALUE('CGL030')
- 
+
              CALL       PGM(AOSARDR0) PARM(&@RTCD &@OPTN &@SARD)
- 
+
              IF         COND(&@RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CGL030) VALUE('Y'))
- 
+
              CHGVAR     VAR(&@RTCD) VALUE('       ')
              CHGVAR     VAR(&@SARD) VALUE('CRE005')
- 
+
              CALL       PGM(AOSARDR0) PARM(&@RTCD &@OPTN &@SARD)
- 
+
              IF         COND(&@RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CRE005) VALUE('Y'))
- 
+
              CHGVAR     VAR(&@RTCD) VALUE('       ')
              CHGVAR     VAR(&@SARD) VALUE('CRE015')
- 
+
              CALL       PGM(AOSARDR0) PARM(&@RTCD &@OPTN &@SARD)
- 
+
              IF         COND(&@RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CRE015) VALUE('Y'))
                                                                                         /*BUG27473*/
@@ -161,17 +163,17 @@
              IF         COND(&@RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CAP204) VALUE('Y'))                                      /*BUG27821*/
 /*/COPY WNCPYSRC,GLH00609                                            */
- 
+
              IF         COND(&GLDA10 *NE 'C') THEN(DO)
- 
+
              GOTO       CMDLBL(ABNOR)
- 
+
              ENDDO
- 
+
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
              MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&ENDCMTCTL) +
                           VALUE('N'))
- 
+
              CALL       PGM(GLC009200)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
@@ -192,29 +194,29 @@
              CALL       PGM(GP000041) PARM(&ZOZONE)                                     /*AR719317*/
                                                                                         /*AR719317*/
              GOTO       CMDLBL(TAG9999)
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             GLC003700 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RTVJRNE    JRN(ICJRN) FROMENT(*LAST) RTNSEQNBR(&LASTSEQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGVAR     VAR(&LASTSEQA) VALUE(&LASTSEQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGDTAARA  DTAARA(ACCTFRJRNE (11 10)) VALUE(&LASTSEQA)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              RTVDTAARA  DTAARA(ACCTFRJRNE (1 10)) RTNVAR(&STARTSEQA)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGVAR     VAR(&STARTSEQ) VALUE(&STARTSEQA)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /**********  RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTBXC) + */                       /*BUG27224*/
 /**********               (SDNOSTPD) (TABLETL) (APOSTPD) (APOSTRA) + */                 /*BUG27224*/
 /**********               (CLEARPD) (GLJEHPPD) (REHISPD) (REHISPS) + */                 /*BUG27224*/
@@ -418,30 +420,30 @@
                           RCVRNG(*CURRENT) FROMENT(&LASTSEQ) +
                           TOENT(&STARTSEQ)                                                /*CSD101*/
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              IF         COND(&CGL030 *EQ 'Y') THEN(DO)
- 
+
              RMVJRNCHG  JRN(ICJRN) FILE(GLSUNDPD) RCVRNG(*CURRENT) +
                           FROMENT(&LASTSEQ) TOENT(&STARTSEQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDDO
- 
+
              IF         COND(&CRE005 *EQ 'Y') THEN(DO)
- 
+
              RMVJRNCHG  JRN(ICJRN) FILE((RERCH1PD) (RERCH2PD) +
                           (RERCH3PD)) RCVRNG(*CURRENT) +
                           FROMENT(&LASTSEQ) TOENT(&STARTSEQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDDO
- 
+
              IF         COND(&CRE015 *EQ 'Y') THEN(DO)
- 
+
              RMVJRNCHG  JRN(ICJRN) FILE(REPRPNPD) RCVRNG(*CURRENT) +
                           FROMENT(&LASTSEQ) TOENT(&STARTSEQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDDO
                                                                                         /*BUG27473*/
              IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*BUG27473*/
@@ -490,23 +492,39 @@
                                                                                         /*BUG27821*/
              ENDDO                                                                      /*BUG27821*/
 /*/COPY WNCPYSRC,GLH00613                                            */
- 
+                                                                                        /*MD060782*/
+             RMVJRNCHG  JRN(ICJRN) FILE(GEICPD) RCVRNG(*CURRENT) +
+                          FROMENT(&LASTSEQ) TOENT(&STARTSEQ)                            /*MD060782*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD060782*/
+                                                                                        /*MD060782*/
+             RMVJRNCHG  JRN(ICJRN) FILE(DLPOSTPD) RCVRNG(*CURRENT) +
+                          FROMENT(&LASTSEQ) TOENT(&STARTSEQ)                            /*MD060782*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD060782*/
+                                                                                        /*MD060782*/
+             RMVJRNCHG  JRN(ICJRN) FILE(MXMEGLPD) RCVRNG(*CURRENT) +
+                          FROMENT(&LASTSEQ) TOENT(&STARTSEQ)                            /*MD060782*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD060782*/
+                                                                                        /*MD060782*/
+             RMVJRNCHG  JRN(ICJRN) FILE(MXMEGLPPD) RCVRNG(*CURRENT) +
+                          FROMENT(&LASTSEQ) TOENT(&STARTSEQ)                            /*MD060782*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD060782*/
+
 /** End Program Processing */
- 
+
  TAG9999:
              CHGVAR     VAR(&CPYFLD) VALUE(&CPYFLD)
              MONMSG     MSGID(CPF0000 MCH0000)
              DLTOVR     FILE(*ALL)
              MONMSG     (CPF0000 MCH0000)
- 
+
              IF         COND(&ENDCMTCTL = 'Y') THEN(DO)
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
              ENDDO
- 
+
              RETURN
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

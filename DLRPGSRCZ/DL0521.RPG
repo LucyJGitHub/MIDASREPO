@@ -15,8 +15,9 @@
       *  NOTE: Check DL5210 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
       *                                                               *                       CAS005
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061553           Date 04Jul23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD025659           Date 24Mar13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSC042             Date 16Feb09               *
@@ -66,6 +67,9 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD061553 - DL0521P1 report lacks the base rate code.         *
+      *           - Move outside of *IN64 condition the setting of    *
+      *             *IN24 and *IN25.                                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025659 - Wrong computation of Interest accrual.            *
@@ -962,18 +966,33 @@
      C*
      C                     SETOF                     24                                       CSD103
      C                     SETOF                     25                                       CSD103
+      *                                                                                     MD061553
+      ** Set indicator *IN24 if UBRTT is populated.                                         MD061553
+      *                                                                                     MD061553
+     C           UBRTT     IFNE *BLANKS                                                     MD061553
+     C           UBRTT     ANDNE'00'                                                        MD061553
+     C                     MOVE '1'       *IN24                                             MD061553
+     C                     ENDIF                                                            MD061553
+      *                                                                                     MD061553
+      ** Set indicator *IN25 if TBRTT is populated.                                         MD061553
+      *                                                                                     MD061553
+     C           TBRTT     IFNE *BLANKS                                                     MD061553
+     C           TBRTT     ANDNE'00'                                                        MD061553
+     C                     MOVE '1'       *IN25                                             MD061553
+     C                     ENDIF                                                            MD061553
+      *                                                                                     MD061553
      C           *IN64     IFEQ '1'
      C********** UBRTT     IFNE 0                                                             CSD103
      C           UBRTT     IFNE *BLANKS                                                       CSD103
      C                     MOVE '1'       *IN69            OUR DETAILS
-     C                     MOVE '1'       *IN24                                               CSD103
+     C**********           MOVE '1'       *IN24                                      CSD103 MD061553
      C                     ELSE
      C                     MOVE '1'       *IN70            THEIR DETAILS
      C                     END
      C*
-     C           TBRTT     IFNE *BLANKS                                                       CSD103
-     C                     MOVE '1'       *IN25                                               CSD103
-     C                     ENDIF                                                              CSD103
+     C********** TBRTT     IFNE *BLANKS                                              CSD103 MD061553
+     C**********           MOVE '1'       *IN25                                      CSD103 MD061553
+     C**********           ENDIF                                                     CSD103 MD061553
      C*
      C**   RP, RF. RR - IF PROVIDERS RATE PRESENT, SET ACCRUAL AMOUNTS .
      C**                TO PRINT.                                      .

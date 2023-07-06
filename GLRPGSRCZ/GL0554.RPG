@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059248           Date 10Jan22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. 258872             DATE 14Jun23               *
+      *  Prev Amend No. MD059248           Date 10Jan22               *
+      *                 MD058285           Date 22Jun21               *
       *                 249578             Date 22May20               *
       *                 MD055401           Date 25Oct20               *
       *                 MD055652           Date 13Jul20               *
@@ -140,6 +141,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  258872 - No projected account movements for nostri.          *
+      *           Due to 209995 which is partially collected in core. *
+      *         - Add trailer for nostro extract Standing Orders.     *
+      *         - Applied for MD-61251.                               *
       *  MD059248 - FM2021A/A1 FX Netting: Unexpected projections for *
       *             netted FX dealsNo posting in Netting ICD account. *
       *             Reverse MD055401 partially as fix impacted the    *
@@ -386,6 +391,8 @@
      FSDNOSTL4IF  E           K        DISK                               090404
      FACNUM   IF  E           K        DISK                               090404
      FFXNETML3IF  E           K        DISK                                                MD036589A
+     F* Nostro extract trailer record for standing orders                                     258872
+     FDLNEEDPDIF  E                    DISK                                                   258872
      FNOSEXEC O   F     320            DISK
      F***NOSEXED O   F     320            DISK                                                CGL029
      F***NOSEXCC O   F     320            DISK                                                CGL029
@@ -445,6 +452,7 @@
      F* 81            ROLLOVER INDICATOR = 'Y', DEAL EVENT ONLY           149024
      F* 82            EVNTM DETAIL - FO RECORD
      F* 83            EVNTM TRAILER- FO RECORD
+     F* 84            READ DLNEEDPD (END OF FILE)                                             258872
      F*       U7 U8   DATABASE ERROR
      E                    CPY@    1   1 80
      E                    INT         1 15 0             HASH TOTALS
@@ -2292,6 +2300,7 @@
      C*                                                                   E321
      C** INCLUDE HEADER AND TRAILER RECORDS IN COUNT                      E321
      C*                                                                   E321
+     CLR                   EXSR TRAIL                                                         258872
      CLR         RECRIT    ADD  2         RECRIT                          E321
      C*
      C**
@@ -2375,6 +2384,22 @@
       *                                                                                    MD036589A
      C                     ENDSR                                                           MD036589A
       *                                                                                    MD036589A
+     C********************************************************************                    258872
+     C* ADD DLNEEDPD TO THE TOT TRAILER NOSEXZZ FOR ALL NOSTRO EXTRACT                        258872
+     C********************************************************************                    258872
+     C           TRAIL     BEGSR                                                              258872
+     C*                                                                                       258872
+     C                     READ DLNEEDPD                 84                                   258872
+     C                     ADD  NERESO    RECRIT                                              258872
+     C                     ADD  NEWNSO    INT,1                                               258872
+     C           DEC,1     ADD  NEDCSO    TEMP1   40                                          258872
+     C                     ADD  NEDCSO    DEC,1                                               258872
+     C           TEMP1     SUB  1000      TEMP1                                               258872
+     C           TEMP1     IFGE *ZERO                                                         258872
+     C                     ADD  1         INT,1                                               258872
+     C                     END                                                                258872
+     C*                                                                                       258872
+     C                     ENDSR                                                              258872
      C*******************************************************************
      C*
      C           HASH      BEGSR

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD061472           Date 07Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061472 - Mismatched receiving and entry parameters causes  *
+      *             the missing data from SDMMOD data structure       *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -221,6 +224,9 @@
       ** CFF007 enhancement                                                                   CFF007
       *                                                                                       CFF007
      D PSARD           S              6A                                                      CFF007
+                                                                                            MD061472
+     D PFRNT           S             20A                                                    MD061472
+     D PAFRT           S             20A                                                    MD061472
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -406,6 +412,10 @@
      C                   PARM                    FFSTS            24
       ** CFF007 Enhancement                                                                   CFF007
      C                   PARM                    CFF007                                       CFF007
+      ** Front Office Transaction ID                                                        MD061472
+      ** Associated Front Office Transaction ID                                             MD061472
+     C                   PARM                    PFRNT                                      MD061472
+     C                   PARM                    PAFRT                                      MD061472
       *
      C                   EVAL      CustBrokFl = 'B'
       *
@@ -491,7 +501,7 @@
       *             SRP006 - Cancel on Main Details Screen            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRP004        BEGSR
       *
       ** Write/read display screen

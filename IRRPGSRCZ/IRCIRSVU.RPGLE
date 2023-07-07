@@ -33,8 +33,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059863           Date 28Sep22               *
-      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *  Last Amend No. MD021868           Date 02Feb23               *
+      *  Prev Amend No. MD021870A          Date 30Jan23               *
+      *                 MD021871           Date 27Jan23               *
+      *                 MD060981           Date 27Jan23               *      
+      *                 MD059863           Date 28Sep22               *
+      *                 MD059314           Date 22Feb22               *
       *                 MD059100A          Date 23Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD058398           Date 20Aug21               *
@@ -115,6 +119,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021868 - Default the cashflow amount when control date is  *
+      *             being defaulted.                                  *
+      *  MD021870A - 31 will be considered as invalid input. It should*
+      *              be either 31+ or 31- just like other numbers.    *
+      *  MD021871 - Yearly frequency are generated as monthly freq.   *
+      *  MD060981 - CIRS buffer issue                                 *      
       *  MD059863 - UDF field position in CIRS or SIRS message type.  *
       *           - Move Front Office ID to RXFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *
@@ -2434,18 +2444,26 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6030)+TPCSAST          MD044553 MD056546
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1029)                  MD044553 MD056546
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11028)                 MD044553 MD056546
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST               MD056546
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST      MD056546 MD060981
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1561)+OPDATEAST               MD060981
      C                                      + TRDATEAST                                     MD056546
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST               MD056546
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST      MD056546 MD060981
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:1960)+TPDATEAST               MD060981
      C                                         +OCFSAST                                     MD056546
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2459)                           MD056546
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12458)                          MD056546
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2459)                  MD056546 MD060981
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2359)                           MD056546
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12458)                 MD056546 MD060981
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12358)                          MD060981
      C                                      + TCFSAST                                       MD056546
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9257)                           MD056546
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9257)                  MD056546 MD060981
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9157)                           MD060981
      C                                      + OPCSAST                                       MD056546
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST                   MD056546
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1055)                           MD056546
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11054)                          MD056546
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST          MD056546 MD060981
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:5956)+TPCSAST                   MD060981
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1055)                  MD056546 MD060981
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:955)                            MD060981
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11054)                 MD056546 MD060981
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:10954)                          MD060981
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -4344,9 +4362,22 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      I=1                                                       BUG5449
      C                   EXSR      SRGetCtlDate                                              BUG5449
       * Default with control date                                               BUG5964
+      * and amount                                                                          MD021868
      C                   IF        X=1                                          BUG5964
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -4364,6 +4395,18 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             and SUNIPD <> *blanks                                     BUG7621
      C                             and SUIPFR <> 'Z'                                         BUG7621
      C                   EVAL      OCFSA(X)=SUNIPD                              BUG5964
+     C                   IF        SFORMAMTOC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTOC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTOC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(OCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
@@ -4575,9 +4618,22 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      I=1                                                       BUG5449
      C                   EXSR      SRGetCtlDate                                              BUG5449
       * Default with control date                                               BUG5964
+      * amount                                                                              MD021868
      C                   IF        X=1                                          BUG5964
      C                             and STNIPD <> *blanks                                     BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ELSE                                                   BUG5964
       * Check if all dates are processed                                        BUG5964
@@ -4595,6 +4651,18 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                             and STNIPD <> *blanks                                     BUG7621
      C                             and STIPFR <> 'Z'                                         BUG7621
      C                   EVAL      TCFSA(X)=STNIPD                              BUG5964
+     C                   IF        SFORMAMTTC <> *blanks                                    MD021868
+     C                   EVAL      WAmount=*BLANKS                                          MD021868
+     C                   EVAL      WAmount=SFORMAMTTC                                       MD021868
+     C                   EXSR      SRZEDIT                                                  MD021868
+     C                   MOVEL     *BLANKS       SFORMAMT                                   MD021868
+     C                   MOVEL     'SFORMAMTTC'  SFORMAMT                                   MD021868
+     C                   EXSR      CheckAmt                                                 MD021868
+     C                   IF        WZFIELD <> *BLANKS                                       MD021868
+     C                   MOVE      WZFIELD       WAMT14           14                        MD021868
+     C                   EVAL      %SUBST(TCFSA(I):8:14)=WAMT14                             MD021868
+     C                   ENDIF                                                              MD021868
+     C                   ENDIF                                                              MD021868
      C                   ADD       1             X                              BUG5964
      C                   ENDIF                                                  BUG5964
      C                   ENDIF                                                  BUG5964
@@ -6542,24 +6610,29 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C*                                                                                      BUG5449
      C**  Validate position 3                                                                BUG5449
      C*                                                                                      BUG5449
-     C**  If position 1/2 is 31, pos 3 must be blank, or 4,5,6 have entry                    BUG5449
+     C****If*position*1/2*is*31,*pos*3*must*be*blank,*or*4,5,6*have*entr           BUG5449 MD021870A
      C**  If position 1 and 2 are not '31' pos.3 must be '+' or '-'                          BUG5449
+     C**  If position 1 and 2 is '31', pos. 3 must be '+' or '-'                           MD021870A
      C*                                                                                      BUG5449
      C*                                                                                      BUG5449
-     C                   IF        SDN1 = '31' AND SWRK3 <> *BLANK                           BUG5449
-     C                             AND S456 = *BLANK                                         BUG5449
-     C                   EVAL      *IN99=*ON                                                 BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         IF        SDN1 = '31' AND SWRK3 <> *BLANK                 BUG5449 MD021870A
+     C**********                   AND S456 = *BLANK                               BUG5449 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG5449 MD021870A
+     C**********         ENDIF                                                     BUG5449 MD021870A
+     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                            MD021870A
+     C                             AND SWRK3 <> '-'                                        MD021870A
+     C                   EVAL      *IN99=*ON                                               MD021870A
+     C                   ENDIF                                                             MD021870A
      C*                                                                                      BUG5449
      C                   IF        SDN1 <> '31' AND SWRK3 <> '+'                             BUG5449
      C                             AND SWRK3 <> '-'                                          BUG5449
      C                   EVAL      *IN99=*ON                                                 BUG5449
      C                   ENDIF                                                               BUG5449
      C*                                                                                      BUG5449
-     C                   IF        SDN1 = '31' AND SWRK3 <> '+'                              BUG5449
-     C                             AND SWRK3 <> '-' AND SWRK3 <> ' '                         BUG5449
-     C                   EVAL      *IN99=*ON                                                 BUG5449
-     C                   ENDIF                                                               BUG5449
+     C**********         IF        SDN1 = '31' AND SWRK3 <> '+'                    BUG5449 MD021870A
+     C**********                   AND SWRK3 <> '-' AND SWRK3 <> ' '               BUG5449 MD021870A
+     C**********         EVAL      *IN99=*ON                                       BUG5449 MD021870A
+     C**********         ENDIF                                                     BUG5449 MD021870A
      C*                                                                                      BUG5449
      C**  Validate positions 4 and 5                                                         BUG5449
      C**    If entered must be numeric, between 1 and 28 inclusive                           BUG5449
@@ -6745,7 +6818,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ADD       6             MTHN                                        BUG5449
      C                   ENDIF                                                               BUG5449
      C                   IF        SFREQF = 'Y'                                              BUG5449
-     C                   ADD       1             MTHN                                        BUG5449
+     C**********         ADD       1             MTHN                               BUG5449 MD021871
+     C                   ADD       1             YRNO                                       MD021871
      C                   ENDIF                                                               BUG5449
      C*                                                                                      BUG5449
      C**  If past end of year                                                                BUG5449

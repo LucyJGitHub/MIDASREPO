@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD047319A          Date 19Dec17               *
-      *  Prev Amend No. MD047319           Date 15Sep17               *
+      *  Last Amend No. MD060855           Date 19Jun23               *
+      *  Prev Amend No. MD047319A          Date 19Dec17               *
+      *                 MD047319           Date 15Sep17               *
       *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD00855 - Users cannot amend/create a Branch due to IBAN     *
+      *            error validation message.                          *
+      *          - Check System Value if there is a country excluded  *
+      *            from updating IBAN details.                        *
       *  MD047319A - CFT050 (SWIFTRef Directories Upload) does not    *
       *              properly update ISO countries file.              *
       *  MD047319 - CFT050 (SWIFTRef Directories Upload) does not     *
@@ -277,12 +282,12 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The Following /COPY Line Includes All The Defined Fields In
       ** The PSDS.  They Have Meaningful Names, Prefixed By 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays AND Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -433,6 +438,31 @@
      D PANSWER2        S              1A                                                    MD034866
      D PANSWER3        S              1A                                                    MD034866
      D KREFKY          S              8A   INZ                                              MD034866
+      *                                                                                     MD060855
+      ** System Value for excluded Country in IBAN details update                           MD060855
+      *                                                                                     MD060855
+     D PSysVal01       S             20A   INZ('CountryExIBAN       ')                      MD060855
+     D PCurSet01       S            200A                                                    MD060855
+     D PSysVal02       S             20A                                                    MD060855
+     D PCurSet02       S            200A                                                    MD060855
+     D PSysVal03       S             20A                                                    MD060855
+     D PCurSet03       S            200A                                                    MD060855
+     D PSysVal04       S             20A                                                    MD060855
+     D PCurSet04       S            200A                                                    MD060855
+     D PSysVal05       S             20A                                                    MD060855
+     D PCurSet05       S            200A                                                    MD060855
+     D PSysVal06       S             20A                                                    MD060855
+     D PCurSet06       S            200A                                                    MD060855
+     D PSysVal07       S             20A                                                    MD060855
+     D PCurSet07       S            200A                                                    MD060855
+     D PSysVal08       S             20A                                                    MD060855
+     D PCurSet08       S            200A                                                    MD060855
+     D PSysVal09       S             20A                                                    MD060855
+     D PCurSet09       S            200A                                                    MD060855
+     D PSysVal10       S             20A                                                    MD060855
+     D PCurSet10       S            200A                                                    MD060855
+     D WSysVal01       S              2A                                                    MD060855
+     D CFT004          S              1A                                                    MD060855
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -859,12 +889,12 @@
      C                   EVAL      SV_B3FIL2 = B_B3FIL2
      C                   EVAL      BIB3DS    = TIB3DS
      C                   EVAL      B_B3UDAT  = ODATE
- 
+
      C                   IF        NOT %FOUND(MEBIB3L0)
      C                   MOVEL     OLDSEQ        B_B3FIL2
      C                   ADD       1             OLDSEQ
      C                   WRITE     BANKIDX
- 
+
      C                   ELSEIF    B3FLAG = 'A'
      C                             OR B3FLAG = 'M'
      C                   EVAL      B_B3FIL2 = SV_B3FIL2
@@ -933,7 +963,7 @@
      C                             OR BCFLAG = 'M'
      C                             OR BCFLAG = 'U'
      C                   EVAL      BICCDS = TICCDS
- 
+
      C                   IF        NOT %FOUND(MEBICCL0)
      C**********         WRITE     CTRYIDX                                                  MD022119
      C                   WRITE(E)  CTRYIDX                                                  MD022119
@@ -967,11 +997,11 @@
      C                             or BCFLAG = 'M' and %Eof(MEISOCL2)
      C                             or BCFLAG = 'U' and %Eof(MEISOCL2)
      C                   EVAL      M3ISOC = BCCNTC
- 
+
      C**********         IF        NOT %EOF(MEISOCL2)                                       MD022873
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C**********         ENDIF                                                              MD022873
- 
+
      C                   EVAL      M3SCHT = 'N'
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
@@ -1015,29 +1045,29 @@
      C**********         IF        M3ISOD = '*** NOT FOUND ***'                   MD022873 MD047319A
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C**********         ENDIF                                                    MD022873 MD047319A
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
@@ -1079,7 +1109,7 @@
      C                             OR BUFLAG = 'M'
      C                             OR BUFLAG = 'U'
      C                   EVAL      BICUDS = TICUDS
- 
+
      C                   IF        NOT %FOUND(MEBICUL0)
      C                   WRITE     CURRIDX
      C                   ELSEIF    B3FLAG = 'A'
@@ -1110,7 +1140,7 @@
      C                             OR BHFLAG = 'M'
      C                             OR BHFLAG = 'U'
      C                   EVAL      BIHLDS = TIHLDS
- 
+
      C                   IF        NOT %FOUND(MEBIHLL0)
      C                   WRITE     HLDIDX
      C                   ELSEIF    BHFLAG = 'A'
@@ -1486,7 +1516,7 @@
      C                             OR N3FLAG = 'U'
      C                   EVAL      IBN3DS   = TIIBDS
      C                   EVAL      I_N3UDAT = ODATE
- 
+
      C                   IF        NOT %FOUND(MEIBN3L0)
      C                   WRITE     IBN3IDX
      C                   ELSEIF    N3FLAG = 'A'
@@ -1562,7 +1592,7 @@
      C                             OR NSFLAG = 'U'
      C                   EVAL      IBNSDS   = TIISDS
      C                   EVAL      N_NSUDAT = ODATE
- 
+
      C                   IF        NOT %FOUND(MEIBNSL0)
      C                   WRITE     IBNSIDX
      C                   ELSEIF    NSFLAG = 'A'
@@ -1615,10 +1645,10 @@
      C**********         WHEN      NSFLAG = 'A'                                             MD034950
      C**********                   OR NSFLAG = 'U' AND WFound = 'N'                         MD034950
      C**********         WHEN      NSFLAG = 'A' OR NSFLAG = 'M'                   MD034950 MD047319A
-     C**********                   OR (NSFLAG = 'U' AND WFound = 'N')             MD034950 MD047319A     
+     C**********                   OR (NSFLAG = 'U' AND WFound = 'N')             MD034950 MD047319A
      C                   WHEN      NSFLAG = 'A' AND WFound = 'N' OR                        MD047319A
      C                             NSFLAG = 'M' AND WFound = 'N' OR                        MD047319A
-     C                             NSFLAG = 'U' AND WFound = 'N'                           MD047319A     
+     C                             NSFLAG = 'U' AND WFound = 'N'                           MD047319A
      C                   EVAL      M3ISOC = NSCCOD
      C                   EVAL      M3SCHT = 'N'
      C                   EVAL      M3ACJN = PSJobName
@@ -1630,7 +1660,7 @@
      C                   EVAL      M3FATF = 'N'
      C                   EVAL      M3MFID = 'N'
      C                   EVAL      M3M205 = 'N'
- 
+
      C     NSCCOD        CHAIN     MEIBN3L1                                                 MD022873
      C                   IF        %FOUND (MEIBN3L1)                                        MD022873
      C                   EVAL      M3ISOD = I2_N3CTY1                                       MD022873
@@ -1643,7 +1673,7 @@
      C                   ELSE
      C                   EVAL      M3IBAC = *Blanks
      C                   ENDIF
- 
+
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
      C                             OR NSCCOD = 'BE'
@@ -1690,15 +1720,15 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
- 
+
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
- 
+
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
- 
+
      C                   EVAL      M3SEPA = NSSEPA
                                                                                             MD047319
      C**********         EVAL      M3TBLN = M3BILN + M3BRLN                       MD047319 MD047319A
@@ -1818,7 +1848,7 @@
      C                   EVAL      M3TBLN =  M3INLN                                           CFT051
      C                   ENDIF                                                                CFT051
                                                                                               CFT051
-     C                   EVAL      M3ACSP = 0                                              MD047319A                                                                                         
+     C                   EVAL      M3ACSP = 0                                              MD047319A
      C                   EVAL      ACNP1 = %SUBST(NSACNP:1:1)                               MD022827
      C                   EVAL      ACNP2 = %SUBST(NSACNP:2:1)                               MD022827
      C                   IF        ACNP2 = *BLANKS AND ACNP1 <> *BLANKS                     MD022827
@@ -1875,39 +1905,39 @@
      C**********                   OR NSFLAG = 'U' AND WFound = 'Y'               MD047319 MD047319A
      C                   WHEN      NSFLAG = 'A' AND WFound = 'Y' OR                        MD047319A
      C                             NSFLAG = 'M' AND WFound = 'Y'                           MD047319A
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
- 
+
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
- 
+
      C**********         IF        NSCPOS <>  '00'                                         MD047319A
      C                   EVAL      M3IBAC = NSCCOD
      C**********         ELSE                                                              MD047319A
      C**********         EVAL      M3IBAC = *Blanks                                        MD047319A
      C**********         ENDIF                                                             MD047319A
- 
+
      C                   IF        M3IBAR  <> 'Y' AND M3IBAR <> 'N'
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
@@ -1955,16 +1985,16 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
- 
+
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
- 
+
      C                   EVAL      M3SEPA = NSSEPA
                                                                                             MD047319
      C                   EVAL      M3CCSP = 0                                              MD047319A
@@ -2120,7 +2150,7 @@
      C                   EVAL      M3BBSP = 5                                              MD047319A
      C                   ELSE                                                              MD047319A
      C                   EVAL      M3BBSP = 0                                              MD047319A
-     C                   ENDIF                                                             MD047319A     
+     C                   ENDIF                                                             MD047319A
                                                                                               CFT051
      C                   IF        CFT051 = 'Y'                                               CFT051
      C                   EVAL      M3TBLN =  M3INLN                                           CFT051
@@ -2157,9 +2187,17 @@
      C                   DOW       NOT %EOF(SDCTRYL2)
      C**********         IF        BCFLAG <> 'D'                                            MD047319
      C                   IF        NSFLAG <> 'D'                                            MD047319
+     C                             AND A4ISOC <> WSysVal01                                  MD060855
      C**********         EVAL      A4BBRL= M3BILN                                           MD023678
+      ** Populate BBAN fields if CFT004 is ON                                               MD060855
+     C                   IF        CFT004 = 'Y'                                             MD060855
      C                   EVAL      A4BBRL= M3TBLN                                           MD023678
      C                   EVAL      A4BBAN = M3BBLN
+     C                   ELSE                                                               MD060855
+     C                   EVAL      A4BBRL= 0                                                MD060855
+     C                   EVAL      A4BBAN = 0                                               MD060855
+     C                   ENDIF                                                              MD060855
+      *                                                                                     MD060855
      C                   ELSE
      C                   EVAL      A4BBRL= 0
      C                   EVAL      A4BBAN = 0
@@ -2716,6 +2754,60 @@
       *                                                                                       CFT051
      C                   ENDIF                                                                CFT051
       *                                                                                       CFT051
+      **  Get System Value for Excluded Country for IBAN Details update                     MD060855
+      *                                                                                     MD060855
+     C                   CALL      'AOSVALR0'                                               MD060855
+     C                   PARM      *BLANKS       PRTCD                                      MD060855
+     C                   PARM                    PSysVal01                                  MD060855
+     C                   PARM                    PCurSet01                                  MD060855
+     C                   PARM                    PSysVal02                                  MD060855
+     C                   PARM                    PCurSet02                                  MD060855
+     C                   PARM                    PSysVal03                                  MD060855
+     C                   PARM                    PCurSet03                                  MD060855
+     C                   PARM                    PSysVal04                                  MD060855
+     C                   PARM                    PCurSet04                                  MD060855
+     C                   PARM                    PSysVal05                                  MD060855
+     C                   PARM                    PCurSet05                                  MD060855
+     C                   PARM                    PSysVal06                                  MD060855
+     C                   PARM                    PCurSet06                                  MD060855
+     C                   PARM                    PSysVal07                                  MD060855
+     C                   PARM                    PCurSet07                                  MD060855
+     C                   PARM                    PSysVal08                                  MD060855
+     C                   PARM                    PCurSet08                                  MD060855
+     C                   PARM                    PSysVal09                                  MD060855
+     C                   PARM                    PCurSet09                                  MD060855
+     C                   PARM                    PSysVal10                                  MD060855
+     C                   PARM                    PCurSet10                                  MD060855
+      *                                                                                     MD060855
+     C                   EVAL      WSysVal01 = *BLANKS                                      MD060855
+      *                                                                                     MD060855
+     C                   IF        PRtCd = *BLANKS                                          MD060855
+     C                   MOVEL     PCurSet01     WSysVal01                                  MD060855
+     C                   ENDIF                                                              MD060855
+      *                                                                                     MD060855
+      ** Check if CFT004 is ON                                                              MD060855
+      *                                                                                     MD060855
+     C                   CALL      'AOSARDR0'                                               MD060855
+     C                   PARM      *BLANKS       @RTCD                                      MD060855
+     C                   PARM      '*VERIFY '    @OPTN                                      MD060855
+     C                   PARM      'CFT004'      @SARD                                      MD060855
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD060855
+      *                                                                                     MD060855
+     C     @RTCD         IFNE      *BLANKS                                                  MD060855
+     C     @RTCD         ANDNE     '*NRF'                                                   MD060855
+     C     *LOCK         IN        LDA                                                      MD060855
+     C                   Z-ADD     36            DBASE                                      MD060855
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD060855
+     C                   EVAL      DBKEY = '*VERIFY '                                       MD060855
+     C                   OUT       LDA                                                      MD060855
+     C                   EXSR      *PSSR                                                    MD060855
+     C                   ENDIF                                                              MD060855
+      *                                                                                     MD060855
+     C     @RTCD         IFEQ      *BLANKS                                                  MD060855
+     C                   MOVE      'Y'           CFT004                                     MD060855
+     C                   ELSE                                                               MD060855
+     C                   MOVE      'N'           CFT004                                     MD060855
+     C                   ENDIF                                                              MD060855
      C                   ENDSR
       *****************************************************************
       /EJECT

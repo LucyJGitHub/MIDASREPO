@@ -1617,6 +1617,10 @@
      C                   PARM                    StatusText                     CAP011
       ** CFF007 enhancement                                                                   CFF007
      C                   PARM                    CFF007                                       CFF007
+      ** Front Office Transaction ID                                                        MD061472
+      ** Associated Front Office Transaction ID                                             MD061472
+     C                   PARM                    PFRNT                                      MD061472
+     C                   PARM                    PAFRT                                      MD061472
                                                                                 CAP011
       ** FFSETLCVT is called twice, once for broker settlement instructions     CAP011
       ** and once for customer settlement instructions.                         CAP011

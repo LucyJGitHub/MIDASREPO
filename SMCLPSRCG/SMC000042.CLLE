@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1085447          Date 06Feb13              */
+/*       Last Amend No. MD061593           Date 07Jul23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1085447          Date 06Feb13              */
 /*                      AR792029           Date 22Jun11              */
 /*                      CUP003             Date 02Aug10              */
 /*                      BUG27793  *REWRITE Date 07Jun10              */
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061593 - Check whether 'TO' file exists prior to further  */
+/*                  process                                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1085447 - Handle migration of loan references to alpha.   */
 /*       AR792029 - Change ssytem prefix references within migration */
@@ -42,7 +45,7 @@
 /*********************************************************************/
              PGM        PARM(&OBJECT &OBJTYPE &FMLIB &TOLIB &CRT +
                           &RERUN &MODE)
- 
+
              DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
              DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
@@ -50,7 +53,7 @@
              DCL        VAR(&CRT) TYPE(*CHAR) LEN(4)
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(4)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
- 
+
              DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&THRESHOLDA) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
@@ -67,14 +70,14 @@
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Check system usage and end if it has breached threshold. */
              RTVDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (23 2)) +
                           RTNVAR(&THRESHOLDA)
@@ -91,11 +94,11 @@
                              threshold has been breached.') MSGTYPE(*DIAG)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Set status to ACTIVE. */
              CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
                           '*UPDATE' 'ACTIVE')
- 
+
 /* Handle physical files. */
              IF         COND(&OBJTYPE *EQ '*FILE') THEN(DO)
 /* Before attempting copy check if file exists in both libraries */
@@ -107,7 +110,14 @@
                                 MSGTYPE(*DIAG)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
+/* Before attempting copy check if file exists in 'TO' library */                       /*MD061593*/
+                                                                                        /*MD061593*/
+             CHKOBJ     OBJ(&TOLIB/&OBJECT) OBJTYPE(*FILE)                              /*MD061593*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD061593*/
+                GOTO       CMDLBL(NOT_FOUND)                                            /*MD061593*/
+             ENDDO                                                                      /*MD061593*/
+                                                                                        /*MD061593*/
 /* If the migration is across alpha customer number changes then check if */
 /*  the specific file needs to be handled specially.                      */
                 IF         COND(&MODE *EQ '*PREAC') THEN(DO)
@@ -152,7 +162,7 @@
 /* SM000040 also can return '*NOTONCNUM' which means that a normal copy is */
 /*  attempted.                                                             */
                 ENDDO
- 
+
 /* If the migration is across alpha loan reference changes then check if  */           /*AR1085447*/
 /*  the specific file needs to be handled specially.                      */           /*AR1085447*/
                 IF         COND(&MODE *EQ '*PREAL') THEN(DO)                           /*AR1085447*/
@@ -197,7 +207,7 @@
 /* SM000062 also can return '*NOTONLNRF' which means that a normal copy is */          /*AR1085447*/
 /*  attempted.                                                             */          /*AR1085447*/
                 ENDDO                                                                  /*AR1085447*/
- 
+
                 CPYF       FROMFILE(&FMLIB/&OBJECT) +
                              TOFILE(&TOLIB/&OBJECT) FROMMBR(*ALL) +
                              TOMBR(*FROMMBR) MBROPT(*REPLACE) +
@@ -296,7 +306,7 @@
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
                    GOTO       CMDLBL(TAG02)
                 ENDDO
- 
+
 /* If CPYF worked then end program. */
                 GOTO       CMDLBL(SUCCESS)
  TAG02:
@@ -361,11 +371,11 @@
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* If CPYF worked then end program. */
                 GOTO       CMDLBL(SUCCESS)
              ENDDO
- 
+
 /* Handle data areas. */
              IF         COND(&OBJTYPE *EQ '*DTAARA') THEN(DO)
 /* Check if it exists in 'to' library; if it doesn't then flag. */
@@ -400,7 +410,7 @@
 /* SM000040 also can return '*NOTONCNUM' which means that a normal copy is */
 /*  attempted.                                                             */
                 ENDDO
- 
+
 /* If the migration is across alpha loan reference changes then check if  */           /*AR1085447*/
 /*  the specific data area needs to be handled specially.                 */           /*AR1085447*/
                 IF         COND(&MODE *EQ '*PREAL') THEN(DO)                           /*AR1085447*/
@@ -428,7 +438,7 @@
 /* SM000062 also can return '*NOTONLNRF' which means that a normal copy is */          /*AR1085447*/
 /*  attempted.                                                             */          /*AR1085447*/
                 ENDDO                                                                  /*AR1085447*/
- 
+
                 CPYDTAARA  FMDTAARA(&FMLIB/&OBJECT) +
                              TODTAARA(&TOLIB/&OBJECT)
                 MONMSG     MSGID(CPF0000) EXEC(DO)
@@ -439,7 +449,7 @@
                 ENDDO
                 GOTO       CMDLBL(SUCCESS)
              ENDDO
- 
+
 /* Copy data queues. */
              IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)
 /* Check if it exists in 'to' library; if it doesn't then flag. */
@@ -456,7 +466,7 @@
                 ENDDO
                 GOTO       CMDLBL(SUCCESS)
              ENDDO
- 
+
 /* Handle validation lists. */                                                            /*CUP003*/
              IF         COND(&OBJTYPE *EQ '*VLDL') THEN(DO)                               /*CUP003*/
 /* Check if it exists in 'to' library; if it doesn't then flag. */                        /*CUP003*/
@@ -482,14 +492,14 @@
                 ENDDO                                                                     /*CUP003*/
                 GOTO       CMDLBL(SUCCESS)                                                /*CUP003*/
              ENDDO                                                                        /*CUP003*/
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 NOT_FOUND:
              CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
                           '*UPDATE' 'NFOUND')
              GOTO       CMDLBL(ENDPGM)
- 
+
 SUCCESS:
 /* Call program to check if the object needs the system prefix changed. */              /*AR792029*/
              CALL       PGM(SMC000114) PARM(&OBJECT &OBJTYPE +
@@ -500,12 +510,12 @@ SUCCESS:
              CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
                           '*UPDATE' 'PASSED')
              GOTO       CMDLBL(ENDPGM)
- 
+
 UNIQUE:                                                                                   /*CUP003*/
              CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
                           '*UPDATE' 'UNIQUE')                                             /*CUP003*/
              GOTO       CMDLBL(ENDPGM)                                                    /*CUP003*/
- 
+
 ERROR:
 /* Set status to FAILED. */
              CALL       PGM(SM000008) PARM(&OBJECT &OBJTYPE +
@@ -516,7 +526,7 @@ ERROR:
                              &OBJECT *TCAT '.') MSGTYPE(*ESCAPE)
              ENDDO
              CHGVAR     VAR(&RECURSIVE) VALUE('Y')
- 
+
 ERROR2:
  /* Receive escape error message. */
              RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +

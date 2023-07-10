@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Credit Lines Future Exposure Update')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Customer Lending Module                          */
+/*                                                                   */
+/*       LEC001000 - Midas LE Credit Lines Future Exposure Update    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD021383A *CREATE   Date 16Jun23             */
+/*       Prev Amend No. xxxxxxxx            Date ddMmmyy             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021383A - Credit Lines (CLE025) Shadow Posting Correction */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('LEC001000 - Midas LE Credit Lines +
+                          Future Exposure Update') TOMSGQ(MRUNQ)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+
+             CHGJOB     SWS(00000000)
+
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/** Call Credit Lines Future Exposure Update RPG Program */
+
+             CALL       PGM(LE001000)
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Abnormal termination */
+
+ABNOR:
+             ROLLBACK
+
+             SNDPGMMSG  MSG('Program LEC001000 ended abnormally - +
+                          see joblog''') TOMSGQ(MOPERQ)
+             MONMSG MSGID(CPF0000 MCH0000)
+
+             DMPCLPGM
+
+/** End program */
+
+ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+             ENDPGM

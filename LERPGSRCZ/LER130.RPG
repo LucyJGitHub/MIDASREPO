@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1042801A         DATE 12Jul22               *
-      *  Prev Amend No. AR827298           Date 12Jul22               *
+      *  Last Amend No. MD021383A          Date 16Jun23               *
+      *  Prev Amend No. AR1042801A         DATE 12Jul22               *
+      *                 AR827298           Date 12Jul22               *
       *                 MD060225           Date 05Jul22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058815           Date 28Sep21               *
@@ -223,6 +224,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction. *
+      *            - MD061267 - Credit Lines (CLE025) fixes           *
       *  AR1042801A - Modify fix to ensure both facility and loan fees*
       *               are correctly dropped.  Patterned after fix     *
       *               261699B. (Child: AR1042802)                     *
@@ -240,7 +243,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057048 - LEFEED.ROBN is being reset to zero for several    *
       *             fees. Remove code moving zeros to LEFEED fields.  *
-      *             Instead of move, zeroise LEFHST fields.           *      
+      *             Instead of move, zeroise LEFHST fields.           *
       *  AR375891A - Fee attached to parts sold posted to the suspense*
       *              account. Move PSTM and PONS to LKSETP and LKOSAC *
       *              (Child: AR375892).                               *
@@ -716,12 +719,16 @@
      FLEFEEQL0UF  E           K        DISK         KINFSR *PSSR                              260345
      FLKEYFED O   E                    DISK         KINFSR *PSSR
      F/COPY WNCPYSRC,LEH01199
-     FLKEYFEA O   E                    DISK         KINFSR *PSSR
-     FLKEYFEZ O   E                    DISK         KINFSR *PSSR
+     F***LKEYFEA O   E                    DISK         KINFSR *PSSR                        MD021383A
+     F***LKEYFEZ O   E                    DISK         KINFSR *PSSR                        MD021383A
+     FLKEYFEA UF  E                    DISK         KINFSR *PSSR A                         MD021383A
+     FLKEYFEZ UF  E                    DISK         KINFSR *PSSR A                         MD021383A
      FLEFHST  O   E                    DISK         KINFSR *PSSR
-     FLEPXTAA O   E                    DISK         KINFSR *PSSR      UC  CLE007
+     F***LEPXTAA O   E                    DISK         KINFSR *PSSR      UC         CLE007 MD021383A
+     FLEPXTAA UF  E                    DISK         KINFSR *PSSR A    UC                   MD021383A
      FLEPXTAB O   E                    DISK         KINFSR *PSSR      UC  CLE007
-     FLEPXTAC O   E                    DISK         KINFSR *PSSR      UC  CLE007
+     F***LEPXTAC O   E                    DISK         KINFSR *PSSR      UC         CLE007 MD021383A
+     FLEPXTAC UF  E                    DISK         KINFSR *PSSR A    UC                   MD021383A
      FLEFECPPDO   E                    DISK         KINFSR *PSSR                            MD053375
      F            LEFEEDF                           KRENAMELEFECPD0                         MD053375
      F***LEHISTV3IF  E           K        DISK                                     AR317401 MD046294
@@ -1973,12 +1980,20 @@
       ** CLE007 is switched on                                            CLE007
       *                                                                   CLE007
      C           CLE007    IFEQ 'Y'                                       CLE007
+     C                     READ LEPXTACF                 89                                MD021383A
+     C           *IN89     IFEQ *ON                                                        MD021383A
      C                     ADD  1         WRECTR                          CLE007
      C                     MOVE WRECTR    NORE                            CLE007
      C                     Z-ADDWHRWN     HRWN                            CLE007
      C                     Z-ADDWHRDC     HRDC                            CLE007
      C                     MOVE 'T'       RECI                            CLE007
      C                     WRITELEPXTACF                                  CLE007
+     C                     ELSE                                                            MD021383A
+     C                     ADD  WRECTR    NORE                                             MD021383A
+     C                     ADD  WHRWN     HRWN                                             MD021383A
+     C                     ADD  WHRDC     HRDC                                             MD021383A
+     C                     UPDATLEPXTACF                                                   MD021383A
+     C                     ENDIF                                                           MD021383A
      C                     ENDIF                                          CLE007
      C/COPY WNCPYSRC,LEH00844
       *
@@ -4957,12 +4972,45 @@
      C                     ENDIF                                                              238569
       *                                                                                       238569
      C           CAS009    IFEQ 'Y'                                                           238569
+     C           CAS016    ANDEQ'N'                                                        MD021383A
      C********** FELOAN    ANDGT0                                                      238569 CLE148
      C           FELOAN    ANDGT*BLANKS                                                       CLE148
      C           FEADJY    ANDEQ'Y'                                                           238569
      C           FSAMRM    ANDEQ'N'                                                           238569
      C           VDAT      ANDGEFSNLAC                                                        238569
      C                     ELSE                                                               238569
+      *                                                                                    MD021383A
+     C           CAS016    IFEQ 'Y'                                                        MD021383A
+     C           FELOAN    ANDGT*BLANKS                                                    MD021383A
+     C           FEADJY    ANDEQ'Y'                                                        MD021383A
+     C           FSAMRM    ANDEQ'N'                                                        MD021383A
+     C           VDAT      ANDGEFSNLAC                                                     MD021383A
+     C                     MOVE 'N'       AKY,6                                            MD021383A
+     C                     MOVEAAKY       LKAKEY                                           MD021383A
+      *                                                                                    MD021383A
+     C           LKREVI    IFEQ 1                                                          MD021383A
+      *                                                                                    MD021383A
+     C           FESAMT    IFNE 0                                                          MD021383A
+     C                     Z-ADDFESAMT    LKEAMT                                           MD021383A
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADD0         LKEAMT                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     Z-ADD0         FESAMT                                           MD021383A
+      *                                                                                    MD021383A
+     C                     ELSE                                                            MD021383A
+      *                                                                                    MD021383A
+     C           FESAMT    IFEQ 0                                                          MD021383A
+     C                     Z-ADDFEFAMT    LKEAMT                                           MD021383A
+      *                                                                                    MD021383A
+      * Add to Non-linear Settlement Amount                                                MD021383A
+      *                                                                                    MD021383A
+     C           FEFAMT    ADD  FESAMT    FESAMT                                           MD021383A
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADD0         LKEAMT                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
       *                                                                   CLE005
       *                                                                                       CGL020
       ** If Midas Compliance Watch (CGL020) is installed and Repayment,                       CGL020
@@ -5640,8 +5688,13 @@
       *
      C           TREXIT    TAG                                              0028
      C                     MOVE 'T'       LKRECI                            0028
+     C           *IN55     IFEQ *ON                                                        MD021383A
      C           LKNTOT    ADD  2         LKNORE                            0028
      C                     WRITELKEYFEZF                                    0028
+     C                     ELSE                                                            MD021383A
+     C           WKNORE    ADD  LKNTOT    LKNORE                                           MD021383A
+     C                     UPDATLKEYFEZF                                                   MD021383A
+     C                     ENDIF                                                           MD021383A
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           1         SETLLLEPK3ZZ                                                       CLE134
@@ -6184,7 +6237,9 @@
      C                     ENDIF                                                              CAS009
       *                                                                                       CAS009
      C********** FEORED    IFEQ BJRDNB                                               CAS009 BUG13140
-     C           FEORED    IFEQ BKAPDT                                                      BUG13140
+     C********** FEORED    IFEQ BKAPDT                                            BUG13140 MD021383A
+     C           FEORED    IFGE BJRDNB                                                     MD021383A
+     C           FEORED    ANDLEBKAPDT                                                     MD021383A
      C           FERECI    ANDEQ'D'                                                           CAS009
       *                                                                                       CAS009
      C           FEPYON    IFNE 'N'                                                         BUG13038
@@ -6514,7 +6569,10 @@
      C                     OPEN LEPXTAB                                   CLE007
      C                     OPEN LEPXTAC                                   CLE007
      C                     MOVE 'H'       RECI                            CLE007
+     C                     READ LEPXTAA                  22                                MD021383A
+     C           *IN22     IFEQ *ON                                                        MD021383A
      C                     WRITELEPXTAAF                                  CLE007
+     C                     ENDIF                                                           MD021383A
      C                     Z-ADD1         WRECTR  50                      CLE007
      C                     Z-ADD0         WHRWN  150                      CLE007
      C                     Z-ADD0         WHRDC   30                      CLE007
@@ -7216,7 +7274,10 @@
       *
       ** Write fee accrual a/c keys header
      C                     MOVE 'H'       LKRECI
+     C                     READ LKEYFEA                  22                                MD021383A
+     C           *IN22     IFEQ *ON                                                        MD021383A
      C                     WRITELKEYFEAF
+     C                     ENDIF                                                           MD021383A
      C                     MOVE 'A'       WRCDT   1
       *
       ** Key list for LEPEFLD
@@ -7350,6 +7411,11 @@
      C           X         COMP 150                      17
      C                     END
      C/COPY WNCPYSRC,LER130CCP1                                           S01408
+      *                                                                                    MD021383A
+     C                     READ LKEYFEZ                  55                                MD021383A
+     C           *IN55     IFEQ *OFF                                                       MD021383A
+     C                     Z-ADDLKNORE    WKNORE  50                                       MD021383A
+     C                     ENDIF                                                           MD021383A
       *
      C           *LIKE     DEFN LKVLRF    L3VLRF                                              CLE134
      C           *LIKE     DEFN LKVLRL    L3VLRL                                              CLE134

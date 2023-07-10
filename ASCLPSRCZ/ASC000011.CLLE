@@ -1,6 +1,6 @@
 /*********************************************************************/
 /*STD    CLPBASEMOD                                                  */
-/*EXI    TEXT('AS Hedge LE A/C Key Generation Control')              */
+/**EXI***TEXT('AS*Hedge*LE*A/C*Key*Generation*Control')***************/                 /*MD049139*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas    - Accounting Standards Module                      */
@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       BUG8780 - ASC000011 failed due to dberr in file SDCLNDPD    */
@@ -29,10 +33,13 @@
 /*       CAS004 - Hedge Accounting Phase A                           */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
- 
+/**********  PGM        PARM(&CNAM &CSEQ)                            */                 /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
@@ -41,20 +48,30 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                    /*BUG8780*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                   /*BUG8780*/
              DCL        VAR(&BGCSLN) TYPE(*CHAR) LEN(1)                                  /*BUG8780*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('ASC000011 - Hedge LE A/C Key +
                           Generation Control') TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /**/                                                                                     /*BUG8780*/
 /* Start of BUG8780 */                                                                   /*BUG8780*/
 /**/                                                                                     /*BUG8780*/
@@ -76,19 +93,19 @@
 /* End of BUG8780 */                                                                     /*BUG8780*/
 /**/                                                                                     /*BUG8780*/
 /* Create data area LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
- 
+
 /* Call program CB0160 to get value of restart indicator */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is not a restart */
- 
+
              IF         COND(&STAT *NE 'Y') THEN(DO)
                   DLTF       FILE(XCLOANCL)
                   MONMSG     MSGID(CPF2105)
@@ -98,9 +115,9 @@
                   MONMSG     MSGID(CPF2105)
                   DLTF       FILE(XASHTRNPD)                                              /*221416*/
                   MONMSG     MSGID(CPF2105)                                               /*221416*/
- 
+
 /* Create a backup for CLOANCL, LKEY1DP and LKEY1ZZ */
- 
+
                   CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
                              CRTFILE(*YES)
                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
@@ -114,9 +131,9 @@
                              CRTFILE(*YES)                                                /*221416*/
                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
              ENDDO
- 
+
 /* If it is a restart */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
                   CPYF       FROMFILE(&DPLIB/XCLOANCL) TOFILE(CLOANCL) +
                              MBROPT(*REPLACE)
@@ -131,23 +148,23 @@
                              MBROPT(*REPLACE)                                             /*221416*/
                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Call Hedge LE A/C Key Generation Control Program */
- 
+
              CALL       PGM(AS000011)
- 
+
 /* If no error occured in the program */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
                   CHGVAR     VAR(&STAT) VALUE('N')
                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                   DLTF       FILE(XCLOANCL)
@@ -159,9 +176,9 @@
                   DLTF       FILE(XASHTRNPD)                                              /*221416*/
                   MONMSG     MSGID(CPF2105)                                               /*221416*/
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
@@ -179,17 +196,17 @@
                              MBROPT(*REPLACE)                                             /*221416*/
                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*221416*/
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                         ASC000011 ended abnormally - see job log') +
                         TOMSGQ(MOPERQ)
               MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
- 
+
              ENDPGM

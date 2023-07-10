@@ -9,29 +9,36 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9678            Date 20Dec05              */
+/*                      BUG9678            Date 20Dec05              */
 /*                      CLE035 *CREATE     Date 22Sep03              */
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG9678- LEC0498 00001 failed due on copy command error.    */
 /*       CLE035 - Lending Enhancement for Nordea Phase 1 Priority 2  */
 /*                Income Splits                                      */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
- 
+/**********  PGM        PARM(&CNAM &CSEQ)                            */                 /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
 /* Declare the variables for rerun checking */
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -40,62 +47,72 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
              SNDPGMMSG  MSG('Midas Transaction Income Splits House+
                           keeping') TOPGMQ(*EXT) TOMSGQ(MRUNQ)
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
              CHGVAR     VAR(&LIB) VALUE(&PREF *TCAT 'DPLIB')
- 
+
 /* Check the current status of this component */
 /* If this is not a restart, backup Transaction Income Splits File */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
              IF         COND(&STAT *EQ 'N') THEN(DO)
- 
+
                 CPYF       FROMFILE(LETISPPD) TOFILE(&LIB/XLETISPPD) +
                              MBROPT(*REPLACE) CRTFILE(*YES)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                /*BUG9678*/
                 CHGVAR     VAR(&STAT) VALUE('Y')
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              ENDDO
- 
+
 /* If this is a restart, restore master files */
- 
+
              ELSE       CMD(DO)
- 
+
                 CPYF       FROMFILE(XLETISPPD) TOFILE(LETISPPD) +
                              MBROPT(*REPLACE)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                /*BUG9678*/
- 
+
              ENDDO
- 
+
 /* Call Manual Facility Utilisation Audit Report */
- 
+
              CALL       PGM(LE0498)
- 
+
 /* No database error or not file-out-of-balance */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
                 DLTF       FILE(XLETISPPD)
                 CHGVAR     VAR(&STAT) VALUE('N')
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              ENDDO
              ELSE       CMD(DO)
- 
+
 /* Database error processing */
- 
+
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 IF         COND(%SWITCH(XXXXXX01)) THEN(SNDPGMMSG +
                              MSGID(MEM0002) MSGF(MIDAS) MSGDTA(&MEM) +
@@ -104,18 +121,18 @@
                              MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ +
                              MRUNQ))
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           LEC0498 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

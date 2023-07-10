@@ -1,0 +1,82 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Fee Payments Due A/C Key Generation')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LERC134 - Fee Payments Due A/C Key Generation               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD021383A *CREATE  Date 16Jun23              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021383A - Credit Lines (CLE025) Shadow Posting Correction.*/
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&NAM &SEQ)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+             DCL        VAR(&NAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('LERC134 - Fee Payments Due A/C Key +
+                          Generation') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/** Check restart indicator */
+
+             CALL       PGM(CB0160) PARM(&NAM &SEQ &STAT)
+
+             IF         COND(&STAT = 'N') THEN(DO)
+             CPYF       FROMFILE(PSTTOM) TOFILE(XPSTTOM) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+
+             IF         COND(&STAT = 'Y') THEN(DO)
+             CPYF       FROMFILE(XPSTTOM) TOFILE(PSTTOM) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(PSTTOM))
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+             CALL       PGM(LER134)
+
+/** If no error found */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+             CLRPFM     FILE(PSTTOM)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+ABNOR:
+             SNDPGMMSG  MSG('Program LERC134 ended abnormally') +
+                          TOMSGQ(MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+
+ENDPGM:
+             ENDPGM

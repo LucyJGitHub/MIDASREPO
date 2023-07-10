@@ -1,0 +1,890 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Account Balance and Historic Bal. Discrepancy Rpt')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  UTRE0772 - Account Balance and History Balance Discrepancy   *
+      *             Report and Update of Discrepant Accounts          *
+      *                                                               *
+      *  (c) Finastra International Limited 2023                      *
+      *                                                               *
+      *  Last Amend No. MD035660 *CREATE   Date 16Jun23               *
+      *  Prev Amend No. MDnnnnnn           Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD035660 - No fee settlement postings in retail history file.*
+      *             Utility to create postings to GEXZPPD with        *
+      *             discrepant amount.                                *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+     FTABTBRE IF  E                    DISK
+     FREHISSL IF  E           K        DISK
+     FREACCNJLIF  E           K        DISK
+     FRELINKJ2IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FGEXZLL0 UF  E           K        DISK
+     F            APOSTPDF                          KRENAMEGEXZLF
+     FGEXZPPD O   F     620            DISK                      A
+     FUTR772AUO   E                    PRINTER      KINFDS SPOOLU
+     FUTR772P1O   E             01     PRINTER      KINFDS SPOOL1     UC
+     FUTR772P2O   E             02     PRINTER      KINFDS SPOOL2     UC
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 01 - Overflow for UTR772P1 printer file                       *
+      * 02 - Overflow for UTR772P2 printer file                       *
+      * 05 - If history balance is equal to cleared balance           *
+      * 19 - Retail account to be patched                             *
+      * 41 - If no details to report                                  *
+      * 70 - 0 decimal place                                          *
+      * 71 - 1 decimal place                                          *
+      * 72 - 2 decimal place                                          *
+      * 73 - 3 decimal place                                          *
+      * 79 - Multibranching indicator                                 *
+      * 87 - Write 'End of Branch'                                    *
+      * 88 - Link installed                                           *
+      *                                                               *
+      * 97 - Read error on REHISSL                                    *
+      * 98 - Read error on ACCNT                                      *
+      * 99 - General error and chaining                               *
+      *                                                               *
+      * U7 - Database error                                           *
+      * U8 - Database error                                           *
+      * LR - End of program                                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   FIRST  - First cycle                                        *
+      *   MPROC  - Main processing                                    *
+      *   DETAIL - Detail processing                                  *
+      *   TOTAL  - End processing                                     *
+      *   SRGEAD - Calculate Adjustment                               *
+      *   SRAUD  - Check primary/secondary a/c in GEXZPPD             *
+      *   SRGEXZ - Output to GEXZPPD                                  *
+      *   *PSSR  - Database error handling                            *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     I/EJECT
+     IACCNTABF
+     I              ACNO                            TACNO
+     I              RRNM                            TRRNM
+      *
+     IFUSIONJF
+     I              ACNO                            FACNO
+     I              LTAB                            FLTAB
+     I              LTAC                            FLTAC
+     I              LTAS                            FLTAS
+     IREHISPSF
+     I              DRIS                            SDRIS
+     I              CRIS                            SCRIS
+     IGEXZLF
+     I              BRCA                            GBRCA
+     I              CNUM                            GCNUM
+     I              CCY                             GCCY
+     I              ACOD                            GACOD
+     I              ACSQ                            GACSQ
+     I              PSTA                            GPSTA
+      *
+      ** KEY DATA STRUCTURE : RKEY TO MOVE IN DBKEY IF ERROR
+      *
+     I            DS
+     I                                        1  18 RKEY
+     I                                        1   6 ZCUST
+     I                                        7   9 ZACCY
+     I                                       10  130ZACOQQ
+     I                                       14  150ZASEQ
+     I                                       16  18 ZBRCA
+      *
+      **   FILE INFORMATION DATA STRUCTURE
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Data Area RUNDAT
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      ** Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+      *
+      ** Data structure for retail details
+      *
+     ISDRETL    E DSSDRETLPD
+      *
+      ** First DS for access programs, Short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access progrmas, Long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  External DS for Branch Codes.
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+      *
+      **  External DS for Currency Codes.
+      *
+     ISDCURR    E DSSDCURRPD
+     I              A6NBDP                          CDP
+     I              A6SPRT                          SPOT
+     I              A6MDIN                          MDIN
+     I              A6ERLC                          ERLC
+     I              A6TXND                          TNOT
+     I              A6CYNM                          CCNM
+     I              A6SPAE                          TACC
+     I              A6SSNB                          SSNO
+      *===================================================================
+     C/EJECT
+      *===================================================================
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** KEY LIST
+      ** KEY FIELD TO READ ACCNT FILE
+      *
+     C           KRKEY     KLIST
+     C                     KFLD           ZCUST
+     C                     KFLD           ZACCY
+     C                     KFLD           ZACOD
+     C                     KFLD           ZASEQ
+     C                     KFLD           ZBRCA
+      *
+     C           LNKEY     KLIST
+     C                     KFLD           ZBRCA
+     C                     KFLD           ZCUST
+     C                     KFLD           ZACCY
+     C                     KFLD           ZACOD
+     C                     KFLD           ZASEQ
+      *
+      ** WORK FIELDS DEFINITION
+      *
+     C           *LIKE     DEFN ZHISB     WHISB
+      ********************************************************************
+     C/EJECT
+      *===================================================================
+      ** P R O G R A M     S T A R T
+      *===================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C                     MOVE '0'       *IN10
+      *
+     C           MODE      IFEQ 'U'
+     C           MODE      OREQ 'u'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+      ** First Cycle Processing
+      *
+     C                     EXSR FIRST
+      *
+      ** Main Processing
+      *
+     C                     READ REACCJLF                 LR
+     C                     MOVE *BLANKS   BRCA#   3
+      *
+     C           *INLR     DOWEQ'0'                        - B1
+     C                     SETOF                     41
+      *
+      ** Multibranching Processing
+      *
+     C           ZBRCA     IFNE BRCA#
+      *
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C   88                WRITEENDP2
+     C                     SETOF                     87
+     C                     ENDIF
+      *
+     C                     MOVE ZBRCA     BRCA#
+      *
+     C                     CLOSEUTR772P1
+     C   88                CLOSEUTR772P2
+     C                     OPEN UTR772P1
+     C   88                OPEN UTR772P2
+      *
+     C                     SETON                     87
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+      *
+      ** Retrieve Branch Name
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ZBRCA     @BRCA   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 2  *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     WRITEERRP1
+     C   88                WRITEERRP2
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+     C   88                WRITEHEADP2
+     C                     ENDIF
+      *
+     C                     EXSR MPROC
+     C                     READ REACCJLF                 LR
+     C                     ENDDO                             - E1
+      *
+      ** Check GEXZPPD for Primary and Secondary Accounts at update mode
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRAUD
+     C                     ENDIF
+      *
+      ** Total Processing
+      *
+     C                     EXSR TOTAL
+      *
+      *===================================================================
+      ** P R O G R A M     E N D
+      *===================================================================
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  FIRST - Subroutine to execute first cycle.                      *
+      *                                                                  *
+      *  Called by : Main Program                                        *
+      *  Calls: *PSSR                                                    *
+      *                                                                  *
+      ********************************************************************
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C                     SETON                     41
+      *
+      ** INITIALISE LDA VARIABLES
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'UTRE0772'DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     79
+     C                     ELSE
+     C                     SETOF                     79
+     C                     ENDIF
+      *
+      ** ACCESS SDRETLPD
+      *
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+      *
+      ** CHECK IF ERROR
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVE 'SDRETLPD'DBFILE           * DBERROR 003 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     SETOF                     69
+      *
+     C           BMCBAI    IFNE 'Y'
+     C                     SETON                     69
+     C                     ENDIF
+      *
+      ** ACCESS TABTBRE TO CHECK LINK INSTALLED.
+      *
+     C           1         CHAINTABTBRE              99
+     C           LNKA      COMP 'Y'                      88
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** OUTPUT AUDIT HEADER
+      *
+     C                     WRITEHEADAU
+      *
+      ** INITIALISE ONE TIME FIELDS TO WRITE IN FILE AUDIT PRINTER
+      *
+     C                     Z-ADD*ZEROS    NBRREC
+      *
+     C                     ENDSR                           **FIRST ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *
+      *  MPROC - Subroutine to execute main processing.                  *
+      *                                                                  *
+      *  Called by: Main Program                                         *
+      *  Calls: DETAIL                                                   *
+      *                                                                  *
+      ********************************************************************
+     C           MPROC     BEGSR                           **MPROC BEGSR**
+      *
+     C           KRKEY     SETLLACCNT                    99
+      *
+     C           *IN99     IFEQ '1'                        - B1
+      *
+      ** Access to ACCNT by key
+      *
+     C           KRKEY     READEACCNT                    98
+      *
+     C           *IN98     DOWEQ'0'                        - B2
+      *
+      ** Update the retail accounts in error
+      *
+     C                     EXSR DETAIL
+      *
+      ** Access to ACCNT by key
+      *
+     C           KRKEY     READEACCNT                    98
+     C                     ENDDO                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR                           **MAIN ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  DETAIL  - Subroutine to execute detail processing.              *
+      *                                                                  *
+      *  Called by: MPROC                                                *
+      *  Calls: *PSSR, SRGEAD, SRGEXZ                                    *
+      *                                                                  *
+      ********************************************************************
+     C           DETAIL    BEGSR                           *DETAIL BEGSR*
+      *
+      ** Check if currency exist
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ZACCY     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL@CYCD     DBKEY            * DB ERROR 2  *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     WRITEERRP1
+     C   88                WRITEERRP2
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Calculation of Total Generated Balance
+      *
+     C                     EXSR SRGEAD
+      *
+      ** If Accrual on CLR'D Balances Flag= 'N', Cleared Bal := Ledger BAL
+      *
+     C           BMCBAI    IFNE 'Y'
+     C                     Z-ADDLDBL      CLBL
+     C                     ENDIF
+      *
+      ** Put the decimal point at the right place
+      *
+     C                     Z-ADDZHISB     OHISB
+     C                     Z-ADDCLBL      ZCLBL
+     C           ZCLBL     SUB  ZHISB     ZDIFF
+     C                     SUB  GEAD      ZDIFF
+      *
+     C                     SETOF                     707172
+     C                     SETOF                     73
+      *
+     C           CDP       IFEQ 0                          - B1
+      *
+     C                     SETON                       70
+      *
+     C                     ELSE                            - X1
+      *
+     C           CDP       IFEQ 1                          - B2
+      *
+     C           ZHISB     DIV  10        OHISB1
+     C           CLBL      DIV  10        ZCLBL1
+     C           GEAD      DIV  10        GEAD1
+     C           ZDIFF     DIV  10        ZDIFF1
+      *
+     C                     SETON                       71
+      *
+     C                     ELSE                            - X2
+      *
+     C           CDP       IFEQ 2                          - B3
+      *
+     C           ZHISB     DIV  100       OHISB2
+     C           CLBL      DIV  100       ZCLBL2
+     C           GEAD      DIV  100       GEAD2
+     C           ZDIFF     DIV  100       ZDIFF2
+     C                     SETON                       72
+      *
+     C                     ELSE                            - X3
+      *
+     C           ZHISB     DIV  1000      OHISB3
+     C           CLBL      DIV  1000      ZCLBL3
+     C           GEAD      DIV  1000      GEAD3
+     C           ZDIFF     DIV  1000      ZDIFF3
+     C                     SETON                       73
+      *
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ** Output for GEXZPPD Field
+      *
+     C                     Z-ADD1         TNITMS  50
+     C                     Z-ADD235959    TPTIM   60
+     C                     Z-ADD0         ZERO3   30
+     C                     Z-ADD0         ZERO5   50
+     C                     Z-ADD0         ZERO8   80
+     C                     Z-ADD0         ZERO13 130
+     C                     Z-ADD0         ZERO15 150
+     C                     Z-ADD0         ZACOQQ
+     C                     Z-ADD0         ZERO52  52
+     C                     Z-ADD0         ZERO32 132
+      *
+      ** Check if END of PAGE
+      *
+     C           *IN01     IFEQ '1'                        - B1
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN01
+     C                     ADD  1         PAGE
+     C                     ENDIF                           - E1
+      *
+     C           *IN02     IFEQ '1'                        - B1
+     C   88                WRITEHEADP2
+     C                     MOVE '0'       *IN02
+     C                     ADD  1         PAGE1
+     C                     ENDIF                           - E1
+      *
+      ** Writing of Detail Line on Report
+      *
+     C           LTAS      IFEQ *ZERO                      - B1
+      *
+     C           ZHISB     ADD  GEAD      WHISB
+     C           WHISB     IFNE CLBL                       - B1B
+      *
+     C           ZHISB     IFEQ CLBL                       - B2
+     C                     MOVE '1'       *IN05
+     C                     ENDIF                           - E2
+      *
+     C                     WRITEDETP1
+     C                     ADD  1         NBRREC
+      *
+     C                     MOVE '0'       *IN05
+      *
+      ** Output for GEXZPPD
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRGEXZ
+     C                     ENDIF
+      *
+     C                     ENDIF                             E1B
+      *
+     C                     ELSE                            - X1
+     C           LTAS      IFEQ 99                         - B2
+      *
+      ** Open spool files
+      *
+     C           *IN87     IFEQ '0'
+     C                     MOVE ZBRCA     BRCA#
+     C                     OPEN UTR772P1
+     C                     SETON                     01
+     C   88                OPEN UTR772P2
+     C   88                SETON                     02
+     C                     SETON                     87
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+     C                     ENDIF
+      *
+     C           LNKEY     SETLLRELINKJ2
+     C           LNKEY     READERELINKJ2                 99
+      *
+     C           *IN99     DOWEQ'0'                        - B3
+      *
+     C           BMCBAI    IFEQ 'Y'
+     C                     ADD  GROSS     CLBL
+     C                     ELSE
+     C                     ADD  GRLDBL    CLBL
+     C                     ENDIF
+      *
+     C           LNKEY     READERELINKJ2                 99
+     C                     ENDDO                           - E3
+      *
+     C           ZHISB     ADD  GEAD      WHISB
+     C           WHISB     IFNE CLBL                       - B3
+      *
+      ** Put the decimal point at the right place
+      *
+     C                     Z-ADDZHISB     OHISB
+     C                     Z-ADDCLBL      ZCLBL
+     C           ZCLBL     SUB  ZHISB     ZDIFF
+     C                     SUB  GEAD      ZDIFF
+      *
+     C                     SETOF                     707172
+     C                     SETOF                     73
+      *
+     C           CDP       IFEQ 0                          - B4
+      *
+     C                     SETON                       70
+      *
+     C                     ELSE                            - X4
+      *
+     C           CDP       IFEQ 1                          - B5
+      *
+     C           ZHISB     DIV  10        OHISB1
+     C           CLBL      DIV  10        ZCLBL1
+     C           GEAD      DIV  10        GEAD1
+     C           ZDIFF     DIV  10        ZDIFF1
+     C                     SETON                       71
+      *
+     C                     ELSE                            - X5
+      *
+     C           CDP       IFEQ 2                          - B6
+      *
+     C           ZHISB     DIV  100       OHISB2
+     C           CLBL      DIV  100       ZCLBL2
+     C           GEAD      DIV  100       GEAD2
+     C           ZDIFF     DIV  100       ZDIFF2
+     C                     SETON                       72
+      *
+     C                     ELSE                            - X6
+      *
+     C           ZHISB     DIV  1000      OHISB3
+     C           CLBL      DIV  1000      ZCLBL3
+     C           GEAD      DIV  1000      GEAD3
+     C           ZDIFF     DIV  1000      ZDIFF3
+     C                     SETON                       73
+      *
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+      *
+     C   88                WRITEDETP2
+     C   88                ADD  1         NBRREC
+      *
+      ** OUTPUT FOR GEXZPPD
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRGEXZ
+     C                     ENDIF
+      *
+     C                     ENDIF                           - E3
+      *
+     C                     ELSE                            - X2
+     C           ZHISB     IFNE CLBL
+     C   88                WRITEDETP2
+     C   88                ADD  1         NBRREC
+      *
+      ** OUTPUT FOR GEXZPPD
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR SRGEXZ
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR                           *DETAIL ENDSR*
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  TOTAL - Subroutine to execute end processing.                   *
+      *                                                                  *
+      *  Called by: Main Program                                         *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+      *
+      **  Print 'END OF BRANCH' narrative at end of program also
+      *
+     C           *IN87     IFEQ '1'
+     C                     WRITEENDP1
+     C   88                WRITEENDP2
+     C                     ENDIF
+      *
+     C                     WRITETOTALS
+      *
+     C                     ENDSR                           **TOTAL ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  SRGEAD - Subroutine to Calculate Adjustment                     *
+      *                                                                  *
+      *  Called by: DETAIL                                               *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           SRGEAD    BEGSR                           **SRGEAD BEGSR*
+      *
+      ** Initialize to Zero
+      *
+     C                     Z-ADD*ZEROS    GEAD
+      *
+      ** Access Capitalisation Records
+      *
+     C           LNKEY     SETLLREHISSL                  99
+      *
+     C           *IN99     IFEQ '1'                        - B1
+      *
+     C           LNKEY     READEREHISSL                  97
+     C           *IN97     DOWEQ'0'                        - B2
+      *
+     C           SDICI     IFNE *BLANKS                    - B3
+     C           SDCI      ANDEQ'Y'
+      *
+     C                     SUB  DAIC      GEAD
+     C                     ENDIF                           - E3
+      *
+     C           SCICI     IFNE *BLANKS                    - B3
+     C           SCCI      ANDEQ'Y'
+      *
+     C                     ADD  CAIC      GEAD
+     C                     ENDIF                           - E3
+      *
+     C           LNKEY     READEREHISSL                  97
+     C                     ENDDO                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR                           **TOTAL ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  SRAUD - Subroutine to check if an a/c in GEXZPPD is the         *
+      *          primary/secondary of another a/c in the same file       *
+      *                                                                  *
+      *  Called by: Main Processing                                      *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           SRAUD     BEGSR                           *SRAUD BEGSR*
+      *
+     C                     READ GEXZLL0                  LR
+      *
+     C           *INLR     DOWEQ'0'
+      *
+      ** Key field to chain ACCNT
+      *
+     C           GAKEY     KLIST
+     C                     KFLD           GCNUM
+     C                     KFLD           GCCY
+     C                     KFLD           GACOD
+     C                     KFLD           GACSQ
+     C                     KFLD           GBRCA
+      *
+      ** Save secondary a/c posting amount
+      *
+     C                     Z-ADDGPSTA     SPSTA  130
+      *
+      ** Check if secondary a/c, then get its primary a/c
+      *
+     C           GAKEY     CHAINACCNT                99
+     C           *IN99     IFEQ '0'
+      *
+     C           LTAS      ANDNE0
+     C           LTAC      ANDNE0
+     C           LTAB      ANDNE*BLANKS
+      *
+      ** Get primary a/c details based on secondary a/c details.
+      *
+     C                     MOVELLTAB      SLTAB   3
+     C                     MOVELCNUM      SCNUM   6
+     C                     MOVELCCY       SCCY    3
+     C                     Z-ADDLTAC      SLTAC  100
+     C                     Z-ADDLTAS      SLTAS   20
+      *
+      ** Key field to chain LF/GEXZLL0
+      *
+     C           GSKEY     KLIST
+     C                     KFLD           SLTAB
+     C                     KFLD           SCNUM
+     C                     KFLD           SCCY
+     C                     KFLD           SLTAC
+     C                     KFLD           SLTAS
+      *
+     C           GSKEY     CHAINGEXZLF               99
+      *
+      ** If corresponding primary a/c exists
+      *
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDGPSTA     PPSTA  130
+      *
+     C           PPSTA     IFEQ SPSTA
+     C                     DELETGEXZLF
+     C                     ELSE
+     C                     SUB  SPSTA     PPSTA
+     C                     UPDATGEXZLF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ GEXZLL0                  LR
+     C                     ENDDO
+      *
+     C                     ENDSR                           *SRAUD ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  SRGEXZ - Subroutine to output to PF/GEXZPPD.                    *
+      *                                                                  *
+      *  Called by: DETAIL                                               *
+      *  Calls:                                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRGEXZ    BEGSR                           *SRGEXZ BEGSR**
+      *
+     C                     Z-ADD0         ZDIFFG
+      *
+     C           ZDIFF     IFGT 0
+     C                     MOVE '0'       TDRCR   1
+     C                     Z-ADDZDIFF     ZDIFFG
+     C                     ELSE
+     C           ZDIFF     MULT -1        ZDIFFG 130
+     C                     MOVE '1'       TDRCR
+     C                     ENDIF
+      *
+     C                     EXCPTOUTG
+      *
+     C                     ENDSR                           *SRGEXZ ENDSR**
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  *PSSR subroutine for database error handling                    *
+      *                                                                  *
+      *  Called by:                                                      *
+      *  Calls: None                                                     *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           **PSSR BEGSR**
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     WRITEERRAU
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           **PSSR ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     OGEXZPPD EADD             OUTG
+     O                                    1 'P'
+     O                         ZCUST      7
+     O                         ZACCY     10
+     O                         ZACOQQ    14
+     O                         ZASEQ     16
+     O                         TACNO     32
+     O                         BJRDNB    35P
+     O                         BJRDNB    38P
+     O                                   43 '99999'
+     O                                   73 'HISTORY CORRECTION'
+     O                         ZDIFFG    80P
+     O                         TDRCR     81
+     O                                  102 'DUMMY'
+     O                         ZBRCA    105
+     O                                  106 '1'
+     O                         TRRNM    114P
+     O                                  124 'R'
+     O                         TPTIM    140
+     O                                  250 '9999'
+     O                         TNITMS   271P
+     O                                  303 'C'
+     O                         ZACOD    599
+     O                         ZERO8     95
+     O                         ZERO3    108P
+     O                                  130 '0'
+     O                                  141 '0'
+     O                                  147 '0'
+     O                         ZERO15   258P
+     O                         ZERO15   266P
+     O                         ZERO13   279P
+     O                         ZERO13   316P
+     O                                  329 '0000000000'
+     O                         ZERO13   359P
+     O                         ZERO52   364
+     O                         ZERO5    530P
+     O                         ZERO32   573
+**  CPY@ OBJECT COPYRIGHT **
+(C) Finastra International Limited 2023

@@ -1,47 +1,54 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI *  TEXT('Midas SE Generate Accounting Entries')                */
-/********************************************************************/
-/*                                                                  */
-/*         Midas     - Securities Trading Module                */
-/*                                                                  */
-/*       SEC0610   GENERATE ACCOUNTING ENTRIES                      */
-/*                                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*         Midas     - Securities Trading Module                     */
+/*                                                                   */
+/*       SEC0610   GENERATE ACCOUNTING ENTRIES                       */
+/*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD020934           Date 11May19              */     
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD021383A          Date 16Jun23              */
+/*                      MD020934           Date 11May19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      258994             Date 16Mar09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CDL045             Date 14Feb06              */
-/* Midas Plus 1.2 ---------------- Base ----------------------------*/
+/* Midas Plus 1.2 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*                      CMX001             Date 18Apr01             */
+/*                      CMX001             Date 18Apr01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             DATE 29APR96              */
 /*                      S01502             DATE 08JUL94              */
 /*                      E38768             DATE 24APR92              */
-/*                      E34692                  DATE  16JAN92       */
-/*                      S01117                  DATE  08JAN91       */
-/*                      S01189                  DATE  08JAN91       */
-/*                      E23408                  DATE  06SEP90       */
-/*                      E21136                  DATE  15FEB90       */
-/*                      E16870                  DATE  08/03/89      */
-/*                      E16663                  DATE  23/01/89      */
-/*                      S01179                  DATE  16/09/88      */
-/*                      E14224                  DATE  16/09/88      */
-/*                                                                  */
+/*                      E34692                  DATE  16JAN92        */
+/*                      S01117                  DATE  08JAN91        */
+/*                      S01189                  DATE  08JAN91        */
+/*                      E23408                  DATE  06SEP90        */
+/*                      E21136                  DATE  15FEB90        */
+/*                      E16870                  DATE  08/03/89       */
+/*                      E16663                  DATE  23/01/89       */
+/*                      S01179                  DATE  16/09/88       */
+/*                      E14224                  DATE  16/09/88       */
+/*                                                                   */
 /*---------------------------------------------------------------------
-/*                                                                 */
+/*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
+/*       MD021383A - Credit Lines (CLE025) Shadow Posting Correction */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
 /*       MD020934 - COB component LERC135 failed due to CDL045.    */
 /*                  Amend length of field &EXTLIB from 8 to 10 to  */
 /*                  avoid truncated library name which causes error*/
-/*                  - applied for MD-53322                         */    
+/*                  - applied for MD-53322                         */
 /*       MD046248 - Finastra Rebranding                            */
 /*       258994 - Must check job switches before calling MXC0490   */
 /*       CDL045 - Copy out Account Keys file to Extract library    */
@@ -68,15 +75,15 @@
 /*       E16663 - PART OF E14224 WITHHELD FROM AS/400 PRODUCT      */ /*E16663*/
 /*                UNTIL FILE GEST1 AVAILABLE FROM FIX E14224.      */ /*E16663*/
 /*                CODE REINSTATED AS PER S/38 VERSION.             */ /*E16663*/
-/*       S01179 -  INCORPORATION                                */ /*S01179*/
+/*       S01179 -  INCORPORATION                                   */ /*S01179*/
 /*       E14224 - WRITE OUT GENERATED ENTRIES TO CORRECT FILE      */ /*E14224*/
 /*                FOR ACCRUAL NON-WORKING DAY RUN.                 */ /*E14224*/
 /*                                                                 */
-/*********************************************************************/
+/*******************************************************************/
 /*           PGM                                                   */ /*E14224*/
 /************PGM        PARM(&TYPE)                           *E14224* *S01189*/
              PGM        PARM(&TYPE &CNAM &CSEQ)                       /*S01189*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -89,7 +96,7 @@
 /*           DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(256)      *S01179E16870*/
 /************DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(128)*/  /*E16870 S01502*/
              DCL        VAR(&SESTAT)  TYPE(*CHAR)  LEN(133)           /*S01502*/
- 
+
 /************DCL        VAR(&MEM)  TYPE(*CHAR) LEN(44)               * *S01117*/
              DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)                /*S01117*/
              DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)                 /*E14224*/
@@ -100,40 +107,74 @@
              DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)               /*CMX001*/
              DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)               /*CMX001*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)             /*CMX001*/
-             DCL        VAR(&CMX001) TYPE(*CHAR) LEN(1)  VALUE('N')   /*CMX001*/
+/**********  DCL        VAR(&CMX001) TYPE(*CHAR) LEN(1)  VALUE('N')          */ /*CMX001 MD021383A*/
+             DCL        VAR(&CMX001) TYPE(*CHAR) LEN(1)  VALUE('N')                     /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1)  VALUE('N')                     /*MD049139*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1)  VALUE('N')                       /*CDL045*/
              DCL        VAR(&SEKEY) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&SEKEY2) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
 /**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/   
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                                  /*MD021383A*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                /*MD021383A*/
+             DCL        VAR(&CAS006) TYPE(*CHAR) LEN(1) VALUE(N)                       /*MD021383A*/
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CDL045*/
                                                                                           /*CDL045*/
 /*/COPY WNCPYSRC,SEC0610002                                          */
- 
+
 /*           RCVDTAARA  DTAARA(MMOD)                                *  *S01179*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*S01179*/
- 
+
 /*  SETUP AND SEND PGM MESSAGE                                      */
- 
+
              CHGVAR     VAR(&MEM) VALUE('SEC0610  - Generate +
                           Accounting Entries')
- 
+
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
-/**/                                                                  /*CMX001*/
-/**  Check if Meridian export is installed                   */       /*CMX001*/
-/**/                                                                  /*CMX001*/
-             CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CMX001*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CMX001*/
-             CHGVAR     VAR(&SAR)  VALUE('CMX001')                    /*CMX001*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)  /*CMX001*/
-                                                                      /*CMX001*/
+/*****************************************************************************/ /*CMX001 MD021383A*/
+/****Check*if*Meridian*export*is*installed************************************/ /*CMX001 MD021383A*/
+/*****************************************************************************/ /*CMX001 MD021383A*/
+/**********  CHGVAR     VAR(&RTCD) VALUE('       ')                          */ /*CMX001 MD021383A*/
+/**********  CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                          */ /*CMX001 MD021383A*/
+/**********  CHGVAR     VAR(&SAR)  VALUE('CMX001')                           */ /*CMX001 MD021383A*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)         */ /*CMX001 MD021383A*/
+/**********                                                                  */ /*CMX001 MD021383A*/
+/**********  IF         COND(&RTCD = '       ') +                                      /*MD021383A*/
+/**********      THEN(CHGVAR VAR(&CMX001) VALUE('Y'))                        */ /*CMX001 MD021383A*/
+/**********                                                                  */ /*CMX001 MD021383A*/
+/*                                                  */                                  /*MD049139*/
+/* Check if Feature CLE025 is switched ON.          */                                  /*MD049139*/
+/*                                                  */                                  /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(&CLE025 *NE 'Y') THEN(DO)                                  /*MD049139*/
+/**/                                                                                    /*MD049139*/
+/**  Check if Meridian export is installed                   */                         /*MD049139*/
+/**/                                                                                    /*MD049139*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD049139*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD049139*/
+             CHGVAR     VAR(&SAR)  VALUE('CMX001')                                      /*MD049139*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD049139*/
+                                                                                        /*MD049139*/
              IF         COND(&RTCD = '       ') +
-                 THEN(CHGVAR VAR(&CMX001) VALUE('Y'))                 /*CMX001*/
-                                                                      /*CMX001*/
- 
+                 THEN(CHGVAR VAR(&CMX001) VALUE('Y'))                                   /*MD049139*/
+             ENDDO                                                                      /*MD049139*/
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
+/* Check if CAS006 is installed */                                                     /*MD021383A*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                    /*MD021383A*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY*')                                   /*MD021383A*/
+             CHGVAR     VAR(&SAR) VALUE('CAS006')                                      /*MD021383A*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                   /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CAS006) VALUE('Y'))                                     /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
+
 /**/                                                                                      /*CDL045*/
 /*   Check if CDL045 is installed   */                                                    /*CDL045*/
 /**/                                                                                      /*CDL045*/
@@ -161,7 +202,7 @@
              IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*CDL045*/
                                                                                           /*CDL045*/
-             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                                /*CDL045*/
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                   */ /*CDL045 MD021383A*/
                                                                                           /*CDL045*/
 /* Set value of extract library */                                                        /*CDL045*/
                                                                                           /*CDL045*/
@@ -172,20 +213,123 @@
          ENDDO                                                                            /*CDL045*/
                                                                                           /*CDL045*/
 /*/COPY WNCPYSRC,SEC0610006                                          */
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
+                                                                                       /*MD021383A*/
+             CHGVAR     VAR(&DPLIB) VALUE(&PRFX *CAT 'DPLIB')                          /*MD021383A*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)                            /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND((&CSEQ *EQ 4) *OR (&CSEQ *EQ 5)) THEN(DO)                 /*MD021383A*/
+                                                                                       /*MD021383A*/
+                IF         COND(&STAT *EQ 'N') THEN(DO)                                /*MD021383A*/
+                                                                                       /*MD021383A*/
+/* Delete XGESTxx files if existing */                                                 /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   DLTF       FILE(&DPLIB/XGESTHH)                                     /*MD021383A*/
+                   MONMSG     MSGID(CPF2105)                                           /*MD021383A*/
+                   DLTF       FILE(&DPLIB/XGESTPD)                                     /*MD021383A*/
+                   MONMSG     MSGID(CPF2105)                                           /*MD021383A*/
+                   DLTF       FILE(&DPLIB/XGESTZZ)                                     /*MD021383A*/
+                   MONMSG     MSGID(CPF2105)                                           /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   IF         COND(&TYPE *EQ '1') THEN(DO)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+/* Backup GESTxx files */                                                              /*MD021383A*/
+                                                                                       /*MD021383A*/
+                      CPYF       FROMFILE(GESTHH) +
+                                   TOFILE(&DPLIB/XGESTHH) CRTFILE(*YES)                /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                      CPYF       FROMFILE(GESTPD) +
+                                   TOFILE(&DPLIB/XGESTPD) CRTFILE(*YES)                /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                      CPYF       FROMFILE(GESTZZ) +
+                                   TOFILE(&DPLIB/XGESTZZ) CRTFILE(*YES)                /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   IF         COND(&TYPE *EQ '5') THEN(DO)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+/* Backup GEST1xx files */                                                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+                      CPYF       FROMFILE(GEST1HH) +
+                                   TOFILE(&DPLIB/XGESTHH) +
+                                   CRTFILE(*YES)                                       /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                      CPYF       FROMFILE(GEST1PD) +
+                                   TOFILE(&DPLIB/XGEST1PD) +
+                                   CRTFILE(*YES)                                       /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                      CPYF       FROMFILE(GEST1ZZ) +
+                                   TOFILE(&DPLIB/XGEST1ZZ) +
+                                   CRTFILE(*YES)                                       /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                        /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+                                                                                       /*MD021383A*/
+                IF         COND(&STAT *EQ 'Y') THEN(DO)                                /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   IF         COND(&TYPE *EQ '1') THEN(DO)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+/* Restore GESTxx files */                                                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTHH) +
+                                   TOFILE(GESTHH) MBROPT(*REPLACE)                     /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GESTHH))                           /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTPD) +
+                                   TOFILE(GESTPD) MBROPT(*REPLACE)                     /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GESTPD))                           /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTZZ) +
+                                   TOFILE(GESTZZ) MBROPT(*REPLACE)                     /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GESTZZ))                           /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   IF         COND(&TYPE *EQ '5') THEN(DO)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+/* Restore GEST1xx files */                                                            /*MD021383A*/
+                                                                                       /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTHH) +
+                                   TOFILE(GEST1HH) MBROPT(*REPLACE)                    /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GEST1HH))                          /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTPD) +
+                                   TOFILE(GEST1PD) MBROPT(*REPLACE)                    /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GEST1PD))                          /*MD021383A*/
+                      CPYF       FROMFILE(&DPLIB/XGESTZZ) +
+                                   TOFILE(GEST1ZZ) MBROPT(*REPLACE)                    /*MD021383A*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                   EXEC(CLRPFM FILE(GEST1ZZ))                          /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
+             CHGVAR     VAR(&STAT) VALUE('Y')                                          /*MD021383A*/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                            /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
 /*     RESET SWITCHES                                               */
- 
+
 /************IF*********COND(%SST(&MMOD 3 1) = 'Y') THEN(CHGJOB +  E23408*/
 /*************************SWS(10000000))                           E23408*/
- 
+
 /*  SET ON U1 IF RETAIL II OR INTEREST ON ACCOUNTS INSTALLED      *E23408*/
- 
+
              IF         COND((%SST(&MMOD 16 1) = 'Y')     +
                           *OR (%SST(&MMOD 23 1) = 'Y'))   +
                           THEN(CHGJOB SWS(10000000))             /*E23408*/
              ELSE (CHGJOB     SWS(00000000))
- 
+
 /*   CLEAR O/P FILES */
- 
+
+/**********  IF         COND((&CSEQ *EQ 1) *OR (&CSEQ *EQ 3)) THEN(DO)    */  /*MD021383A MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              ((&CSEQ *EQ 1) *OR (&CSEQ *EQ 3))) *OR +
+                             (&CLE025 *NE 'Y')) THEN(DO)                                /*MD049139*/
              IF         COND(&TYPE *EQ '1') THEN(DO)                  /*E16663*/
              CLRPFM     FILE(GESTHH)
              CLRPFM     FILE(GESTPD)
@@ -197,25 +341,99 @@
              CLRPFM     FILE(GEST1ZZ)                                 /*E16663*/
              OVRDBF     FILE(GEST) TOFILE(GEST1)                      /*E16663*/
              ENDDO                                                    /*E16663*/
- 
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND((&CSEQ *EQ 4) *OR (&CSEQ *EQ 5)) THEN(DO)                 /*MD021383A*/
+                                                                                       /*MD021383A*/
+                IF         COND(&TYPE *EQ '1') THEN(DO)                                /*MD021383A*/
+                   CLRPFM     FILE(GEST3HH)                                            /*MD021383A*/
+                   CLRPFM     FILE(GEST3PD)                                            /*MD021383A*/
+                   CLRPFM     FILE(GEST3ZZ)                                            /*MD021383A*/
+                   OVRDBF     FILE(GEST) TOFILE(GEST3)                                 /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+                                                                                       /*MD021383A*/
+                IF         COND(&TYPE *EQ '5') THEN(DO)                                /*MD021383A*/
+                   CLRPFM     FILE(GEST4HH)                                            /*MD021383A*/
+                   CLRPFM     FILE(GEST4PD)                                            /*MD021383A*/
+                   CLRPFM     FILE(GEST4ZZ)                                            /*MD021383A*/
+                   OVRDBF     FILE(GEST) TOFILE(GEST4)                                 /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
+
 /*   CALL SE2445 TO SUPPRESS BOOK CODES/INVESTMENT TYPES ON SEKEY  */ /*E34692*/
 /*              IF NECESSARY                                       */ /*E34692*/
              CALL       PGM(SE2445)                                   /*E34692*/
- 
+
 /*/COPY WNCPYSRC,SEC0610003                                          */
 /*   CALL PROGRAM                        */
- 
+
 /************CALL       PGM(SE2450)                                  * *S01117*/
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
+                                                                                       /*MD021383A*/
+             IF         COND(&CAS006 *EQ 'N') THEN(DO)                                 /*MD021383A*/
+                IF         COND((&CSEQ *EQ 4) *OR (&CSEQ *EQ 5)) THEN(DO)              /*MD021383A*/
+                  CALL       PGM(SE000150) PARM('SEKEYA' 'Write')                      /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
              CALL       PGM(SE2450) PARM(&RSEQ)                       /*S01117*/
 /*/COPY WNCPYSRC,SEC0610004                                          */
- 
-             IF         COND(&TYPE *EQ '5') THEN(DLTOVR FILE(GEST))   /*E16663*/
+
+/**********  IF         COND(&TYPE *EQ '5') THEN(DLTOVR FILE(GEST))          */ /*E16663 MD021383A*/
+             IF         COND((&CLE025 *NE 'Y') *AND +
+                             (&TYPE *EQ '5')) +
+                        THEN(DLTOVR FILE(GEST))                                         /*MD049139*/
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
+             IF         COND((&CSEQ *EQ 3) *OR (&CSEQ *EQ 4) *OR +
+                          (&CSEQ *EQ 5)) THEN(DLTOVR FILE(GEST))                       /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND((&CSEQ *EQ 1) *OR (&CSEQ *EQ 3)) THEN(DO)                 /*MD021383A*/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                            /*MD021383A*/
+                   CLRPFM     FILE(&DPLIB/SEKEY1D)                                     /*MD021383A*/
+                   CPYF       FROMFILE(SEKEYD) TOFILE(SEKEY1D) +
+                                FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                                MBROPT(*REPLACE)                                       /*MD021383A*/
+                   MONMSG     MSGID(CPF2817 CPF2869)                                   /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
+                                                                                       /*MD021383A*/
+             IF         COND((&CSEQ *EQ 4) *OR (&CSEQ *EQ 5)) THEN(DO)                 /*MD021383A*/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                            /*MD021383A*/
+                   IF         COND(&TYPE *EQ '1') THEN(DO)                             /*MD021383A*/
+                                                                                       /*MD021383A*/
+                      CPYF       FROMFILE(GEST3PD) TOFILE(GESTPD) +
+                                   MBROPT(*ADD)                                        /*MD021383A*/
+                      CALL       PGM(SE000150) PARM('GEST3ZZ' 'Update')                /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   IF         COND(&TYPE *EQ '5') THEN(DO)                             /*MD021383A*/
+                      CPYF       FROMFILE(GEST4PD) TOFILE(GEST1PD) +
+                                   MBROPT(*ADD)                                        /*MD021383A*/
+                      CALL       PGM(SE000150) PARM('GEST4ZZ' 'Update')                /*MD021383A*/
+                   ENDDO                                                               /*MD021383A*/
+                                                                                       /*MD021383A*/
+                   CPYF       FROMFILE(SEKEY1D) TOFILE(&DPLIB/SEKEYD) +
+                                FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                                MBROPT(*ADD)                                           /*MD021383A*/
+                   MONMSG     MSGID(CPC2957 CPF2817 CPF2869)                           /*MD021383A*/
+                ENDDO                                                                  /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
                                                                       /*CMX001*/
-             IF         COND(&CMX001 = 'Y') THEN(DO)                  /*CMX001*/
-             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*258994*/
-             CALL       PGM(MXC0490) PARM('SEC0610 ' &TYPE)           /*CMX001*/
-             ENDDO                                                                        /*258994*/
-             ENDDO                                                    /*CMX001*/
+/**********  IF         COND(&CMX001 = 'Y') THEN(DO)                         */ /*CMX001 MD021383A*/
+/**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                     */ /*258994 MD021383A*/
+/**********  CALL       PGM(MXC0490) PARM('SEC0610 ' &TYPE)                  */ /*CMX001 MD021383A*/
+/**********  ENDDO                                                           */ /*258994 MD021383A*/
+/**********  ENDDO                                                           */ /*CMX001 MD021383A*/
+             IF         COND(&CLE025 *NE 'Y') THEN(DO)                                  /*MD049139*/
+             IF         COND(&CMX001 = 'Y') THEN(DO)                                    /*MD049139*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                /*MD049139*/
+             CALL       PGM(MXC0490) PARM('SEC0610 ' &TYPE)                             /*MD049139*/
+             ENDDO                                                                      /*MD049139*/
+             ENDDO                                                                      /*MD049139*/
+             ENDDO                                                                      /*MD049139*/
                                                                       /*CMX001*/
 /**/
 /*  ABNORMAL TERMINATION MESSAGE - DATABASE ERROR                   */
@@ -238,7 +456,7 @@
 /*  IF A/C KEYS MISSING CHECK D/SESTAT WHETHER TO CONTINUE OR NOT  */
 /*****HALT*MESSAGE*&*CONTROL*IS*HANDLED*BY*EODRUN****************      *S01189*/
 /*  CALL CB0175 TO HALT COB RUN                                        *S01189*/
- 
+
              IF         COND(%SWITCH(XXX1XXX0)) THEN(DO)
 /*              RCVDTAARA  DTAARA(SESTAT)                           *  *S01179*/
                 RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)             /*S01179*/
@@ -266,6 +484,10 @@
              IF         COND(&CDL045 *EQ 'Y') THEN(DO)                                    /*CDL045*/
                                                                                           /*CDL045*/
              IF         COND(&TYPE = '1') THEN(DO)                                        /*CDL045*/
+/**********  IF         COND(&CSEQ *EQ 1) THEN(DO)                        */  /*MD021383A MD049139*/
+             IF         COND((&CLE025 *NE 'Y') *OR +
+                             ((&CLE025 *EQ 'Y') *AND (&CSEQ *EQ 1))) +
+                        THEN(DO)                                                        /*MD049139*/
                                                                                           /*CDL045*/
              CPYF       FROMFILE(SEKEYD) TOFILE(&EXTLIB/&SEKEY) +
                           FROMMBR(ACCRUAL) TOMBR(*FROMMBR) +
@@ -424,12 +646,23 @@
              MONMSG     MSGID(CPF3142)                 /* File does not exist yet */      /*CDL045*/
              CLRPFM     FILE(&EXTLIB/&SEKEY2) MBR(TSETTLE)                                /*CDL045*/
              MONMSG     MSGID(CPF3142)                 /* File does not exist yet */      /*CDL045*/
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND(&CSEQ *EQ 4) THEN(DO)                                     /*MD021383A*/
+                CPYF       FROMFILE(SEKEYD) TOFILE(&EXTLIB/SEKEY) +
+                             FROMMBR(ACCRUAL) MBROPT(*ADD)                             /*MD021383A*/
+                MONMSG     MSGID(CPC2957 CPF2817 CPF2869)                              /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
  /**/                                                                                     /*CDL045*/
          ENDDO                                                                            /*CDL045*/
  /**/                                                                                     /*CDL045*/
  /* ACCRUAL NON WORKING DAY   */                                                          /*CDL045*/
  /**/                                                                                     /*CDL045*/
              IF         COND(&TYPE = '5') THEN(DO)                                        /*CDL045*/
+/**********  IF         COND(&CSEQ *EQ 3) THEN(DO)                        */  /*MD021383A MD049139*/
+             IF         COND((&CLE025 *NE 'Y') *OR +
+                             ((&CLE025 *EQ 'Y') *AND (&CSEQ *EQ 3))) +
+                        THEN(DO)                                                        /*MD049139*/
  /**/                                                                                     /*CDL045*/
              CPYF       FROMFILE(SEKEYD) TOFILE(&EXTLIB/&SEKEY2) +
                           FROMMBR(ACCRUAL) TOMBR(*FROMMBR) +
@@ -542,6 +775,13 @@
              MONMSG     MSGID(CPF2817 CPF2869) EXEC(CLRPFM  +
                         FILE(&EXTLIB/&SEKEY2) MBR(TSETTLE))                               /*CDL045*/
              MONMSG     MSGID(CPF2870 CPF2817 CPF2869)    /* To member is empty */        /*CDL045*/
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND(&CSEQ *EQ 5) THEN(DO)                                     /*MD021383A*/
+                CPYF       FROMFILE(SEKEYD) TOFILE(&EXTLIB/&SEKEY2) +
+                             FROMMBR(ACCRUAL) MBROPT(*ADD)                             /*MD021383A*/
+                MONMSG     MSGID(CPC2957 CPF2817 CPF2869)                              /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
  /**/                                                                                     /*CDL045*/
              ENDDO                                                                        /*CDL045*/
  /**/                                                                                     /*CDL045*/
@@ -610,6 +850,22 @@
 /*                                                         S01408    */
 /*/COPY WNCPYSRC,SEC0610001                                          */
 /*                                                         S01408    */
+                                                                                       /*MD021383A*/
+/* If no error occured in the program, update the restart flag */                      /*MD021383A*/
+/* delete backup files */                                                              /*MD021383A*/
+                                                                                       /*MD021383A*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                               /*MD021383A*/
+                CHGVAR     VAR(&STAT) VALUE('N')                                       /*MD021383A*/
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                         /*MD021383A*/
+                                                                                       /*MD021383A*/
+                DLTF       FILE(&DPLIB/XGESTHH)                                        /*MD021383A*/
+                MONMSG     MSGID(CPF2105)                                              /*MD021383A*/
+                DLTF       FILE(&DPLIB/XGESTPD)                                        /*MD021383A*/
+                MONMSG     MSGID(CPF2105)                                              /*MD021383A*/
+                DLTF       FILE(&DPLIB/XGESTZZ)                                        /*MD021383A*/
+                MONMSG     MSGID(CPF2105)                                              /*MD021383A*/
+             ENDDO                                                                     /*MD021383A*/
+                                                                                       /*MD021383A*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,SEC0610005                                          */

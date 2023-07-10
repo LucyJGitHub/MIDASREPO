@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DL IRS Date/Cash Flow/Princ Chg Sched. Upd')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC4100 - Midas DL IRS Date/Cash Flow/Princ Chg Sched. Upd  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD021383A *CREATE  Date 16Jun23              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021383A - Credit lines shadow posting correction.         */
+/*                   Component split of DLC0606C. This component     */
+/*                   should only run when CIR001 is on.              */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&NAM &SEQ)
+
+             DCL        VAR(&NAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  +
+                          DPLIB')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 RNX0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('DLC4100 - IRS Date/Cash Flow/Princ Chg +
+                          Sched Upd') TOMSGQ(MRUNQ)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+             CALL       PGM(CB0160) PARM(&NAM &SEQ &STAT)
+
+             IF         COND(&STAT = 'N') THEN(DO)
+
+                DLTF       FILE(&DPLIB/XDEALSDG)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLCFSCPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLDTSCPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLPCSCPD)
+                MONMSG     MSGID(CPF2105)
+
+                CPYF       FROMFILE(DEALSDG) +
+                             TOFILE(&DPLIB/XDEALSDG) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(DLCFSCPD) +
+                             TOFILE(&DPLIB/XDLCFSCPD) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(DLDTSCPD) +
+                             TOFILE(&DPLIB/XDLDTSCPD) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(DLPCSCPD) +
+                             TOFILE(&DPLIB/XDLPCSCPD) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             ENDDO
+
+             IF         COND(&STAT = 'Y') THEN(DO)
+
+                CPYF       FROMFILE(XDEALSDG) TOFILE(DEALSDG) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(DEALSDG))
+                CPYF       FROMFILE(XDLCFSCPD) TOFILE(DLCFSCPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(DLCFSCPD))
+                CPYF       FROMFILE(XDLDTSCPD) TOFILE(DLDTSCPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(DLDTSCPD))
+                CPYF       FROMFILE(XDLPCSCPD) TOFILE(DLPCSCPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(DLPCSCPD))
+
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+             OVRDBF     FILE(DEALSX) TOFILE(DEALS) SHARE(*NO)
+
+             CALL       PGM(DL4100)
+
+             DLTOVR     FILE(DEALSX)
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+                DLTF       FILE(&DPLIB/XDEALSDG)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLCFSCPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLDTSCPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XDLPCSCPD)
+                MONMSG     MSGID(CPF2105)
+
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+             ELSE       CMD(DO)
+
+                IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+                   SNDPGMMSG  MSG('JOB TERMINATED - Database in +
+                                error') TOMSGQ(MOPERQ MRUNQ)
+                   RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                                MSGDTA(&MEM) TOMSGQ(MOPERQ MRUNQ)
+                ENDDO
+
+ABNOR:
+                SNDPGMMSG  MSG('Program DLC4100 ended abnormally') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CHGJOB     SWS(XXXXXX11)
+
+             ENDDO
+
+ENDPGM:
+             ENDPGM

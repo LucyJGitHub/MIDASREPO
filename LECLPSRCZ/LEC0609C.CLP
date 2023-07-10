@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1042505          Date 24Apr13              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1042505          Date 24Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1042505 - MFU is not included on rebuild of fclty exposure*/
 /*                   Create a backup of LEMNFUPD before call to      */
@@ -33,16 +37,19 @@
 /*       CLE005 - Customer Lending Enhancements - Others (T3)        */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
- 
+/**********  PGM        PARM(&CNAM &CSEQ)                          */                   /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CLE023*/
@@ -51,16 +58,26 @@
                                                                                           /*CLE023*/
 /*/COPY WNCPYSRC,LEC0609C01                                          */
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
              SNDPGMMSG  MSG('Manual Utilisation Processing') +
                           TOMSGQ(MRUNQ)
+                                                                                        /*MD049139*/
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
 /**/                                                                                      /*CLE023*/
 /* Access SAR file to determine if switchable feature CLE023 */                           /*CLE023*/
 /* is switched ON */                                                                      /*CLE023*/
@@ -73,11 +90,11 @@
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE023*/
                 CHGVAR     VAR(&CLE023) VALUE('Y')
              ENDDO                                                                        /*CLE023*/
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /*/COPY WNCPYSRC,LEC0609C02                                          */
- 
+
              IF         COND(&STAT *EQ 'N') THEN(DO)
              CPYF       FROMFILE(LEMNFUPD) TOFILE(XLEMNFUPD) +
                           MBROPT(*REPLACE)
@@ -122,8 +139,8 @@
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              ENDDO
- 
- 
+
+
              ELSE       CMD(DO)
              CPYF       FROMFILE(XLEMNFUPD) TOFILE(LEMNFUPD) +
                           MBROPT(*REPLACE)
@@ -165,21 +182,21 @@
                              FILE(FACHISH))                                               /*CLE023*/
              ENDDO                                                                        /*CLE023*/
              ENDDO
- 
+
              CPYF       FROMFILE(LEMNFUPD) TOFILE(LEMFUXPD) +
                           MBROPT(*REPLACE)                                             /*AR1042505*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                           FILE(LEMFUXPD))                                              /*AR1042505*/
 /* Do a call to LE0495 */
- 
+
              CALL       PGM(LE0495)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(SNDPGMMSG +
                           MSG('Job terminated, database in error.') +
                           TOMSGQ(MRUNQ MOPERQ))
- 
+
              ELSE       CMD(DO)
- 
+
 /**********  RGZPFM     FILE(LEMNFUPD)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF2995 CPF2981)                                            /*228542*/
              CALL       PGM(SCC000060) PARM('LEMNFUPD' '*FIRST')                          /*228542*/
@@ -190,23 +207,23 @@
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              GOTO       CMDLBL(END)
              ENDDO
- 
- 
+
+
  ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           LEC0609C ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
- 
+
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

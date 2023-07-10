@@ -11,9 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 230636             Date 17Mar23               *
-      *  Prev Amend No. AR1078902          Date 17Mar23               *
-      *  Prev Amend No. AR854496           Date 10Mar23               *
+      *  Last Amend No. MD030402           Date 16Jun23               *
+      *  Prev Amend No. MD021383A          Date 16Jun23               *
+      *                 230636             Date 17Mar23               *
+      *                 AR1078902          Date 17Mar23               *
+      *                 AR854496           Date 10Mar23               *
       *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -163,6 +165,18 @@
      A*                                                               *
      A*---------------------------------------------------------------*
       *                                                               *
+      *  MD030402 - Incorrect exposure for posting with value on a    *
+      *             holiday. Update PEXP during recalculation for     *
+      *             facility attached to an account.                  *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  MD021383A - Incorrect CFA for Retail Overdraft (CLE025).     *
+      *              Update drawn, undrawn, offset and facility amount*
+      *              for CLE025 type according to RC indicator.       *
+      *              Copy the CL history record of previous facility  *
+      *              that had been tagged as 'R' before deleting the  *
+      *              record and also include the CL record of the     *
+      *              facility that had been reversed.                 *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
       *  230636 - Duplicate sequence number when loan entered on same *
       *           day and with same value date as facility. Set       *
       *           sequence number to 1 to avoid next record of same   *
@@ -590,6 +604,8 @@
       *                                                                                       239910
      FSDCURRPDIF  E                    DISK                           UC                      CSC042
       *                                                                                       CSC042
+     FACCNTLA IF  E           K        DISK         KINFSR *PSSR                            MD030402
+     F            ACCNTABF                          KRENAMEACCNTA1F                         MD030402 
      FLER032P1O   E             50     PRINTER      KINFDS SPOOL      UC
       ** Facilities History Reconciliation Exceptions Report
       *
@@ -627,6 +643,7 @@
       * 84    Record not found on history update file                 *
       * 86    Record not found on PEFCLFM                             *
       * 87    Record not found on READE to FACHISA/FACHISH            *
+      * 88    Record not found on CHAIN to ACCNTLA                    *                     MD030402
       * 90    EOF on facilities actioned today file                   *
       *                                                               *
       *  U7+U8 - Database Error                                       *
@@ -870,6 +887,28 @@
      I              FACT                            FACTT                 154529
      I              FCNO                            FCNOT                 154529
      I              RCTP                            RCTPT                 154529
+      *                                                                                     MD030402
+     IACCNTA1F                                                                              MD030402
+     I              RECI                            GLRECI                                  MD030402
+     I              CNUM                            GLCNUM                                  MD030402
+     I              CCY                             GLCCY                                   MD030402
+     I              ACOD                            GLACOD                                  MD030402
+     I              ACSQ                            GLACSQ                                  MD030402
+     I              BRCA                            GLBRCA                                  MD030402
+     I              CLBL                            GLCLBL                                  MD030402
+     I              FCCU                            GLFCCU                                  MD030402
+     I              FACT                            GLFACT                                  MD030402
+     I              FCNO                            GLFCNO                                  MD030402
+     I              FRNT                            GLFRNT                                  MD030402
+     I              AFRT                            GLAFRT                                  MD030402
+     I              ORED                            GLORED                                  MD030402
+     I              REPI                            GLREPI                                  MD030402
+     I              PRFC                            GLPRFC                                  MD030402
+     I              LCD                             GLLCD                                   MD030402
+     I              CHTP                            GLCHTP                                  MD030402
+     I              TNLU                            GLTNLU                                  MD030402
+     I              TMST                            GLTMST                                  MD030402
+     I              AUTH                            GLAUTH                                  MD030402
       *
      I            DS
       ** Breakdown of Facility No.
@@ -1048,6 +1087,13 @@
      C                     ENDIF                                          CLE004
       *
      C           KEY001    CHAINFCLTYF               80
+      *                                                                                    MD021383A
+      * Store facility expiry date for reference of PF/FACHISH                             MD021383A
+      *                                                                                    MD021383A
+     C           CLE005    IFEQ 'Y'                                                        MD021383A
+     C                     MOVE DTEX      DTEX1   50                                       MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
      C           *IN80     IFEQ '1'
      C*                                                                   063200
      C** IF RECORD NOT ON FACILITY FILE THEN CHECK DELETED FACILITIES     063200
@@ -1300,6 +1346,7 @@
      C                     MOVE *BLANKS   RCNUM                                               CSD027
      C                     Z-ADD0         RFCLT                                               204450
      C                     MOVE 'N'       REACTF                                              204450
+     C                     MOVE 'N'       WCLHS   1                                        MD021383A
       *
       ** Read all records for this facility GE FACACT date on logical
      C           *IN84     DOUEQ'1'
@@ -1377,6 +1424,9 @@
      C           FHRWKR    ANDEQ'Y'                                                           CLE023
      C           CLE025    OREQ 'Y'                                                           CLE025
      C           FHRWKR    ANDEQ'Y'                                                           CLE025
+     C           CLE025    OREQ 'Y'                                                        MD021383A
+     C           FHORED    ANDEQBJRDNB                                                     MD021383A
+     C           WCLHS     ANDEQ'Y'                                                        MD021383A
       *                                                                                       203890
       ** Obtain the difference between computed FADRAM and CAMD.  Add                         203890
       ** this difference to OAMxx array to adjust the amounts.                                203890
@@ -1409,11 +1459,28 @@
      C           FADRAM    SUB  CAMD      WDIFF  130                                          206325
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAREVI    IFNE 'R'                                                        MD021383A
      C           FAOFFS    SUB  FCXCOF    WOFFSD 130                                          CLE025
+     C                     ENDIF                                                           MD021383A
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C                     Z-ADDFADRAM    CAMD                            154584
      C**********           Z-ADDFADRAM    PEXP                                       154584 AR854496
+      *                                                                                     MD030402
+     C           CLE025    IFEQ 'Y'                                                         MD030402
+      *                                                                                     MD030402
+     C           KEYACC    KLIST                                                            MD030402
+     C                     KFLD           FCCNUM                                            MD030402
+     C                     KFLD           @FTYP                                             MD030402
+     C                     KFLD           @FSEQ                                             MD030402
+      *                                                                                     MD030402
+     C           KEYACC    CHAINACCNTLA              88                                     MD030402
+     C           *IN88     IFEQ '0'                                                         MD030402
+     C                     Z-ADDFADRAM    PEXP                                              MD030402
+     C                     ENDIF                                                            MD030402
+      *                                                                                     MD030402
+     C                     ENDIF                                                            MD030402
+      *                                                                                     MD030402
      C                     Z-ADDFADRAM    OAM1                            154584
      C**********           Z-ADDFADRAM    OAM2                                         154584 203890
      C**********           Z-ADDFADRAM    OAM3                                         154584 203890
@@ -1445,6 +1512,7 @@
      C           KFCUPH    CHAINLEFCLTLH             80                                       CLE025
      C           *IN80     IFEQ *OFF                                                          CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAREVI    IFNE 'R'                                                        MD021383A
      C                     Z-ADDFAOFFS    FCXCOF                                              CLE025
      C                     Z-ADDFAOFFS    FCXOF1                                              CLE025
      C           FCXOF2    ADD  WOFFSD    FCXOF2                                              CLE025
@@ -1456,6 +1524,7 @@
      C           FCXOF8    ADD  WOFFSD    FCXOF8                                              CLE025
      C           FCXOF9    ADD  WOFFSD    FCXOF9                                              CLE025
      C           FCXO10    ADD  WOFFSD    FCXO10                                              CLE025
+     C                     ENDIF                                                           MD021383A
      C                     UPDATLEFCLTD0                                                      CLE025
      C                     ENDIF                                                              CLE025
      C                     ENDIF                                                              CLE025
@@ -1490,8 +1559,14 @@
       *
      C           A6NBDP    COMP 1                    626061
      C   62      A6NBDP    COMP 3                      6263
+      *                                                                                    MD021383A
+     C           FAREVI    IFNE 'R'                                                        MD021383A
      C                     Z-ADDFACFAM    @DSAMT
      C                     Z-ADDFADRAM    @DTAMT
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADDFAMT      @DSAMT                                           MD021383A
+     C                     Z-ADDOAM1      @DTAMT                                           MD021383A
+     C                     ENDIF                                                           MD021383A
      C                     Z-ADDFAMT      @DUAMT
      C***********          Z-ADDCAMD      @DVAMT                          E29762
       *                                                                   E29762
@@ -1500,7 +1575,11 @@
      C                     Z-ADDOAM1      @DVAMT                          E29762
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAREVI    IFNE 'R'                                                        MD021383A
      C                     Z-ADDFAOFFS    @DWAMT                                              CLE025
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADDFCXOF1    @DWAMT                                           MD021383A
+     C                     ENDIF                                                           MD021383A
      C                     Z-ADDFCXOF1    @DXAMT                                              CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -1517,10 +1596,13 @@
       ** Error if facility or drawn amount are out.                       E29762
       *                                                                   E29762
      C           FACFAM    IFNE FAMT                                      E29762
+     C           FAREVI    ANDNE'R'                                                        MD021383A
      C           FADRAM    ORNE OAM1                                      E29762
+     C           FAREVI    ANDNE'R'                                                        MD021383A
      C           WTDIF     ANDGT10                                                            213749
      C           CLE025    OREQ 'Y'                                                           CLE025
      C           FAOFFS    ANDNEFCXOF1                                                        CLE025
+     C           FAREVI    ANDNE'R'                                                        MD021383A
       *                                                                   E29762
       ** Indicate error on report                                         E29762
       *                                                                   E29762
@@ -1698,6 +1780,7 @@
       *                                                                                       CLE025
      C           CLE005    IFEQ 'Y'                                       127733
      C                     MOVE WRECI     FHRECI                          127733
+     C                     MOVE DTEX1     FHEXDT                                           MD021383A
      C                     ENDIF                                          127733
       *                                                                                       CLE023
       ** After facility history "Rework", update FACHISH's new fields                         CLE023
@@ -1785,7 +1868,17 @@
       *
       **  Reset History
      C           *IN87     IFEQ '0'
+      *                                                                                    MD021383A
+      * Check for facility reactivation                                                    MD021383A
+      *                                                                                    MD021383A
+     C           RECI      IFEQ 'E'                                                        MD021383A
+     C           RECI      OREQ 'C'                                                        MD021383A
+     C           FHEXDT    IFLE BJRDNB                                                     MD021383A
+     C                     MOVE RECI      FHRECI                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ELSE                                                            MD021383A
      C                     MOVE RECI      FHRECI
+     C                     ENDIF                                                           MD021383A
       *                                                                                       CLE023
       ** After facility history "Rework", update FACHISH's new fields                         CLE023
       ** accordingly.                                                                         CLE023
@@ -1812,6 +1905,13 @@
      C           KEY005    READEFACHISAF                 87
       *
      C           *IN87     DOWEQ'0'
+      *                                                                                    MD021383A
+      * Do not overwrite RECI if facility was reactivated today                            MD021383A
+      *                                                                                    MD021383A
+     C           FAACTN    IFEQ 'FR'                                                       MD021383A
+     C           FAGNDT    ANDEQBJRDNB                                                     MD021383A
+     C                     LEAVE                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
      C                     MOVE RECI      FARECI
      C                     UPDATFACHISAF
      C           KEY005    READEFACHISAF                 87
@@ -2821,6 +2921,7 @@
       ** Action type is Reinstatement ('RS')                                                  CLE025
       *                                                                                       CLE025
      C           HAACTN    IFEQ 'RS'                                                          CLE025
+     C                     MOVE 'Y'       WCLHS                                            MD021383A
       *                                                                                       CLE025
      C           HADEAL    IFNE *ZEROS                                                        CLE025
      C                     ADD  1         I                                                   CLE025
@@ -3013,6 +3114,7 @@
      C                     ENDIF                                          161412
       *                                                                   161412
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C                     MOVE 'Y'       WCLHS                                            MD021383A
       *                                                                                       CLE025
       ** MM Loan Start (S1), MM Loan Principal Increase (I1), MM Loan                         CLE025
       ** Interest Capitalisation (C1)                                                         CLE025
@@ -3052,30 +3154,62 @@
      C           HAACTN    OREQ 'AS'                                                          CLE025
      C           HAACTN    OREQ 'AC'                                                          CLE025
      C           HAACTN    OREQ 'AR'                                                         BUG3035
-     C           HATTEO    IFGE *ZEROS                                                        CLE025
-     C           HAPTEO    IFGE *ZEROS                                                        CLE025
-     C                     ADD  @AMT      @DADJ                                               CLE025
-     C                     ELSE                                                               CLE025
-     C                     ADD  HAPTEO    @OADJ                                               CLE025
-     C                     ADD  HATTEO    @DADJ                                               CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ELSE                                                               CLE025
-     C           HAPTEO    IFLT *ZEROS                                                        CLE025
-     C                     SUB  @AMT      @OADJ                                               CLE025
-     C                     ELSE                                                               CLE025
-     C                     SUB  HAPTEO    @DADJ                                               CLE025
-     C                     SUB  HATTEO    @OADJ                                               CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** HATTEO    IFGE *ZEROS                                              CLE025 MD021383A
+     C********** HAPTEO    IFGE *ZEROS                                              CLE025 MD021383A
+     C**********           ADD  @AMT      @DADJ                                     CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C**********           ADD  HAPTEO    @OADJ                                     CLE025 MD021383A
+     C**********           ADD  HATTEO    @DADJ                                     CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C********** HAPTEO    IFLT *ZEROS                                              CLE025 MD021383A
+     C**********           SUB  @AMT      @OADJ                                     CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C**********           SUB  HAPTEO    @DADJ                                     CLE025 MD021383A
+     C**********           SUB  HATTEO    @OADJ                                     CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+      *                                                                                    MD021383A
+     C           @RCI      IFEQ 'Y'                                                        MD021383A
+     C           @RCI      OREQ 'N'                                                        MD021383A
+     C           @AMT      ANDGE*ZEROS                                                     MD021383A
      C                     SUB  @AMT      @UADJ                                               CLE025
+     C                     ADD  @AMT      @DADJ                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           @RCI      IFEQ 'N'                                                        MD021383A
+     C           @AMT      ANDLT*ZEROS                                                     MD021383A
+     C                     ADD  @AMT      @DADJ                                            MD021383A
+     C                     ADD  @AMT      @FADJ                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           HAPTEO    IFLT *ZEROS                                                     MD021383A
+     C                     ADD  HAPTEO    @OADJ                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           HATTEO    IFLT *ZEROS                                                     MD021383A
+     C                     SUB  HATTEO    @OADJ                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
      C                     GOTO D1EXIT                                                        CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
       ** FX Margin (FM)                                                                       CLE025
       *                                                                                       CLE025
      C           HAACTN    IFEQ 'FM'                                                          CLE025
+      *                                                                                    MD021383A
+     C           @RCI      IFEQ 'Y'                                                        MD021383A
+     C           @RCI      OREQ 'N'                                                        MD021383A
+     C           @AMT      ANDGE*ZEROS                                                     MD021383A
      C                     ADD  @AMT      @DADJ                                               CLE025
      C                     SUB  @AMT      @UADJ                                               CLE025
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           @RCI      IFEQ 'N'                                                        MD021383A
+     C           @AMT      ANDLT*ZEROS                                                     MD021383A
+     C                     ADD  @AMT      @DADJ                                            MD021383A
+     C                     ADD  @AMT      @FADJ                                            MD021383A
+     C                     ENDIF                                                           MD021383A
      C                     GOTO D1EXIT                                                        CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -3186,10 +3320,14 @@
      C           @UA       ADD  @UADJ     FAUNDR                          157050
      C                     ELSE                                           157050
      C           FACFAM    SUB  FADRAM    FAUNDR                          157050
-     C           CLE025    IFEQ 'Y'                                                           CLE025
-     C                     ADD  FAOFFS    FAUNDR                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** CLE025    IFEQ 'Y'                                                 CLE025 MD021383A
+     C**********           ADD  FAOFFS    FAUNDR                                    CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
      C                     ENDIF                                          157050
+      *                                                                                    MD021383A
+     C           CLE025    IFEQ 'Y'                                                        MD021383A
+     C                     ADD  FAOFFS    FAUNDR                                           MD021383A
+     C                     ENDIF                                                           MD021383A
       *                                                                   158852
      C***********FACFAM    IFLT 0                                   158852159499
      C***********          SUB  FACFAM    FAUNDR                    158852159499
@@ -3255,6 +3393,7 @@
       *                                                                   CLE005
      C           HAACTN    IFEQ 'FE'                                      CLE005
      C           HAACTN    OREQ 'FC'                                      CLE005
+     C           HAACTN    OREQ 'FR'                                                       MD021383A
      C***********          Z-ADD*ZEROS    FADRAM                   CLE005 147509
      C***********          Z-ADDFAMT      FADRAM                   147509 153938
      C***********          Z-ADDOAM1      FADRAM                   153938 156993
@@ -4111,30 +4250,64 @@
      C           FAREVI    ANDNE'R'                                                          BUG3035
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           FATTEO    IFGE *ZEROS                                                        CLE025
-     C           FAPTEO    IFGE *ZEROS                                                        CLE025
-     C                     ADD  @AMT      FADRAM                                              CLE025
-     C                     ELSE                                                               CLE025
-     C                     ADD  FAPTEO    FAOFFS                                              CLE025
-     C                     ADD  FATTEO    FADRAM                                              CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ELSE                                                               CLE025
-     C           FAPTEO    IFLT *ZEROS                                                        CLE025
-     C                     SUB  @AMT      FAOFFS                                              CLE025
-     C                     ELSE                                                               CLE025
-     C                     SUB  FAPTEO    FADRAM                                              CLE025
-     C                     SUB  FATTEO    FAOFFS                                              CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** FATTEO    IFGE *ZEROS                                              CLE025 MD021383A
+     C********** FAPTEO    IFGE *ZEROS                                              CLE025 MD021383A
+     C**********           ADD  @AMT      FADRAM                                    CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C**********           ADD  FAPTEO    FAOFFS                                    CLE025 MD021383A
+     C**********           ADD  FATTEO    FADRAM                                    CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C********** FAPTEO    IFLT *ZEROS                                              CLE025 MD021383A
+     C**********           SUB  @AMT      FAOFFS                                    CLE025 MD021383A
+     C**********           ELSE                                                     CLE025 MD021383A
+     C**********           SUB  FAPTEO    FADRAM                                    CLE025 MD021383A
+     C**********           SUB  FATTEO    FAOFFS                                    CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+     C**********           ENDIF                                                    CLE025 MD021383A
+      *                                                                                    MD021383A
+     C           FARCIN    IFEQ 'Y'                                                        MD021383A
+     C           FARCIN    OREQ 'N'                                                        MD021383A
+     C           @AMT      ANDGE*ZEROS                                                     MD021383A
      C                     SUB  @AMT      FAUNDR                                              CLE025
+     C                     ADD  @AMT      FADRAM                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           FARCIN    IFEQ 'N'                                                        MD021383A
+     C           @AMT      ANDLT*ZEROS                                                     MD021383A
+     C                     ADD  @AMT      FADRAM                                           MD021383A
+     C                     ADD  @AMT      FACFAM                                           MD021383A
+     C                     ADD  @AMT      FAAFAM                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           FAPTEO    IFLT *ZEROS                                                     MD021383A
+     C                     ADD  FAPTEO    FAOFFS                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           FATTEO    IFLT *ZEROS                                                     MD021383A
+     C                     SUB  FATTEO    FAOFFS                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C           FAACTN    WHEQ 'FM'                                                          CLE025
      C           FAREVI    ANDNE'R'                                                           CLE025
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+      *                                                                                    MD021383A
+     C           FARCIN    IFEQ 'Y'                                                        MD021383A
+     C           FARCIN    OREQ 'N'                                                        MD021383A
+     C           @AMT      ANDGE*ZEROS                                                     MD021383A
      C                     ADD  @AMT      FADRAM                                              CLE025
      C                     SUB  @AMT      FAUNDR                                              CLE025
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           FARCIN    IFEQ 'N'                                                        MD021383A
+     C           @AMT      ANDLT*ZEROS                                                     MD021383A
+     C                     ADD  @AMT      FADRAM                                           MD021383A
+     C                     ADD  @AMT      FACFAM                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C                     ENDSL                                          154584
@@ -4228,6 +4401,7 @@
      C                     ENDIF                                          CLE005
      C           FAACTN    IFEQ 'FE'                                      CLE005
      C           FAACTN    OREQ 'FC'                                      CLE005
+     C           FAACTN    OREQ 'FR'                                                       MD021383A
      C***********          Z-ADD*ZERO     FADRAM                   CLE005 147509
      C***********          Z-ADDFAMT      FADRAM                   147509 153938
      C***********          Z-ADDOAM1      FADRAM                   153938 156993

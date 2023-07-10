@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061227           Date 28Apr23               *
-      *  Prev Amend No. MD043665           Date 21Jun22               *
+      *  Last Amend No. MD037862           Date 16Jun23               *
+      *  Prev Amend No. MD061227           Date 28Apr23               *
+      *                 MD043665           Date 21Jun22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD020349           Date 06Jun13               *
       *                 MD054693A          Date 27Jan20               *
@@ -147,6 +148,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037862 - Incorrect date with 'Cleared Balance at end' when *
+      *             there is back-valued projection. Save and use the *
+      *             opening date when less than previous value date   *
+      *             for 'Cleared Balance at end' when CRE009 is *ON.  *
+      *           - Applied for MD035660                              *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
       *  MD061227 - The opening balance line has a batch number in    *
       *             Projected Account Movements Enquiry. Initialise   *
       *             ABTCH in WRTSU2. Also, write TNMR in ABTCH for    *
@@ -5193,6 +5200,9 @@ E1   C                     END
      C                     ENDIF                                          CGL017
      C                     EXSR ZDATE2                                    CGL017
      C                     MOVE ZADATE    VALDZ                           CGL017
+      *                                                                 MD037862
+     C                     Z-ADDZDAYNO    WOBDTE  50                    MD037862
+     C                     MOVE VALDZ     WOBTXT  7                     MD037862
      C*                                                                   CGL017
      C                     Z-ADDPRCLB     ZFLD15                          CGL017
      C                     Z-ADDA6NBDP    ZDECS                           CGL017
@@ -5283,7 +5293,14 @@ E1   C                     END
      C           CRE009    IFEQ 'Y'                                       CRE009
      C           *IN14     ANDEQ*ON                                       CRE009
      C                     MOVEATXT,8     LPDESC                          CRE009
+      *                                                                 MD037862
+     C           ZDAYNO    IFGE WOBDTE                                  MD037862
      C                     MOVE VALDZ     RPDESC                          CRE009
+     C                     ELSE                                         MD037862
+     C                     MOVE WOBTXT    VALDZ                         MD037862
+     C                     MOVE WOBTXT    RPDESC                        MD037862
+     C                     ENDIF                                        MD037862
+      *                                                                 MD037862
      C                     MOVEL@DESC     PDESC                           CRE009
      C                     ENDIF                                          CRE009
       *                                                                                       252876

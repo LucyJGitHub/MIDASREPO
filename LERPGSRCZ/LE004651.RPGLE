@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD021383A          Date 16Jun23               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056838           Date 01Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction. *
+      *            - MD061267 - Credit Lines (CLE025) fixes           *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1323,23 +1326,23 @@
       ** Initialise flag for Settlement Account Key Generation
      C                   EVAL      WFAcKeyG  = *ZERO
 
-      ** Non-linear Settlement Amount
-     C                   IF        FESAMT <> *ZEROS
-
-     C                   EVAL      WFAcKeyG  = 1
-
-      ** Generate reversal settlement account key for the fee amount
-     C                   EXSR      SrFeeAcKey
-
-      ** Output account key details to report
-
-     C                   IF        FEAMRI = 'Y'
-     C                   EXSR      SrFeeRprt1
-     C                   ELSE
-     C                   EXSR      SrFeeRprt2
-     C                   ENDIF
-
-     C                   ENDIF
+      ***Non-linear*Settlement*Amount**********************************                    MD021383A
+     C**********         IF        FESAMT <> *ZEROS                                        MD021383A
+     C**********                                                                           MD021383A
+     C**********         EVAL      WFAcKeyG  = 1                                           MD021383A
+      *****************************************************************                    MD021383A
+      ***Generate*reversal*settlement*account*key*for*the*fee*amount***                    MD021383A
+     C**********         EXSR      SrFeeAcKey                                              MD021383A
+      *****************************************************************                    MD021383A
+      ***Output*account*key*details*to*report**************************                    MD021383A
+      *****************************************************************                    MD021383A
+     C**********         IF        FEAMRI = 'Y'                                            MD021383A
+     C**********         EXSR      SrFeeRprt1                                              MD021383A
+     C**********         ELSE                                                              MD021383A
+     C**********         EXSR      SrFeeRprt2                                              MD021383A
+     C**********         ENDIF                                                             MD021383A
+     C**********                                                                           MD021383A
+     C**********         ENDIF                                                             MD021383A
 
       ** Fee amount to be amortised non-linearly
      C**********         IF        FENLAI = 'Y'  AND                                          263866
@@ -1431,8 +1434,8 @@
 
      C                   SELECT
 
-     C                   WHEN      WFAcKeyG = 1
-     C                   EVAL      WkTyp1 = 'R'
+     C**********         WHEN      WFAcKeyG = 1                                            MD021383A
+     C**********         EVAL      WkTyp1 = 'R'                                            MD021383A
 
      C                   WHEN      WFAcKeyG = 2
      C                   EVAL      WkTyp1 = 'E'
@@ -1505,8 +1508,8 @@
      C
      C                   SELECT
 
-     C                   WHEN      WFAcKeyG  = 1
-     C                   EVAL      FKEAMT = FESAMT
+     C**********         WHEN      WFAcKeyG  = 1                                           MD021383A
+     C**********         EVAL      FKEAMT = FESAMT                                         MD021383A
 
      C                   WHEN      WFAcKeyG  = 2
      C**********         EVAL      FKEAMT = FEFEAM                                          BUG17318
@@ -2603,36 +2606,35 @@
      C                   ENDIF                                                                CLE134
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
-      ** If Adjustment to Yield Fees Settlement Date is on or before Event Control Date
-      ** and Non-linear Settlement Amount is zero and Auto Settle Indicator is 'Y'
-      ** Generate Settlement Account Key
-     C                   IF        WCheckDt <= WEvntCtlD AND
-     C                             FESAMT = 0 AND
-     C**********                   FEAUTO = 'Y'                                               CLE134
-     C                             WFEAUT = 'Y'                                               CLE134
-
-     C                   EVAL      WFAcKeyG = 1
-     C                   EVAL      WAddAcKeyF = 'Y'
-
-     C                   EXSR      SrFeeAcKey
-
-      ** Output account key details to report
-     C                   IF        FKEAMT <> *ZERO
-
-     C                   IF        FEAMRI = 'Y'
-     C                   EXSR      SrFeeRprt1
-     C                   ELSE
-     C                   EXSR      SrFeeRprt2
-     C                   ENDIF
-
-     C                   ENDIF
-
-      ** Add to Non-linear Settlement Amount
-     C                   ADD       FEFAMT        FESAMT
-
-     C                   EVAL      WLEFEUpd = 'Y'
-
-     C                   ENDIF
+      ***If*Adjustment*to*Yield*Fees*Settlement*Date*is*on*or*before*Event*Control*Date    MD021383A
+      ***and*Non-linear*Settlement*Amount*is*zero*and*Auto*Settle*Indicator*is*'Y'*****    MD021383A
+      ***Generate*Settlement*Account*Key***********************************************    MD021383A
+     C**********         IF        WCheckDt <= WEvntCtlD AND                               MD021383A
+     C**********                   FESAMT = 0 AND                                          MD021383A
+     C**********                   FEAUTO = 'Y'                                            MD021383A
+     C**********                                                                           MD021383A
+     C**********         EVAL      WFAcKeyG = 1                                            MD021383A
+     C**********         EVAL      WAddAcKeyF = 'Y'                                        MD021383A
+     C**********                                                                           MD021383A
+     C**********         EXSR      SrFeeAcKey                                              MD021383A
+      *****************************************************************                    MD021383A
+      ***Output*account*key*details*to*report*************************                     MD021383A
+     C**********         IF        FKEAMT <> *ZERO                                         MD021383A
+     C**********                                                                           MD021383A
+     C**********         IF        FEAMRI = 'Y'                                            MD021383A
+     C**********         EXSR      SrFeeRprt1                                              MD021383A
+     C**********         ELSE                                                              MD021383A
+     C**********         EXSR      SrFeeRprt2                                              MD021383A
+     C**********         ENDIF                                                             MD021383A
+     C**********                                                                           MD021383A
+     C**********         ENDIF                                                             MD021383A
+      *****************************************************************                    MD021383A
+      ***Add*to*Non-linear*Settlement*Amount***************************                    MD021383A
+     C**********         ADD       FEFAMT        FESAMT                                    MD021383A
+     C**********                                                                           MD021383A
+     C**********         EVAL      WLEFEUpd = 'Y'                                          MD021383A
+     C**********                                                                           MD021383A
+     C**********         ENDIF                                                             MD021383A
 
       ** If Adjustment to Yield Fees Amortisation Start Date is on or before
       ** Event Control Date and Amortised to Date is zero

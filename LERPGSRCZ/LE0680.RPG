@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. 244716             Date 11Aug22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD042829           Date 16Jun23               *
+      *  Prev Amend No. 244716             Date 11Aug22               *
+      *                 249385             Date 01Aug22               *
       *                 CLE063             Date 02Nov21               *
       *                 MD054101           Date 08Aug19               *
       *                 MD053873           Date 10Jul19               *
@@ -82,6 +83,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD042829 - Fee Next Payment Date is reflected differently in *
+      *             Events by Nostro report                           *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
       *  244716 - Change field sequence of INOI and REPT              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
@@ -928,6 +932,32 @@
      C                     MOVEL'Y'       CLE031                                            MD053873
      C                     ENDIF                                                            MD053873
       *                                                                   CLE005
+      *                                                                                     MD042829
+      ** Determine CLE025 is installed                                                      MD042829
+      *                                                                                     MD042829
+     C                     CALL 'AOSARDR0'                                                  MD042829
+     C                     PARM *BLANKS   PRTCD                                             MD042829
+     C                     PARM '*VERIFY' POPTN                                             MD042829
+     C                     PARM 'CLE025'  PSARD                                             MD042829
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD042829
+      *                                                                                     MD042829
+     C           PRTCD     IFNE *BLANKS                                                     MD042829
+     C           PRTCD     ANDNE'*NRF   '                                                   MD042829
+     C           *LOCK     IN   LDA                                                         MD042829
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD042829
+     C                     Z-ADD14        DBASE                                             MD042829
+     C                     MOVELPSARD     DBKEY                                             MD042829
+     C                     OUT  LDA                                                         MD042829
+     C                     MOVE *ON       *INU7                                             MD042829
+     C                     MOVE *ON       *INU8                                             MD042829
+     C                     GOTO END                                                         MD042829
+     C                     ENDIF                                                            MD042829
+      *                                                                                     MD042829
+     C           PRTCD     IFEQ *BLANKS                                                     MD042829
+     C                     MOVE 'Y'       CLE025  1                                         MD042829
+     C                     ELSE                                                             MD042829
+     C                     MOVE 'N'       CLE025                                            MD042829
+     C                     ENDIF                                                            MD042829
 0278 C*****N20**           GOTO BY02                                      S01194
 0279 C**********           MOVEL'02'      DBASE            ** DBASE  02 **S01194
 0280 C**********           GOTO END                                       S01194
@@ -1373,8 +1403,17 @@
      C                     ELSE                                                               237466
      C                     MOVE '0'       *IN30                                               237466
      C                     ENDIF                                                              237466
+     C           CLE025    IFEQ 'Y'                                                         MD042829
+     C           ETYP      ORNE '71F2'                                                      MD042829
 0345 C         30EDAT      COMP RUND                   3131
 0346 C      30 31          SETOF                     30
+     C                     ELSE                                                             MD042829
+     C           *IN30     IFEQ '1'                                                         MD042829
+     C           ETYP      ANDEQ'71F2'                                                      MD042829
+     C           EDAT      COMP RUND                   31                                   MD042829
+     C                     ENDIF                                                            MD042829
+     C      30 31          SETOF                     30                                     MD042829
+     C                     ENDIF                                                            MD042829
      C**                                                                  S01392
      C***********ETYP      COMP '63R3'                   37         S01392127048
      C***37******          Z-ADDEAMT      NPEAMT 130       NEW PRINCS01392127048

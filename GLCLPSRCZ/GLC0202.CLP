@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR787620           Date 10Jun11              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,6 +20,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR787620 - Hooks Incorporation                              */
 /*                  WNCPYSRC,GLH00308                                */
@@ -27,8 +31,11 @@
 /*       CDL013 - Tiered Withholding Tax                             */
 /*                                                                   */
 /*********************************************************************/
-             PGM
+/**********  PGM                                                   */                   /*MD049139*/
+             PGM        PARM(&RUNCOND)                                                  /*MD049139*/
 /**/
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5) VALUE(' ')
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1) VALUE('B')
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3) VALUE('ALL')
@@ -44,6 +51,16 @@
              CHGJOB     SWS(00000000)
 /*/COPY WNCPYSRC,GLH00309                                            */
 /**/
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(ENDPGM))                                                 /*MD049139*/
+                                                                                        /*MD049139*/
              CALL       PGM(GL0202) PARM(&RSEQ &RLEV &RENT)
 /*/COPY WNCPYSRC,GLH00312                                            */
 /**/
@@ -54,8 +71,8 @@
              ENDDO
 /**/
 ENDPGM:
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

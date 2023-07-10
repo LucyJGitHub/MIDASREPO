@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 243951             Date 10Feb23               *
-      *  Prev Amend No. MD059248           Date 10Jan22               *
+      *  Last Amend No. MD042829           Date 16Jun23               *
+      *  Prev Amend No. 243951             Date 10Feb23               *
+      *                 MD059248           Date 10Jan22               *
       *                 MD058285           Date 22Jun21               *
       *                 249578             Date 22May20               *
       *                 MD055401           Date 25Oct20               *
@@ -141,6 +142,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042829 - Fee Next Payment Date is reflected differently in *
+      *             Events by Nostro report                           *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
       *  243951 - For taxable deals, correct projection of core       *
       *           withholding tax (calculated using rate BNHKTR)      *
       *           at interest payment and maturity. Net interest      *
@@ -1163,6 +1167,19 @@
      C                     EXSR *PSSR                                                         CAP204
      C                     ENDIF                                                              CAP204
      C                     ENDIF                                                              CAP204
+      *                                                                                     MD042829
+      **  Access SAR details file to see if CLE025 is installed.                            MD042829
+      *                                                                                     MD042829
+     C                     CALL 'AOSARDR0'                                                  MD042829
+     C                     PARM '       ' @RTCD                                             MD042829
+     C                     PARM '*VERIFY' @OPTN                                             MD042829
+     C                     PARM 'CLE025'  WSARD                                             MD042829
+     C*                                                                                     MD042829
+     C           @RTCD     IFEQ *BLANK                                                      MD042829
+     C                     MOVE 'Y'       CLE025  1                                         MD042829
+     C                     ELSE                                                             MD042829
+     C                     MOVE 'N'       CLE025                                            MD042829
+     C                     ENDIF                                                            MD042829
       *                                                                                    MD022382A
       ** Check the value of Currency Basis for Nostro Events                               MD022382A
       *                                                                                    MD022382A
@@ -1668,7 +1685,15 @@
      C           EDAT      COMP ZDYNBR               41
      C                     ELSE
      C           EDAT      COMP ZDYNBR               41
+     C           CLE025    IFEQ 'Y'                                                         MD042829
+     C           ETYP      ORNE '71F2'                                                      MD042829
      C  N41      EDAT      COMP BJRDNB                 4141
+     C                     ELSE                                                             MD042829
+     C           *IN41     IFEQ '0'                                                         MD042829
+     C           ETYP      ANDEQ'71F2'                                                      MD042829
+     C           EDAT      COMP BJRDNB                 41                                   MD042829
+     C                     ENDIF                                                            MD042829
+     C                     ENDIF                                                            MD042829
      C                     END
      C*****DO*NOT REPORT ROLLOVER DEAL IF EVENT IS 'START' (='V1')        CEU003
      C*    DO NOT REPORT ROLLOVER DEAL IF EVENT IS 'START'(='V1' OR 'VX') CEU003

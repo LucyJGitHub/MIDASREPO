@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /*                      244019             Date 03Nov09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -21,6 +22,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       244019 - Arrays TKEY, TPAM and TLAM are not large enough so */
@@ -28,10 +32,13 @@
 /*       CAS001 - Net Present Value (NPV) Accounting                 */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
- 
+/**********  PGM        PARM(&CNAM &CSEQ)                            */                 /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
@@ -40,30 +47,40 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
              SNDPGMMSG  MSG('LEC4210 - Customer Lending Revaluation +
                           A/C Key Generation') TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(XXXXXX00)
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
              RTVJOBA    TYPE(&JOBTYPE)
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /* Setup system prefix variable from SDSTAT data area */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
- 
+
 /* Call program CB0160 to get value of restart indicator */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is NOT a restart */
- 
+
              IF         COND(&STAT *NE 'Y') THEN(DO)
                DLTF       FILE(XCLOANCL)
                MONMSG     MSGID(CPF2105)
@@ -71,63 +88,63 @@
                MONMSG     MSGID(CPF2105)
                DLTF       FILE(XLKEY1ZZ)
                MONMSG     MSGID(CPF2105)
- 
+
                CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(LKEY1DP) TOFILE(&DPLIB/XLKEY1DP) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CPYF       FROMFILE(LKEY1ZZ) TOFILE(&DPLIB/XLKEY1ZZ) +
                             MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
              ENDDO
- 
+
 /* If it is a restart */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
                CPYF       FROMFILE(XCLOANCL) TOFILE(CLOANCL) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(CLOANCL))
- 
+
                CPYF       FROMFILE(XLKEY1DP) TOFILE(LKEY1DP) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(LKEY1DP))
- 
+
                CPYF       FROMFILE(XLKEY1ZZ) TOFILE(LKEY1ZZ) +
                             MBROPT(*REPLACE)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
                             EXEC(CLRPFM FILE(LKEY1ZZ))
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Clear Revalued Customer Loans file */
- 
+
              CLRPFM     FILE(LENPVLPD)
                                                                                           /*244019*/
 /* Clear work file used to calculate summary account keys */                              /*244019*/
                                                                                           /*244019*/
              CLRPFM     FILE(LE4210PD)                                                    /*244019*/
- 
+
 /* Call LE Revaluation & A/Key Generation Report */
- 
+
              CALL       PGM(LE4210)
- 
+
 /* If no error occured in the program */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
                CHGVAR     VAR(&STAT) VALUE('N')
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
                DLTF       FILE(XCLOANCL)
@@ -137,20 +154,20 @@
                DLTF       FILE(XLKEY1ZZ)
                MONMSG     MSGID(CPF2105)
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 /* Abnormal termination - batch job */
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              DMPCLPGM
@@ -160,7 +177,7 @@
                             TOMSGQ(MOPERQ MRUNQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

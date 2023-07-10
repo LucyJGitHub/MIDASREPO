@@ -3,21 +3,22 @@
 /*EXI *  TEXT('Midas Calc Precious Metal A/C Balances')              */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     - Securities Trading Module                   */
+/*       Midas     - Securities Trading Module                       */
 /*                                                                   */
 /*       CL/SEC6410 - Calculate Precious Metal Account Balances      */
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 096390             Date 09Jul96              */
+/*                      096390             Date 09Jul96              */
 /*                      091522             Date 16Aug95              */
 /*                      S01464             Date 04APR94              */
 /*                      049421     BZ      DATE 19JAN93              */
@@ -26,6 +27,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       096390 - Non-retail precious metal accounts were excluded   */
 /*                by B5737 - remove the check on account type 'R'.   */
@@ -40,8 +44,9 @@
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&ANWD)
- 
+/**********  PGM        PARM(&ANWD)                                */                  /*MD049139*/
+             PGM        PARM(&ANWD &RUNCOND)                                           /*MD049139*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -49,21 +54,33 @@
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)                 /*S01464*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01464*/
              DCL        VAR(&ANWD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                               /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                     /*MD049139*/
 /* >>> SESCS >>> */
 /************DCL        VAR(&SCSW) TYPE(*CHAR) LEN(1)                 /*S01464*/
              DCL        VAR(&SCAC) TYPE(*CHAR) LEN(1)
 /* <<< SESCS <<< */
- 
+
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) +
                           VALUE('       ')                            /*S01464*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
                           VALUE('*FIRST ')                            /*S01464*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(800)                /*S01464*/
- 
+
 /* GLOBAL MONITOR MESSAGE                                            */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(END))
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *EQ 'N') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /* >>> SESCS >>> */
 /************RTVDTAARA  DTAARA(LZSTAT (28 1)) RTNVAR(&SCSW)           /*S01464*/
 /************IF         COND(&SCSW *EQ 'Y') THEN(DO)                  /*S01464*/
@@ -84,7 +101,7 @@
              IF         COND(&SCAC *NE 'Y') THEN(GOTO +
                           CMDLBL(END))
 /* <<< SESCS <<< */
- 
+
 /* CREATE LDA IF NOT PRESENT        */
              CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(DO)
@@ -94,7 +111,7 @@
 /**/
 /*  SET OFF SWITCHES:                                                         */
              CHGJOB     SWS(00000000)
- 
+
 /* SEND PROGRAM MESSAGE */
              SNDPGMMSG  MSG('SEC6410 - Calculate precious metal +
                           account balances') TOMSGQ(MRUNQ) +
@@ -111,7 +128,7 @@
 /************OVRDBF     FILE(SCGEDLL0) TOFILE(SCGEDLL1)               /*S01464*/
              OVRDBF     FILE(SEGEDLL0) TOFILE(SEGEDLL1)               /*S01464*/
              ENDDO
- 
+
 /**OPEN*QUERY*FILE*SELECTING*PRCIOUS*METAL*ACCOUNTS*****************/ /*S01464*/
 /************OVRDBF     FILE(SCACCNLL) TOFILE(SDCURRX0) SHARE(*YES)   /*S01464*/
 /*>>B5737>>*/
@@ -123,7 +140,7 @@
                           (ACCNTAB/CNUM *MAPFLD/CUST)) +
                           JDFTVAL(*YES) MAPFLD((CUST +
                           'SDSECSPD/BFCUST' *ZONED 6 0))        */
- 
+
 /************OPNQRYF    FILE((SDCURRX0) (ACCNTAB) (SDSECSPD)) +       /*S01464*/
 /************             FORMAT(SCACCNLL SCACCND0) QRYSLT('CYPMRT +  /*S01464*/
 /************             *EQ "Y" *AND BFSBJF *EQ "Y" *AND RECI *NE + /*S01464*/
@@ -162,7 +179,7 @@
                           ACCNTAB/CCY) (ACCNTAB/CNUM *MAPFLD/CUST)) +
                           JDFTVAL(*YES) MAPFLD((CUST +
                           'SDSECSPD/BFCUST' *ZONED 6 0))              /*096390*/
- 
+
              CALL       PGM(SE6410)
 /************CLOF       OPNID(SDCURRX0)                               /*S01464*/
 /************DLTOVR     FILE(SCACCNLL)                                /*S01464*/
@@ -180,11 +197,11 @@
                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
                           MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)    /*S01464*/
              ENDDO
- 
+
 /* >>> SESCS >>> */
              ENDDO
 /* <<< SESCS <<< */
- 
+
 /***END:*********ENDPGM                                               /*S01464*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

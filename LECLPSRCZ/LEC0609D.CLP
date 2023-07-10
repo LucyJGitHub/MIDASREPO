@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD060096           Date 13Jun22              */
-/*       Prev Amend No. CLE138             Date 02Nov21              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD060096           Date 13Jun22              */
+/*                      CLE138             Date 02Nov21              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR402546           Date 31Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -30,6 +31,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD060096 - XLEFCLTQD in *LIBL not found or not created      */
 /*                - add CRTFILE(*YES) in XLEFCLTQD                   */
 /*       CLE138 - Class Codes for Facilities                         */
@@ -45,10 +49,13 @@
 /*       CLE005 - Customer Lending Enhancements - Others (T3)        */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
+/**********  PGM        PARM(&CNAM &CSEQ)                          */                   /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
 
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -78,6 +85,16 @@
                                                                                         /*MD060096*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                             /*MD060096*/
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                       /*MD060096*/
+                                                                                        /*MD049139*/
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
                                                                                           /*CLE023*/
 /** Access SAR file to determine if switchable feature CLE023     */                      /*CLE023*/
 /** is switched ON                                                */                      /*CLE023*/

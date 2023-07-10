@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030126           Date 27Oct14              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030126           Date 27Oct14              */
 /*                      CLE075AR           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -25,6 +26,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD030126 - Added processing for 2nd run of LEC0497-PDCL run */
 /*                  Patterned after MP1.4 AR996468.                  */
@@ -37,10 +41,13 @@
 /*                                                                   */
 /*********************************************************************/
 /**********  PGM        PARM(&CNAM &CSEQ)                            */                 /*MD030126*/
-             PGM        PARM(&CNAM &CSEQ &RERUN)                                        /*MD030126*/
+/**********  PGM        PARM(&CNAM &CSEQ &RERUN)                               /*MD030126 MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RERUN &RUNCOND)                               /*MD049139*/
  
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
 /**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')   */                   /*CLE075AR*/
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
 /**********  DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)              */                   /*CLE075AR*/
@@ -71,6 +78,16 @@
              SNDPGMMSG  MSG('Contingent Facility A/c Keys +
                           Generation') TOMSGQ(MRUNQ)
  
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /* Write current journal sequence number to file SCJSEQPD, using */                     /*CLE075AR*/
 /* command SCWRTJREG */                                                                 /*CLE075AR*/
                                                                                         /*CLE075AR*/

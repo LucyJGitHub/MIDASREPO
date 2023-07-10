@@ -3,14 +3,20 @@
 /*EXI    TEXT('Midas LE Fee Calcs, Update & Acc Key Gen')            */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     - Customer Lending Module                     */
+/*       Midas     - Customer Lending Module                         */
 /*                                                                   */
 /*       LERC135 - Fee calculations & accruals (COB)                 */
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD053375           Date 10Oct19              */
-/*       Prev Amend No. MD026969           Date 23Oct19              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD025087           Date 16Jun23              */
+/*                      MD024561           Date 16Jun23              */
+/*                      MD035660           Date 16Jun23              */
+/*                      MD021114A          Date 16Jun23              */
+/*                      MD021383A          Date 16Jun23              */
+/*                      MD053375           Date 10Oct19              */
+/*                      MD026969           Date 23Oct19              */
 /*                      MD052216           Date 04Apr19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD052961           Date 18Mar19              */
@@ -40,6 +46,23 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
+/*       MD025087 - ANWD 'S'ettlement run (seq 00006) should not     */
+/*                  settle FEAMTP prepared on daily 'A'ccrual run    */
+/*                  (seq 00001) on an ANWD cob run                   */
+/*                - Applied for MD035660                             */
+/*       MD024561 - Fee adjustment not considered on projection      */
+/*                - clear LEFEAM only on daily 'S' run (seq 00005)   */
+/*                - Applied for MD035660                             */
+/*       MD035660 - Partially applied CLE139 codes to comply with    */
+/*                  MD021114A fix.                                   */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
+/*       MD021114A - Credit Lines (CLE025) Shadow Posting Correction */
+/*                 - Applied for MD035660                            */
+/*       MD021383A - Credit Lines (CLE025) Shadow Posting Correction.*/
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD053375 - Incorrect fee settlement amount in LER170 report.*/
 /*                  Maintain security copy of LEFECPPD.              */
 /*       MD026969 - New Processing for Fee Settlement.               */
@@ -103,6 +126,7 @@
              DCL        VAR(&CLE007) TYPE(*CHAR) LEN(1) VALUE(' ')    /*CLE007*/
              DCL        VAR(&CLE005) TYPE(*CHAR) LEN(1) VALUE(' ')    /*153736*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CDL045*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&LKEY1) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&LKEY2) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
 /**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
@@ -111,6 +135,8 @@
              DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CLE134*/
              DCL        VAR(&SLC) TYPE(*CHAR) LEN(512)                                    /*CLE134*/
              DCL        VAR(&TOLIB)   TYPE(*CHAR) LEN(10)                                 /*CLE134*/
+/**********  DCL        VAR(&SDGELR) TYPE(*CHAR) LEN(250)             */     /*MD021383A MD021114A*/
+/**********  DCL        VAR(&BKALDI) TYPE(*CHAR) LEN(1)               */     /*MD021383A MD021114A*/
 /*/COPY WNCPYSRC,LEH01134                                            */
                                                                                           /*CDL045*/
 /* Define parameters used in AOSVALR0 to retrieve system value                            /*CDL045*/
@@ -119,6 +145,23 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+/**********                                                            */    /*MD021383A MD021114A*/
+/**********  CALL       PGM(AOGELRR1) PARM(&RTCD '*VERIFY' &SDGELR)    */    /*MD021383A MD021114A*/
+/**********                                                            */    /*MD021383A MD021114A*/
+/**********  IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +        */              /*MD021114A*/
+/**********               VAR(&BKALDI) VALUE(%SST(&SDGELR 37 1)))      */    /*MD021383A MD021114A*/
+/**********                                                            */    /*MD021383A MD021114A*/
+/**********  ELSE       CMD(IF COND(&RTCD *NE '*NRF    ') THEN(GOTO +  */              /*MD021114A*/
+/**********               CMDLBL(DBERR)))                              */    /*MD021383A MD021114A*/
+/**********                                                            */    /*MD021383A MD021114A*/
+/**********  IF         COND((&BKALDI *EQ 'N') *AND ((&CSEQ *EQ 5) +   */              /*MD021114A*/
+/**********               *OR (&CSEQ *EQ 6))) THEN(GOTO CMDLBL(END))   */    /*MD021383A MD021114A*/
+/**********  IF         COND((&BKALDI *EQ 'Y') *AND ((&CSEQ *EQ 1) +   */              /*MD021114A*/
+/**********               *OR (&CSEQ *EQ 2))) THEN(GOTO CMDLBL(END))   */
+/*                                                  */                                  /*MD049139*/
+/* Check if Feature CLE025 is switched ON.          */                                  /*MD049139*/
+/*                                                  */                                  /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
                                                                                           /*CDL045*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                                /*CLE134*/
              CHGVAR     VAR(&TOLIB) VALUE(&PRFX *TCAT 'DPLIB')                            /*CLE134*/
@@ -277,9 +320,14 @@
                    EXEC(CLRPFM FILE(LEFHST))                          /*153736*/
      ENDDO                                                            /*153736*/
                                                                       /*153736*/
-     CPYF       FROMFILE(XPSTTOM) TOFILE(PSTTOM) MBROPT(*REPLACE) /*BH3479*/
+/**********     CPYF       FROMFILE(XPSTTOM) TOFILE(PSTTOM) MBROPT(*REPLACE) */ /*BH3479 MD021383A*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +               */ /*MD021383A*/
+/**********                CMDLBL(NEXT))                                     */ /*BH3479 MD021383A*/
+     IF  COND(&CLE025 *NE 'Y') THEN(DO)                                                 /*MD049139*/
+     CPYF       FROMFILE(XPSTTOM) TOFILE(PSTTOM) MBROPT(*REPLACE)                       /*MD049139*/
      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
-                CMDLBL(NEXT))                                     /*BH3479*/
+                CMDLBL(NEXT))                                                           /*MD049139*/
+     ENDDO                                                                              /*MD049139*/
 
      IF  COND(&CLE007 *EQ 'Y') THEN(DO)                               /*CLE007*/
      CPYF        FROMFILE(XLEPXTAA) TOFILE(LEPXTAA) MBROPT(*REPLACE)  /*CLE007*/
@@ -372,18 +420,23 @@
      CHGVAR VAR(&STAT) VALUE('Y')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
 
-/* If there are any account keys from yesterday run the RPG to      BH3479*/
-/* copy the account keys and to report them as being for posting    BH3479*/
-/* today                                                            BH3479*/
+/**If*there*are*any*account*keys*from*yesterday*run*the*RPG*to********/         /*BH3479 MD021383A*/
+/**copy*the*account*keys*and*to*report*them*as*being*for*posting******/         /*BH3479 MG021383A*/
+/**today**************************************************************/         /*BH3479 MD021383A*/
 
-     CPYF       FROMFILE(PSTTOM) TOFILE(XPSTTOM) MBROPT(*REPLACE) /*BH3479*/
+/**********     CPYF       FROMFILE(PSTTOM) TOFILE(XPSTTOM) MBROPT(*REPLACE) */ /*BH3479 MD021383A*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
+/**********                CMDLBL(NEXT))                                     */ /*BH3479 MD021383A*/
+     IF  COND(&CLE025 *NE 'Y') THEN(DO)                                                 /*MD049139*/
+     CPYF       FROMFILE(PSTTOM) TOFILE(XPSTTOM) MBROPT(*REPLACE)                       /*MD049139*/
      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO +
-                CMDLBL(NEXT))                                     /*BH3479*/
-
+                CMDLBL(NEXT))                                                           /*MD049139*/
+     ENDDO                                                                              /*MD049139*/
      ENDDO
 
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                                /*CLE134*/
              IF         COND(&CSEQ *NE 3) THEN(DO)                                      /*AR996830*/
+             IF  COND(&CLE025 *NE 'Y') THEN(DO)                                         /*MD049139*/
             CALL LER134                                           /*BH3479*/
 
      IF COND(%SWITCH(XXXXXX00)) THEN(DO)                          /*BH3479*/
@@ -400,6 +453,8 @@
      GOTO END                                                     /*BH3479*/
 
      ENDDO                                                        /*BH3479*/
+             ENDDO                                                                      /*MD049139*/
+
              ENDDO                                                                      /*AR996830*/
              ENDDO                                                                        /*CLE134*/
 
@@ -408,7 +463,18 @@
 /****Clear*PF/LEFEAM*before*calling*LER135*****************************/           /*216123 245803*/
 /*           CLRPFM     LEFEAM                                        */           /*216123 245803*/
   /* Clear PF/LEFEAM before calling LER135 */                                            /*243496B*/
+/**********  IF         COND(&CSEQ *EQ 5) THEN(DO)                    */       /*MD024561 MD049139*/
+             IF         COND((&CLE025 *NE 'Y') *OR +
+                             (&CSEQ *EQ 5)) THEN(DO)                                    /*MD049139*/
              CLRPFM     LEFEAM                                                           /*243496B*/
+             ENDDO                                                                      /*MD024561*/
+/* Set U4 on so that LER135 will recognize that this is an */                           /*MD025087*/
+/* ANWD settlement run */                                                               /*MD025087*/
+             CHGJOB     SWS(XXX0XXXX)                                                   /*MD025087*/
+             IF         COND(&CSEQ *EQ 6) THEN(DO)                                      /*MD025087*/
+                CHGJOB     SWS(XXX1XXXX)                                                /*MD025087*/
+             ENDDO                                                                      /*MD025087*/
+                                                                                        /*MD025087*/
   /* Call Fee Accruals & account Key Generation Program */
 
 /**********  OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC) */              /*CLE134 MD052961*/
@@ -482,7 +548,13 @@
 /* If the component has completed successfully reset the status field */
      COMMIT                                                                             /*MD049309*/
      IF COND(&CLE007 *NE 'Y') THEN(DO)                                /*CLE007*/
+/**********  IF         COND((&CSEQ *EQ 1) *OR (&CSEQ *EQ 2) *OR +    */               /*MD021114A*/
+/**********               (&CSEQ *EQ 5) *OR (&CSEQ *EQ 6)) THEN(DO)   */     /*MD021383A MD021114A*/
+/**********  IF         COND((&CSEQ *EQ 5) *OR (&CSEQ *EQ 6)) THEN(DO)*/      /*MD021114A MD049139*/
+             IF         COND((&CLE025 *NE 'Y') *OR +
+                             (&CSEQ *EQ 5) *OR (&CSEQ *EQ 6)) THEN(DO)                  /*MD049139*/
      CLRPFM LEFEEAD                                                  /*095606*/
+     ENDDO                                                                             /*MD021383A*/
      ENDDO                                                            /*CLE007*/
      CHGVAR VAR(&STAT) VALUE('N')
      CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)

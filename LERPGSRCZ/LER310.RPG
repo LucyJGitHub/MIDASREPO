@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049474           Date 02May22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD021383A          Date 16Jun23               *
+      *  Prev Amend No. MD049474           Date 02May22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053295           Date 13Apr19               *
@@ -79,6 +80,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction. *
+      *            - MD061267 - Credit Lines (CLE025) fixes           *
       *  MD049474 - Component LERC430 failed due to loan type/subtype *
       *             not found. Update loan subtype & loan class in    *
       *             LEPEMGD when subtype change is done for the loan. *
@@ -446,6 +449,8 @@
      C                     Z-ADD0         MDPSTD
      C                     Z-ADD0         MDIATD
      C                     Z-ADD0         MDADJA                          E49419
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADDMDMGNR    MDMGPR  75                                       MD021383A
      C                     END
      C*
      C* RESET 'NEW' FLAG.
@@ -655,6 +660,42 @@
      C*
      C           ETYPE     IFEQ 'A'
      C           RECI      ANDEQ'D'
+      *                                                                                    MD021383A
+      * Chain to LEACT5L0 to see any backvalued rate changes                               MD021383A
+      *                                                                                    MD021383A
+     C           KEYACT    CHAINLOAMSDKF             26                                    MD021383A
+     C           *IN26     IFEQ '0'                                                        MD021383A
+     C           AMTP      ANDEQ'SC'                                                       MD021383A
+     C           *IN26     OREQ '0'                                                        MD021383A
+     C           AMTP      ANDEQ'BR'                                                       MD021383A
+     C           *IN26     OREQ '0'                                                        MD021383A
+     C           AMTP      ANDEQ'BC'                                                       MD021383A
+      *                                                                                    MD021383A
+     C           VDATL     IFLT BJRDNB                                                     MD021383A
+      *                                                                                    MD021383A
+     C           MARG      IFEQ MDMGPR                                                     MD021383A
+     C                     Z-ADD0         MKEAMT 130H                                      MD021383A
+     C                     Z-ADDPELAP     ZIBEG                                            MD021383A
+     C                     Z-ADDEDAT      ZIEND                                            MD021383A
+     C                     MOVE ICBS      ZICALC                                           MD021383A
+     C                     Z-ADDCPAM      ZIAMT                                            MD021383A
+     C                     Z-ADDMDMGNR    ZIRATE                                           MD021383A
+      *                                                                                    MD021383A
+     C           ZIEND     IFGT ZIBEG                                                      MD021383A
+     C                     EXSR GLINTC                                                     MD021383A
+     C           RDFC      IFEQ 'Y'                                                        MD021383A
+     C                     Z-ADDZINTR     RDWORK 130                                       MD021383A
+     C                     Z-ADDRDWORK    ZINTR                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADD0         ZINTR                                            MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C                     Z-ADDZINTR     MKEAMT 130H                                      MD021383A
+      *                                                                                    MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
       *                                                                                       208013
       ** Regardless of margin amount computed, set on update of file                          208013
       ** if interest accrual amount is not zero and record existed                            208013

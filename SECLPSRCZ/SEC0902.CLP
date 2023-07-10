@@ -1,42 +1,46 @@
 /*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI *  TEXT('Midas SE Unrealized Profit & Loss Analysis')          */
-/********************************************************************/
-/*                                                                  */
-/*         Midas     - Securities Trading Module                */
-/*                                                                  */
-/*       SEC0902 - UNREALISED PROFIT AND LOSS ANALYSIS              */
-/*                                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*         Midas     - Securities Trading Module                     */
+/*                                                                   */
+/*       SEC0902 - UNREALISED PROFIT AND LOSS ANALYSIS               */
+/*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 224132             Date 22Dec03              */
+/*                    . 224132             Date 22Dec03              */
 /*                      CAS006             Date 21Jan03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*                      S01117             Date  10Jan91            */
-/*                      E23248             Date  10Sep90            */
-/*                      S01179             DATE  16/09/88           */
-/*                      E13575             DATE  29/07/88           */
-/*                      S01158             DATE  19/05/88           */
-/*------------------------------------------------------------------*/
-/*                                                                  */
+/*                      S01117             Date  10Jan91             */
+/*                      E23248             Date  10Sep90             */
+/*                      S01179             DATE  16/09/88            */
+/*                      E13575             DATE  29/07/88            */
+/*                      S01158             DATE  19/05/88            */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       224132 - Run Rprts with Price Format for Yield Based        */
 /*                Securities first.                                  */
 /*       CAS006 - Hedge Accounting Phase B                           */
-/*         S01117 - MULTIBRANCHING                                  */
-/*         E23248 - ALLOW USER TO REQUEST YIELDS ON SE0915          *  *E23248*/
-/*         S01179 -     RELEASE                                     *  *S01179*/
-/*         E13575 - ENABLE TRADE DATE, VALUE DATE OR BOTH.          *  *E13575*/
-/*         S01158 - POST INCORPORATION ERROR FIX.                   *  *S01158*/
-/*                                                                  */
-/********************************************************************/
+/*         S01117 - MULTIBRANCHING                                   */
+/*         E23248 - ALLOW USER TO REQUEST YIELDS ON SE0915           *  *E23248*/
+/*         S01179 -     RELEASE                                      *  *S01179*/
+/*         E13575 - ENABLE TRADE DATE, VALUE DATE OR BOTH.           *  *E13575*/
+/*         S01158 - POST INCORPORATION ERROR FIX.                    *  *S01158*/
+/*                                                                   */
+/*********************************************************************/
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*                                                                   */
 /*********************************************************************/
@@ -45,7 +49,8 @@
 /************PGM        PARM(&DTBS)                                     E23248*/
 /************PGM        PARM(&DTBS &PRTYPE)                   *E23248* *S01117*/
 /*/COPY WNCPYSRC,SEC0902002                                          */
-             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)                /*S01117*/
+/**********  PGM        PARM(&RSEQ &RLEV &RENT &RPARM)             */            /*S01117 MD049139*/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM &RUNCOND)                         /*MD049139*/
 /*/COPY WNCPYSRC,SEC0902003                                          */
 /*                                                               */   /*S01158*/
 /**/
@@ -68,8 +73,10 @@
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                 /*S01117*/
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)                 /*S01117*/
              DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)              /*S01117*/
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&OPTION) TYPE(*CHAR) LEN(1)               /*S01117*/
- 
+
 /* Declare the variables to check the enhancements file */                                /*224132*/
                                                                                           /*224132*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*224132*/
@@ -81,6 +88,17 @@
              DCL        VAR(&CAS006) TYPE(*CHAR) LEN(1) +
                           VALUE(' ')                                                      /*224132*/
                                                                                           /*224132*/
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(ENDPGM))                                                 /*MD049139*/
+                                                                                        /*MD049139*/
+
 /* Check if enhancement CAS006 in installed */                                            /*224132*/
                                                                                           /*224132*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*224132*/
@@ -99,24 +117,24 @@ REPEAT:                                                                         
 /* EXTRACT PROMPT PARAMETERS FROM RCF */                              /*S01117*/
              CHGVAR     VAR(&OPTION) VALUE(%SST(&RPARM 1 1))          /*S01117*/
 /**********  CHGVAR     VAR(&PRTYPE) VALUE(%SST(&RPARM 2 1)) */                    /*S01117 224132*/
- 
+
 /* IF WANT BOTH REPORTS DO BY TRADE DATE FIRST                       * *S01117*/
              IF         COND(&OPTION *EQ 'B') THEN(CHGVAR VAR(&DTBS) +
                           VALUE('T'))                                 /*S01117*/
              ELSE       CMD(CHGVAR VAR(&DTBS) VALUE(&OPTION))         /*S01117*/
- 
+
 /**/
 /* SEND PGM MESSAGE */
 /**/
              CHGVAR     VAR(&MEM) VALUE('SEC0902 - Unrealised Profit +
                           & Loss Analysis')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
- 
+
 /*/COPY WNCPYSRC,SEC0902005                                          */
 /*******TEMPORARY*PATCH*TO*MAKE*PGM*WORK****/                         /*S01158*/
 /*           CHGVAR     VAR(&DTBS) VALUE('T')                     */  /*S01158*/
 AGAIN:
- 
+
 /**/
 /* CLEAR SWITCHES */
 /**/
@@ -141,7 +159,7 @@ AGAIN:
 /* IF NO ERRORS CALL SE0915 (REPORT) */
 /**/
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /*       POSITION FILE TO THE PARTICULAR BRANCH                      * *S01117*/
            IF COND((&RENT *NE '   ') *AND (&RENT *NE 'ALL')) THEN(DO) /*S01117*/
              OVRDBF     FILE(UPLEX) POSITION(*KEY 1 UPLEXDF &RENT)    /*S01117*/
@@ -152,7 +170,7 @@ AGAIN:
              CLOF       OPNID(UPLEX)                                  /*S01117*/
              MONMSG     MSGID(CPF0000)                                /*S01117*/
            ENDDO                                                      /*S01117*/
- 
+
 /**************CALL       PGM(SE0915) PARM(&DTBS)                       E23248*/
 /**************CALL       PGM(SE0915) PARM(&DTBS &PRTYPE)     *E23248* *S01117*/
 /*/COPY WNCPYSRC,SEC0902001                                          */
@@ -183,14 +201,14 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
                 GOTO ENDPGM
              ENDDO
- 
+
 /**************MORE*TEMPORARY*BITS***********/                        /*E13575*/
- 
+
 /*           IF         COND(&DTBS *EQ 'T') THEN(DO)       */         /*E13575*/
 /*           CHGVAR     VAR(&DTBS) VALUE('V')              */         /*E13575*/
 /*           GOTO       CMDLBL(AGAIN)                      */         /*E13575*/
 /*           ENDDO                                         */         /*E13575*/
- 
+
 /**/
 /* NORMAL COMPLETION - CLEAR OUTPUT FILES */
 /**/
@@ -209,7 +227,7 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              CHGVAR     VAR(&DTBS) VALUE('V')                         /*S01117*/
              GOTO       CMDLBL(AGAIN)                                 /*S01117*/
              ENDDO                                                    /*S01117*/
- 
+
              IF         COND(&CAS006 *EQ ' ') THEN(GOTO CMDLBL(ENDPGM))                   /*224132*/
                                                                                           /*224132*/
              IF         COND(&PRTYPE *EQ 'P') THEN(DO)                                    /*224132*/

@@ -1,0 +1,181 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DL Generate Additional Entries for CLS Sched')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC0296 - Midas DL Generate Additional Entries for CLS      */
+/*                 Sched                                             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD021383A *CREATE  Date 16Jun23              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021383A - Credit lines shadow posting correction.         */
+/*                   Component split of DLC0606C. This component     */
+/*                   should only run when CDL008 is on.              */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POST &NAM &SEQ)
+
+             DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  +
+                          DPLIB')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 RNX0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('DLC0296 - Midas DL Generate +
+                          Additional Entries for CLS Sched') +
+                          TOMSGQ(MRUNQ)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+/** Call program CB0160 to get value of restart indicator. */
+
+             CALL       PGM(CB0160) PARM(&NAM &SEQ &STAT)
+
+/** If not a restart, create back-ups. */
+
+             IF         COND(&STAT *EQ 'N') THEN(DO)
+
+                DLTF       FILE(&DPLIB/XFXCLSPSH)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDLPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDLZZ)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDL2PD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDL2ZZ)
+                MONMSG     MSGID(CPF2105)
+
+                CPYF       FROMFILE(FXCLSPSH) +
+                             TOFILE(&DPLIB/XFXCLSPSH) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+                IF         COND(&POST *EQ '1') THEN(DO)
+
+                   CPYF       FROMFILE(GEDLPD) +
+                                TOFILE(&DPLIB/XGEDLPD) CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GEDLZZ) +
+                                TOFILE(&DPLIB/XGEDLZZ) CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                ENDDO
+
+                IF   COND(&POST *EQ '5') THEN(DO)
+
+                   CPYF       FROMFILE(GEDL2PD) +
+                                TOFILE(&DPLIB/XGEDL2PD) CRTFILE(*YES)
+                   MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                   CPYF       FROMFILE(GEDL2ZZ) +
+                                TOFILE(&DPLIB/XGEDL2ZZ) CRTFILE(*YES)
+                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+                 ENDDO
+
+              ENDDO
+
+ /** If it is a restart, restore backups. */
+
+              IF         COND(&STAT *EQ 'Y') THEN(DO)
+
+                 CPYF       FROMFILE(XFXCLSPSH) TOFILE(FXCLSPSH) +
+                              MBROPT(*REPLACE)
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                              EXEC(CLRPFM FILE(FXCLSPSH))
+
+                 IF         COND(&POST *EQ '1') THEN(DO)
+
+                    CPYF       FROMFILE(XGEDLPD) TOFILE(GEDLPD) +
+                                 MBROPT(*REPLACE)
+                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                 EXEC(CLRPFM FILE(GEDLPD))
+                    CPYF       FROMFILE(XGEDLZZ) TOFILE(GEDLZZ) +
+                                 MBROPT(*REPLACE)
+                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                 EXEC(CLRPFM FILE(GEDLZZ))
+
+                 ENDDO
+
+                 IF         COND(&POST *EQ '5') THEN(DO)
+
+                    CPYF       FROMFILE(XGEDL2PD) TOFILE(GEDL2PD) +
+                                 MBROPT(*REPLACE)
+                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                 EXEC(CLRPFM FILE(GEDL2PD))
+                    CPYF       FROMFILE(XGEDL2ZZ) TOFILE(GEDL2ZZ) +
+                                 MBROPT(*REPLACE)
+                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                                 EXEC(CLRPFM FILE(GEDL2ZZ))
+
+                 ENDDO
+
+             ENDDO
+
+/** Call CB0150 to update restart indicator */
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+             IF         COND(&POST *EQ '5') THEN(DO)
+
+                OVRDBF     FILE(GEDLPD) TOFILE(GEDL2PD)
+                OVRDBF     FILE(GEDLZZ) TOFILE(GEDL2ZZ)
+
+             ENDDO
+
+             CALL       PGM(DL0296) PARM('Y')
+
+/** If no error occured in the program, delete backup file. */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+                DLTF       FILE(&DPLIB/XFXCLSPSH)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDLPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDLZZ)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDL2PD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGEDL2ZZ)
+                MONMSG     MSGID(CPF2105)
+
+                GOTO       CMDLBL(ENDPGM)
+
+             ENDDO
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+             SNDPGMMSG  MSG('Program DLC0296 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ENDPGM:
+             ENDPGM

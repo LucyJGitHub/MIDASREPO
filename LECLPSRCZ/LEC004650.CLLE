@@ -1,6 +1,6 @@
 /*********************************************************************/
 /*STD    CLPBASEMOD                                                  */
-/*EXI    TEXT('Midas LE Fee and Discount Amort A/C Gen(nonlinear)')  */
+/**EXI***TEXT('Midas*LE*Fee*and*Discount*Amort*A/C*Gen(nonlinear)')***/                 /*MD049139*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Customer Lending Module                             */
@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CAS019             Date 24Mar07              */
@@ -27,6 +28,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CAS019 - Upgrade of CAS016 to Midas Plus (Recompile)        */
@@ -40,10 +44,13 @@
 /*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
- 
+/**********  PGM        PARM(&CNAM &CSEQ)                          */                   /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
@@ -55,26 +62,36 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2004')
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('LEC004650 - LE Fee and Discount Amortisation +
                           A/C Key Generation (Non-Linear)') +
                           TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(00000000)
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /* Create data area LDA */
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
+
 /**/                                                                                      /*CAS016*/
 /* Check if CAS016 is enabled. */                                                         /*CAS016*/
 /**/                                                                                      /*CAS016*/
@@ -86,18 +103,18 @@
                                                                                           /*CAS016*/
              IF         COND(&RTCD *EQ '       ') THEN(GOTO +
                           CMDLBL(END))                                                    /*CAS016*/
- 
+
 /* Setup system prefix variable from SDSTAT data area. */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
- 
+
 /* Call program CB0160 to get value of restart indicator. */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is NOT a restart. */
- 
+
              IF         COND(&STAT *NE 'Y') THEN(DO)
                DLTF       FILE(XCLOANCL)
                MONMSG     MSGID(CPF0000)
@@ -113,7 +130,7 @@
                MONMSG     MSGID(CPF0000)                                                  /*238567*/
                DLTF       FILE(XLEPEFLZ)                                                  /*238567*/
                MONMSG     MSGID(CPF0000)                                                  /*238567*/
- 
+
                CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
@@ -143,9 +160,9 @@
                           MBROPT(*REPLACE) CRTFILE(*YES)                                  /*238567*/
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*238567*/
              ENDDO
- 
+
 /* If it is a restart. */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
                CPYF       FROMFILE(XCLOANCL) TOFILE(CLOANCL) +
                           MBROPT(*REPLACE)
@@ -176,15 +193,15 @@
                           MBROPT(*REPLACE)                                                /*238567*/
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*238567*/
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Call Lending Fee and Discount Amortisation A/C Key Generation Report */
- 
+
 /* Clear LEEIRPPD before calling LE004650 */                                              /*231712*/
              CLRPFM     LEAMRTPD                                                          /*231712*/
                                                                                           /*231712*/
@@ -196,16 +213,16 @@
              OVRDBF     FILE(LEEIRDL8) TOFILE(LEEIRDLB)                                   /*234591*/
                                                                                           /*232628*/
              CALL       PGM(LE004650)                                                     /*232628*/
- 
+
 /* If no error occured in the program */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /* Call CB0150 to update restart indicator. */
- 
+
                CHGVAR     VAR(&STAT) VALUE('N')
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
                DLTF       FILE(XCLOANCL)
                MONMSG     MSGID(CPF0000)
                DLTF       FILE(XLKEYFED)
@@ -221,17 +238,17 @@
                DLTF       FILE(XLEPEFLZ)                                                  /*238567*/
                MONMSG     MSGID(CPF0000)                                                  /*238567*/
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOMSGQ(MOPERQ MRUNQ)
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              DMPCLPGM
@@ -240,6 +257,6 @@ ABNOR:
                           ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
- 
+
 END:
              ENDPGM

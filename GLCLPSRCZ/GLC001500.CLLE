@@ -1,6 +1,6 @@
 /*********************************************************************/
 /*STD    CLPBASEMOD                                                  */
-/*EXI    TEXT('Midas GL COB Collateral Revaluation')                 */
+/**EXI***TEXT('Midas*GL*COB*Collateral*Revaluation')******************/                 /*MD049139*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas    - General Ledger Module                            */
@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD056889           Date 11Oct20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD056889           Date 11Oct20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CLE134             Date 01Aug12              */
 /*                      BUG27747A          Date 25Jun10              */
 /*                      BUG27747           Date 22Jun10              */
@@ -26,6 +27,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD056889 - Deliverable Data Split for SDJARFPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
@@ -39,10 +43,13 @@
 /*       CGL014 - Collaterals Processing                             */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ)
+/**********  PGM        PARM(&CNAM &CSEQ)                          */                   /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
 
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
@@ -88,6 +95,16 @@
 
              CHGJOB     SWS(XXXXXX00)
 
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /** Start commitment control */
 
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +

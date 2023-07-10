@@ -10,8 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055724           Date 29Apr20              */
-/*       Prev Amend No. MD052994           Date 25Nov19              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD021383A          Date 16Jun23              */
+/*                      MD055724           Date 29Apr20              */
+/*                      MD052994           Date 25Nov19              */
 /*                      MD045032           Date 07Apr18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD033997           Date 11May15              */
@@ -40,6 +42,15 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
+/*       MD021383A - Credit lines shadow posting correction.         */
+/*                   Introduced new LEC06A cob component to call     */
+/*                   LE0470 on rerun in order to process IAS postings*/
+/*                 - Incorrect CFA for Retail Overdraft (CLE025).    */
+/*                   Clear LECLHIST file before LER032.              */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
 /*       MD055724 - Reversal entries for previous facility posted    */
 /*                  twice on contingent facility account. Clear      */
 /*                  PF/LECLHIPD before every call to LER032.         */
@@ -101,6 +112,7 @@
      DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE('S01473')         /*S01473*/
      DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                        /*S01473*/
      DCL        VAR(&S01473) TYPE(*CHAR) LEN(1)                       /*S01473*/
+     DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                              /*MD049139*/
      DCL        VAR(&CLE023) TYPE(*CHAR) LEN(1)                                           /*CLE023*/
      DCL        VAR(&CLE147) TYPE(*CHAR) LEN(1)                                           /*CLE147*/
      DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                            /*CLE147*/
@@ -146,6 +158,11 @@
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                               /*CLE147*/
              CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                         /*CLE147*/
 
+/*                                                  */                                  /*MD049139*/
+/* Check if Feature CLE025 is switched ON.          */                                  /*MD049139*/
+/*                                                  */                                  /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+                                                                                        /*MD049139*/
                                                                       /*S01473*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
@@ -320,12 +337,23 @@
            OVRDBF     FILE(LEHISFL1) TOFILE(LEHISAL1)                                     /*CLE134*/
            OVRDBF     FILE(LEHISFL0) TOFILE(LEHISAL0)                                     /*CLE134*/
            ENDDO                                                                          /*CLE134*/
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
   /* Call Generated Changes Extract Program */
 
+             OVRDBF     FILE(LKEY1DP) TOFILE(LKEY1SDP)                                 /*MD021383A*/
+             OVRDBF     FILE(LKEYFED) TOFILE(LKEYFESD)                                 /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
              IF         COND(&RERUN *NE 'INTCAP') THEN(DO)                              /*MD052994*/
                                                                                         /*MD052994*/
 /**********  CALL LER031 */                                                               /*263413*/
              CALL       PGM(LER031) PARM(&RERUN)                                          /*263413*/
+             IF         COND(&CLE025 *EQ 'Y') THEN(DO)                                  /*MD049139*/
+                                                                                       /*MD021383A*/
+             DLTOVR     FILE(LKEY1DP)                                                  /*MD021383A*/
+             DLTOVR     FILE(LKEYFED)                                                  /*MD021383A*/
+                                                                                       /*MD021383A*/
+             ENDDO                                                                      /*MD049139*/
      IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
 
 /**/                                                                                      /*CLE023*/

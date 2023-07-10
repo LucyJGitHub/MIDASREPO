@@ -9,142 +9,159 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CSD008  *CREATE    Date 05Feb01              */
+/*                      CSD008  *CREATE    Date 05Feb01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSD008 - Customer Service Fees Enhancement                  */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&CNAM &CSEQ )
- 
+/**********  PGM        PARM(&CNAM &CSEQ )                           */                 /*MD049139*/
+             PGM        PARM(&CNAM &CSEQ &RUNCOND)                                      /*MD049139*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&MEM)    TYPE(*CHAR) LEN(50)
              DCL        VAR(&CNAM)   TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)   TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
              DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&PRE)    TYPE(*CHAR) LEN(2)
              DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&SCFEE)  TYPE(*CHAR) LEN(1)
              DCL        VAR(&MGFEE)  TYPE(*CHAR) LEN(1)
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(END))                                                    /*MD049139*/
+                                                                                        /*MD049139*/
 /** Check whether SC or MG fees have to be accrued */
- 
+
              RTVDTAARA  DTAARA(GLCSFSTAT (1 1)) RTNVAR(&SCFEE)
              RTVDTAARA  DTAARA(GLCSFSTAT (3 1)) RTNVAR(&MGFEE)
- 
+
              IF         COND((&SCFEE *NE 'Y') *AND (&MGFEE *NE 'Y')) +
                           THEN(GOTO CMDLBL(END))
- 
+
 /* Send start component message */
- 
+
              SNDPGMMSG  MSG('GLC1943 - Customer Service Fees/LE +
                           Holdings Extract.') TOMSGQ(MRUNQ +
                           MOPERQ) MSGTYPE(*INFO)
- 
+
 /* Create QTEMP/LDA */
- 
+
              CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' '))
- 
+
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
- 
+
 /* Retrieve SDSTAT details */
- 
+
              RTVDTAARA DTAARA(SDSTAT) RTNVAR(&SDSTAT)
              CHGVAR    VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
              CHGVAR    VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
- 
+
 /* Check component status */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)
- 
+
 /* If restart of component, then Set Status Component to "N" */
- 
+
              IF         COND(&STATUS = 'Y') THEN(DO)
- 
+
                   CHGVAR     VAR(&STATUS) VALUE('N')
                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
- 
+
              ENDDO
- 
- 
+
+
 /* Change Component Status to "started" */
- 
+
              CHGVAR     VAR(&STATUS) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
- 
+
 /* If the Working File not in QTEMP, must be created */
 /* Before Running Extact Holdings file */
- 
+
              CHKOBJ     OBJ(QTEMP/XGLHOLDPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
              CPYF       FROMFILE(GLHOLDPD) TOFILE(QTEMP/XGLHOLDPD) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
              ENDDO
- 
+
 /* Call program */
- 
+
              CLRPFM     FILE(QTEMP/XGLHOLDPD)
              OVRDBF     FILE(GLHOLDPD) TOFILE(QTEMP/XGLHOLDPD)
              CALL       PGM(GL1943)
- 
+
 /* If No database error, Component is terminated */
 /* Use Work File with *ADD for  Holdings file */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
                DLTOVR     FILE(GLHOLDPD)
                CPYF       FROMFILE(QTEMP/XGLHOLDPD) TOFILE(GLHOLDPD) +
                           MBROPT(*ADD)
                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
                CHGVAR     VAR(&STATUS) VALUE('N')
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
- 
+
 /* Send normal end component message */
- 
+
                SNDPGMMSG  MSG('GLC1943 - Customer Service Fees/LE +
                           Holdings Extract successfully +
                           terminated') TOMSGQ(MRUNQ MOPERQ) +
                           MSGTYPE(*INFO)
- 
+
 /* Delete files image */
- 
+
                DLTF       FILE(QTEMP/XGLHOLDPD)
                MONMSG     MSGID(CPF0000)
                GOTO       CMDLBL(END)
- 
+
              ENDDO
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
@@ -153,8 +170,8 @@
              MONMSG     MSGID(CPF0000 MCH0000)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

@@ -1,16 +1,17 @@
-/********************************************************************/
+/*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas ER LE Events File Creation')                    */
 /*********************************************************************/
-/*                                                                  */
-/*     MIDAS/ABS  CUSTOMER LENDING MODULE                           */
-/*                                                                  */
-/*     LEC0609R -  EVENTS FILE CREATION FOR ER                      */
-/*                                                                  */
-/*       (c) Finastra International Limited 2005                    */
-/*                                                                  */
-/*       Last Amend No. CLE071             Date 18Jul18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*     MIDAS/ABS  CUSTOMER LENDING MODULE                            */
+/*                                                                   */
+/*     LEC0609R -  EVENTS FILE CREATION FOR ER                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2005                     */
+/*                                                                   */
+/*       Last Amend No. MD049139           Date 16Jun23              */
+/*       Prev Amend No. CLE071             Date 18Jul18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD021605           Date 22Aug13              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -20,23 +21,30 @@
 /*                      CER001             Date 25Apr05              */
 /*                      UPG402             Date 04Oct04              */
 /*                      124371             Date 23Oct97              */
-/*                    ERL454 PT          DATE 01FEB95               */
-/*                    ERL416 PT          DATE 25JUL94               */
-/*                                                                  */
-/*------------------------------------------------------------------*/
-/*                                                                  */
+/*                      ERL454 PT          Date 01Feb95              */
+/*                      ERL416 PT          Date 25Jul94              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD049139 - Lending Fee are posting 1 day late for           */
+/*                  auto settle fee on a calculated facility.        */
+/*                - MD061267 - Credit Lines (CLE025) fixes           */
 /*       CLE071 - Value Dating of Rate Changes to Fees (Recompile)   */
 /*       MD046248 - Finastra Rebranding                              */
-/*     MD021605 - Add a parameter for LE0480.                       */
-/*     CLE134 - Past Due Call Loan Processing (Recompile)           */
+/*       MD021605 - Add a parameter for LE0480.                      */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
-/*     UPG402 - Recompile due to R4.02 upgrade                      */
-/*     124371 - REPAYMENTS ARE NOT GENERATED IN THE EOM.            */
-/*     ERL454 - CPYF COMMAND NOT MONITORED FOR EMPTY FILE           */
-/*     GENERATE ALL EVENTS FOR ER (RERUN LE0480 IF NECESSARY)       */
-/*                                                                  */
-/********************************************************************/
-             PGM
+/*       UPG402 - Recompile due to R4.02 upgrade                     */
+/*       124371 - REPAYMENTS ARE NOT GENERATED IN THE EOM.           */
+/*       ERL454 - CPYF COMMAND NOT MONITORED FOR EMPTY FILE          */
+/*       GENERATE ALL EVENTS FOR ER (RERUN LE0480 IF NECESSARY)      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                   */                   /*MD049139*/
+             PGM        PARM(&RUNCOND)                                                  /*MD049139*/
+                                                                                        /*MD049139*/
+             DCL        VAR(&RUNCOND) TYPE(*CHAR) LEN(6)                                /*MD049139*/
+             DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD049139*/
 
 /************DCLF       FILE(TABTB50)                                   ER_R10*/
              DCLF       FILE(SDCLNDPD)                                /*ER_R10*/
@@ -46,6 +54,16 @@
              SNDPGMMSG  MSG('CUSTOMER LENDING EVENTS FILE CREATION +
                           FOR ER') TOMSGQ(MRUNQ)
 
+/** Determine if switchable feature CLE025 is switched ON then     */                   /*MD049139*/
+/** check if program should run based on feature and parameter     */                   /*MD049139*/
+                                                                                        /*MD049139*/
+             RTVDTAARA  DTAARA(CLE025DTA) RTNVAR(&CLE025)                               /*MD049139*/
+             IF         COND(((&CLE025 *EQ 'Y') *AND +
+                              (&RUNCOND *EQ 'CLE025')) *OR +
+                             ((&CLE025 *NE 'Y') *AND +
+                              (&RUNCOND *NE 'CLE025'))) THEN(GOTO +
+                        CMDLBL(ENDPGM))                                                 /*MD049139*/
+                                                                                        /*MD049139*/
              CHGJOB     SWS(01XXXXXX)
 
              CLRPFM     FILE(ERLVENHH)

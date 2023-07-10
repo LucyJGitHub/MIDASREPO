@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059665           Date 07Mar22               *
-      *  Prev Amend No. CAS020             Date 02Nov21               *  
+      *  Last Amend No. MD021383A          Date 16Jun23               *
+      *  Prev Amend No. MD059665           Date 07Mar22               *
+      *                 CAS020             Date 02Nov21               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD025453           Date 21Mar16               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction  *
+      *            - MD061267 - Credit Lines (CLE025) fixes           *
       *  MD059665 - IAS Issues found during CAS020 Testing            *
       *  CAS020 - Use Profit Center of Derivative rather than Profit  *
       *           Center of Hedged Item                               *
@@ -164,7 +167,8 @@
      F                                     PREFIX(LK)
 
       ** Midas SE Security Account Keys Trailer
-     FSEKEYA    UF   E           K DISK    INFSR(*PSSR)
+     F***SEKEYA    UF   E           K DISK    INFSR(*PSSR)                                 MD021383A
+     FSEKEYA    UF A E           K DISK    INFSR(*PSSR)                                    MD021383A
      F                                     PREFIX(LZ)
                                                                                               228103
      FSEMKVLL0  IF   E           K DISK    INFSR(*PSSR)                                       228103
@@ -367,6 +371,7 @@
       ** Switchable Features
      D CAC005          S              1
      D CAS020          S              1                                                       CAS020
+     D WrtSekeya       S              1                                                    MD021383A
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1832,7 +1837,12 @@
      C                   EVAL      LZNORE = WkNoRec
      C                   EVAL      LZHRWN = WkVlInt
      C                   EVAL      LZHRDC = WkVlDec
+      *                                                                                    MD021383A
+     C                   IF        WrtSekeya = 'Y'                                         MD021383A
+     C                   WRITE     SEKEYAF                                                 MD021383A
+     C                   ELSE                                                              MD021383A
      C                   UPDATE    SEKEYAF
+     C                   ENDIF                                                             MD021383A
 
      C                   ENDSR
 
@@ -2322,15 +2332,20 @@
 
       ** Read Trailer file of SEKEYD
 
+     C                   EVAL      WrtSekeya = 'N'                                         MD021383A
      C                   READ      SEKEYA
 
      C                   IF        %EOF(SEKEYA)
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBFILE =  'SEKEYA'
-     C                   EVAL      DBKEY  =  'READ'
-     C                   EVAL      DBASE  =  6
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
+     C******LOCK         IN        LDA                                                     MD021383A
+     C**********         EVAL      DBFILE =  'SEKEYA'                                      MD021383A
+     C**********         EVAL      DBKEY  =  'READ'                                        MD021383A
+     C**********         EVAL      DBASE  =  6                                             MD021383A
+     C**********         OUT       LDA                                                     MD021383A
+     C**********         EXSR      *PSSR                                                   MD021383A
+     C                   EVAL      WkNoRec = 0                                             MD021383A
+     C                   EVAL      WkVlInt = 0                                             MD021383A
+     C                   EVAL      WkVlDec = 0                                             MD021383A
+     C                   EVAL      WrtSekeya = 'Y'                                         MD021383A
      C                   ELSE
      C                   EVAL      WkNoRec = LZNORE
      C                   EVAL      WkVlInt = LZHRWN

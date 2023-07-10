@@ -36,8 +36,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1078902          Date 17Mar23               *
-      *  Prev Amend No. AR854496           Date 10Mar23               *
+      *  Last Amend No. MD061267           Date 16Jun23               *
+      *  Prev Amend No. MD030297           Date 16Jun23               *
+      *                 260203             Date 16Jun23               *
+      *                 MD030402           Date 16Jun23               *
+      *                 MD021383A          Date 16Jun23               *
+      *                 AR1078902          Date 17Mar23               *
+      *                 AR854496           Date 10Mar23               *
       *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -198,13 +203,29 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes                       *
+      *  MD030297 - LER032P1 shows status ERROR for reactivated       *
+      *             overdraft facility. Consider new expiry date when *
+      *             checking RESEODPD so postings are included in     *
+      *             account balance computation and exposures updated.*
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  260203 - LER032P1 shows status ERROR for reactivated         *
+      *           overdraft facility. OAM array of expiring facility  *
+      *           should not be set to FAMT.                          *
+      *         - Applied for MD030297                                *
+      *  MD030402 - LE0710P1 does not show current outstanding for    *
+      *             overdraft facilities. Populate PEXP for facility  *
+      *             attached to a retail account.                     *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction. *
+      *            - MD061267 - Credit Lines (CLE025) fixes           *
       *  AR1078902 - Principal Transfer enhancement. Transfer to a    *
       *              new loan under a different facility.             *
       *              (Child: AR1084471)                               *
       *            - Applied for MD050153                             *
       *  AR854496 - LE0710P1 shows incorrect current outstanding. Use *
       *             PEXP field as previous CEXP or current exposure   *
-      *             up to rundate. (Child: AR854497)                  * 
+      *             up to rundate. (Child: AR854497)                  *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -535,7 +556,7 @@
      FACCNTLA IF  E           K        DISK         KINFSR *PSSR                              CLE025
      FRSACMTL7IF  E           K        DISK         KINFSR *PSSR                              CLE025
      FGLACNTL4IF  E           K        DISK         KINFSR *PSSR                            CLE075AF
-     FGPWEIGL0IF  E           K        DISK         KINFSR *PSSR                              CLE025
+     F***GPWEIGL0IF  E           K        DISK         KINFSR *PSSR                 CLE025 MD021383A
      FGLACP1L2IF  E           K        DISK         KINFSR *PSSR                              CLE040
      FLECAUTL0UF  E           K        DISK         KINFSR *PSSR A    UC  CLE005
      FLENFCTL1UF  E           K        DISK         KINFSR *PSSR      UC  CLE005
@@ -562,6 +583,8 @@
       *
      FLEFCAML0IF  E           K        DISK                               156229
      F            LEFCAMPF                          KRENAMELEFCAMRE       156229
+      *                                                                                    MD021383A
+     FRESEODL0IF  E           K        DISK         KINFSR *PSSR                           MD021383A
      F*APOSTL4*IF**E           K        DISK         KINFSR *PSSR                    CLE169 MD052530
      FAPOSTL4 IF  E           K        DISK         KINFSR *PSSR      UC                    MD052530
      F            APOSTPDF                          KRENAMEAPOSTL4F                           CLE169
@@ -1176,6 +1199,9 @@
       *
      IDSSDY     E DSDSSDY
       ** Second DS for access programs, long data structure
+     IDSLDY     E DSDSLDY                                                                  MD021383A
+      * Second DS for access programs, long data structure                                 MD021383A
+      *                                                                                    MD021383A
      I/COPY WNCPYSRC,LE0491I002
       *
      C/TITLE Main Processing
@@ -1307,6 +1333,13 @@
      C                     KFLD           GLACSQ                                              CLE169
      C                     KFLD           KPSTD   50                                          CLE169
      C                     KFLD           KDRCR   10                                          CLE169
+      *                                                                                    MD021383A
+     C           KSEOD     KLIST                                                           MD021383A
+     C                     KFLD           GLCNUM                                           MD021383A
+     C                     KFLD           GLCCY                                            MD021383A
+     C                     KFLD           GLACOD                                           MD021383A
+     C                     KFLD           GLACSQ                                           MD021383A
+     C                     KFLD           GLBRCA                                           MD021383A
       *                                                                                       CLE025
      C           KFACTL    KLIST                                                              CLE025
      C                     KFLD           KCNUM                                               CLE025
@@ -1847,6 +1880,8 @@
      C                     MOVE 'Y'       NEWCOB  1                                           CLE134
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE134
+     C                     MOVEL'GPAOW'   PGMWEI 10                                        MD021383A
+     C                     MOVE 'EIGR0'   PGMWEI                                           MD021383A
      C                     ENDSR
       *
       *****************************************************************
@@ -2265,7 +2300,7 @@
       ** Update availability to reflect forthcoming or prior expiry.      BH3505
       *                                                                   BH3505
      C/COPY WNCPYSRC,LE0491C027
-     C                     Z-ADD1         O       20                      BH3505
+     C**********           Z-ADD1         O       20                                   BH3505 260203
      C/COPY WNCPYSRC,LE0491C018
      C********** O         DOWLE10                                                   BH3505 MD024229
      C********** DTEX      IFLE RUNS,O                                    BH3505              204450
@@ -5833,8 +5868,28 @@
       *                                                                                     CLE075AF
      C           H         OCUR GPWEIG                                                      CLE075AF
       *                                                                                     CLE075AF
-     C           PDWEIG    CHAINGPWEIGL0             81                                       CLE025
-     C           *IN81     IFEQ '0'                                                         CLE075AF
+     C********** PDWEIG    CHAINGPWEIGL0             81                             CLE025 MD021383A
+     C                     MOVE PDWEIG    PWEIG                                            MD021383A
+     C                     CALL PGMWEI                                                     MD021383A
+     C                     PARM *BLANKS   PRTCD                                            MD021383A
+     C                     PARM '*KEY   ' POPTN                                            MD021383A
+     C                     PARM           PWEIG   2                                        MD021383A
+     C           GPWEIG    PARM GPWEIG    DSFDY                                            MD021383A
+      *                                                                                    MD021383A
+     C           PRTCD     IFNE *BLANKS                                                    MD021383A
+     C           PRTCD     IFEQ '*NRF    '                                                 MD021383A
+     C                     SETON                     81                                    MD021383A
+     C                     ELSE                                                            MD021383A
+     C           *LOCK     IN   LDA                                                        MD021383A
+     C                     MOVEL'GPWEIGPD'DBFILE                                           MD021383A
+     C                     Z-ADD45        DBASE                                            MD021383A
+     C                     MOVELPDWEIG    DBKEY                                            MD021383A
+     C                     OUT  LDA                                                        MD021383A
+     C                     EXSR *PSSR                                                      MD021383A
+     C                     ENDIF                                                           MD021383A
+     C**********           ENDIF                                                  MD021383A MD061267
+     C********** *IN81     IFEQ '0'                                                CLE075AF MD061267
+     C                     ELSE                                                             MD061267
      C                     EXSR ADDWEI                                                      CLE075AF
      C                     ENDIF                                                            CLE075AF
      C                     ENDIF                                                            CLE075AF
@@ -5842,12 +5897,14 @@
      C           PDINOF    WHEQ 'C'                                                           CLE025
      C                     MOVE *BLANKS   PCNUM                                               CLE025
      C                     MOVE GLCNUM    PCNUM                                               CLE025
-     C                     CALL 'AOCUSTR0'                                                    CLE025
+     C**********           CALL 'AOCUSTR0'                                          CLE025 MD021383A
+     C                     CALL 'AOCUSTR1'                                                 MD021383A
      C                     PARM *BLANKS   PRTCD                                               CLE025
      C                     PARM '*KEY   ' POPTN                                               CLE025
      C                     PARM           PCNUM  10                                           CLE025
      C                     PARM           PKYST   7                                           CLE025
-     C           SDCUST    PARM SDCUST    DSSDY                                               CLE025
+     C********** SDCUST    PARM SDCUST    DSSDY                                     CLE025 MD021383A
+     C           SDCUST    PARM SDCUST    DSLDY                                            MD021383A
       *                                                                                       CLE025
      C           PRTCD     IFNE *BLANKS                                                       CLE025
      C           *LOCK     IN   LDA                                                           CLE025
@@ -5886,8 +5943,28 @@
       *                                                                                     CLE075AF
      C           H         OCUR GPWEIG                                                      CLE075AF
       *                                                                                     CLE075AF
-     C           PDWEIG    CHAINGPWEIGL0             81                                       CLE025
-     C           *IN81     IFEQ '0'                                                         CLE075AF
+     C********** PDWEIG    CHAINGPWEIGL0             81                             CLE025 MD021383A
+     C                     MOVE PDWEIG    PWEIG                                            MD021383A
+     C                     CALL PGMWEI                                                     MD021383A
+     C                     PARM *BLANKS   PRTCD                                            MD021383A
+     C                     PARM '*KEY   ' POPTN                                            MD021383A
+     C                     PARM           PWEIG                                            MD021383A
+     C           GPWEIG    PARM GPWEIG    DSFDY                                            MD021383A
+      *                                                                                    MD021383A
+     C           PRTCD     IFNE *BLANKS                                                    MD021383A
+     C           PRTCD     IFEQ '*NRF    '                                                 MD021383A
+     C                     SETON                     81                                    MD021383A
+     C                     ELSE                                                            MD021383A
+     C           *LOCK     IN   LDA                                                        MD021383A
+     C                     MOVEL'GPWEIGPD'DBFILE                                           MD021383A
+     C                     Z-ADD45        DBASE                                            MD021383A
+     C                     MOVELPDWEIG    DBKEY                                            MD021383A
+     C                     OUT  LDA                                                        MD021383A
+     C                     EXSR *PSSR                                                      MD021383A
+     C                     ENDIF                                                           MD021383A
+     C**********           ENDIF                                                  MD021383A MD061267
+     C********** *IN81     IFEQ '0'                                                CLE075AF MD061267
+     C                     ELSE                                                             MD061267
      C                     EXSR ADDWEI                                                      CLE075AF
      C                     ENDIF                                                            CLE075AF
      C                     ENDIF                                                            CLE075AF
@@ -5903,6 +5980,7 @@
      C           *IN81     IFEQ *ON                                                           CLE025
      C                     Z-ADD100       PDPERC                                              CLE025
      C                     ENDIF                                                              CLE025
+     C           CLE169    IFEQ 'Y'                                                         MD061267
       *                                                                                       CLE025
       ** Set the account balance for the next 10 days with the cleared                        CLE025
       ** balance                                                                              CLE025
@@ -6087,6 +6165,57 @@
      C                     ENDIF                                                              CLE169
       *                                                                                       CLE040
      C                     ENDIF                                                              CLE040
+     C                     ELSE                                                             MD061267
+      *                                                                                    MD021383A
+      * Set the account balance for Day0 with the cleared balance                          MD021383A
+      *                                                                                    MD021383A
+     C                     Z-ADDGLCLBL    ACCT,1                                           MD021383A
+      *                                                                                    MD021383A
+      * Access all records in RESEODPD of the same account with                            MD021383A
+      * value date less than or equal to RUN0                                              MD021383A
+      *                                                                                    MD021383A
+     C           KSEOD     SETLLRESEODL0                                                   MD021383A
+     C           KSEOD     READERESEODL0                 81                                MD021383A
+      *                                                                                    MD021383A
+     C           *IN81     DOWEQ*OFF                                                       MD021383A
+      *                                                                                    MD021383A
+     C           R1VDAT    IFLE RUNS,1                                                     MD021383A
+     C           R1VDAT    ANDLEDTEX                                                       MD021383A
+     C           R1VDAT    ORLE RUNS,1                                                      MD030297
+     C           R1VDAT    ANDLENDEX                                                        MD030297
+     C           REACT     ANDEQ'Y'                                                         MD030297
+     C           R1DRCR    IFEQ 0                                                          MD021383A
+     C                     ADD  R1PSTA    ACCT,1                                           MD021383A
+     C                     ELSE                                                            MD021383A
+     C                     SUB  R1PSTA    ACCT,1                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C           KSEOD     READERESEODL0                 81                                MD021383A
+     C                     ENDDO                                                           MD021383A
+      *                                                                                    MD021383A
+      * Set the account balance for Day0 equals to account balance                         MD021383A
+      * from extension file if the facility has already expired                            MD021383A
+      * and not re-activated                                                               MD021383A
+      *                                                                                    MD021383A
+     C           FCRECI    IFEQ 'E'                                                        MD021383A
+     C           DTEX      ANDLTRUNS,1                                                     MD021383A
+     C           REACT     ANDEQ'N'                                                        MD021383A
+      *                                                                                    MD021383A
+     C           KSEOD     SETLLGLACNTL4                                                   MD021383A
+     C           KSEOD     READEGLACNTL4                 81                                MD021383A
+      *                                                                                    MD021383A
+     C           *IN81     IFEQ '0'                                                        MD021383A
+      *                                                                                    MD021383A
+     C           F1ACBL    IFGE *ZEROS                                                     MD021383A
+     C                     Z-ADDF1ACBL    ACCT,1                                           MD021383A
+     C                     ELSE                                                            MD021383A
+     C                     Z-ADD*ZEROS    ACCT,1                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                           MD021383A
+      *                                                                                    MD021383A
+     C                     ENDIF                                                           MD021383A
+     C                     ENDIF                                                            MD061267
       *                                                                                       CLE025
       ** If facility currency <> Account currency:                                            CLE025
       ** Convert account balances for today and the next 9 working days into                  CLE025
@@ -6130,12 +6259,12 @@
       ** Convert to facility currency                                                         CLE025
       *                                                                                       CLE025
      C                     Z-ADD1         I                                                   CLE025
-     C           I         DOWLT11                                                            CLE025
+     C********** I         DOWLT11                                                  CLE025 MD021383A
      C                     Z-ADDACCT,I    ZAMTCI                                              CLE025
      C                     EXSR ZCONV                                                         CLE025
      C                     Z-ADDZAMTCO    ACCT,I                                              CLE025
-     C                     ADD  1         I                                                   CLE025
-     C                     ENDDO                                                              CLE025
+     C*********            ADD  1         I                                         CLE025 MD021383A
+     C*********            ENDDO                                                    CLE025 MD021383A
       *                                                                                       CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -6146,7 +6275,7 @@
      C                     Z-ADD0         WSCEXP                                             BUG3382
       *                                                                                      BUG3281
      C                     Z-ADD1         I                                                   CLE025
-     C           I         DOWLT11                                                            CLE025
+     C********** I         DOWLT11                                                  CLE025 MD021383A
       *                                                                                       CLE025
       ** Update exposure if account balance is positive                                       CLE025
       *                                                                                       CLE025
@@ -6159,6 +6288,7 @@
      C                     Z-ADDACCT,1    WSCAMD                                              CLE025
      C                     ADD  ACCT,1    CEXP                                               BUG3382
      C                     Z-ADDACCT,1    WSCEXP                                             BUG3382
+     C                     ADD  ACCT,1    PEXP                                              MD030402
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C                     ADD  ACCT,I    OAM,I                                               CLE025
@@ -6187,8 +6317,8 @@
       *                                                                                       CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
-     C                     ADD  1         I                                                   CLE025
-     C                     ENDDO                                                              CLE025
+     C**********           ADD  1         I                                         CLE025 MD021383A
+     C**********           ENDDO                                                    CLE025 MD021383A
       *                                                                                       CLE025
      C           TRCA      IFEQ 'TR'                                                          CLE025
      C                     MOVEL'00AC'    ETYP                                                CLE025

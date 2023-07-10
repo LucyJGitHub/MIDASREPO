@@ -22,8 +22,20 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1005865          Date 24Jan23               *
-      *  Prev Amend No. MD060411           Date 20Sep22               *
+      *  Last Amend No. MD049139           Date 16Jun23               *
+      *  Prev Amend No. MD048082           Date 16Jun23               *
+      *                 MD042829           Date 16Jun23               *
+      *                 MD025910           Date 16Jun23               *
+      *                 MD025024           Date 16Jun23               *
+      *                 MD025130           Date 16Jun23               *
+      *                 MD025228           Date 16Jun23               *
+      *                 MD025087           Date 16Jun23               *
+      *                 MD025066           Date 16Jun23               *
+      *                 MD035660           Date 16Jun23               *
+      *                 MD021114A          Date 16Jun23               *
+      *                 MD021383A          Date 27Feb14               *
+      *                 AR1005865          Date 24Jan23               *
+      *                 MD060411           Date 20Sep22               *
       *                 MD060363           Date 19Aug22               *
       *                 AR988274           Date 10Aug22               *
       *                 249385             Date 01Aug22               *
@@ -318,6 +330,41 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD049139 - Lending Fee are posting 1 day late for            *
+      *             auto settle fee on a calculated facility.         *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  MD048082 - Profitability record is not updated               *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  MD042829 - Fee Next Payment Date is reflected differently in *
+      *             Events by Nostro report	
+      *  MD025910 - Do not mature back-valued fee with back-dated     *
+      *             end date on COB of day of insertion.              *
+      *           - Applied for MD035660                              *
+      *  MD025024 - Next payment date did not update in Fee details   *
+      *           - Applied for MD035660                              *
+      *  MD025130 - Calculated Facility Fee is incorrectly displayed  *
+      *             as Matured. Mature calculated facility fee when   *
+      *             end date is less than the current rundate.        *
+      *           - Applied for MD035660                              *
+      *  MD025228 - For auto-settled calc fee, only write LEFHST      *
+      *             record if settled amount is non-zero              *
+      *           - Applied for MD035660                              *
+      *  MD025087 - ANWD 'S'ettlement run (seq 00006) should not      *
+      *             settle FEAMTP prepared on daily 'A'ccrual run     *
+      *             (seq 00001) on an ANWD cob run                    *
+      *           - Applied for MD035660                              *
+      *  MD025066 - Past Due and nonautosettle fee not displayed on   *
+      *             enquiry screen after COB due to fee was matured   *
+      *             incorrectly. For facility fee, mature fee when    *
+      *             end date is less than the current rundate.        *
+      *           - Applied for MD035660                              *
+      *  MD035660 - Applied various codes from CLE073 and CLE139      *
+      *             to comply with MD021114A fixes.                   *
+      *           - MD061267 - Credit Lines (CLE025) fixes            *
+      *  MD021114A - Credit Lines (CLE025) Shadow Posting Correction  *
+      *            - Applied for MD035660                             *
+      *  MD021383A - Credit Lines (CLE025) Shadow Posting Correction. *
+/     *            - MD061267 - CREDIT LINES (CLE025) FIXES           *
       *  AR1005865 - Missing value date on fee accrual posting.       *
       *              Initialise ATYP to prevent previous value to be  *
       *              used on the processing of next fee record with   *
@@ -2580,6 +2627,9 @@
       *
      C                     MOVE *BLANKS   LKSCCY                          179741
       *                                                                   179741
+     C                     MOVE 'N'       WBVFEE  1                                        MD021114A
+     C                     MOVE 'N'       WADJDT  1                                        MD021114A
+      *                                                                                    MD021114A
      C           *IN50     IFEQ '0'
      C           FERECI    ANDEQ'D'
      C                     MOVE FEBRCA    REPBRC  3
@@ -2602,7 +2652,11 @@
      C           FECAPI    IFEQ 'Y'                                                           CLE139
      C           CCAP      ANDEQ'C'                                                           CLE139
      C           FECAPI    ORNE 'Y'                                                           CLE139
-     C           CCAP      ANDEQ'P'                                                           CLE139
+     C********   CCAP      ANDEQ'P'                                                 CLE139 MD021114A
+     C           CCAP      ANDEQ'A'                                                        MD021114A
+     C           FECAPI    ORNE 'Y'                                                        MD021114A
+     C           CCAP      ANDEQ'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
       *                                                                                       CLE139
      C           FECALT    IFNE *BLANKS
      C           CLE134    ANDNE'Y'                                                           262506
@@ -2761,6 +2815,21 @@
      C                     MOVE 'N'       WFACLF                                              CLE134
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE134
+     C                     MOVE 'N'       WNEWFC  1                                        MD021114A
+      *                                                                                    MD021114A
+      ** Check if fee is inserted yesterday and still has fee                              MD021114A
+      ** payment/s in the past that needs to be processed in                               MD021114A
+      ** 'S'-Settlement mode run today.                                                    MD021114A
+      *                                                                                    MD021114A
+     C           FEORED    IFEQ PRUN                                                       MD021114A
+     C           FENPYD    ANDLEPRUN                                                       MD021114A
+     C           FENPYD    ANDNE0                                                          MD021114A
+      *                                                                                    MD021114A
+     C           FEORED    OREQ PRUN                                                       MD021114A
+     C           FEPEND    ANDLEPRUN                                                       MD021114A
+     C                     MOVE 'Y'       WBVFEE                                           MD021114A
+     C                     ENDIF                                                           MD021114A
+      *                                                                                    MD021114A
      C           WFACLF    IFEQ 'Y'                                                           CLE073
       *
       ** Obtain original facility details from facility history header.
@@ -2768,6 +2837,16 @@
      C           HSHKEY    CHAINFACHISH              20
       *
      C           *IN20     IFEQ '1'
+     C********** BKALDI    IFEQ 'Y'                                              MD021383A MD021114A
+     C           HSHKEY    CHAINFCLTY                20                                    MD021383A
+     C**********           ENDIF                                                 MD021383A MD021114A
+      *                                                                                    MD021114A
+     C           *IN20     IFEQ '0'                                                        MD021114A
+     C           FCORED    ANDEQBJRDNB                                                     MD021114A
+     C                     MOVE 'Y'       WNEWFC                                           MD021114A
+     C                     ENDIF                                                           MD021114A
+      *                                                                                    MD021114A
+     C           *IN20     IFEQ '1'                                                        MD021383A
      C           *LOCK     IN   LDA
      C                     MOVEL'LER135'  DBPGM
      C                     MOVELFECNUM    DBKEY
@@ -2776,6 +2855,7 @@
      C                     Z-ADD001       DBASE            * DBERR 01 *
      C                     OUT  LDA                        ************
      C                     EXSR *PSSR
+     C                     ENDIF                                                           MD021383A
      C                     END
       *                                                                                     MD060223
      C           CLE138    IFEQ 'Y'                                                         MD060223
@@ -2988,6 +3068,13 @@
       **********************************
       *** FEE ADJUSTMENT PROCESSING: ***
       **********************************
+      *                                                                                    MD021114A
+      ** Do fee adjustment processing when run mode is                                     MD021114A
+      ** 'S'-Settlement only.                                                              MD021114A
+      ** or when CLE025 is switched OFF.                                                    MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
       *
       ** Search for match on fee adjustments file (can only be one
       ** settlement/adjustment on file for a fee)  If found
@@ -3651,6 +3738,8 @@
      C           FESTAL    IFEQ 'Y'                                                           CLE034
      C                     MOVE 'FEES'    WKTYPE                                              CLE034
      C                     ENDIF                                                              CLE034
+      *
+     C                     ENDIF                                                           MD021114A
      C*                                                                   E45504
      C****************************************                            E45504
      C***  Automatic settlement processing ***                            E45504
@@ -3663,6 +3752,17 @@
      C***  auto-settle after they've gone past due.                       E45504
      C*                                                                   E45504
      C                     MOVE 'N'       FREQ    1                                           196612
+      *                                                                                    MD021114A
+      ** If fee is backvalued, no need to process settlement on                            MD021114A
+      ** its first 'S'-Settlement cob run.                                                 MD021114A
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           FEORED    ANDEQBJRDNB                                                     MD021114A
+     C           FEPSTD    ANDLTBJRDNB                                                     MD021114A
+     C           CLE025    ANDEQ'Y'                                                         MD049139
+     C                     MOVE 'Y'       FREQ                                             MD021114A
+     C                     ENDIF                                                           MD021114A
       *                                                                                       196612
       ** Loop to check all the payment periods to be processed                                196612
       *                                                                                       196612
@@ -3697,6 +3797,21 @@
      C                     Z-ADDWNPAYD    WNWDAT                                            MD052216
      C                     ENDIF                                                            MD052216
       *                                                                                     MD052216
+      ** Do automatic settlement processing when run mode is                               MD021114A
+      ** 'S'-Settlement only.                                                              MD021114A
+      ** or when CLE025 is switched OFF.                                                    MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                         MD025087
+     C           *INU4     ANDEQ*OFF                                                        MD025087
+     C           CCAP      OREQ 'S'                                                         MD025087
+     C           WFACLF    ANDEQ'N'                                                         MD025087
+     C           CLE025    OREQ 'N'                                                         MD049139
+     C           WFACLF    ANDEQ'Y'                                                         MD049139
+     C           *INU4     ANDEQ*OFF                                                        MD049139
+     C           CLE025    OREQ 'N'                                                         MD049139
+     C           WFACLF    ANDEQ'N'                                                         MD049139
+      *                                                                                    MD021114A
      C           FEAMTP    IFNE 0                                         E45504
      C********** FEAUTO    ANDEQ'Y'                                                    E45504 CLE134
      C           WFEAUT    ANDEQ'Y'                                                           CLE134
@@ -3749,7 +3864,11 @@
      C                     ENDIF                                                              CLE134
      C                     Z-ADD0         LKREVI                          E45504
      C                     MOVE '1'       *IN61                           E45504
+     C           CLE025    IFEQ 'Y'                                                         MD049139
+     C                     MOVE 'Y'       WADJDT                                           MD021114A
+     C                     ENDIF                                                            MD049139
      C                     EXSR GENKEY                                    E45504
+     C                     MOVE 'N'       WADJDT                                           MD021114A
      C                     MOVE '0'       *IN61                           E45504
       *                                                                                     AR823503
       ** Restore the value of FELPAM if no fee settlement on rundate                        AR823503
@@ -3769,10 +3888,18 @@
      C*                                                                   E45504
      C***  If fee period end date on or before control date mature        E45504
      C***  this fee record.                                               E45504
+     ** For calculated facility fees, mature record when it is                            MD021114A
+     ** less than control date.                                                           MD021114A
      C*                                                                   E45504
      C           FEPEND    IFLE CODT                                      E45504
      C           WPDCLL    ANDNE'Y'                                                           CLE134
      C           FEAUTO    ANDNE'C'                                                         AR318650
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           FEPEND    ORLT CODT                                                       MD021114A
+     C           FEPEND    ANDLTBJRDNB                                                      MD025130
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           WPDCLL    ANDNE'Y'                                                        MD021114A
+     C           FEAUTO    ANDNE'C'                                                        MD021114A
       *                                                                                     AR318650
       ** If Fee has Auto-settle = 'C' and End date less than run date                       AR318650
       ** and Last change date equal run date the fee cannot mature                          AR318650
@@ -3839,10 +3966,31 @@
      C                     Z-ADD0         FEPAMS                          101859
      C                     Z-ADD0         FEDDAT                          101859
      C                     END                                            101859
+     C*                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
       *
       ****************************************
       *** FEE ACCRUALS/PAYMENT PROCESSING: ***
       ****************************************
+      *                                                                                    MD021114A
+      ** Do fee accruals processing when run mode is 'A'-Accrual only.                     MD021114A
+      ** This processing also needs to run when:                                           MD021114A
+      ** 1.) Fee is a loan fee                                                             MD021114A
+      ** 2.) Fee is backvalued and has a payment date in the past.                         MD021114A
+      ** 3.) Feature CLE025 is switched OFF.                                                MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'A'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+      *                                                                                    MD021114A
+     C           CCAP      OREQ 'S'                                                        MD021114A
+     C           WBVFEE    ANDEQ'Y'                                                        MD021114A
+     C           WNEWFC    ANDEQ'N'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+      *                                                                                    MD021114A
+     C           CCAP      OREQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+      *                                                                                     MD049139
+     C           CLE025    OREQ 'N'                                                         MD049139
       *
       ** If there is an amount past due set up fee due indicator.
       *
@@ -3911,6 +4059,18 @@
      C********** OMCODT    ANDEQBJDNWD                                                 209380 258414
      C********** FEPEND    OREQ BJDNWD                                                 209380 258414
      C********** BKANWD    ANDEQ'2'                                                    209380 258414
+     C                     MOVE 'N'       WINCAC  1                                        MD021114A
+      *                                                                                    MD021114A
+      ** When fee has a payment on next working day, only process                          MD021114A
+      ** accrual on 'A'-Accrual or if the fee is a loan fee.                               MD021114A
+      ** or if CLE025 is switched OFF.                                                      MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
+     C                     MOVE 'Y'       WINCAC                                           MD021114A
+     C                     ENDIF                                                           MD021114A
+      *                                                                                    MD021114A
       *                                                                                       258414
       ** If next payment date or fee period end date is less than                             258414
       ** or equal to date of next working date then calculate final                           258414
@@ -3930,18 +4090,23 @@
      C           OMCODT    ANDEQBJDNWD                                                      MD058499
      C           FENPYD    ANDNE0                                                           MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WINCAC    ANDEQ'Y'                                                        MD021114A
      C           FENPYD    OREQ BJDNWD                                                      MD058499
      C           FENPYD    ANDNE0                                                           MD058499
      C           BKANWD    ANDEQ'2'                                                         MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WINCAC    ANDEQ'Y'                                                        MD021114A
      C           FEPEND    ORLT BJDNWD                                                      MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WINCAC    ANDEQ'Y'                                                        MD021114A
      C           FEPEND    OREQ BJDNWD                                                      MD058499
      C           OMCODT    ANDEQBJDNWD                                                      MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WINCAC    ANDEQ'Y'                                                        MD021114A
      C           FEPEND    OREQ BJDNWD                                                      MD058499
      C           BKANWD    ANDEQ'2'                                                         MD058499
      C           PRCDUE    ANDEQ'APD'                                                       MD058499
+     C           WINCAC    ANDEQ'Y'                                                        MD021114A
       *****************************************************************                209380 258414
      C/COPY WNCPYSRC,LER135C002
      C*                                                                   100428
@@ -4031,6 +4196,22 @@
      C                     EXSR CHKPAY                                                      MD052216
      C                     Z-ADDWNPAYD    WNWDAT                                            MD052216
      C                     ENDIF                                                            MD052216
+      *                                                                                    MD021114A
+      ** Do automatic settlement processing when run mode is                               MD021114A
+      ** 'S'-Settlement only.                                                              MD021114A
+      ** or when CLE025 is switched OFF.                                                    MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                         MD025087
+     C           *INU4     ANDEQ*OFF                                                        MD025087
+     C           CCAP      OREQ 'S'                                                         MD025087
+     C           WFACLF    ANDEQ'N'                                                         MD025087
+     C           CLE025    OREQ 'N'                                                         MD049139
+     C           WFACLF    ANDEQ'Y'                                                         MD049139
+     C           *INU4     ANDEQ*OFF                                                        MD049139
+     C           CLE025    OREQ 'N'                                                         MD049139
+     C           WFACLF    ANDEQ'N'                                                         MD049139
+      *                                                                                    MD021114A
      C*                                                                   E45504
      C           FEAMTP    IFNE 0                                         E45504
      C********** FEAUTO    ANDEQ'Y'                                                    E45504 CLE134
@@ -4067,15 +4248,27 @@
      C                     Z-ADDFEAMTP    LKEAMT                          E45504
      C                     Z-ADD0         LKREVI                          E45504
      C                     MOVE '1'       *IN61                           E45504
+     C           CLE025    IFEQ 'Y'                                                         MD049139
+     C                     MOVE 'Y'       WADJDT                                           MD021114A
+     C                     ENDIF                                                            MD049139
      C                     EXSR GENKEY                                    E45504
+     C                     MOVE 'N'       WADJDT                                           MD021114A
      C                     MOVE '0'       *IN61                           E45504
      C*                                                                   E45504
      C***  If fee period end date on or before control date mature        E45504
      C***  this fee record.                                               E45504
+      ** For calculated facility fees, mature record when end date                         MD021114A
+      ** is before control date.                                                           MD021114A
      C*                                                                   E45504
      C           FEPEND    IFLE CODT                                      E45504
      C           WPDCLL    ANDNE'Y'                                                           CLE134
      C           FEAUTO    ANDNE'C'                                                         AR318650
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           FEPEND    ORLT CODT                                                       MD021114A
+     C           FEPEND    ANDLTBJRDNB                                                      MD025130
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           WPDCLL    ANDNE'Y'                                                        MD021114A
+     C           FEAUTO    ANDNE'C'                                                        MD021114A
       *                                                                                     AR318650
       ** If Fee has Auto-settle = 'C' and End date less than run date                       AR318650
       ** and Last change date equal run date the fee cannot mature                          AR318650
@@ -4084,6 +4277,7 @@
      C           FEPEND    ANDLTBJRDNB                                                      AR318650
      C           FELCHD    ANDNEBJRDNB                                                      AR318650
      C           WPDCLL    ANDNE'Y'                                                         AR318650
+      *
      C                     MOVE 'M'       FERECI                          E45504
      C********** FEAUTO    IFEQ 'C'                                               AR1078443 MD020212
      C**********           MOVE 'D'       FERECI                                  AR1078443 MD020212
@@ -4159,7 +4353,15 @@
       *                                                                                       204866
      C           FENPYD    IFLE BJDNWD                                                        204866
      C           FENPYD    ANDGT0                                                             204866
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
      C           FEPEND    ORLE BJDNWD                                                        204866
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+      *                                                                                    MD021114A
+     C           FENPYD    ORLT BJDNWD                                                     MD021114A
+     C           FENPYD    ANDGT0                                                          MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           FEPEND    ORLT BJDNWD                                                     MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
       *                                                                                       204866
      C           FELPDT    IFGT FEPEND                                                        204866
      C           FENPYD    ANDEQ0                                                             204866
@@ -4221,11 +4423,21 @@
      C                     Z-ADDFEAMTP    LKEAMT                                              204866
      C                     Z-ADD0         LKREVI                                              204866
      C                     MOVE '1'       *IN61                                               204866
+     C           CLE025    IFEQ 'Y'                                                         MD049139
+     C                     MOVE 'Y'       WADJDT                                           MD021114A
+     C                     ENDIF                                                            MD049139
      C                     EXSR GENKEY                                                        204866
+     C                     MOVE 'N'       WADJDT                                           MD021114A
      C                     MOVE '0'       *IN61                                               204866
      C           FEPEND    IFLE CODT                                                          204866
      C           WPDCLL    ANDNE'Y'                                                           CLE134
      C           FEAUTO    ANDNE'C'                                                         AR318650
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           FEPEND    ORLT CODT                                                       MD021114A
+     C           FEPEND    ANDLTBJRDNB                                                      MD025130
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           WPDCLL    ANDNE'Y'                                                        MD021114A
+     C           FEAUTO    ANDNE'C'                                                        MD021114A
       *                                                                                     AR318650
       ** If Fee has Auto-settle = 'C' and End date less than run date                       AR318650
       ** and Last change date equal run date the fee cannot mature                          AR318650
@@ -4287,12 +4499,25 @@
      C**********           ENDDO                                                     204866 AR326180
       *
      C                     END
+      *                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
       *
       ** If final accrual not yet required continue to accrue
       ** daily
       *
      C                     ELSE
      C/COPY WNCPYSRC,LER135C024
+      *                                                                                    MD021114A
+      ** Do daily fee accruals processing when run mode is                                 MD021114A
+      ** 'A'-Accrual only. This processing however needs to run                            MD021114A
+      ** 'S' -Settlement mode if the fee is a loan fee.                                    MD021114A
+      ** or if CLE025 is switched OFF.                                                      MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'A'                                                        MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           CCAP      OREQ 'S'                                                        MD021114A
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
       *
       ** If calculated on on actual amount of facility then accrue
       ** daily - this is not required for average type calculations,
@@ -4317,10 +4542,25 @@
      C                     END
       *
      C                     END
+      *                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
       *
      C                     END
       *
      C                     END
+      *                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
+      *                                                                                     MD025024
+      ** For backvalued fees inserted on rundate, process                                   MD025024
+      ** payment date if less than or equal to rundate                                      MD025024
+      *                                                                                     MD025024
+     C                     MOVE 'N'       WRKFEE  1                                         MD025024
+     C           FEORED    IFEQ BJRDNB                                                      MD025024
+     C           FEPSTD    ANDLTBJRDNB                                                      MD025024
+     C           FENPYD    ANDLEBJRDNB                                                      MD025024
+     C           FENPYD    ANDNE*ZEROS                                                      MD025024
+     C                     MOVE 'Y'       WRKFEE                                            MD025024
+     C                     ENDIF                                                            MD025024
       *                                                                                       196612
       ** End processing of fee if next payment date is greater                                196612
       ** than or equal to next working day or equal to zero                                   196612
@@ -4334,8 +4574,11 @@
       ** or fee next payment date is greater than run date but not greater than next          205529
       ** working day.                                                                         205529
       *                                                                                       205529
-     C           FENPYD    ORGT BJRDNB                                                        205529
+     C********** FENPYD    ORGT BJRDNB                                              205529 MD021114A
+     C           FENPYD    ORGE BJRDNB                                                     MD021114A
+     C           WRKFEE    ANDEQ'N'                                                         MD025024
      C           FEPEND    ORLT BJDNWD                                                        196612
+     C           WNEWFC    OREQ 'Y'                                                        MD021114A
      C                     MOVE 'Y'       FREQ                                                196612
      C                     ENDIF                                                              196612
       *                                                                                       CLE134
@@ -4360,6 +4603,13 @@
      C                     ENDIF                                                              CLE134
       *                                                                                       196612
      C                     ENDDO                                                              196612
+      *                                                                                    MD021114A
+      ** Do Full Settlement Processing from Adjustment file when                           MD021114A
+      ** run mode is 'S'-Settlement only.                                                  MD021114A
+      ** or when CLE025 is switched OFF.                                                    MD049139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
       *
       ** If fully settled amount on adjustment file add settlement
       ** amount to event amount and generate account key for
@@ -4389,6 +4639,7 @@
      C                     ENDIF                                                            MD057078
       *                                                                                       250628
       * If fee due date processing taking place and full settlement also, this                250628
+      * will have been for the previous period so skip updates to new past due                250628
       * will have been for the previous period so skip updates to new past due                250628
       *                                                                                       250628
      C           ATYP      IFNE 'H'                                                           250628
@@ -4437,11 +4688,19 @@
       *
       ** If fee period end date on or before control date mature
       ** this fee record.
+      ** For calculated facility fee, mature record when fee period                        MD021114A
+      ** end date is less than control date                                                MD021114A
       *
      C           FEPEND    IFLE CODT
      C           WPDCLL    ANDNE'Y'                                                           CLE134
      C           FEAUTO    ANDNE'C'                                                         AR318650
-      *                                                                                     AR318650
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+     C           FEPEND    ORLT CODT                                                       MD021114A
+     C           FEPEND    ANDLTBJRDNB                                                      MD025130
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           WPDCLL    ANDNE'Y'                                                        MD021114A
+     C           FEAUTO    ANDNE'C'                                                        MD021114A
+      *
       ** If Fee has Auto-settle = 'C' and End date less than run date                       AR318650
       ** and Last change date equal run date the fee cannot mature                          AR318650
       *                                                                                     AR318650
@@ -4536,6 +4795,7 @@
      C***********PTFI      ANDEQ' '                                142402 141462
      C***********CLE004    ORNE 'Y'                                142402 141462
      C***********CLE005    ANDNE'Y'                                142402 141462
+     C                     ENDIF                                                            MD048082
       *
      C           WAGG      CASNE0         EXTUPD
      C                     END
@@ -4546,12 +4806,24 @@
      C** they cannot be settled and are never reprocessed after the       052449
      C** day before due date                                              052449
      C*                                                                   052449
+     C           CCAP      IFEQ 'S'                                                         MD048082
+     C           CLE025    OREQ 'N'                                                         MD049139
      C           FEPEND    IFLE CODT                                      052449
      C           FEAMTO    ANDEQ0                                         052449
      C           FEAMTP    ANDEQ0                                         052449
      C           WPDCLL    ANDNE'Y'                                                           CLE134
      C           FEAUTO    ANDNE'C'                                                         AR318650
-      *                                                                                     AR318650
+     C           WFACLF    ANDEQ'N'                                                        MD021114A
+      *                                                                                    MD021114A
+     C           FEPEND    ORLT CODT                                                       MD021114A
+     C           FEPEND    ANDLTBJRDNB                                                      MD025066
+     C           FEORED    ANDLTBJRDNB                                                      MD025910
+     C           FEAMTO    ANDEQ0                                                          MD021114A
+     C           FEAMTP    ANDEQ0                                                          MD021114A
+     C           WFACLF    ANDEQ'Y'                                                        MD021114A
+     C           WPDCLL    ANDNE'Y'                                                        MD021114A
+     C           FEAUTO    ANDNE'C'                                                        MD021114A
+      *                                                                                    MD021114A
       ** If Fee has Auto-settle = 'C' and End date less than run date                       AR318650
       ** and Last change date equal run date the fee cannot mature                          AR318650
       *                                                                                     AR318650
@@ -4561,11 +4833,13 @@
      C           FEAMTO    ANDEQ0                                                           AR318650
      C           FEAMTP    ANDEQ0                                                           AR318650
      C           WPDCLL    ANDNE'Y'                                                         AR318650
+      *
      C                     MOVE 'M'       FERECI                          052449
      C********** FEAUTO    IFEQ 'C'                                               AR1078443 MD020212
      C**********           MOVE 'D'       FERECI                                  AR1078443 MD020212
      C**********           ENDIF                                                  AR1078443 MD020212
      C                     END                                            052449
+     C                     ENDIF                                                           MD021114A
       *
       ** Update Fee Extension File                                                          MD052216
       *                                                                                     MD052216
@@ -4578,6 +4852,10 @@
       *                                                                                     MD052216
      C                     END
      C                     ENDIF                                                              CLE139
+      *                                                                                    MD021114A
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
+      *                                                                                    MD021114A
       ******************************************************************               243496 245803
       ***Save*the*fee*adjustment*amount*for*PF/LEFEAM*******************               243496 245803
       ******************************************************************               243496 245803
@@ -4698,7 +4976,16 @@
      C********** FEAUTO    OREQ 'Y'                                                   BUG8762 248358
      C                     Z-ADD*ZERO     HIRCVD                                             CLE071A
      C                     MOVEL*BLANKS   HIRCTP                                             CLE071A
+      *                                                                                     MD025228
+     C           HIAMTS    IFNE 0                                                           MD025228
+     C           WFACLF    ANDEQ'Y'                                                         MD025228
+     C           FEAUTO    ANDEQ'Y'                                                         MD025228
+      *                                                                                     MD025228
+     C           FEAUTO    OREQ 'N'                                                         MD025228
+     C           WFACLF    OREQ 'N'                                                         MD025228
+      *                                                                                     MD025228
      C                     WRITELEFHSTF                                                      BUG8762
+     C                     ENDIF                                                            MD025228
      C**********           ENDIF                                                      BUG8762 248358
      C                     ENDIF                                                             BUG8762
      C                     ENDIF                                                             BUG8762
@@ -4741,6 +5028,7 @@
      C                     DELETLEFADJD0                                                    AR634880
      C                     ENDIF                                                            AR634880
      C                     ENDIF                                                              250628
+     C                     ENDIF                                                           MD021114A
       *                                                                                    MD026969A
      C           WKADJY    IFEQ 'Y'                                                        MD026969A
      C           WKSIGN    IFEQ '-'                                                        MD026969A
@@ -4785,13 +5073,18 @@
       *                                                                                       CLE034
      C                     ENDIF                                                              CLE034
       *                                                                                       CLE034
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
      C                     Z-ADD0         FASADJ                          153736
+     C                     ENDIF                                                           MD021114A
      C                     END
       *
      C                     END
       *
       ** PROCESSING COMPLETE:
       *
+     C           CCAP      IFEQ 'S'                                                        MD021114A
+     C           CLE025    OREQ 'N'                                                         MD049139
       *                                                                   CLE007
       ** Check if CLE007 is on.                                           CLE007
       *                                                                   CLE007
@@ -4815,6 +5108,8 @@
      C                     ENDIF                                          CLE007
      C                     ENDIF                                          CLE007
       *                                                                   CLE007
+      *                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
       ** Update account keys trailer.
       *
      C           CLE134    IFNE 'Y'                                                           CLE134
@@ -5087,7 +5382,8 @@
       ** If fee period end less than or equal to next working day
       ** make it the work end date.
       *
-     C           FEPEND    IFLE BJDNWD
+     C********** FEPEND    IFLE BJDNWD                                                     MD021114A
+     C           FEPEND    IFLT BJDNWD                                                     MD021114A
      C           FENPYD    ANDEQ0                                                           MD052216
      C           FEPEND    ORLE BJDNWD                                                      MD052216
      C           FENPYD    ANDEQFEPEND                                                      MD052216
@@ -7588,9 +7884,17 @@
      C*                                                                                      BUG8762
      C********** HIAMTS    IFNE 0                                                     BUG8762 248358
      C********** FEAUTO    OREQ 'Y'                                                   BUG8762 248358
+     C           HIAMTS    IFNE 0                                                           MD025228
+     C           WFACLF    ANDEQ'Y'                                                         MD025228
+     C           FEAUTO    ANDEQ'Y'                                                         MD025228
+      *                                                                                     MD025228
+     C           FEAUTO    OREQ 'N'                                                         MD025228
+     C           WFACLF    OREQ 'N'                                                         MD025228
+      *                                                                                     MD025228
      C                     Z-ADD*ZERO     HIRCVD                                             CLE071A
      C                     MOVEL*BLANKS   HIRCTP                                             CLE071A
      C                     WRITELEFHSTF                                                      BUG8762
+     C                     ENDIF                                                            MD025228
      C**********           ENDIF                                                      BUG8762 248358
      C                     ENDIF                                                             BUG8762
      C                     ENDIF                                                             BUG8762
@@ -8108,8 +8412,23 @@
      C********** FELPDT    ANDGEBJRDNB                                             AR852475 MD052216
      C           FELPDT    ANDLTBJDNWD                                                      MD052216
      C           FELPDT    ANDLECODT                                      155912
-     C           FEESET    ANDEQ' '                                                         AR640738
+     C           *IN61     OREQ '1'                                                        MD021114A
+     C           FELPDT    ANDLECODT                                                       MD021114A
+     C           FELPDT    ANDGEPRUN                                                       MD021114A
+     C           WADJDT    ANDEQ'Y'                                                        MD021114A
+     C           FEESET    ANDEQ' '                                                        MD021114A
      C                     Z-ADDFELPDT    LKEDAT                          093212
+      *                                                                                    MD021114A
+     C           WADJDT    IFEQ 'Y'                                                        MD021114A
+      *                                                                                    MD021114A
+     C           BKALDI    IFEQ 'N'                                                        MD021114A
+     C           CLE025    ANDEQ'Y'                                                         MD042829
+     C           FELPDT    ADD  1         LKEDAT                                           MD021114A
+     C                     ELSE                                                            MD021114A
+     C                     Z-ADDFELPDT    LKEDAT                                           MD021114A
+     C                     ENDIF                                                           MD021114A
+      *                                                                                    MD021114A
+     C                     ENDIF                                                           MD021114A
       *                                                                                     MD025983
       ** Check if backvalued to previous year when Analytical                               MD025983
       ** Accounting is on, to prevent reversal of accrued fee                               MD025983
@@ -10247,6 +10566,29 @@
      C********** WRTCD     IFEQ *BLANKS                                           AR1097176 MD020563
      C**********           MOVE 'Y'       CFC006                                  AR1097176 MD020563
      C**********           ENDIF                                                  AR1097176 MD020563
+      *                                                                                     MD042829
+      ** Check if CLE025 is switched *ON.                                                   MD042829
+      *                                                                                     MD042829
+     C                     MOVE 'N'       CLE025  1                                         MD042829
+     C                     CALL 'AOSARDR0'                                                  MD042829
+     C                     PARM *BLANKS   WRTCD                                             MD042829
+     C                     PARM '*VERIFY' WOPTN                                             MD042829
+     C                     PARM 'CLE025'  WSARD                                             MD042829
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD042829
+      *                                                                                     MD042829
+     C           WRTCD     IFEQ *BLANKS                                                     MD042829
+     C                     MOVE 'Y'       CLE025                                            MD042829
+     C                     ENDIF                                                            MD042829
+      *                                                                                     MD042829
+     C           WRTCD     IFNE *BLANKS                                                     MD042829
+     C           WRTCD     ANDNE'*NRF  '                                                    MD042829
+     C           *LOCK     IN   LDA                                                         MD042829
+     C                     MOVEL'CLE025'  DBPGM                                             MD042829
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD042829
+     C                     Z-ADD037       DBASE                                             MD042829
+     C                     OUT  LDA                                                         MD042829
+     C                     EXSR *PSSR                                                       MD042829
+     C                     ENDIF                                                            MD042829
       *                                                                                       CLE071
       ** Check if CLE071 is switched ON                                                       CLE071
       *                                                                                       CLE071

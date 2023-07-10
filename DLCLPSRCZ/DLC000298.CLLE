@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DL AWV Extract Program')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC000298 - Midas DL AWV Extract Program                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD021383A *CREATE  Date 16Jun23              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021383A - Credit lines shadow posting correction.         */
+/*                   Component split of DLC0606C. This component     */
+/*                   should only run when CER044 is on.              */
+/*                 - MD061267 - Credit Lines (CLE025) fixes          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&NAM &SEQ)
+
+             DCL        VAR(&NAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  +
+                          DPLIB')
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 RNX0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SNDPGMMSG  MSG('DLC000298 - Midas DL AWV Extract +
+                          Program') TOMSGQ(MRUNQ)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+             CALL       PGM(CB0160) PARM(&NAM &SEQ &STAT)
+
+             IF         COND(&STAT = 'N') THEN(DO)
+
+                DLTF       FILE(&DPLIB/XGLAWVDPD)
+                MONMSG     MSGID(CPF2105)
+                DLTF       FILE(&DPLIB/XGLAWXDPD)
+                MONMSG     MSGID(CPF2105)
+
+                CPYF       FROMFILE(GLAWVDPD) +
+                             TOFILE(&DPLIB/XGLAWVDPD) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(GLAWXDPD) +
+                             TOFILE(&DPLIB/XGLAWXDPD) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             ENDDO
+
+             IF         COND(&STAT = 'Y') THEN(DO)
+
+                CPYF       FROMFILE(XGLAWVDPD) TOFILE(GLAWVDPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(GLAWVDPD))
+                CPYF       FROMFILE(XGLAWXDPD) TOFILE(GLAWXDPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(GLAWXDPD))
+
+             ENDDO
+
+             CPYF       FROMFILE(DKEYSDP) TOFILE(QTEMP/XXDKEYSDP) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+             CALL       PGM(DL000298)
+
+             DLTF       FILE(QTEMP/XXDKEYSDP)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+
+             DLTF       FILE(&DPLIB/XGLAWVDPD)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(&DPLIB/XGLAWXDPD)
+             MONMSG     MSGID(CPF2105)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+             SNDPGMMSG  MSG('Program DLC000298 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ENDPGM:
+             ENDPGM

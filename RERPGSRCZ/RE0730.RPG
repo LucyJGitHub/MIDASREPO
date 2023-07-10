@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056198           Date 08Jul20               *
-      *  Prev Amend No. MD035074           Date 13May20               *
+      *  Last Amend No. 261499             Date 14Jun23               *
+      *  Prev Amend No. 258872             Date 14Jun23               *
+      *                 MD056198           Date 08Jul20               *
+      *                 MD035074           Date 13May20               *
       *                 255449             Date 21Apr20               *
       *                 MD050452           Date 11Feb20               *
       *                 MD054019           Date 11Feb20               *
@@ -108,6 +110,16 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  261499 - Wrong entry generated in projected a/c movement for *
+      *           nostro when next payment date = rundate (option 1)  *
+      *         - Move the NXTPO into NXTP once file is updated       *
+      *           (after EXSR STUP).                                  *
+      *         - Applied for MD-61251.                               *
+      *  258872 - No projected account movements for nostri.          *
+      *           Due to 209995 which is partially collected in core. *
+      *         - In subroutine NOSEVT, write records to RENESOPD     *
+      *           instead of DLNEEDPD.                                *
+      *         - Applied for MD-61251.                               *
       *  MD056198 - STOR was processed despite insufficient balance,  *
       *             switch on CRE013 even if CAP207 is on             *
       *  MD035074 - Standing Order failed due to insufficient funds,  *
@@ -2140,6 +2152,10 @@
 0415 C   46                MOVE DLMVO     DLMV                            RE0730
 0416 C   46                GOTO GENGE                                     RE0730
 0417 C                     EXSR STUP                                      RE0730
+      *                                                                                       261499
+      ** Update NXTP with new value - to be used in SR NOSEVT                                 261499
+     C                     MOVE NXTPO     NXTP                                                261499
+      *                                                                                       261499
 0418 C                     GOTO END                                       RE0730
 0419 C**   ACCUMULATE COUNT & VALUE OF EXPIRED S/O.                       RE0730
 0420 C           EXPIRE    TAG                             *EXPIRE* TAG   RE0730
@@ -3958,6 +3974,8 @@
      C*****************************************************************   209995
      C*                                                                   209995
      C           NOSEVT    BEGSR                                          209995
+      *                                                                                       258872
+     C                     Z-ADDSTOR      NSSTOR                                              258872
       *                                                                   209995
       ** Check if the first payment date falls w/in the no. of days       209995
       ** forward fo project.                                              209995
@@ -4072,7 +4090,8 @@
      C                     ENDIF                                          209995
       *                                                                   209995
      C                     EXSR SRHOL                                     209995
-     C                     WRITEDLNEEDD0                                  209995
+     C**********           WRITEDLNEEDD0                                               209995 258872
+     C                     WRITERENESOD0                                                      258872
      C                     ADD  1         TNORE                           209995
      C                     ADD  NSEAMT    TEAMT                           209995
       *                                                                   209995

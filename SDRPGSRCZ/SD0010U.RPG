@@ -14,8 +14,9 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. AR672811           Date 07Mar22               *
-      *  Prev Amend No. MD022741           Date 16Feb22               *
+      *  Last Amend No. AR1059515          Date 04Jul23               *
+      *  Prev Amend No. AR672811           Date 07Mar22               *
+      *                 MD022741           Date 16Feb22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD027372           Date 06Nov19               *
       *                 MD052297           Date 14Nov19               *
@@ -73,6 +74,11 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  AR1059515 - COB fails at component GLC3300. Amended pgm in   *
+      *              such a way that user will not be able to close   *
+      *              a customer that has a live Collateral.           *
+      *              (Child: AR1059516).                              *
+      *              Applied for MD029229.                            *
       *  AR672811 - Receiver of Guarantee customer appearing on Report*
       *             SD0012P ( Customers Eligible for Manual Deletion) *
       *             Amended program to prevent Customer Number to be  *
@@ -209,7 +215,13 @@
      FLEFEEDL1IF  E           K        DISK                                                 MD050457
      F/COPY WNCPYSRC,SD0010UF01
       *
+      *                                                                                    AR1059515
      FCGCORRL4IF  E           K        DISK                                                 MD022741
+     FGLCOLLLUIF  E           K        DISK                                                AR1059515
+     FGLCOLALFIF  E           K        DISK                                                AR1059515
+     E                    PROV       12  6                                                 AR1059515
+     IGLCOLLD0                                                                             AR1059515
+     I              CDCREF                          CDCRF1                                 AR1059515
      I*OANSCRF*****                                                       E23879
      I************* LSWS                            LSWSX                 E23879
       *
@@ -289,6 +301,23 @@
      I                                        9   9 WUD409                063444
      I                                       10  10 WUD410                063444
      I/COPY WNCPYSRC,SD0010UI02
+      *                                                                                    AR1059515
+      ** Data Structure to format Provider Customers - Number                              AR1059515
+      *                                                                                    AR1059515
+     I            DS                                                                       AR1059515
+     I                                        1  72 PROV                                   AR1059515
+     I                                        1   6 CDPR01                                 AR1059515
+     I                                        7  12 CDPR02                                 AR1059515
+     I                                       13  18 CDPR03                                 AR1059515
+     I                                       19  24 CDPR04                                 AR1059515
+     I                                       25  30 CDPR05                                 AR1059515
+     I                                       31  36 CDPR06                                 AR1059515
+     I                                       37  42 CDPR07                                 AR1059515
+     I                                       43  48 CDPR08                                 AR1059515
+     I                                       49  54 CDPR09                                 AR1059515
+     I                                       55  60 CDPR10                                 AR1059515
+     I                                       61  66 CDPR11                                 AR1059515
+     I                                       67  72 CDPR12                                 AR1059515
       *                                                                   063444
      I*                                                                   077335
      I** Data structure for SDMMOD access object                          077335
@@ -1506,6 +1535,76 @@
      C/COPY WNCPYSRC,SD0010UE02                                           077335
       *                                                                   077335
      C                     END                             End Exp Mngmt  077335
+      *                                                                                    AR1059515
+      ** Call to the Switchable features file to check if CGL011                           AR1059515
+      ** is switched on.                                                                   AR1059515
+      *                                                                                    AR1059515
+     C                     CALL 'AOSARDR0'                                                 AR1059515
+     C                     PARM *BLANKS   @RTCD                                            AR1059515
+     C                     PARM '*VERIFY' @OPTN                                            AR1059515
+     C                     PARM 'CGL011'  @SARD   6                                        AR1059515
+     C           SCSARD    PARM SCSARD    DSFDY                                            AR1059515
+      *                                                                                    AR1059515
+     C           @RTCD     IFEQ *BLANKS                                                    AR1059515
+     C                     MOVE 'Y'       CGL011  1                                        AR1059515
+     C                     ELSE                                                            AR1059515
+     C                     MOVE 'N'       CGL011                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+      *                                                                                    AR1059515
+     C           CGL011    IFEQ 'Y'                                                        AR1059515
+      *                                                                                    AR1059515
+     C           NCNUM     CHAINGLCOLLLU             91                                    AR1059515
+     C           *IN91     IFEQ *OFF                                                       AR1059515
+      *                                                                                    AR1059515
+     C           CDRECI    IFEQ 'D'                                                        AR1059515
+     C                     MOVEL'REJECT'  W0RTN                                            AR1059515
+     C                     MOVE 'F'       WUD232                                           AR1059515
+     C           QUIT      IFEQ 'Y'                                                        AR1059515
+     C                     RETRN                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     GOTO ESC91                                                      AR1059515
+     C                     ENDIF                                                           AR1059515
+      *                                                                                    AR1059515
+     C                     ENDIF                                                           AR1059515
+      *                                                                                    AR1059515
+     C           *LOVAL    SETLLGLCOLLLU                                                   AR1059515
+     C                     READ GLCOLLLU                 91                                AR1059515
+     C           *IN91     DOWEQ*OFF                                                       AR1059515
+     C           CDRECI    IFEQ 'D'                                                        AR1059515
+     C                     Z-ADD1         X       30                                       AR1059515
+     C           X         DOWLE12                                                         AR1059515
+     C                     MOVELPROV,X    WCUNM   6                                        AR1059515
+     C           WCUNM     IFNE *BLANKS                                                    AR1059515
+     C           WCUNM     IFEQ NCNUM                                                      AR1059515
+     C                     MOVEL'REJECT'  W0RTN                                            AR1059515
+     C                     MOVE 'F'       WUD232                                           AR1059515
+     C           QUIT      IFEQ 'Y'                                                        AR1059515
+     C                     RETRN                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     GOTO ESC91                                                      AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     ADD  1         X                                                AR1059515
+     C                     ENDDO                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     READ GLCOLLLU                 91                                AR1059515
+     C                     ENDDO                                                           AR1059515
+      *                                                                                    AR1059515
+     C           NCNUM     CHAINGLCOLALF             91                                    AR1059515
+     C           *IN91     IFEQ *OFF                                                       AR1059515
+     C           CDRECI    IFEQ 'D'                                                        AR1059515
+     C                     MOVEL'REJECT'  W0RTN                                            AR1059515
+     C                     MOVE 'F'       WUD232                                           AR1059515
+     C           QUIT      IFEQ 'Y'                                                        AR1059515
+     C                     RETRN                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     GOTO ESC91                                                      AR1059515
+     C                     ENDIF                                                           AR1059515
+     C                     ENDIF                                                           AR1059515
+      *                                                                                    AR1059515
+     C           ESC91     TAG                                                             AR1059515
+      *                                                                                    AR1059515
+     C                     ENDIF                                                           AR1059515
       *                                                                   S01522
       ** Establish whether UDC is installed. If installed call CGC0023    S01522
       ** to establish if the customer can be deleted.                     S01522

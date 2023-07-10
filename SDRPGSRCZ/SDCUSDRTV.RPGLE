@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. 254109             Date 01Jun20               *
+      *  Last Amend No. AR1059515          Date 06Jul23               *	
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
@@ -154,6 +155,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1059515 - COB fails at component GLC3300. Amended pgm in   *
+      *              such a way that user will not be able to close   *
+      *              a customer that has a live Collateral. Added a   *
+      *              specific error message when closing a customer   *
+      *              with live Collateral. (Child: AR1059516).        *
+      *              Applied for MD029229.                            *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records. (Recompile)      *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
@@ -3480,6 +3487,14 @@
      C                   MOVEL     '5049331'     MsgIdArr(Ix)                               MD052297
      C                   GOTO      EVALAC                                                   MD052297
      C                   ENDIF                                                              MD052297
+      *                                                                                    AR1059515
+      ** Customer has live Collateral                                                      AR1059515
+      ** CASE: WRK.Customer Deln Flag 232 is Do not delete                                 AR1059515
+      *                                                                                    AR1059515
+     C     WDS2032       IFEQ      'F'                                                     AR1059515
+     C                   MOVEL     '5049595'     MsgIdArr(Ix)                              AR1059515
+     C                   GOTO      EVALAC                                                  AR1059515
+     C                   ENDIF                                                             AR1059515
       *                                                                                       246639
       ** Customer defined as a parent on SDCUSTPD.                                            246639
       ** CASE: WRK.Customer Deln Flag 006 is Do not delete                                    246639

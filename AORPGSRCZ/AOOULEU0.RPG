@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD059570           Date 15Mar21               *
+      *  Last Amend No. MD037299           Date 11Jul23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD059570           Date 15Mar21               *
       *                 MD058815           Date 28Sep21               *
       *                 MD058984           Date 19Oct21               *
       *                 CLE172             Date 01Oct20               *
@@ -148,6 +149,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037299 - Looping encountered when loan's maturity date is  *
+      *             31st December 2071. Based on MD-24938/AR830785.   *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD059570 - Shadow posting for reversed Participation sold    *
@@ -4468,6 +4471,8 @@
       *                                                                                       201672
      C           SRRPAY    BEGSR                                                              201672
       *                                                                                       201672
+     C                     Z-ADD0         FWNIDT                                            MD037299
+      *                                                                                     MD037299
      C           WNRPD     DOWLEOMEND                                                         201672
      C           WNRPD     ANDGENRPD                                                        AR830785
      C           OMMAT     ANDNEWNRPD                                                         205504
@@ -4483,6 +4488,10 @@
      C           WNRPD     DOWLEOMEND                                                         201672
      C           WNRPD     ANDGENRPD                                                        AR830785
      C           WNRPD     ANDLTWNIDT                                                         201672
+      *                                                                                     MD037299
+     C           WNRPD     ORLE OMEND                                                       MD037299
+     C           WNRPD     ANDGENRPD                                                        MD037299
+     C           WNRPD     ANDLEFWNIDT                                                      MD037299
       *                                                                                       201672
      C           WLICD     IFNE WNRPD                                                         201672
      C           WNRPD     ANDNE0                                                             201672
@@ -4523,6 +4532,11 @@
      C           WNIDT     DOWLEOMEND                                                         201672
      C           WNIDT     ANDGENIDT                                                        AR830785
      C           WNIDT     ANDLEWNRPD                                                         201672
+      *                                                                                     MD037299
+     C           WNIDT     ORLE OMEND                                                       MD037299
+     C           WNIDT     ANDGENIDT                                                        MD037299
+     C           WNIDT     ANDGTWNRPD                                                       MD037299
+     C           WNRPD     ANDLTNRPD                                                        MD037299
       *                                                                                       201672
      C           WLICD     IFNE WNIDT                                                         201672
      C********** WNRPD     ANDNE0                                                     201672 221505R
@@ -4559,6 +4573,14 @@
      C                     Z-ADDZDYNBR    ZDAYNO                                              238838
      C                     ENDSL                                                              238838
      C                     Z-ADDZDAYNO    WNIDT                                               201672
+      *                                                                                     MD037299
+      ** Save final valid value of WNIDT, use it to exit WNRPD loop                         MD037299
+      *                                                                                     MD037299
+     C           WNIDT     IFLE OMEND                                                       MD037299
+     C           WNIDT     ANDGENIDT                                                        MD037299
+     C                     Z-ADDWNIDT     FWNIDT  50                                        MD037299
+     C                     ENDIF                                                            MD037299
+      *                                                                                     MD037299
      C                     ELSE                                                               201672
      C                     Z-ADD99999     WNIDT                                               201672
      C                     ENDIF                                                              201672

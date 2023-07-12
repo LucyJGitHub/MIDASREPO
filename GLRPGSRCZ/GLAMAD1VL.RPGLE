@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250822             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD039747           Date 12Jul23               *
+      *  Prev Amend No. 250822             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039747 - API General Ledger and Retail Accounts (GLAMAD)   *
+      *             assumes filed "Midas Tax Indicator field (Y or N)"*
+      *             is mandatory                                      *
       *  250822 - Next Statement date is incorrect.  Ensure that      *
       *           DnxtSDat is always called to calculate value based  *
       *           on Frequency and/or Next Statement Day.             *
@@ -1951,14 +1955,16 @@
 
      C                   EXSR      RESETERRS
       *                                                                                       CDL013
-     C     CDL013        Ifeq      'Y'                                                        CDL013
+     C*****CDL013        Ifeq      'Y'                                               CDL013 MD039747
      C*                                                                                       CDL013
-     C                   CALL      'AOCUSTR0'                                                 CDL013
+     C**********         CALL      'AOCUSTR0'                                        CDL013 MD039747
+     C                   CALLB     'AOCUSTR1'                                               MD039747
      C                   PARM      '*MSG    '    @RTCD             7                          CDL013
      C                   PARM      '*KEY    '    @OPTN             7                          CDL013
      C                   PARM      DDCUSN        @CUSNN           10                          CDL013
      C                   PARM                    @CSTAT            7                          CDL013
-     C     SDCUST        PARM      SDCUST        DSFDY                                        CDL013
+     C*****SDCUST        PARM      SDCUST        DSFDY                               CDL013 MD039747
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD039747
      C*                                                                                       CDL013
      C** Data-base error processing.                                                          CDL013
      C*                                                                                       CDL013
@@ -1971,7 +1977,12 @@
      C                   OUT       LDA                                                        CDL013
      C                   EXSR      #TERM                                                      CDL013
      C                   ENDIF                                                                CDL013
-     C                   ENDIF                                                                CDL013
+     C**********         ENDIF                                                       CDL013 MD039747
+      *                                                                                     MD039747
+     C     CRE007        IFEQ      'N'                                                      MD039747
+     C     DDITAX        ANDEQ     *BLANKS                                                  MD039747
+     C                   MOVE      BBTAIN        DDITAX                                     MD039747
+     C                   ENDIF                                                              MD039747
      C*                                                                                       CDL013
       *                                                                         180721
       ** Default Interest Taxable if necessary                                  180721
@@ -2918,6 +2929,32 @@
      C                   Eval      CER050 = 'Y'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
+      ** Access SAR details file to determine if CRE007 is on.                              MD039747
+      *                                                                                     MD039747
+     C                   CALLB     'AOSARDR0'                                               MD039747
+     C                   PARM      *BLANKS       PRTCD                                      MD039747
+     C                   PARM      '*VERIFY'     POPTN                                      MD039747
+     C                   PARM      'CRE007'      PSARD                                      MD039747
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD039747
+      *                                                                                     MD039747
+      * Database Error                                                                      MD039747
+      *                                                                                     MD039747
+     C     PRTCD         IFNE      *BLANKS                                                  MD039747
+     C     PRTCD         ANDNE     '*NRF   '                                                MD039747
+     C     *LOCK         IN        LDA                                                      MD039747
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD039747
+     C                   Z-ADD     7             DBASE                                      MD039747
+     C                   MOVEL     'CRE007'      DBKEY                                      MD039747
+     C                   OUT       LDA                                                      MD039747
+     C                   EXSR      *PSSR                                                    MD039747
+     C                   END                                                                MD039747
+      *                                                                                     MD039747
+     C     PRTCD         IFEQ      *BLANK                                                   MD039747
+     C                   MOVE      'Y'           CRE007            1                        MD039747
+     C                   ELSE                                                               MD039747
+     C                   MOVE      'N'           CRE007                                     MD039747
+     C                   END                                                                MD039747
+      *                                                                                     MD039747
      C     KLActx        KLIST                                                                CER048
      C                   KFLD                    KFCusn                                       CER048
      C                   KFLD                    KFCtax                                       CER048

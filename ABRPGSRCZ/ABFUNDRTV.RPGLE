@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. AR658206           Date 22Jun23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -66,6 +67,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR658206 - Cannot insert Front Office ID and Associated      *
+      *             Front Office ID fields for FUND api. Add these    *
+      *             fields as parameters.                             *
+      *           - Applied for MD-61469.                             *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -548,7 +553,26 @@
 
       ** Error if deal not found
 
-     C     FOASID        CHAIN     ABFUNDL1                           02
+     C*****FOASID        CHAIN     ABFUNDL1                           02                    AR658206
+     C     FOASID        CHAIN     FRNTOFCL1                          02                    AR658206
+      *                                                                                     AR658206
+      ** If insert                                                                          AR658206
+      *                                                                                     AR658206
+     C                   IF        DDACTN = 'I'                                             AR658206
+                                                                                            AR658206
+      ** Associated Front Office Transaction ID can't be present already                    AR658206
+                                                                                            AR658206
+     C                   IF        RecNotFnd = False                                        AR658206
+     C                   EVAL      OKACTN = 'N'                                             AR658206
+     C                   EVAL      Ix = Ix + 1                                              AR658206
+     C                   EVAL      FldNameArr(Ix) = '#1ACTN'                                AR658206
+     C                   EVAL      MsgIdArr(Ix) = 'APM0102'                                 AR658206
+     C                   EVAL      MsgDtaArr(Ix) = FOASID                                   AR658206
+     C                   GOTO      EVFRNT                                                   AR658206
+     C                   ENDIF                                                              AR658206
+                                                                                            AR658206
+     C                   ELSE                                                               AR658206
+                                                                                            AR658206
      C                   IF        RecNotFnd = True
      C                   EVAL      OKACTN = 'N'
      C                   EVAL      Ix = Ix + 1
@@ -564,6 +588,8 @@
 
      C                   MOVE      HKDN38        DDDADN
      C                   ENDIF
+                                                                                            AR658206
+     C                   ENDIF                                                              AR658206
 
      C     EVFRNT        ENDSR
       *****************************************************************

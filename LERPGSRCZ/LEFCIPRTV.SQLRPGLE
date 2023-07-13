@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. AR567221           Date 12Jul23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 MD060092           Date 01Aug22               *
       *                 MD060121           Date 18Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD034146           Date 17May22               *
@@ -79,6 +80,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR567221 - Facility is allowed to be closed even there are   *
+      *             outstanding loans attached to it. Check out-      *
+      *             standing loans from CLOANCL instead of LEREF.     *
+      *             Patterned fix from GEMS224505.                    *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
@@ -216,9 +221,9 @@
      FLEFCLTL9  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:FCLTYFLF9)
      F                                     PREFIX(F9_)
-      **  Customer/Facility/Loan Cross-Reference file
-     FLEREF     IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(LE_)
+      ****Customer/Facility/Loan*Cross-Reference*file******************                     AR567221
+     F*LEREF****IF   E           K DISK    INFSR(*PSSR)                                     AR567221
+     F**********                           PREFIX(LE_)                                      AR567221
 
       **  Loan Master file
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
@@ -226,6 +231,12 @@
      F                                     IGNORE(CLOANZ1F)
      F                                     IGNORE(CLOANCKF)
      F                                     PREFIX(CL_)
+
+     FCLOANF    IF   E           K DISK    INFSR(*PSSR)                                     AR567221
+     F                                     RENAME(CLOANCLF:CLOANCF)                         AR567221
+     F                                     PREFIX(CF_)                                      AR567221
+      ** Loans by Facility for History                                                      AR567221
+      *                                                                                     AR567221
       **  Use CLOANL6 to check o/s loans for syndicated facility                            AR928430
       *                                                                                     AR928430
      FCLOANL6   IF   E           K DISK    INFSR(*PSSR)                                     AR928430
@@ -1304,14 +1315,18 @@
      C                   Z-ADD     FC_FACT       K2FACT
      C                   Z-ADD     FC_FCNO       K2FCNO
       *
-     C     K#KY02        SETLL     LEREF
-     C     K#KY02        READE     LEREF                                  80
+     C*****K#KY02        SETLL     LEREF                                                    AR567221
+     C*****K#KY02        READE     LEREF                                  80                AR567221
+     C     K#KY02        SETLL     CLOANF                                                   AR567221
+     C     K#KY02        READE     CLOANF                                 80                AR567221
       *
      C     *IN80         DOWEQ     *OFF
       *
-     C     LE_RECI       IFEQ      'D'
+     C*****LE_RECI       IFEQ      'D'                                                      AR567221
      C**********         Z-ADD     LE_LNNO       K5LNRF            6 0                        CLE148
-     C                   MOVEL     LE_LNNO       K5LNRF            6                          CLE148
+     C**********         MOVEL     LE_LNNO       K5LNRF            6                 CLE148 AR567221
+     C     CF_RECI       IFEQ      'D'                                                      AR567221
+     C                   Z-ADD     CF_LNRF       K5LNRF            6 0                      AR567221
      C                   MOVE      'A'           K5RCTP            1
      C     K#KY05        CHAIN     CLOAN                              80
       *
@@ -1333,7 +1348,8 @@
      C                   ENDIF
      C                   ENDIF
       *
-     C     K#KY02        READE     LEREF                                  80
+     C*****K#KY02        READE     LEREF                                  80                AR567221
+     C     K#KY02        READE     CLOANF                                 80                AR567221
       *
      C                   ENDDO
       *
@@ -1392,14 +1408,18 @@
      C                   Z-ADD     FC_FACT       K2FACT
      C                   Z-ADD     FC_FCNO       K2FCNO
       *
-     C     K#KY02        SETLL     LEREF
-     C     K#KY02        READE     LEREF                                  80
+     C*****K#KY02        SETLL     LEREF                                                    AR567221
+     C*****K#KY02        READE     LEREF                                  80                AR567221
+     C     K#KY02        SETLL     CLOANF                                                   AR567221
+     C     K#KY02        READE     CLOANF                                 80                AR567221
       *
      C     *IN80         DOWEQ     '0'
       *
-     C     LE_RECI       IFEQ      'D'
+     C*****LE_RECI       IFEQ      'D'                                                      AR567221
      C**********         Z-ADD     LE_LNNO       K5LNRF                                       CLE148
-     C                   MOVEL     LE_LNNO       K5LNRF                                       CLE148
+     C**********         MOVEL     LE_LNNO       K5LNRF                              CLE148 AR567221
+     C     CF_RECI       IFEQ      'D'                                                      AR567221
+     C                   Z-ADD     CF_LNRF       K5LNRF                                     AR567221
      C                   MOVE      'A'           K5RCTP
      C     K#KY05        CHAIN     CLOAN                              80
       *
@@ -1410,7 +1430,8 @@
       *
      C                   ENDIF
       *
-     C     K#KY02        READE     LEREF                                  80
+     C*****K#KY02        READE     LEREF                                  80                AR567221
+     C     K#KY02        READE     CLOANF                                 80                AR567221
       *
      C                   ENDDO
       *

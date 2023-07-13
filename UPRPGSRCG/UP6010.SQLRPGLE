@@ -15,10 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061004 *CREATE   Date 02Feb23               *
+      *  Last Amend No. MD061632           Date 13Jul23               *
+      *  Prev Amend No. MD061533           Date 27Jun23               *
+      *                 MD061004 *CREATE   Date 02Feb23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061632 - *U library for client package can be either core  *
+      *             or client                                         *
+      *  MD061533 - Amendments to INSP screen and process             *
+      *             Also apply MD-61361                               *
+      *  MD061361 - Correct package name when calling PGM             *
       *  MD061004 - Adding CCSID for database objects                 *
       *                                                               *
       *****************************************************************
@@ -93,6 +100,9 @@
      D WQ0003          S              6  0
      D ZDate           S              7
      D etc             S              3
+     D LIBP            S             10                                                     MD061533
+     D RTN             S             10                                                     MD061533
+     D LIBU            S             10A                                                    MD061632
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
 
@@ -329,7 +339,8 @@
      C                   if        XSELG <> *blanks
      C                   eval      XNAXG  = '/' + XPACK + 'G' + ' objects ' +
      C                             'will be restored to'
-     C                   eval      XNAYG  = 'Programs PGMAG, PGMB1 and PGMC1' +
+     C**********         eval      XNAYG  = 'Programs PGMAG, PGMB1 and PGMC1' +             MD061533
+     C                   eval      XNAYG  = 'Programs PGMB1 and PGMC1' +                    MD061533
      C                             ' will be called for global'
      C                   eval      XLIRG = GPFX + 'GIRLIB'
      C                   ENDIF
@@ -339,7 +350,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ1 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
-     C                   eval      XNAYZ1 = 'Programs PGMAZ, PGMB2 and PGMC2' +
+     C**********         eval      XNAYZ1 = 'Programs PGMAZ, PGMB2 and PGMC2' +             MD061533
+     C                   eval      XNAYZ1 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf
      C                   eval      XLIRZ1 = sprf + 'IRLIB'
      C                   ENDIF
@@ -349,6 +361,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ2 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ2 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ2 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -357,6 +371,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ3 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ3 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ3 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -365,6 +381,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ4 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ4 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ4 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -373,6 +391,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ5 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ5 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ5 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -380,7 +400,10 @@
      C                   eval      sprf = vPFX6
      C                   exsr      SrSysVal
      C                   eval      XNAXZ6 = '/' + XPACK + 'Z' + ' objects ' +
-     C                             'will be restored to ' + sprf + 'IRLIB'
+     C**********                   'will be restored to ' + sprf + 'IRLIB'                  MD061533
+     C                             'will be restored to'                                    MD061533
+     C                   eval      XNAYZ6 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ6 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -389,6 +412,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ7 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ7 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ7 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -397,6 +422,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ8 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ8 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ8 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -405,6 +432,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ9 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ9 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ9 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -413,6 +442,8 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ0 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   eval      XNAYZ0 = 'Programs PGMB2 and PGMC2' +                    MD061533
+     C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ0 = sprf + 'IRLIB'
      C                   ENDIF
 
@@ -955,7 +986,9 @@
      C                   ENDIF
 
       * *U
+      * Check first using core package                                                      MD061632
      C                   eval      LibName = XPACK + 'U'
+     C                   EVAL      LIBU = LibName                                           MD061632
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD           10
      C                   PARM      LibName       P2OBNM           10
@@ -963,6 +996,17 @@
      C                   PARM      '*LIB'        P2OBTP            8
      C                   PARM      *blanks       CHKMBR           10
       *
+      * If libary does not exist, check with client package                                 MD061632
+     C     RTNCOD        IFNE      'Exist'                                                  MD061632
+     C                   eval      LibName = XPACK2 + 'U'                                   MD061632
+     C                   EVAL      LIBU = LibName                                           MD061632
+     C                   CALL      'UTCHKOBJ'                                               MD061632
+     C                   PARM      *BLANK        RTNCOD           10                        MD061632
+     C                   PARM      LibName       P2OBNM           10                        MD061632
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061632
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061632
+     C                   PARM      *blanks       CHKMBR           10                        MD061632
+                                                                                            MD061632
       * If libary does not exist, send message
      C     RTNCOD        IFNE      'Exist'
      C                   seton                                        30
@@ -972,6 +1016,7 @@
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
      C                   ENDIF
+     C                   ENDIF                                                              MD061632
 
       * *D
      C                   If        XCUM = 'Y'
@@ -1177,7 +1222,8 @@
 
      C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +
      C                             '/GPSVLXTD set GIVAL = ' + '''' +
-     C                             XPACK + 'U' + '''' + ' where GISVAL = ' +
+     C**********                   XPACK + 'U' + '''' + ' where GISVAL = ' +                MD061632
+     C                             LIBU        + '''' + ' where GISVAL = ' +                MD061632
      C                             '''' + 'BrgDeliveredSrcLib' + ''''
 
      C/EXEC SQL
@@ -1273,7 +1319,8 @@
 
      C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +
      C                             '/SDSVLXTD set GIVAL = ' + '''' +
-     C                             XPACK + 'U' + '''' + ' where GISVAL = ' +
+     C**********                   XPACK + 'U' + '''' + ' where GISVAL = ' +                MD061632
+     C                             LIBU        + '''' + ' where GISVAL = ' +                MD061632
      C                             '''' + 'BrgDeliveredSrcLib' + ''''
 
      C/EXEC SQL
@@ -1391,7 +1438,8 @@
      C                   seton                                        33
      C                   ENDIF
      C                   eval      ValLib = XLIRZ3
-     C                   exsr      Sr_ValLibZ
+     C**********         exsr      Sr_ValLibZ                                               MD061533
+     C                   exsr      Sr_ValLibL                                               MD061533
      C                   If        ErrInd = 'Y'
      C                   seton                                        63
      C                   ENDIF
@@ -2037,22 +2085,25 @@
      C     Sr_RestGCum   BEGSR
 
      C                   eval      ErrInd = ' '
+     C                   eval      RTN = *blanks                                            MD061533
 
      C                   eval      LIBP =   XPACK2 + 'P'
 
-     C                   CALL      'PGMAG'                              20
-     C                   PARM                    LIBP
-     C                   PARM                    GPFX
-     C                   PARM                    ZPFX              2
-     C                   PARM                    RTN              10
-
-     C                   if        RTN <> *blanks or *IN20 = '1'
-     C                   eval      ErrInd = 'Y'
-     C                   leaveSR
-     C                   endif
+      * System values are already updated, no need to run the scripts                       MD061533
+     C**********         CALL      'PGMAG'                              20                  MD061533
+     C**********         PARM                    LIBP                                       MD061533
+     C**********         PARM                    GPFX                                       MD061533
+     C**********         PARM                    ZPFX              2                        MD061533
+     C**********         PARM                    RTN              10                        MD061533
+      **********                                                                            MD061533
+     C**********         if        RTN <> *blanks or *IN20 = '1'                            MD061533
+     C**********         eval      ErrInd = 'Y'                                             MD061533
+     C**********         leaveSR                                                            MD061533
+     C**********         endif                                                              MD061533
 
      C                   CALL      'PGMB1'                              20
-     C                   PARM                    XPACK2
+     C**********         PARM                    XPACK2                                     MD061361
+     C                   PARM                    XPACK                                      MD061361
      C                   PARM                    GPFX
      C                   PARM                    ZPFX              2
      C                   PARM                    RTN
@@ -2084,22 +2135,25 @@
      C     Sr_RestZCum   BEGSR
 
      C                   eval      ErrInd = ' '
+     C                   eval      RTN = *blanks                                            MD061533
 
      C                   eval      LIBP =   XPACK2 + 'P'
 
-     C                   CALL      'PGMAZ'                              20
-     C                   PARM                    LIBP             10
-     C                   PARM                    GPFX
-     C                   PARM                    sprf
-     C                   PARM                    RTN
-
-     C                   if        RTN <> *blanks or *IN20 = '1'
-     C                   eval      ErrInd = 'Y'
-     C                   leaveSR
-     C                   endif
+      * System values are already updated, no need to run the scripts                       MD061533
+     C**********         CALL      'PGMAZ'                              20                  MD061533
+     C**********         PARM                    LIBP             10                        MD061533
+     C**********         PARM                    GPFX                                       MD061533
+     C**********         PARM                    sprf                                       MD061533
+     C**********         PARM                    RTN                                        MD061533
+      **********                                                                            MD061533
+     C**********         if        RTN <> *blanks or *IN20 = '1'                            MD061533
+     C**********         eval      ErrInd = 'Y'                                             MD061533
+     C**********         leaveSR                                                            MD061533
+     C**********         endif                                                              MD061533
 
      C                   CALL      'PGMB2'                              20
-     C                   PARM                    XPACK2
+     C**********         PARM                    XPACK2                                     MD061361
+     C                   PARM                    XPACK                                      MD061361
      C                   PARM                    GPFX
      C                   PARM                    sprf
      C                   PARM                    RTN

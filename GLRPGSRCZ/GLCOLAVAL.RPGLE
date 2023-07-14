@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -394,6 +396,8 @@
      C                   Parm                    ValidTran
      C                   Parm                    PColRef          10
      C                   Parm                    PColCur           3
+     C                   Parm                    PColEnty          1                          BA6045
+     C                   Parm                    PColBrca          3                          BA6045
      C                   Parm                    SBlank            1
      C                   Parm                    WChgDel           1
      C                   Parm                    CGL072            1                          CGL072
@@ -446,7 +450,31 @@
      C**********         ELSE                                                        CLE138 MD060092
      C**********         MOVE      'N'           CLE138                              CLE138 MD060092
      C**********         END                                                         CLE138 MD060092
-
+      *                                                                                       BA6045
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       @RTCD                                        BA6045
+     C                   PARM      '*VERIFY'     @OPTN                                        BA6045
+     C                   PARM      'BA6045'      @SARD                                        BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6045
+      *                                                                                       BA6045
+      ** Database Error                                                                       BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFNE      *BLANKS                                                    BA6045
+     C     @RTCD         ANDNE     '*NRF   '                                                  BA6045
+     C                   MOVEL     'SCSARDPD'    DBFILE                         ************  BA6045
+     C                   Z-ADD     7             DBASE                          * DBERR 07 *  BA6045
+     C                   MOVEL     'BA6045'      DBKEY                          ************  BA6045
+     C                   EXSR      *PSSR                                                      BA6045
+     C                   END                                                                  BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
+     C
      C/COPY WNCPYSRC,GLCOLAVC07
       ** Initialise Program name
 
@@ -1162,6 +1190,7 @@
 
      C                   If        (*IN32 = *On) Or
      C                             (*IN32 = *Off) And  (RECI <> 'D')
+     C                   If        BA6045 = 'N'                                               BA6045
      C                   Add       1             WIdx
 
      C                   If        WIdx <= 75
@@ -1171,10 +1200,34 @@
      C                   Else
      C                   Eval      WIdx = 75
      C                   EndIf
+     C                   Else                                                                 BA6045
+     C                   If        Idx < 75                                                   BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 BA6045
+     C                   Eval      MsgIdArr(Idx)   = 'GLM0218'                                BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
      C                   Eval      OKFCTY = 'N'
      C                   EndIf
 
      C                   EndIf
+      *                                                                                       BA6045
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   IF        OKFCTY <> 'N'                                              BA6045
+     C                   EVAL      ADBRCA = BRCA                                              BA6045
+     C                   ENDIF                                                                BA6045
+      * Facility branch                                                                       BA6045
+     C                   EVAL      CAFBRC = BRCA                                              BA6045
+     C                   IF        OKFCTY <> 'N' and Idx < 75 and                             BA6045
+     C                             PColEnty = 'B' and PColBrca <> ADBRCA                      BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADFCTY'                                 BA6045
+     C                   Eval      MsgIdArr(Idx)   = 'GLM0300'                                BA6045
+     C                   Eval      OKFCTY = 'N'                                               BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
      C                   EndIf
 
      C                   EndSr
@@ -1321,6 +1374,7 @@
      C                   If        (*IN33 = *On) Or
      C                             (*IN33 = *Off) And  (RECI <> 'D')
      C                   If        (ADFCTY = *Blank)
+     C                   If        BA6045 = 'N'                                               BA6045
      C                   Add       1             WIdx
 
      C                   If        WIdx <= 75
@@ -1330,6 +1384,14 @@
      C                   Else
      C                   Eval      WIdx = 75
      C                   EndIf
+     C                   Else                                                                 BA6045
+     C                   If        Idx < 75                                                   BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 BA6045
+     C                   Eval      MsgIdArr(Idx)   = 'GLM0222'                                BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
      C                   Eval      OKLNLM = 'N'
      C                   EndIf
      C                   Else
@@ -1352,6 +1414,20 @@
      C                   Eval      OKLNLM = 'N'
      C                   Endif
      C                   Endif
+      *                                                                                       BA6045
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   IF        OKLNLM <> 'N'                                              BA6045
+     C                   EVAL      ADBRCA = BRCA                                              BA6045
+     C                   ENDIF                                                                BA6045
+     C                   IF        OKLNLM <> 'N' and Idx < 75 and                             BA6045
+     C                             PColEnty = 'B' and PColBrca <> ADBRCA                      BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADLNLM'                                 BA6045
+     C                   Eval      MsgIdArr(Idx) = 'GLM0301'                                  BA6045
+     C                   Eval      OKLNLM = 'N'                                               BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
      C                   Endif
 
      C                   EndIf
@@ -1524,6 +1600,7 @@
      C     ACST          OrEq      'C'
      C     RECI          OrEq      'C'
      C     RECI          OrEq      'R'
+     C                   If        BA6045 = 'N'                                               BA6045
      C                   Add       1             WIdx
 
      C                   If        WIdx <= 75
@@ -1537,10 +1614,32 @@
      C                   Else
      C                   Eval      WIdx = 75
      C                   EndIf
+     C                   Else                                                                 BA6045
+     C                   If        Idx < 75                                                   BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADREAC'                                 BA6045
+     C                   Eval      MsgIdArr(Idx)   = 'GLM0225'                                BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
      C                   Eval      OKREAC = 'N'
      C                   EndIf
      C                   EndIf
 
+      *                                                                                       BA6045
+     C                   If        BA6045 = 'Y'                                               BA6045
+     C                   IF        OKREAC <> 'N'                                              BA6045
+     C                   EVAL      ADBRCA = BRCA                                              BA6045
+     C                   ENDIF                                                                BA6045
+     C                   IF        OKREAC <> 'N' and Idx < 75 and                             BA6045
+     C                             PColEnty = 'B' and PColBrca <> ADBRCA                      BA6045
+     C                   Add       1             Idx                                          BA6045
+     C                   Add       1             RIdx                                         BA6045
+     C                   Eval      FldNameArr(Idx) = 'ADREAC'                                 BA6045
+     C                   Eval      MsgIdArr(Idx) = 'GLM0302'                                  BA6045
+     C                   Eval      OKREAC = 'N'                                               BA6045
+     C                   EndIf                                                                BA6045
+     C                   EndIf                                                                BA6045
       *                                                                                       CGL072
      C                   ENDIF                                                                CGL072
       *                                                                                       CGL072

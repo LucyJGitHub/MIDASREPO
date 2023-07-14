@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058109           Date 08Sep21               *
-      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *  Last Amend No. BA6048             Date 01Mar23               *
+      *  Prev Amend No. MD058109           Date 08Sep21               *
+      *                 MD057871           Date 30Apr21               *
       *                 MD058050           Date 10May21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -138,6 +139,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  BA6048 - New Special Instructions for LE Loans               *
       *  MD058109 - 'Accrue' field misalignment on LE0310P1 Report    *
       *  MD057871 - Allow a blank floor in calling ARR Calculator     *
       *  MD058050 - CLE172 fields are reflected in LE0310P1 Report    *
@@ -377,6 +379,9 @@
      F*                                                                   S01408
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,LE0310FFPG                                           S01408
+      *                                                                                       BA6048
+     FA6CLIPY0IF  E           K        DISK                           UC                      BA6048
+      *                                                                                       BA6048
      F*                                                                   S01408
 0020 F* ID F  C  H  L    FUNCTION OF INDICATORS
 0021 F**01************CLOAN*-*HEADER***********************************   S01117
@@ -1330,6 +1335,32 @@
      C*                                                                   S01408
      C*COPY*WMCPYSRC,LE0310CCP2************************                   S01408
      C/COPY WNCPYSRC,LE0310CCP2                                           S01408
+      *                                                                                       BA6048
+      **  Access SAR details file to see if BA6048 is installed                               BA6048
+      *                                                                                       BA6048
+     C                     CALL 'AOSARDR0'                                                    BA6048
+     C                     PARM '       ' @RTCD   7                                           BA6048
+     C                     PARM '*VERIFY' @OPTN   7                                           BA6048
+     C                     PARM 'BA6048'  @SARD   6                                           BA6048
+      *                                                                                       BA6048
+     C           @RTCD     IFEQ *BLANK                                                        BA6048
+     C                     MOVE '1'       *IN97                                               BA6048
+     C                     MOVE 'Y'       BA6048  1                                           BA6048
+     C                     OPEN A6CLIPY0                                                      BA6048
+     C                     ELSE                                                               BA6048
+     C           @RTCD     IFNE '*NRF   '                                                     BA6048
+     C                     SETON                     U7U8LR                                   BA6048
+     C                     MOVEL'SCSARDPD'DBFILE           ************                       BA6048
+     C                     MOVEL@SARD     DBKEY            DB ERROR 027                       BA6048
+     C                     Z-ADD27        DBASE            ************                       BA6048
+     C                     EXSR *PSSR                                                         BA6048
+     C                     GOTO ENDT                                                          BA6048
+     C                     ELSE                                                               BA6048
+     C                     MOVE '0'       *IN97                                               BA6048
+     C                     MOVE 'N'       BA6048                                              BA6048
+     C                     END                                                                BA6048
+     C                     END                                                                BA6048
+      *                                                                                       BA6048
      C                     MOVE *OFF      *IN97                                               CER020
       *                                                                                       CER020
      C                     CALL 'AOSARDR0'                                                    CER020
@@ -2859,6 +2890,16 @@ STOP  *                                                                   CLE004
       *                                                                                       CLE036
      C                     ENDIF                                                              CLE036
       *                                                                                       CLE036
+     C           BA6048    IFEQ 'Y'                                                           BA6048
+     C                     MOVE *BLANKS   SPI4   30                                           BA6048
+     C                     MOVE *BLANKS   RSPI4  30                                           BA6048
+     C           LNRF      CHAINA6CLIPY0             99                                       BA6048
+     C           *IN99     IFEQ '0'                                                           BA6048
+     C                     MOVE X0SPI4    SPI4                                                BA6048
+     C                     MOVE X0SPI4    RSPI4                                               BA6048
+     C                     ENDIF                                                              BA6048
+     C                     ENDIF                                                              BA6048
+      *
      C**   CHECK BENIFICIARY BANK DETAILS
      C*
      C**   IGNORE IF FIRST LINE OF SPECIAL INSTRUCTIONS IS BLANK
@@ -5037,13 +5078,21 @@ STOP  *                                                                   CLE004
      O                 28N17             67 'SPECIAL INST'                                    CLE034
      O                N17      SPI2      99                                                   CLE034
 1226 O********D  2     30                                                 S01518
-     O        D  2     30N80                                              S01518
+     O********D* 2     30N80                                                           S01518 BA6048
+      *                                                                                       BA6048
+     O        D  2     30N80N97                                                               BA6048
+     O        D  1     30N80 97                                                               BA6048
+      *
 1227 O                                   18 'FCLT CCY RATE'
 1228 O                 64      FCXR      35 '   0 .        '
      O                 64      RFMDI     37                               147994
 1229 O**********               SPI3      99                                                   CLE034
      O                N17      SPI3      99                                                   CLE034
      O/COPY WNCPYSRC,LE0310O001
+      *                                                                                       BA6048
+     O        D  1     30N80 97                                                               BA6048
+     O                N17 97   SPI4      99                                                   BA6048
+      *                                                                                       BA6048
 1230 O********D        30                                                 S01518
      O        D        30N80                                              S01518
 1231 O                                   14 'NARRATIVE'

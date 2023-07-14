@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -807,6 +809,12 @@
      C                   Z-ADD     B_CDLAMT      B_CDTOTA
      C                   Z-ADD     100           B_CDPCTA
      C                   ENDIF
+                                                                                              BA6045
+     C                   IF        BA6045 = 'Y'                                               BA6045
+     C                   MOVEL     'N'           B_CDBCOL                                     BA6045
+     C                   MOVEL     'N'           B_CDBCON                                     BA6045
+     C                   MOVEL     B_CDBRCA      B_CDBBRC                                     BA6045
+     C                   ENDIF                                                                BA6045
       *
      C                   ENDSR
       *****************************************************************
@@ -835,6 +843,12 @@
      C                   Z-ADD     B_CDLAMT      B_CDTOTA
      C                   Z-ADD     100           B_CDPCTA
      C                   ENDIF
+                                                                                              BA6045
+     C                   IF        BA6045 = 'Y'                                               BA6045
+     C                   MOVEL     'N'           B_CDBCOL                                     BA6045
+     C                   MOVEL     'N'           B_CDBCON                                     BA6045
+     C                   MOVEL     B_CDBRCA      B_CDBBRC                                     BA6045
+     C                   ENDIF                                                                BA6045
       *
      C                   ENDSR
       *****************************************************************
@@ -2454,6 +2468,29 @@
      C                   MOVE      A6CYCD        BSCCY             3
      C                   Z-ADD     A6NBDP        BSNBDP            1 0
      C                   ENDIF
+      *                                                                                       BA6045
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       PRTCD                                        BA6045
+     C                   PARM      '*VERIFY'     POPTN                                        BA6045
+     C                   PARM      'BA6045'      PSARD             6                          BA6045
+      *                                                                                       BA6045
+      ** Database Error                                                                       BA6045
+      *                                                                                       BA6045
+     C     PRTCD         IFNE      *BLANKS                                                    BA6045
+     C     PRTCD         ANDNE     '*NRF   '                                                  BA6045
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       BA6045
+     C                   Z-ADD     8             DBASE                                        BA6045
+     C                   MOVEL     'BA6045'      DBKEY                                        BA6045
+     C                   EXSR      *PSSR                                                      BA6045
+     C                   END                                                                  BA6045
+      *                                                                                       BA6045
+     C     PRTCD         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
       *
       **********                                                                      CAP084 BUG6979
      C******DTAARA       DEFINE                  ZMUSER                               CAP084 BUG6979

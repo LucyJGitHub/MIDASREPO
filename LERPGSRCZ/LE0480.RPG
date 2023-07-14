@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 250588             Date 08May23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. BA6049             Date 23Feb23               *
+      *  Prev Amend No. 250588             Date 08May23               *
+      *                 249385             Date 01Aug22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -256,6 +257,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6049 - Additional Rollover Events                          *
       *  250588 - Settlement instructions should be blank for         *
       *           principal transfer.                                 *
       *           Applied for AR926390 (Child: AR926391)              *
@@ -2626,6 +2628,26 @@
      C                     GOTO END                                                           CLE036
      C                     ENDIF                                                              CLE036
      C                     ENDIF                                                              CLE036
+      *                                                                                       BA6049
+      ** READ SWITCHABLE FEATURES FILE USING ACCESS OBJECT                                    BA6049
+      ** to determine if switchable feature (BA6049) is switched ON                           BA6049
+      *                                                                                       BA6049
+     C                     MOVE 'N'       BA6049  1                                           BA6049
+      *                                                                                       BA6049
+     C                     CALL 'AOSARDR0'                                                    BA6049
+     C                     PARM *BLANKS   W0RTCD                                              BA6049
+     C                     PARM '*VERIFY' W0OPTN                                              BA6049
+     C                     PARM 'BA6049'  W0SARD                                              BA6049
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA6049
+      *                                                                                       BA6049
+      ** If feature is on, set up BA6049 indicator                                            BA6049
+      *                                                                                       BA6049
+     C           W0RTCD    IFEQ *BLANKS                                                       BA6049
+     C                     MOVE 'Y'       BA6049                                              BA6049
+     C                     ELSE                                                               BA6049
+     C                     MOVE 'N'       BA6049                                              BA6049
+     C                     ENDIF                                                              BA6049
+      *                                                                                       BA6049
       *                                                                                       CLE036
      C           *LIKE     DEFN CVMR      CVMRX                                               218992
      C           *LIKE     DEFN RSCY      RSCYX                                               218992
@@ -4209,9 +4231,25 @@
      C         63VROLLR    COMP VMATUR                 4141               S01486
      C        N63VROLLR    COMP CKDAT2                 4141               S01486
      C                     END                                            S01486
+      *                                                                                       BA6049
+     C           BA6049    IFEQ 'Y'                                                           BA6049
+     C           VROLLR    IFEQ 99999                                                         BA6049
+     C           RLDT      ANDEQ0                                                             BA6049
+     C           PTYP      ANDEQ62                                                            BA6049
+     C                     EXSR ROLLVR                                                        BA6049
+     C   U7                GOTO END                                                           BA6049
+     C                     ELSE                                                               BA6049
+     C   41                EXSR ROLLVR                                                        BA6049
+     C   41 U7             GOTO END                                                           BA6049
+     C                     ENDIF                                                              BA6049
+     C                     ELSE                                                               BA6049
+      *                                                                                       BA6049
      C*                                                                   S01486
 0887 C   41                EXSR ROLLVR
 0888 C   41 U7             GOTO END
+      *                                                                                       BA6049
+     C                     ENDIF                                                              BA6049
+      *                                                                                       BA6049
       **********                                                                   AR679736 MD021819
       ***Terminate*rollover  projection after 2071                                 AR679736 MD021819
       **********                                                                   AR679736 MD021819
@@ -7052,6 +7090,37 @@
 1531 C**   CALLS: SR.INTCAL,LEVENT,RECOUT,BRTCHN,NEWINT
 1532 C**
 1533 C           ROLLVR    BEGSR                           **ROLLVR**
+      *                                                                                       BA6049
+      ** Generate "fake" rollover event                                                       BA6049
+     C           BA6049    IFEQ 'Y'                                                           BA6049
+     C           VROLLR    ANDEQ99999                                                         BA6049
+     C           RLDT      ANDEQ0                                                             BA6049
+     C           PTYP      ANDEQ62                                                            BA6049
+     C                     MOVE EMUCC2    EMUCCY                                              BA6049
+     C           MDAT      IFNE 0                                                             BA6049
+     C                     Z-ADDMDAT      EVDATE           EVENT DATE                         BA6049
+     C                     ELSE                                                               BA6049
+     C                     Z-ADD83276     EVDATE                                              BA6049
+     C                     ENDIF                                                              BA6049
+     C**   FORMAT EVENT AS PER P/LEVENT                                                       BA6049
+     C                     MOVE 'R5'      EVTYPE           EVENT TYPE                         BA6049
+     C                     EXSR LEVENT                                                        BA6049
+     C  N57                SETON                     U7U8  **DATABASE 19**                    BA6049
+     C  N57                Z-ADD19        DBASE                                               BA6049
+     C  N57                MOVE EVCODE    DBKEY                                               BA6049
+     C   U7 U8             GOTO ROLEND                                                        BA6049
+     C**                                                                                      BA6049
+     C**   CURRENT PRINCIPAL OUTPUT ON ROLLOVER EVENTS FOR                                    BA6049
+     C**   FINANCIAL LOANS DIARY REPORT ONLY.                                                 BA6049
+     C**                                                                                      BA6049
+     C                     Z-ADDCPRINC    EVAMNT           EVENT AMOUNT                       BA6049
+     C                     Z-ADD0         DBEAMT           DEALT BASE EQV.                    BA6049
+     C                     Z-ADD0         SBEAMT           SPOT BASE EQV.                     BA6049
+     C                     Z-ADD0         SLEAMT           SPOT LIMS. EQV.                    BA6049
+      *                                                                                       BA6049
+     C                     EXSR RECOUT                                                        BA6049
+     C                     ELSE                                                               BA6049
+      *                                                                                       BA6049
      C*                                                                   CEU004
      C*********************MOVE EMUCC3    EMUCCY                    CEU004CLE031
      C                     MOVE EMUCC2    EMUCCY                          CLE031
@@ -7617,6 +7686,8 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,LE0480CCP8                                           S01408
      C*                                                                   S01408
+     C                     ENDIF                                                              BA6049
+      *                                                                                       BA6049
 1585 C**
 1586 C           ROLEND    ENDSR                           **ROLEND**
 1587 C********************************************************************

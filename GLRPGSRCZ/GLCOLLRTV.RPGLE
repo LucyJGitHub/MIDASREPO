@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -589,6 +591,7 @@
       *
       ** Error if authorising user is the same as the
       ** inserting/amending user.
+     C                   IF        BA6045 = 'N'                                               BA6045
      C     CDIUSR        IFEQ      WWUSER
      C     CDAUSR        OREQ      WWUSER
      C                   MOVE      'N'           DDACTNOK
@@ -596,6 +599,7 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'COL0014'     MsgIdArr(Ix)
      C                   ENDIF
+     C                   ENDIF                                                                BA6045
       *
      C                   ENDSR
       *****************************************************************
@@ -1001,6 +1005,30 @@
      C                   ELSE                                                                 CGL018
      C                   MOVE      'N'           CGL018                                       CGL018
      C                   END                                                                  CGL018
+      *                                                                                       BA6045
+      ** Access SAR details file to determine if BA6045 is on.                                BA6045
+      *                                                                                       BA6045
+     C                   CALLB     'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       @RTCD                                        BA6045
+     C                   PARM      '*VERIFY'     @OPTN                                        BA6045
+     C                   PARM      'BA6045'      @SARD                                        BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6045
+      *                                                                                       BA6045
+      ** Database Error                                                                       BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFNE      *BLANKS                                                    BA6045
+     C     @RTCD         ANDNE     '*NRF   '                                                  BA6045
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       BA6045
+     C                   Z-ADD     8             DBASE                                        BA6045
+     C                   MOVEL     'BA6045'      DBKEY                                        BA6045
+     C                   EXSR      *PSSR                                                      BA6045
+     C                   END                                                                  BA6045
+      *                                                                                       BA6045
+     C     @RTCD         IFEQ      *BLANK                                                     BA6045
+     C                   MOVE      'Y'           BA6045            1                          BA6045
+     C                   ELSE                                                                 BA6045
+     C                   MOVE      'N'           BA6045                                       BA6045
+     C                   END                                                                  BA6045
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

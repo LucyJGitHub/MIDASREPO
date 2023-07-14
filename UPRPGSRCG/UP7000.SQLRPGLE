@@ -15,10 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP045 *CREATE     Date 09Dec22               *
+      *  Last Amend No. MD061580           Date 12Jul23               *
+      *  Prev Amend No. CUP045 *CREATE     Date 09Dec22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060580 - Strange characters appear in OTRM (One Touch      *
+      *             Bridge - Refresh Monitor). (Recompile)            *
       *  CUP045 - One Touch Bridge - refresh                          *
       *         - Applied for MD060769.                               *
       *                                                               *

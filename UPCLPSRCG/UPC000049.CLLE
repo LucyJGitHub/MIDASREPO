@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055832           Date 16May20              */
-/*       Prev Amend No. MD055783           Date 06May20              */
+/*       Last Amend No. MD056250           Date 14Sep20              */
+/*       Prev Amend No. MD056535           Date 18Aug20              */
+/*                      MD055832           Date 16May20              */
+/*                      MD055783           Date 06May20              */
 /*                      MD055759           Date 04May20              */
 /*                      MD054955           Date 16Dec19              */
 /*                      MD055280           Date 17Feb20              */
@@ -18,6 +20,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056250 - UPC000049 and UPC000050 execution failed due to  */
+/*                  missing libraries                                */
+/*                - Applied for MD-56754                             */
+/*       MD056535 - Installation failed as UTCFKDPD is still using   */
+/*                  the old Key Fields                               */
 /*       MD055832 - Created data recovery for the old GPSVALPD and   */
 /*                  GPSVRFPD when GDBU fails                         */
 /*       MD055783 - Created data recovery for the old T_WIPCF        */
@@ -46,6 +53,7 @@
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)                                  /*MD056250*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2019')
@@ -71,6 +79,28 @@
                                                                                         /*MD055783*/
              CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PRFX *TCAT +
                              'GMLIB')                                                   /*MD055783*/
+             CHKOBJ     OBJ(&LIBMOV) OBJTYPE(*LIB)                                      /*MD056250*/
+/* If library does not exist then create it; check if user has authority to */          /*MD056250*/
+/*  the CRTLIB command.                                                     */          /*MD056250*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD056250*/
+                CHKOBJ     OBJ(CRTLIB) OBJTYPE(*CMD) AUT(*USE)                          /*MD056250*/
+                MONMSG     MSGID(CPF9802) EXEC(DO)                                      /*MD056250*/
+                   RTVMSG     MSGID(UPM0013) MSGF(UTMSGF) MSG(&MESSAGE)                 /*MD056250*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                 /*MD056250*/
+                  RTVMSG     MSGID(UPM0014) MSGF(UTMSGF) +
+                          MSGDTA(&LIBMOV) MSG(&MESSAGE)                                 /*MD056250*/
+                   CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                 /*MD056250*/
+                   CALL       PGM(SCC0010) PARM('UPC000049' 'ENTER' ' ')                /*MD056250*/
+                   CHGJOB     SWS(XXXXXX11)                                             /*MD056250*/
+                   GOTO       CMDLBL(ENDPGM)                                            /*MD056250*/
+                ENDDO                                                                   /*MD056250*/
+                                                                                        /*MD056250*/
+                RTVJOBA    DATE(&TODAY)                                                 /*MD056250*/
+                CRTLIB     LIB(&LIBMOV) TEXT('Temporary for Bridge' +
+                                *BCAT &TODAY)                                           /*MD056250*/
+                                                                                        /*MD056250*/
+             ENDDO                                                                      /*MD056250*/
+                                                                                        /*MD056250*/
              CHKOBJ     OBJ(&LIBMOV/T_WIPCF) OBJTYPE(*FILE)                             /*MD055783*/
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(GPSVAL))                        /*MD055783*/
                                                                                         /*MD055783*/
@@ -169,7 +199,24 @@ START:                                                                          
                 GOTO       CMDLBL(ENDPGM)                                               /*MD055280*/
              ENDDO                                                                      /*MD055280*/
                                                                                         /*MD055280*/
+/* Check UTCFKDPD if existing in delivery package */                                    /*MD056535*/
+             CHKOBJ     OBJ(&LIBUPG/UTDDSSRCGP) OBJTYPE(*FILE) +
+                          MBR(UTCFKDPD)                                                 /*MD056535*/
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(DELFILE))                       /*MD056535*/
+/* Delete UTCFKDPD           */                                                         /*MD056535*/
+             DLTF       FILE(UTCFKDPD)                                                  /*MD056535*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056535*/
+/* Create UTCFKDPD - core PF */                                                         /*MD056535*/
+             CALL       PGM(UPC000034) PARM('UTCFKDPD' 'UTDDSSRCGP' +
+                          &LIBUPG &PLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD056535*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD056535*/
+                                                                                        /*MD056535*/
 /* Delete files in case or re-run */
+DELFILE:                                                                                /*MD056535*/
+             DLTF       FILE(V_GPCASHST)                                                /*MD056535*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056535*/
+             DLTF       FILE(V_SDFTHAW2)                                                /*MD056535*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD056535*/
              DLTF       FILE(UPGSVALJ0)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(GPSVLJI0)

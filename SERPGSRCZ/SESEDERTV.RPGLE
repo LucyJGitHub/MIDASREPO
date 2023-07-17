@@ -338,6 +338,29 @@
      D Work2N          S              2P 0
      D Work1N          S              1P 0
      D WkISSD          S              6A                                                    MD061394
+     D PSysVal1        C                   CONST('AllowIREventEqIssDte')                    MD061394
+     D PRetCode        S              7A                                                    MD061394
+     D P@OP01          S             20A                                                    MD061394
+     D P@VL01          S            200A                                                    MD061394
+     D P@OP02          S             20A                                                    MD061394
+     D P@VL02          S            200A                                                    MD061394
+     D P@OP03          S             20A                                                    MD061394
+     D P@VL03          S            200A                                                    MD061394
+     D P@OP04          S             20A                                                    MD061394
+     D P@VL04          S            200A                                                    MD061394
+     D P@OP05          S             20A                                                    MD061394
+     D P@VL05          S            200A                                                    MD061394
+     D P@OP06          S             20A                                                    MD061394
+     D P@VL06          S            200A                                                    MD061394
+     D P@OP07          S             20A                                                    MD061394
+     D P@VL07          S            200A                                                    MD061394
+     D P@OP08          S             20A                                                    MD061394
+     D P@VL08          S            200A                                                    MD061394
+     D P@OP09          S             20A                                                    MD061394
+     D P@VL09          S            200A                                                    MD061394
+     D P@OP10          S             20A                                                    MD061394
+     D P@VL10          S            200A                                                    MD061394
+     D WAllow          S              1A                                                    MD061394
       *
       ** Work fields for parameter
      D PReDsp          S              1A
@@ -1246,6 +1269,7 @@
 
      C                   ENDDO
       *                                                                                     MD061394
+     C                   IF        WAllow = 'Y'                                             MD061394
      C                   EVAL      WkISSD = *BLANKS                                         MD061394
      C                   EVAL      PDateIn = F1ISSD                                         MD061394
      C                   EXSR      SrZDATE2                                                 MD061394
@@ -1255,6 +1279,7 @@
       *                                                                                     MD061394
      C                   IF        DDSDED = WkISSD                                          MD061394
      C                   EVAL      *IN34 = *ON                                              MD061394
+     C                   ENDIF                                                              MD061394
      C                   ENDIF                                                              MD061394
       *                                                                                     MD061394
 
@@ -1987,6 +2012,40 @@
      C                   ELSE                                                                 260331
      C                   MOVE      'N'           S01512                                       260331
      C                   ENDIF                                                                260331
+                                                                                            MD061394
+     C                   CALL      'AOSVALR0'                                               MD061394
+     C                   PARM      *BLANKS       PRetCode                                   MD061394
+     C                   PARM      PSysVal1      P@OP01                                     MD061394
+     C                   PARM      *BLANKS       P@VL01                                     MD061394
+     C                   PARM      *BLANKS       P@OP02                                     MD061394
+     C                   PARM      *BLANKS       P@VL02                                     MD061394
+     C                   PARM      *BLANKS       P@OP03                                     MD061394
+     C                   PARM      *BLANKS       P@VL03                                     MD061394
+     C                   PARM      *BLANKS       P@OP04                                     MD061394
+     C                   PARM      *BLANKS       P@VL04                                     MD061394
+     C                   PARM      *BLANKS       P@OP05                                     MD061394
+     C                   PARM      *BLANKS       P@VL05                                     MD061394
+     C                   PARM      *BLANKS       P@OP06                                     MD061394
+     C                   PARM      *BLANKS       P@VL06                                     MD061394
+     C                   PARM      *BLANKS       P@OP07                                     MD061394
+     C                   PARM      *BLANKS       P@VL07                                     MD061394
+     C                   PARM      *BLANKS       P@OP08                                     MD061394
+     C                   PARM      *BLANKS       P@VL08                                     MD061394
+     C                   PARM      *BLANKS       P@OP09                                     MD061394
+     C                   PARM      *BLANKS       P@VL09                                     MD061394
+     C                   PARM      *BLANKS       P@OP10                                     MD061394
+     C                   PARM      *BLANKS       P@VL10                                     MD061394
+      *                                                                                     MD061394
+     C                   IF        PRetCode  <> *BLANKS                                     MD061394
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD061394
+     C                   EVAL      DBKEy = '*KEY   '                                        MD061394
+     C                   EVAL      DBase = 1                                                MD061394
+     C                   EXSR      *PSSR                                                    MD061394
+     C                   ENDIF                                                              MD061394
+      *                                                                                     MD061394
+     C                   MOVEL     P@VL01        WAllow                                     MD061394
+      *                                                                                     MD061394
+                                                                                            MD061394
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

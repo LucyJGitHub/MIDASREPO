@@ -18,12 +18,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD050921           Date 17Jul23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 05Aug04              */
+/*                      228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             Date 01Jun00              */
@@ -34,6 +35,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD050921 - Iseries Events 213722/CAOWNER/DQCAXLIB Msg ID:   */
+/*                  CPF9898 , Program SCC2471 ended abnormally       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       228542 - RGZPFM has changed at R5V3                         */
 /*       CCB009 - Journal files throughout close of business        */
@@ -45,15 +48,15 @@
 /*                                                                  */
 /********************************************************************/
              PGM
- 
+
 /* Copyright statement definition */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Other declarations */
- 
+
              DCL        VAR(&BUEN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST')
              DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7)
@@ -82,28 +85,28 @@
 /*                                                                      CCB009*/
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
- 
+
              DCLF       FILE(EDOUTFPD)
- 
+
 /* Global error monitor */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /*                                                                      CCB009*/
 /** Check for Switchable feature CCB009.                                CCB009*/
 /*                                                                      CCB009*/
              CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
                           'CCB009' &AOFMT)                            /*CCB009*/
              CHGJOB     SWS(00000000)
- 
+
 /* Copyright statement definition - at runtime */
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              CHGVAR     VAR(&MEM) VALUE('EDC0011 - ED Bulk Transfer +
                           Initialisation')
- 
+
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
 /* */                                                                 /*CEU031*/
 /* Check if CEU031 is existing in SCSARDPD */                         /*CEU031*/
@@ -114,29 +117,30 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD ' ')     /*CEU031*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CEU031) VALUE('Y'))                    /*CEU031*/
- 
+
 /* Retrieve Interface ICD */
- 
+
              CHGVAR     VAR(&RTNC) VALUE('*MSG   ')
              CALL       PGM(AOMEXPR0) PARM(&RTNC &OPTN &AOMEXP)
- 
+
              IF         COND(&RTNC *NE '       ') THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Prepare for transfer */
- 
+
 /* Determine the library prefix for this system */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
              CHGVAR     VAR(&DPLIB) VALUE(&PREF *CAT 'DPLIB')
              CHGVAR     VAR(&JLIB) VALUE(&PREF *TCAT 'JLIB')
              CHGVAR     VAR(&XLIB) VALUE(&PREF *TCAT 'XLIB')
- 
+
 /* Reset Data Queue */
              DLTDTAQ    DTAQ(EDBULKQ)
              MONMSG     MSGID(CPF2105)
-             CRTDTAQ    DTAQ(&XLIB/EDBULKQ) MAXLEN(100)
- 
+/**********  CRTDTAQ    DTAQ(&XLIB/EDBULKQ) MAXLEN(100)                     */          /*MD050921*/
+             CRTDTAQ    DTAQ(&DPLIB/EDBULKQ) MAXLEN(100)                                /*MD050921*/
+
 /* Purge Batches to Send file of old Bulk Transfer batch details */
 /* Reset Sequence no. etc. */
 /* Cycle Through 10 Days history  EHA0..,EHA1,EHA2, etc                     */
@@ -151,24 +155,24 @@
              CHGDTAARA  DTAARA(EDJSEQDA (1 20)) +
                           VALUE('0000000001M000000001')
 /* N.B. IF EHA prefix changed, also amend crt parm for dtara EDJSEQDA        */
- 
+
              CALL       PGM(ED0030)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Compress deleted records */
 /**********  RGZPFM     FILE(EDSAVEPD)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
              CALL       PGM(SCC000060) PARM('EDSAVEPD' '*FIRST')                          /*228542*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*228542*/
- 
+
 /* Clear Sorted Batches File */
              CLRPFM     FILE(EDSAVXPD)
- 
+
 /* Clear Failed Bulk Transfer Request File */
              CLRPFM     FILE(EDFBUTPD)
- 
+
 /* Clear all members of all COB work files */
              RMVM       FILE(EDDKEYPD) MBR(*ALL)
              MONMSG     MSGID(CPF7303 CPF7301)
@@ -193,16 +197,16 @@
              CLRPFM     FILE(GLCEVTPD)
              IF         COND(&CEU031 *EQ 'Y') THEN(CLRPFM +
                           FILE(EDMCRLPD))                             /*CEU031*/
- 
+
 /* Delete last night's Bulk Transfer data */
- 
+
              DSPFD      FILE(EDBULKPD) TYPE(*MBR) OUTPUT(*OUTFILE) +
                              OUTFILE(QTEMP/EDOUTFPD)
- 
+
 LOOP:
              RCVF
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDLOOP))
- 
+
              CHGVAR     VAR(&MEM3) VALUE(%SST(&MBNAME 1 3))
              CHGVAR     VAR(&MEM4) VALUE(%SST(&MBNAME 1 4))
              IF         COND(&MEM3 *NE 'EHA' *OR +
@@ -213,28 +217,28 @@ LOOP:
                 ENDDO                                                 /*136827*/
              ENDDO
              GOTO       CMDLBL(LOOP)
- 
+
  ENDLOOP:
- 
+
 /* Clear the audit file for tonight's run; (it will be left un-    */
 /* cleared until the next COB to assist in problem investigation). */
              CLRPFM     FILE(EDBUAUPD)
- 
+
 /* Set next batch number field to initial value */
              CHGDTAARA  DTAARA(EDBULK (1 60)) +
                           VALUE('000000000000000000000000000000000000+
                           000000000000000000000000')
- 
+
 /** If the Bulk Transfer process is disabled then end process now */
              CHGVAR     VAR(&BUEN) VALUE(%SUBSTRING(&AOMEXP 26 1))
- 
+
              IF         COND(&BUEN *EQ 'N') THEN(DO)
                CHGVAR     VAR(&MEM) VALUE('EDC0010 - ED Bulk Transfer +
                             Disabled')
                SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ) MSGTYPE(*INFO)
                GOTO       CMDLBL(ENDCLPGM)
              ENDDO
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
@@ -242,53 +246,53 @@ LOOP:
 /* Create Journal & Receiver for PF/EDSAVXPD Commitment Control */
              ENDJRNPF   FILE(*ALL) JRN(JEDC0010)
              MONMSG     MSGID(CPF7032 CPF9801)
- 
+
              DLTJRN     JRN(JEDC0010)
              MONMSG     MSGID(CPF2105)
- 
+
              CHGJOB     INQMSGRPY(*DFT)
              DLTJRNRCV  JRNRCV(JREDC0010)
              MONMSG     MSGID(CPF2105)
              CHGJOB     INQMSGRPY(*RQD)
- 
+
              CRTJRNRCV  JRNRCV(&JLIB/JREDC0010)
              CRTJRN     JRN(&JLIB/JEDC0010) JRNRCV(&JLIB/JREDC0010)
              STRJRNPF   FILE(EDSAVXPD EDBUAUPD) JRN(JEDC0010) +
                           IMAGES(*BOTH)
              ENDDO                                                    /*CCB009*/
- 
+
 /* Normal termination */
- 
+
              GOTO       CMDLBL(ENDCLPGM)
- 
- 
+
+
 ABNOR:
- 
+
 /* Abnormal termination */
- 
+
              RCVMSG     MSGTYPE(*EXCP) RMV(*NO) MSGDTA(&MSGDTA) +
                           MSGID(&MSGID) MSGF(&MSGF) +
                           MSGFLIB(&MSGFLIB)
              MONMSG     MSGID(CPF0000)
- 
+
              IF         COND(&MSGID *NE '       ') THEN(DO)
                  SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                             MSGDTA(&MSGDTA) TOMSGQ(MOPERQ MRUNQ)
                  MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              SNDPGMMSG  MSG('EDC0011 Midas ED Bulk Transfer +
                           Preparation TERMINATED ABNORMALLY') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                CHGJOB     SWS(XXXXXX11)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ENDCLPGM:
              ENDPGM

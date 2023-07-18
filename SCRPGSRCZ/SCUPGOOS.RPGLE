@@ -8,15 +8,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061067           Date 17Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC025  *CREATE    Date 03May05               *
+      *                 CSC025  *CREATE    Date 03May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061067 - Missing process for UDF tables                    *
+      *           - Applied for MD061569.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC025 - Exit program for high availability switchover.      *
       *                                                               *
@@ -50,6 +53,7 @@
       *
       *  update the file with the journal receiver and sequence number received.
       *
+     C                   MOVE      JRNRCV        I#LASTRCV                                  MD061067
      C                   MOVE      JRNSEQ        I#LASTSEQ
      C                   UPDATE    GOOSJSD0
       *

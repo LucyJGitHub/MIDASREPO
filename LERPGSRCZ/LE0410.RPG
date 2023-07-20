@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023455A          Date 17Jul23               *
-      *  Prev Amend No. MD023455           Date 17Jul23               *
+      *  Last Amend No. MD041713           Date 20Jul23               *
+      *  Prev Amend No. MD023455A          Date 17Jul23               *
+      *                 MD023455           Date 17Jul23               *
       *                 AR933453           Date 13Mar23               *
       *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -91,6 +92,7 @@
 0008 F*                                                                  *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD041713 - MPCA Prod: Issues on Report LE0410P1              *
       *  MD023455A - Open/Close operation error for no details branch *
       *              after last record. Output 'END OF REPORT FOR     *
       *              BRANCH' as EXCPT for the last record. Use *IN29  *
@@ -657,6 +659,7 @@
      I*
 0242 C**         FIRST CYCLE
 0243 C*
+     C  N40                MOVEL'Y'       FIRST   1                                         MD041713
 0244 C   40                GOTO ENDLP
 0245 C                     SETON                     40
      C*
@@ -1049,8 +1052,9 @@
      C*                                                                   S01117
      C           MBIN      IFEQ 'Y'                                       S01117
      C*                                                                   S01117
+     C  NL3                MOVELBRCA      CURBR   3                                         MD041713
      C           *INL3     IFEQ '1'                                       S01117
-     C                     CLOSELE0410P1                                  S01117
+     C**********           CLOSELE0410P1                                             S01117 MD041713
       *                                                                                     MD023455
       * Check for branch to be reported with no details                                     MD023455
       *                                                                                     MD023455
@@ -1682,10 +1686,13 @@
       *  for the current spool file then close.                                            MD023455A
       *                                                                                    MD023455A
      C           *INL3     IFEQ '1'                                                        MD023455A
-     C           *INLR     ANDEQ'1'                                                        MD023455A
+     C********** *INLR     ANDEQ'1'                                               MD023455A MD041713
      C           *IN12     ANDEQ'1'                                                        MD023455A
+     C           FIRST     IFNE 'Y'                                                         MD041713
      C                     EXCPT                                                           MD023455A
      C                     CLOSELE0410P1                                                   MD023455A
+     C                     ENDIF                                                            MD041713
+     C                     MOVEL'N'       FIRST                                             MD041713
      C                     ENDIF                                                           MD023455A
       *                                                                                     MD023455
       * Generate report when array has branch info, or when branch                          MD023455
@@ -2072,7 +2079,8 @@
      O       AND       12N29                                                               MD023455A
      O                                   66 '*** END OF REPORT FOR'       S01117
      O                                   74 ' BRANCH '                    S01117
-     O                         BRCA      77                               S01117
+     O**********               BRCA      77                                          S01117 MD041713
+     O                         CURBR     77                                                 MD041713
      O                                   81 ' ***'                        S01117
 0621 O        T 3      LRN10NU7                                           S01117
      O       AND       12                                                 S01117
@@ -2103,11 +2111,17 @@
 0689 O                                   74 '------'                      S01117
 0732 O********E*  19                                                                S01117 MD023455A
      O        E   19   29                                                                  MD023455A
-0733 O                                   50 '*** NO DETAILS TO REPOR'     S01117
-0734 O                                   55 'T ***'                       S01117
+0733 O**********                         50 '*** NO DETAILS TO REPOR'                S01117 MD041713
+0734 O**********                         55 'T ***'                                  S01117 MD041713
+     O                                   74 '*** NO DETAILS TO REPOR'                       MD041713
+     O                                   79 'T ***'                                         MD041713
 0732 O********E*  25                                                                S01117 MD023455A
      O        E   25   29                                                                  MD023455A
-     O                                   76 '*** END OF REPORT ***'       S01117
+     O**********                         76 '*** END OF REPORT ***'                  S01117 MD041713
+     O                                   66 '*** END OF REPORT FOR'                         MD041713
+     O                                   74 ' BRANCH '                                      MD041713
+     O                         WBRC      77                                                 MD041713
+     O                                   81 ' ***'                                          MD041713
 0631 O********T**203   LR                                                 S01117
 0632 O***********                        22 'REFERENCE LE0410'            S01117
 0631 OLE0410AUT  203   LR                                                 S01117

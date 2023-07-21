@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP046 *CREATE     Date 18Jul22               *
+      *  Last Amend No. MD061596           Date 18Jul23               *
+      *  Prev Amend No. CUP046 *CREATE     Date 18Jul22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061596 - Add field for mandatory components                *
       *  CUP046 - One Touch Bridge Automation Changes - Version Upg   *
       *                                                               *
       *****************************************************************
@@ -175,7 +177,8 @@
      C                   DOW       ErrInd = 'Y'
      C                             and *INKL = *OFF
      C                             or *INKE = *ON
-     C                   ROLBK
+      ** As program is called from UTMENU, commitment is not started                       MD061596
+     C**********         ROLBK                                                             MD061596
      C                   EXSR      InsertRecord
      C                   ENDDO
       *
@@ -218,7 +221,8 @@
      C                   DOW       (*INKJ = *OFF
      C                             and *INKL = *OFF)
      C                             or ErrInd = 'Y'
-     C                   ROLBK
+      ** As program is called from UTMENU, commitment is not started                       MD061596
+     C**********         ROLBK                                                             MD061596
      C                   EXSR      DeleteRecord
      C                   ENDDO
       *
@@ -237,7 +241,8 @@
      C                   DOW       ErrInd = 'Y'
      C                             and *INKL = *OFF
      C                             or *INKE = *ON
-     C                   ROLBK
+      ** As program is called from UTMENU, commitment is not started                       MD061596
+     C**********         ROLBK                                                             MD061596
      C                   EXSR      AmendRecord
      C                   ENDDO
      C                   ENDIF
@@ -914,6 +919,7 @@
      C                   EVAL      DDCRBS = 'Bespoke'
      C                   Endif
      C                   EVAL      DFMODE = DDCRBS
+     C                   EVAL      DDMAND = OTMAND                                          MD061596
 
      C     MoveDataE     ENDSR
 
@@ -989,6 +995,15 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
 
+      ** Cannot be 'N' if component is mandatory                                            MD061596
+     C                   IF        DDRUN = 'N'                                              MD061596
+     C                             and DDMAND = 'Y'                                         MD061596
+     C                   EVAL      ErrFlg = 'Y'                                             MD061596
+     C                   EVAL      ZAMSGF = 'SDUSRMSG'                                      MD061596
+     C                   EVAL      ZAMSID = 'DDS0025'                                       MD061596
+     C                   EXSR      ZASNMS                                                   MD061596
+     C                   ENDIF                                                              MD061596
+                                                                                            MD061596
      C                   IF        ErrFlg = 'Y'
      C                   EVAL      ErrInd = 'Y'
      C                   EVAL      *IN75 = *ON
@@ -1201,6 +1216,7 @@
      C                   EVAL      DDLYR  = *blanks
      C                   EVAL      OTMODE = *blanks
      C                   EVAL      DDCRBS = *blanks
+     C                   EVAL      DDMAND = *blanks                                         MD061596
 
      C     ClearFldsE    ENDSR
 

@@ -5520,11 +5520,19 @@
       * ERROR
       *
      C     @RTCD         IFNE      *BLANKS
+     C                   IF        BBCLST = 'Y'                                             MD061242
+     C                   ADD       1             Idx                                        MD061242
+     C                   EVAL      FldNameArr(Idx) = 'DDAWBN'                               MD061242
+     C                   EVAL      MsgIDArr(Idx) = 'ESM1029'                                MD061242
+     C                   MOVE      'N'           DDAwbnOK                                   MD061242
+     C                   GOTO      EVAWBN                                                   MD061242
+     C                   ELSE                                                               MD061242
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDAWBN'
      C                   EVAL      MsgIDArr(Idx) = 'ESM0970'
      C                   MOVE      'N'           DDAwbnOK
      C                   GOTO      EVAWBN
+     C                   ENDIF                                                              MD061242
      C                   END
      C                   ENDIF                                                              AR641619
       *

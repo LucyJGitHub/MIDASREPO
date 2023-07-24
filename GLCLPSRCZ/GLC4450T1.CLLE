@@ -10,14 +10,17 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD059147           Date 10Dec21              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD061412           Date 21Jul23              */
+/*       Prev Amend No. MD059147           Date 10Dec21              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD044909           Date 10Jan17              */
 /*                      MD033115           Date 11Sep15              */
 /*                      CGL127AY *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD061412 - GLC4450T1 failed due to locking.                 */
+/*                  Add CONFLICT(*RQSRLS) on ALCOBJ for GLACPHPD.    */
 /*       MD059147 - GLC4450 task split jobs timeout                  */
 /*                - Allocate GLACPHL5 if S01520 is ON.               */
 /*       MD046248 - Finastra Rebranding                              */
@@ -191,14 +194,18 @@
 
 /* Allocate GLACPHL to ensure access paths rebuilt before GLC4450* continues  */        /*MD044909*/
              IF         COND(&S01520 *EQ 'Y') THEN(DO)                                  /*MD059147*/
-             ALCOBJ     OBJ((GLACPHL5 *FILE *EXCL)) WAIT(&GLCDLY)                       /*MD059147*/
+/**********  ALCOBJ     OBJ((GLACPHL5 *FILE *EXCL)) WAIT(&GLCDLY)     */       /*MD059147 MD061412*/
+             ALCOBJ     OBJ((GLACPHL5 *FILE *EXCL)) WAIT(&GLCDLY) +
+                          CONFLICT(*RQSRLS)                                             /*MD061412*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                         /*MD059147*/
              DLCOBJ     OBJ((GLACPHL5 *FILE *EXCL))                                     /*MD059147*/
              MONMSG     MSGID(CPF0000)                                                  /*MD059147*/
              ENDDO                                                                      /*MD059147*/
              ELSE       DO                                                              /*MD059147*/
                                                                                         /*MD044909*/
-             ALCOBJ     OBJ((GLACPHL *FILE *EXCL)) WAIT(&GLCDLY)                        /*MD044909*/
+/**********  ALCOBJ     OBJ((GLACPHL *FILE *EXCL)) WAIT(&GLCDLY)      */       /*MD044909 MD061412*/
+             ALCOBJ     OBJ((GLACPHL5 *FILE *EXCL)) WAIT(&GLCDLY) +
+                          CONFLICT(*RQSRLS)                                             /*MD061412*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))                         /*MD044909*/
              DLCOBJ     OBJ((GLACPHL *FILE *EXCL))                                      /*MD044909*/
              MONMSG     MSGID(CPF0000)                                                  /*MD044909*/

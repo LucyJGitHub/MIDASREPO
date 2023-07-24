@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058101           Date 24May21               *
-      *  Prev Amend No. 250822             Date 22May20               *
+      *  Last Amend No. MD051649           Date 12Jul23               *
+      *  Prev Amend No. MD058101           Date 24May21               *
+      *                 250822             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR979910           Date 07Jun12               *
       *                 260405             Date 04Apr20               *
@@ -147,6 +148,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051649 - Capitalisation date (Cr & Dr) from template       *
+      *             is incorrect. Default NDID/NCID based on the      *
+      *             capitalisation frequency wherein the new account  *
+      *             should have Next Cap Date greater than run date.  *
       *  MD058101 - Default error Fixed commission default. Amend to  *
       *             default only when account type is Retail Account. *
       *  250822 - Commented-out /cpy GLAMADSMV1 as this is irrelevant *
@@ -2998,6 +3003,14 @@
      C                   ENDIF                                                                BUG553
       *                                                                                       BUG553
      C     NDID          IFNE      *ZEROS                                                     BUG553
+     C     NDID          IFLT      BJRDNB                                                   MD051649
+     C                   Z-ADD     BJRDNB        ZDAYNO                                     MD051649
+     C                   Z-ADD     DRDY          ZMDAY                                      MD051649
+     C                   MOVE      DRIF          ZFREQ                                      MD051649
+     C                   EXSR      SrCalDate                                                MD051649
+     C                   Z-ADD     ZDAYNO        NDID                                       MD051649
+     C                   Z-ADD     ZDAYNO        E_AMNDID                                   MD051649
+     C                   ENDIF                                                              MD051649
      C                   CallB     'ZDATE2'                                                   BUG553
      C                   Parm      NDID          ZDAYNO            5 0                        BUG553
      C                   Parm                    BJDFIN                                       BUG553
@@ -3041,6 +3054,14 @@
      C                   ENDIF                                                                BUG553
       *                                                                                       BUG553
      C     NCID          IFNE      *ZEROS                                                     BUG553
+     C     NCID          IFLT      BJRDNB                                                   MD051649
+     C                   Z-ADD     BJRDNB        ZDAYNO                                     MD051649
+     C                   Z-ADD     CRDY          ZMDAY                                      MD051649
+     C                   MOVE      CRIF          ZFREQ                                      MD051649
+     C                   EXSR      SrCalDate                                                MD051649
+     C                   Z-ADD     ZDAYNO        NCID                                       MD051649
+     C                   Z-ADD     ZDAYNO        E_AMNCID                                   MD051649
+     C                   ENDIF                                                              MD051649
      C                   CallB     'ZDATE2'                                                   BUG553
      C                   Parm      NCID          ZDAYNO            5 0                        BUG553
      C                   Parm                    BJDFIN                                       BUG553
@@ -4220,4 +4241,42 @@
      C                   KFLD                    WWBRCK                                       BUG553
 
      C                   ENDSR
+      *****************************************************************                     MD051649
+      /EJECT                                                                                MD051649
+      *****************************************************************                     MD051649
+      *                                                               *                     MD051649
+      *  SrCalDate - Subroutine to Calculate Capitalisation Date      *                     MD051649
+      *                                                               *                     MD051649
+      *****************************************************************                     MD051649
+     C     SrCalDate     BEGSR                                                              MD051649
+     C                   MOVE      BJLCCY        ZCCY              3                        MD051649
+     C     ZFREQ         IFNE      'Z'                                                      MD051649
+     C     ZFREQ         IFEQ      'W'                                                      MD051649
+     C     ZFREQ         OREQ      'F'                                                      MD051649
+     C     ZFREQ         OREQ      'S'                                                      MD051649
+     C     ZDAYNO        DOWLT     BJDNWD                                                   MD051649
+     C                   CallB     'ZFRQA'                                                  MD051649
+     C                   PARM                    ZFREQ             1                        MD051649
+     C                   PARM                    ZDAYNO                                     MD051649
+     C                   PARM                    ZMDAY             2 0                      MD051649
+     C                   PARM      BJLCCY        ZCCY              3                        MD051649
+     C                   PARM      BJSLCD        ZLOC              3                        MD051649
+     C                   PARM      BJDFIN        ZDFIN             1                        MD051649
+     C                   ENDDO                                                              MD051649
+     C                   ELSE                                                               MD051649
+     C                   CALLB     'ZFRQA'                                                  MD051649
+     C                   PARM                    ZFREQ                                      MD051649
+     c                   PARM                    ZDAYNO                                     MD051649
+     c                   PARM                    ZMDAY                                      MD051649
+     c                   PARM      BJLCCY        ZCCY                                       MD051649
+     c                   PARM      BJSLCD        ZLOC                                       MD051649
+     c                   PARM      BJDFIN        ZDFIN                                      MD051649
+     C                   ENDIF                                                              MD051649
+     C                   ENDIF                                                              MD051649
+      *                                                                                     MD051649
+     C     ZFREQ         IFEQ      'Z'                                                      MD051649
+     C                   Z-ADD     *ZERO         ZDAYNO                                     MD051649
+     C                   END                                                                MD051649
+      *                                                                                     MD051649
+     C                   ENDSR                                                              MD051649
       *****************************************************************

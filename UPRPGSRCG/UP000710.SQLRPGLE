@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD061005             Date 02Feb23             *
-      *  Prev Amend No. MD060848             Date 28Dec22             *
+      *  Last Amend No. MD061673             Date 21Jul23             *
+      *  Prev Amend No. MD061616             Date 12Jul23             *
+      *                 MD061005             Date 02Feb23             *
+      *                 MD060848             Date 28Dec22             *
       *                 MD060547             Date 12Dec22             *
       *                 MD060626             Date 13Oct22             *
       *                 MD059702             Date 15Mar22             *
@@ -23,6 +25,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061673 - Consider field SDNWRKPD.EDCONV                    *
+      *  MD061616 - Multiple errors with jobs OTM_11400 AND otm_11500 *
       *  MD061005 - Merging issue with MD060848                       *
       *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
@@ -49,14 +53,22 @@
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
-     D WHERE           S            600A
-     D WHEREK          S            600A
-     D PINSERT         S            600A
-     D PSELECT         S            600A
-     D PINSERTX        S            600A
-     D PSELECTX        S            600A
-     D PINSERTB        S            600A
-     D PSELECTB        S            600A
+     D*WHERE****       S            600A                                                    MD061673
+     D WHERE           S           2000A                                                    MD061673
+     D*WHEREK***       S            600A                                                    MD061673
+     D WHEREK          S           2000A                                                    MD061673
+     D*PINSERT**       S            600A                                                    MD061673
+     D PINSERT         S           2000A                                                    MD061673
+     D*PSELECT**       S            600A                                                    MD061673
+     D PSELECT         S           2000A                                                    MD061673
+     D*PINSERTX*       S            600A                                                    MD061673
+     D PINSERTX        S           2000A                                                    MD061673
+     D*PSELECTX*       S            600A                                                    MD061673
+     D PSELECTX        S           2000A                                                    MD061673
+     D*PINSERTB*       S            600A                                                    MD061673
+     D PINSERTB        S           2000A                                                    MD061673
+     D*PSELECTB*       S            600A                                                    MD061673
+     D PSELECTB        S           2000A                                                    MD061673
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D O_File          S             10A
@@ -67,6 +79,15 @@
      D TotRow          S             13  0
      D X_Field         S             10
      D RcdCount        S              2  0                                                  MD060547
+     D ModeFl          S             10                                                     MD061616
+     D SDSVL           C                   Const(' and B.GISVAL not in (''BrgMi-            MD061616
+     D                                     dasGlobalPrefix'', ''BrgMidasSystemP-            MD061616
+     D                                     refix'', ''JavaPathStem'', ''GlobalS-            MD061616
+     D                                     ystemPrefix'', ''BrgOldZonePrefix'')-            MD061616
+     D                                     ')                                               MD061616
+     D GPSVL           C                   Const(' and B.GISVAL not in (''BrgMi-            MD061616
+     D                                     dasGlobalPrefix'', ''BrgMidasSystemP-            MD061616
+     D                                     refix'', ''BrgOldGlobalPrefix'')')               MD061616
      D FldData       E DS                  EXTNAME(UPFFDSTPD)
 
       /EJECT
@@ -321,6 +342,43 @@
      C     SR_AddBTD     BEGSR
 
 
+      ** Before data take-on, make sure BTD is empty. This will prevent duplicate           MD061616
+      ** records in case component is restarted                                             MD061616
+     C                   eval      SQLDynStmt = *Blanks                                     MD061616
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD061616
+     C                             %trimr(SCHEMAM) + '/' + TABLEB                           MD061616
+                                                                                            MD061616
+     C/EXEC SQL                                                                             MD061616
+     C+ prepare DynSQLStmnt                                                                 MD061616
+     C+ from :SQLDynStmt                                                                    MD061616
+     C/END-EXEC                                                                             MD061616
+                                                                                            MD061616
+     C/exec SQL                                                                             MD061616
+     C+ execute DynSQLStmnt                                                                 MD061616
+     C/end-exec                                                                             MD061616
+                                                                                            MD061616
+      ** And remove 'B' records from XTD                                                    MD061616
+      ** Retrieve MODE field                                                                MD061616
+     C/EXEC SQL                                                                             MD061616
+     C+ select DBIFLD into :ModeFl                                                          MD061616
+     C+ from QADBILLB WHERE DBILIB = :SCHEMAM and DBIFIL                                    MD061616
+     C+ = :TABLEX and DBIFLD like '%MODE%'                                                  MD061616
+     C/END-EXEC                                                                             MD061616
+     C                   eval      SQLDynStmt = *Blanks                                     MD061616
+     C                   eval      SQLDynStmt = 'delete from ' +                            MD061616
+     C                             %trimr(SCHEMAM) + '/' + TABLEX +                         MD061616
+     C                             ' where ' + ModeFL + ' = ''B'''                          MD061616
+                                                                                            MD061616
+     C/EXEC SQL                                                                             MD061616
+     C+ prepare DynSQLStmnt                                                                 MD061616
+     C+ from :SQLDynStmt                                                                    MD061616
+     C/END-EXEC                                                                             MD061616
+                                                                                            MD061616
+     C/exec SQL                                                                             MD061616
+     C+ execute DynSQLStmnt                                                                 MD061616
+     C/end-exec                                                                             MD061616
+                                                                                            MD061616
+                                                                                            MD061616
       * for SCSARSPD migration, all core features are delivered in SCSRSCTD                 MD055681
       * what is non core is the old SCSARZPD, these are the ones to be added in BTD         MD055681
       * set OLDFILE to SCSARZPD                                                             MD055681
@@ -380,21 +438,38 @@
      C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''E'''             MD055681
      C                   else                                                               MD055681
                                                                                             MD060547
+      * for EDCONV field                                                                    MD061673
+     C                   IF        X_Field = 'EDCONV'                                       MD061673
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD061673
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + ''' '''             MD061673
+     C                   else                                                               MD061673
+                                                                                            MD061673
       ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
      C                   If        X_Field = 'A1FTPT'                                       MD060547
-     C                             or WHFLDI = 'ROUAPL'                                     MD060848
-     C                   If        WHFLDI = 'A1FTPT'                                        MD060848
+     C**********                   or WHFLDI = 'ROUAPL'                            MD060848 MD061616
+     C                             or X_Field = 'ROUAPL'                                    MD061616
+     C                             or X_Field = 'GIZONE'                                    MD061616
+     C**********         If        WHFLDI = 'A1FTPT'                               MD060848 MD061616
+     C                   If        X_Field = 'A1FTPT'                                       MD061616
      C/EXEC SQL                                                                             MD060547
      C+ select count(*) into :RcdCount                                                      MD060547
      C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060547
      C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
      C/END-EXEC                                                                             MD060547
      C                   else                                                               MD060848
+     C                   If        X_Field = 'GIZONE'                                       MD061616
+     C/EXEC SQL                                                                             MD061616
+     C+ select count(*) into :RcdCount                                                      MD061616
+     C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD061616
+     C+ = :OLDFILE and DBIFLD = 'GIZONE'                                                    MD061616
+     C/END-EXEC                                                                             MD061616
+     C                   else                                                               MD061616
      C/EXEC SQL                                                                             MD060848
      C+ select count(*) into :RcdCount                                                      MD060848
      C+ from QADBILLB WHERE DBILIB = :OSCHEMA and DBIFIL                                    MD060848
      C+ = :OLDFILE and DBIFLD = 'ROUAPL'                                                    MD060848
      C/END-EXEC                                                                             MD060848
+     C                   Endif                                                              MD061616
      C                   Endif                                                              MD060848
      C                   If        RcdCount = 0                                             MD060547
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD060547
@@ -408,6 +483,7 @@
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field
      C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field
      C                   Endif                                                              MD060547
+     C                   ENDIF                                                              MD061673
      C                   ENDIF                                                              MD055681
      C                   ENDIF                                                              MD055681
      C                   ENDIF
@@ -447,6 +523,14 @@
      C+ execute DynSQLStmnt
      C/end-exec
 
+     C                   If        SQLCode <> 0                                             MD061616
+     C                             and SQLCode <> 100                                       MD061616
+     C                   eval      ERROR = '*Error'                                         MD061616
+     C                   Dump                                                               MD061616
+     C                   Seton                                        LR                    MD061616
+     C                   Return                                                             MD061616
+     C                   Endif                                                              MD061616
+                                                                                            MD061616
      C/EXEC SQL
      C+ get diagnostics :TotRow  = ROW_COUNT
      C/END-EXEC
@@ -741,8 +825,15 @@
      C                   Endif                                                              MD060547
      C                   Else                                                               MD060547
                                                                                             MD060547
+      ** if processing EDCONV, replace with '' ''                                           MD061673
+     C                   If        X_Field = 'EDCONV'                                       MD061673
+     C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field            MD061673
+     C                   eval      PSELECTX = %trimr(PSELECTX) + ', '  + ''' '''            MD061673
+     C                   Else                                                               MD061673
+                                                                                            MD061673
      C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field
      C                   eval      PSELECTX = %trimr(PSELECTX) + ',A.' + X_Field
+     C                   Endif                                                              MD061673
      C                   Endif                                                              MD060547
      C                   ENDIF
      C                   ENDIF
@@ -772,6 +863,16 @@
      C                             %trimr(OSCHEMA) + '/' + OLDFILE +
      C                             ' A ' + %trimr(WHEREK) + ')'
 
+      ** when updating SDSVLCTD, avoid update for these System Values                       MD061616
+     C                   If        TABLEX = 'SDSVLXTD'                                      MD061616
+     C                   eval      SQLDynStmt = %trim(SQLDynStmt) + SDSVL                   MD061616
+     C                   Endif                                                              MD061616
+                                                                                            MD061616
+      ** when updating SDSVLCTD, avoid update for these System Values                       MD061616
+     C                   If        TABLEX = 'GPSVLXTD'                                      MD061616
+     C                   eval      SQLDynStmt = %trim(SQLDynStmt) + GPSVL                   MD061616
+     C                   Endif                                                              MD061616
+                                                                                            MD061616
      C/EXEC SQL
      C+ prepare DynSQLStmnt
      C+ from :SQLDynStmt

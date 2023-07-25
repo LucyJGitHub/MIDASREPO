@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD021509           Date 19Jul23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD061684           Date 25Jul23               *
+      *  Prev Amend No. MD021509           Date 19Jul23               *
+      *                 249385             Date 01Aug22               *
       *                 MD059620           Date 18Mar22               *
       *                 MD058815           Date 28Sep21               *
       *                 MD058222           Date 08Jul21               *
@@ -303,6 +304,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061684 - Resolve conflict between MD021509 and MD052734.   *
       *  MD021509 - Wrong 'In Date' shown in Loan Activity Enquiry.   *
       *             Adjust SINDT based on NIDT/NRPD/MDAT and used     *
       *             PTDI of loan. Update SDUDT/SINDT with WIDUDT and  *
@@ -10188,6 +10190,7 @@
       *                                                                                       253042
      C                     EXSR SRSCUR                                                        253042
      C**********           MOVE WNLOC     ZLOC                                         253042 241243
+     C                     Z-ADDZDAYNO    WSINDT                                            MD061684
      C                     Z-ADD0         ZNRDYS                                              253042
       *                                                                                       253042
      C           CLE141    IFEQ 'Y'                                                         MD052734
@@ -10241,11 +10244,26 @@
      C                     ENDSL                                                              253042
      C                     ENDIF                                                            MD052734
       *                                                                                       253042
-     C           MDAT      IFNE WMDAT                                                         253042
-     C           CLE141    ANDEQ'N'                                                         MD052734
-     C                     Z-ADDWMDAT     ZDAYNO                                              253042
-     C                     EXSR ZDATE2                                                        253042
-     C                     MOVE ZADATE    SINDT                                               253042
+     C********** MDAT      IFNE WMDAT                                                253042 MD061684
+     C********** CLE141    ANDEQ'N'                                                MD052734 MD061684
+     C**********           Z-ADDWMDAT     ZDAYNO                                     253042 MD061684
+     C**********           EXSR ZDATE2                                               253042 MD061684
+     C**********           MOVE ZADATE    SINDT                                      253042 MD061684
+     C           CLE141    IFEQ 'N'                                                         MD061684
+     C                     SELEC                                                            MD061684
+     C           ORED      WHLE RUND                                                        MD061684
+     C           WSINDT    ANDLTRUND                                                        MD061684
+     C           WMDAT     ANDLERUND                                                        MD061684
+     C                     Z-ADDRUND      ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
+     C                     MOVE ZADATE    SINDT                                             MD061684
+     C           WSINDT    WHNE WMDAT                                                       MD061684
+     C                     Z-ADDWMDAT     ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
+     C                     MOVE ZADATE    SINDT                                             MD061684
+     C                     OTHER                                                            MD061684
+     C                     MOVE *BLANKS   SINDT                                             MD061684
+     C                     ENDSL                                                            MD061684
      C                     ENDIF                                                              253042
       *                                                                                     MD052734
      C           CLE141    IFEQ 'Y'                                                         MD052734
@@ -10254,6 +10272,7 @@
      C                     EXSR ZDATE2                                                      MD052734
      C                     MOVE ZADATE    SINDT                                             MD052734
      C                     ENDIF                                                            MD052734
+     C                     Z-ADDZDAYNO    WMDAT2  50                                        MD061684
       *                                                                   133915
       ** Maturity                                                         133915
       *                                                                   133915
@@ -10390,6 +10409,8 @@
      C           VSLN      IFGE 20                                        188806
      C                     MOVE 'Y'       WFINL                           133915
      C                     ELSE                                           133915
+     C                     Z-ADDWMDAT2    ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
      C                     MOVE ZADATE    SBLDT                           133915
      C                     Z-ADD0         ZFLD15                          133915
      C                     EXSR ZSEDIT                                    133915
@@ -11951,6 +11972,11 @@
      C                     MOVELZDATE     MMNWKD    P                                       MD021509
      C                     ENDIF                                                            MD021509
       *                                                                                     MD021509
+     C           MMNLCD    IFNE MMNWKD                                                      MD061684
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD061684
+     C                     EXSR ZBKDT                                                       MD061684
+     C                     ENDIF                                                            MD061684
+      *                                                                                     MD061684
      C                     ENDSL                                                            MD021509
       *                                                                                     MD021509
       * If back-valued date, use rundate as In Date. If date is not                         MD021509

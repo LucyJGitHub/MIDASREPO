@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW101             Date 03Feb23               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *                 MD058830           Date 01Oct21               *
       *                 CGL094             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
@@ -86,6 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Include GSH026 and GSH046CC1                        *
       *  CSW101 - PayPlus Interface.                                  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CGL094 - Allow External Destination for MT940 Message.       *
@@ -587,6 +590,10 @@
      D   WPageNum              1      5  0
      D   WPageChr              1      5
      D/COPY WNCPYSRC,MGH00014
+      ** Work variables for BA6026                                                            BA6026
+     D PNaty           S              1A                                                      BA6026
+     D PDstn           S             11A                                                      BA6026
+     D PPNarr          S             30A                                                      BA6026
       *                                                                                       CER030
      D WExtNarr        DS                                                                     CER030
      D  X_MGADI1                                                                              CER030
@@ -1671,6 +1678,12 @@
       *  Accumulate this page's Closing Balance
       *
      C                   If        %subst(X_MGDRCR : 1 : 1) = 'D'
+      *                                                                                       BA6026
+      ** Include handling of new debit indicator value 'RC' if BA6026 is ON                   BA6026
+      ** for This Page Closing Balance.                                                       BA6026
+      *                                                                                       BA6026
+     C                             Or %Subst(X_MGDRCR : 1 : 2) = 'RC'                         BA6026
+     C                             And BA6026 = 'Y'                                           BA6026
      C                   Eval      PageClBal = PageClBal + X_MGPSTA
      C                   Else
      C                   Eval      PageClBal = PageClBal - X_MGPSTA
@@ -2668,9 +2681,25 @@
      C                   EVAL      PArrExt(20) = X_MG8664                                   BUG23742
      C                   EVAL      PArrExt(21) = X_MG8665                                   BUG23742
      C                   EVAL      PArrExt(22) = X_MG8632                                   BUG23742
+      *                                                                                       BA6026
+      ** If BA6026 = ON, populate parms required for Structured Field 86                      BA6026
+      ** formatting in MG001901 (only applies for MT940 msgs).                                BA6026
+     C                   If        BA6026 =  'Y'                                              BA6026
+      ** Network A/c type                                                                     BA6026
+     C                   EVAL      PNaty  = X_MGNATY                                          BA6026
+      ** Destination                                                                          BA6026
+     C                   EVAL      PDstn  = X_MGDSTN                                          BA6026
+      ** Posting Narrative                                                                    BA6026
+     C                   EVAL      PPNarr = X_MG8620                                          BA6026
+      ** Transaction Type                                                                     BA6026
+     C                   Eval      PRtty = %EDITC(X_MGTRAT:'X')                               BA6026
+      ** Message Type                                                                         BA6026
+     C                   EVAL      PMsgTyp = '940'                                            BA6026
+     C                   Endif                                                                BA6026
       *                                                                                     BUG23742
      C                   CALL      'MG001901'                                               BUG23742
-     C                   PARM                    PRtcd                                      BUG23742
+     C**********         PARM                    PRtcd                             BUG23742   BA6026
+     C                   PARM      *BLANKS       PRtcd1           10                          BA6026
      C                   PARM      '*FORMAT'     POptn                                      BUG23742
      C                   PARM      MGNWRK        PNwrk                                      BUG23742
      C                   PARM                    PMsgTyp                                    BUG23742
@@ -2686,6 +2715,9 @@
      C                   PARM      MGACSQ        PAcsq                                      BUG25311
      C                   PARM                    PDCInd                                     BUG23742
      C                   PARM                    PRtty                                      BUG23742
+     C                   PARM                    PPNarr                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+     C                   PARM                    PDstn                                        BA6026
      C                   PARM                    PArrExt                                    BUG23742
      C                   PARM                    PFormL1                                    BUG23742
      C                   PARM                    PFormL2                                    BUG23742
@@ -2716,6 +2748,7 @@
      C                   PARM                    WFldNmXAr                                  BUG23742
      C                   PARM                    WMsgIDXAr                                  BUG23742
      C                   PARM                    WMsgDtXAr                                  BUG23742
+     C                   PARM      X_MGSFD9      PPNar2           30                          BA6026
      C                   ELSE                                                               BUG23742
       *                                                                                     BUG23742
      C                   CALL      'MG001900'                                                 CER030
@@ -3401,6 +3434,22 @@
      C                   EVAL      PArrExt(20) = X_MG8664                                     CSW101
      C                   EVAL      PArrExt(21) = X_MG8665                                     CSW101
      C                   EVAL      PArrExt(22) = X_MG8632                                     CSW101
+      *                                                                                       BA6026
+      ** If BA6026 = ON, populate parms required for Structured Field 86                      BA6026
+      ** formatting in MG001901 (only applies for MT940 msgs).                                BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 =  'Y'                                              BA6026
+      ** Network A/c type                                                                     BA6026
+     C                   EVAL      PNaty  = X_MGNATY                                          BA6026
+      ** Destination                                                                          BA6026
+     C                   EVAL      PDstn  = X_MGDSTN                                          BA6026
+      ** Posting Narrative                                                                    BA6026
+     C                   EVAL      PPNarr = X_MG8620                                          BA6026
+      ** Transaction Type                                                                     BA6026
+     C                   Eval      PRtty = %EDITC(X_MGTRAT:'X')                               BA6026
+      ** Message Type                                                                         BA6026
+     C                   EVAL      PMsgTyp = '940'                                            BA6026
+     C                   Endif                                                                BA6026
       *                                                                                       CSW101
      C                   CALL      'MG001901'                                                 CSW101
      C                   PARM                    PRtcd                                        CSW101
@@ -3414,6 +3463,9 @@
      C                   PARM      MGACSQ        PAcsq                                        CSW101
      C                   PARM                    PDCInd                                       CSW101
      C                   PARM                    PRtty                                        CSW101
+     C                   PARM                    PPNarr                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+     C                   PARM                    PDstn                                        BA6026
      C                   PARM                    PArrExt                                      CSW101
      C                   PARM                    PFormL1                                      CSW101
      C                   PARM                    PFormL2                                      CSW101
@@ -3444,6 +3496,7 @@
      C                   PARM                    WFldNmXAr                                    CSW101
      C                   PARM                    WMsgIDXAr                                    CSW101
      C                   PARM                    WMsgDtXAr                                    CSW101
+     C                   PARM                    PPNar2                                       BA6026
      C                   ELSE                                                                 CSW101
       *                                                                                       CSW101
      C                   CALL      'MG001900'                                                 CSW101
@@ -4025,6 +4078,33 @@
 
      C/COPY OFCPYSRCZ,CGL146_094                                                             CGL146A
      C/COPY WNCPYSRC,MGH00031
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Move      'N'           BA6026            1                          BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *Blanks       PRtcd                                        BA6026
+     C                   Parm      '*VERIFY'     POptn                                        BA6026
+     C                   Parm      'BA6026 '     PSard                                        BA6026
+      *                                                                                       BA6026
+     C                   If        PRtcd = *Blanks                                            BA6026
+     C                   Eval      BA6026 = 'Y'                                               BA6026
+     C                   Else                                                                 BA6026
+      *                                                                                       BA6026
+      ** Database error                                                                       BA6026
+      *                                                                                       BA6026
+     C                   If        PRtcd <> '*NRF   '                                         BA6026
+     C     *Lock         In        LDA                                                        BA6026
+     C                   Eval      DBKEY = PSard                                              BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE = 12                                                 BA6026
+     C                   Out       LDA                                                        BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      BA6026 = 'N'                                               BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
       *                                                                                       CSW101
      C                   CALL      'AOSARDR0'                                                 CSW101
      C                   PARM      *BLANK        PRtcd                                        CSW101

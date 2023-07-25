@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD059859A          Date 28Jun22               *
+      *  Last Amend No. BA6026             Date 08Mar23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD059859A          Date 28Jun22               *
       *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
       *                 CCG025             Date 04Apr22               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Include GSH026, GSH046CC1 and MD060859.             *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059859A - Apply change to both credit and debit side.      *
       *              If no entries prior to last posting date, check  *
@@ -1247,6 +1250,7 @@
      C                   MOVEL     ##ACOD        PACCD                                        CER038
      C                   MOVEL     ##ACSQ        PACSQ                                        CER038
      C                   MOVEL     '*FORMAT'     POPTN                                        CER038
+     C                   MOVEL     TRAT          PTRTP                                        BA6026
       *                                                                                     BUG23445
       ** Format according to network Paper if Account is linked                             BUG23445
       *                                                                                     BUG23445
@@ -1285,6 +1289,9 @@
      C                   PARM                    PACSQ                                      BUG24460
      C                   PARM                    PDCIN                                      BUG24460
      C                   PARM                    PTRTP                                      BUG24460
+     C                   PARM      *BLANKS       PPNARR           30                          BA6026
+     C                   PARM      *BLANKS       PNATY             1                          BA6026
+     C                   PARM      *BLANKS       PDSTN            11                          BA6026
       *                                                                                     BUG24460
       ** Extended Narratives of length 22 * 35                                              BUG24460
       *                                                                                     BUG24460
@@ -1319,6 +1326,7 @@
      C                   PARM                    WFLDNM                                     BUG24460
      C                   PARM                    WMGID                                      BUG24460
      C                   PARM                    WMGDTA                                     BUG24460
+     C                   PARM                    PPNAR2           30                          BA6026
       *                                                                                     BUG24460
      C     PRTCD2        IFEQ      *BLANKS                                                  BUG24460
      C     PRTCD2        OREQ      '*FORMAT'                                                BUG24460

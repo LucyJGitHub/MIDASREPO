@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG28073 *CREATE   Date 12Aug10               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG28073 *CREATE   Date 12Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG28073 - Add missing files in ATU                          *
       *                                                               *
@@ -36,6 +38,9 @@
      FGLNW94L7  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(GLNW94D0:GLNW94F7)
+     FA6NW94L2  UF A E           K DISK    INFSR(*PSSR)                                       BA6026
+     F                                     COMMIT                                             BA6026
+     F                                     RENAME(A6NW94D0:A6NW94G2)                          BA6026
      FGLAUTFPD  O    E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       /EJECT
@@ -198,7 +203,70 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+      *                                                                                       BA6026
+      ** START OF PROCESSING OF RECORDS IN A6NW94PD                                           BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C     KNW94         SETLL     A6NW94G2                                                   BA6026
+     C     KNW94         READE     A6NW94G2                                                   BA6026
+      *                                                                                       BA6026
+     C                   IF        %ERROR                                                     BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'A6NW94L2'                                        BA6026
+     C                   EVAL      DBKEY = DSKITE                                             BA6026
+     C                   Z-ADD     007           DBASE                                        BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDIF                                                                BA6026
+      ** Delete and Write Records until End of File for Selected Account                      BA6026
+     C                   DOW       NOT %EOF(A6NW94L2)                                         BA6026
+     C                   DELETE    A6NW94G2                                                   BA6026
+      *                                                                                       BA6026
+     C                   IF        %ERROR                                                     BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'A6NW94L2'                                        BA6026
+     C                   EVAL      DBKEY = DSKITE                                             BA6026
+     C                   Z-ADD     008           DBASE                                        BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+     C                   EVAL      G4BRCA = DSTBRC                                            BA6026
+     C                   EVAL      G4CNUM = DSTCNU                                            BA6026
+     C                   EVAL      G4CCY  = DSTCCY                                            BA6026
+     C                   MOVEL     DSTACO        G4ACCD                                       BA6026
+     C                   MOVEL     DSTACS        G4ACSQ                                       BA6026
+      *                                                                                       BA6026
+     C                   WRITE     A6NW94G2                                                   BA6026
+      *                                                                                       BA6026
+     C                   IF        %ERROR                                                     BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'A6NW94L2'                                        BA6026
+     C                   EVAL      DBKEY = DSKITE                                             BA6026
+     C                   Z-ADD     009           DBASE                                        BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+     C                   CLEAR                   GLAUTFD0                                     BA6026
+     C                   EVAL      AULFIL = 'A6NW94L2'                                        BA6026
+     C                   EXSR      XSAUDT                                                     BA6026
+      *                                                                                       BA6026
+     C     KNW94         READE     A6NW94G2                                                   BA6026
+      *                                                                                       BA6026
+     C                   IF        %ERROR                                                     BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'A6NW94L2'                                        BA6026
+     C                   EVAL      DBKEY = DSKITE                                             BA6026
+     C                   Z-ADD     010           DBASE                                        BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDIF                                                                BA6026
+     C                   ENDDO                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -318,6 +386,29 @@
      C                   KFLD                    KACOD
      C                   KFLD                    KACSQ
  
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *BLANKS       WRTCD             7                          BA6026
+     C                   Parm      '*VERIFY'     WOPTN             7                          BA6026
+     C                   Parm      'BA6026'      WSARD             6                          BA6026
+     C                   Parm                    DSFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+     C                   When      WRTCD=*BLANKS                                              BA6026
+     C                   Move      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C                   When      WRTCD='*NRF   '                                            BA6026
+     C                   Move      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   Other                                                                BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  001                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   EndSl                                                                BA6026
+      *                                                                                       BA6026
      C                   ENDSR
  
       *****************************************************************

@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD056963           Date 07Jun23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056963 - Apply DDS change to SDNWRKPD during incorporation *
+      *             of BA6026                                         *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Include GSH026.                                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
@@ -42,6 +48,10 @@
      F                                     RENAME(GLNW94D0:GLNW94D1)
       ** Midas GL Network Accounts - MT94x - Retrieval
       *
+     FA6NW94L0  IF   E           K DISK    INFSR(*PSSR)                                       BA6026
+     F                                     RENAME(A6NW94D0:A6NW94D2)                          BA6026
+      ** Midas GL Network Accounts - MT94x Extension File (Rtv)                               BA6026
+      *                                                                                       BA6026
       *****************************************************************
       *                                                               *
       * Use of Indicators                                             *
@@ -104,6 +114,23 @@
      D NewFilRcd     E DS                  EXTNAME(GLNW94PD)
       ** New Network Account MT94x Details File Record (i.e. new state after amendments)
       *
+                                                                                              BA6026
+     D PrvFilRcd2    E DS                  EXTNAME(A6NW94PD) PREFIX(PR2_)                     BA6026
+      ** Previous Network Account MT94x Details - Extension File                              BA6026
+      *                                                                                       BA6026
+     D NewFilRcd2    E DS                  EXTNAME(A6NW94PD)                                  BA6026
+      ** New Network Account MT94x Details - Extension File                                   BA6026
+      *                                                                                       BA6026
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6026
+      ** First DS for Access Programs, Short Data Structure                                   BA6026
+      *                                                                                       BA6026
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                     BA6026
+      ** DS (longest) used as output parameter for Access Objects                             BA6026
+      *                                                                                       BA6026
+     D*DsNWRK***     E DS                  EXTNAME(SDNWRKPD)                         BA6026 MD056963
+     D DsNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD056963
+      ** Network details record format data structure                                         BA6026
+      *                                                                                       BA6026
  
       ** Declared variables
       ** ------------------
@@ -146,6 +173,28 @@
      C     *INKJ         PARM      *Off          KJIn              1
      C     *INKL         PARM      *INKL         KLIn              1
      C                   PARM                    NewFilRcd
+      *                                                                                       BA6026
+      ** Parameters for ME002322 where extension file is added.                               BA6026
+      *                                                                                       BA6026
+     C     PME00232x1    PLIST                                                                BA6026
+     C                   PARM      *Blanks       RetCodeIn                                    BA6026
+     C                   PARM                    ActionCode                                   BA6026
+     C                   PARM      ZAPGM         CallerOut        10                          BA6026
+     C     *INKC         PARM      *Off          KCIn              1                          BA6026
+     C     *INKJ         PARM      *Off          KJIn              1                          BA6026
+     C     *INKL         PARM      *INKL         KLIn              1                          BA6026
+     C                   PARM                    NewFilRcd                                    BA6026
+     C                   PARM                    NewFilRcd2                                   BA6026
+      *                                                                                       BA6026
+     C     KA6NW94L0     KLIST                                                                BA6026
+     C                   KFLD                    N4NWRK                                       BA6026
+     C                   KFLD                    N4BRCA                                       BA6026
+     C                   KFLD                    N4CNUM                                       BA6026
+     C                   KFLD                    N4CCY                                        BA6026
+     C                   KFLD                    N4ACCD                                       BA6026
+     C                   KFLD                    N4ACSQ                                       BA6026
+     C                   KFLD                    N4NATY                                       BA6026
+     C                   KFLD                    N4DSTN                                       BA6026
  
       ** Key lists
       *
@@ -189,17 +238,63 @@
  
  B3  C                   IF        ActionCode = 'A'
      C                   EVAL      PrvFilRcd = NewFilRcd
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   Eval      PrvFilRcd2 = NewFilRcd2                                    BA6026
+     C                   EndIf                                                                BA6026
  E3  C                   ENDIF
  
       ** ---- Display the first details screen format (Destination)
       *
  X2  C                   WHEN      CurFormat = 2
      C                   CALLB     'ME002321'    PME00232x
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   If        ActionCode = 'D' And *INKJ = '1'                           BA6026
+     C     KA6NW94L0     Chain     A6NW94D2                           98                      BA6026
+     C                   If        *IN98 = *Off                                               BA6026
+     C                   Eval      PR2_G4RECI = N4RECI                                        BA6026
+     C                   Eval      PR2_G4NWRK = N4NWRK                                        BA6026
+     C                   Eval      PR2_G4BRCA = N4BRCA                                        BA6026
+     C                   Eval      PR2_G4CNUM = N4CNUM                                        BA6026
+     C                   Eval      PR2_G4CCY  = N4CCY                                         BA6026
+     C                   Eval      PR2_G4ACCD = N4ACCD                                        BA6026
+     C                   Eval      PR2_G4ACSQ = N4ACSQ                                        BA6026
+     C                   Eval      PR2_G4NATY = N4NATY                                        BA6026
+     C                   Eval      PR2_G4DSTN = N4DSTN                                        BA6026
+     C                   Eval      PR2_G4SF86 = G4SF86                                        BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
  
       ** ---- Display the second details screen format (MT940)
       *
  X2  C                   WHEN      CurFormat = 3
-     C                   CALLB     'ME002322'    PME00232x
+     C*****              CALLB     'ME002322'    PME00232x                                    BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   If        ActionCode = 'E' Or ActionCode = 'A'                       BA6026
+     C     KA6NW94L0     Chain     A6NW94D2                           98                      BA6026
+     C                   If        *IN98 = *OFF                                               BA6026
+     C                   Eval      PR2_G4RECI = N4RECI                                        BA6026
+     C                   Eval      PR2_G4NWRK = N4NWRK                                        BA6026
+     C                   Eval      PR2_G4BRCA = N4BRCA                                        BA6026
+     C                   Eval      PR2_G4CNUM = N4CNUM                                        BA6026
+     C                   Eval      PR2_G4CCY  = N4CCY                                         BA6026
+     C                   Eval      PR2_G4ACCD = N4ACCD                                        BA6026
+     C                   Eval      PR2_G4ACSQ = N4ACSQ                                        BA6026
+     C                   Eval      PR2_G4NATY = N4NATY                                        BA6026
+     C                   Eval      PR2_G4DSTN = N4DSTN                                        BA6026
+     C                   Eval      PR2_G4SF86 = G4SF86                                        BA6026
+     C                   EndIf                                                                BA6026
+     C                   Else                                                                 BA6026
+     C                   If        ActionCode = 'I'                                           BA6026
+     C                   Eval      G4DSTN = N4DSTN                                            BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   CallB     'ME002322'    PME00232x1                                   BA6026
  
       ** ---- Display the third details screen format (MT941/1)
       *
@@ -310,6 +405,8 @@
      C                   PARM                    ActionCode
      C                   PARM                    PrvFilRcd
      C                   PARM                    NewFilRcd
+     C                   PARM                    PrvFilRcd2                                   BA6026
+     C                   PARM                    NewFilRcd2                                   BA6026
       *    ----------    ------
      C     @UpdatRcd     ENDSR
  
@@ -383,7 +480,49 @@
       *
      C                   CLEAR                   PrvFilRcd
      C                   CLEAR                   NewFilRcd
- 
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *BLANKS       WRTCD             7                          BA6026
+     C                   Parm      '*VERIFY'     WOPTN             7                          BA6026
+     C                   Parm      'BA6026'      WSARD             6                          BA6026
+     C                   Parm                    DSFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+     C                   When      WRTCD=*BLANKS                                              BA6026
+     C                   Move      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C                   When      WRTCD='*NRF   '                                            BA6026
+     C                   Move      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   Other                                                                BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  001                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   EndSl                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                   Clear                   PrvFilRcd2                                   BA6026
+     C                   Clear                   NewFilRcd2                                   BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Retrieve the associated network record                                               BA6026
+      *                                                                                       BA6026
+     C                   CallB     'AONWRKR1'                                                 BA6026
+     C                   Parm      *Blanks       WRTCD                                        BA6026
+     C                   Parm      '*KEY'        WOPTN                                        BA6026
+     C                   Parm      KEYNWRK       @NWRK             6                          BA6026
+     C     DsNWRK        Parm                    DSLDY                                        BA6026
+      *                                                                                       BA6026
+     C                   If        WRTCD <> *Blanks                                           BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  002                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   Endif                                                                BA6026
+                                                                                              BA6026
       ** Set up screen format flag according to the received action code
       *
       ** -- Key format if Insert
@@ -456,6 +595,10 @@
       *
  X3  C                   ELSE
      C                   MOVE      NewFilRcd     PrvFilRcd
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   Move      NewFilRcd2    PrvFilRcd2                                   BA6026
+     C                   EndIf                                                                BA6026
  E3  C                   ENDIF
  
  E2  C                   ENDIF
@@ -470,6 +613,17 @@
      C                   EVAL      N4ACCD = KeyACCD
      C                   EVAL      N4ACSQ = KeyACSQ
      C                   EVAL      N4NATY = KeyNATY
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT'                         BA6026
+     C                   Eval      G4NWRK = KeyNWRK                                           BA6026
+     C                   Eval      G4BRCA = KeyBRCA                                           BA6026
+     C                   Eval      G4CNUM = KeyCNUM                                           BA6026
+     C                   Eval      G4CCY  = KeyCCY                                            BA6026
+     C                   Eval      G4ACCD = KeyACCD                                           BA6026
+     C                   Eval      G4ACSQ = KeyACSQ                                           BA6026
+     C                   Eval      G4NATY = KeyNATY                                           BA6026
+     C                   Eval      G4DSTN = KeyDSTN                                           BA6026
+ E1  C                   EndIf                                                                BA6026
  
  E1  C                   ENDIF
  

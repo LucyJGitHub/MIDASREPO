@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR897548           Date 11Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1076807          Date 26Jul23               *
+      *  Prev Amend No. AR897548           Date 11Feb22               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028899           Date 09Dec16               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1076807 - Various errors in german feature CER042. Pass    *
+      *              additional fields from REHISPS to CGC7280.       *
+      *              (Child: AR1076808)                               *
+      *              Applied for MD60847                              *
       *  AR897548 - Generate Interest scale each time there is a      *
       *             capitalisation (Child:AR897549)                   *
       *           - Applied for MD-59166.                             *
@@ -92,6 +97,13 @@
       ** Data structure to allow the cr interest to be passed as alpha
      D @DCINA          DS
      D  @DCINN                 1      9P 0
+                                                                                           AR1076807
+      ** Data structure for additional parameters                                          AR1076807
+     D @DRCR           DS                                                                  AR1076807
+     D  @SDICI                 1      1A                                                   AR1076807
+     D  @SCICI                 2      2A                                                   AR1076807
+     D  @DAIC                  3     11P 0                                                 AR1076807
+     D  @CAIC                 12     20P 0                                                 AR1076807
 
       ** Data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
@@ -125,6 +137,10 @@
      I              DRIS                        H1DRIS
      I              CRIP                        H1CRIP
      I              CRIS                        H1CRIS
+     I              SDICI                       H1DICI                                     AR1076807
+     I              SCICI                       H1CICI                                     AR1076807
+     I              DAIC                        H1DAIC                                     AR1076807
+     I              CAIC                        H1CAIC                                     AR1076807
       *
       *****************************************************************
       /EJECT
@@ -240,6 +256,7 @@
      C                   PARM                    @PCINA
      C                   PARM      'FIRST'       @PFRLS
      C                   PARM                    @PRTCD
+     C                   PARM                    @DRCR                                     AR1076807
 
       ** Set the flag to say the routine has been run
      C                   MOVE      'YES'         @FIRST
@@ -367,6 +384,10 @@
      C                   MOVE      @DCINA        @PCINA
      C                   MOVE      *BLANKS       @PFRLS
      C                   MOVE      *BLANKS       @PRTCD
+     C                   MOVEL     H1DICI        @SDICI                                    AR1076807
+     C                   MOVEL     H1CICI        @SCICI                                    AR1076807
+     C                   Z-SUB     H1DAIC        @DAIC                                     AR1076807
+     C                   Z-ADD     H1CAIC        @CAIC                                     AR1076807
      C                   CALL      'CGC7280'
      C                   PARM                    @PBRCA
      C                   PARM                    @PCNUM
@@ -381,6 +402,7 @@
      C                   PARM                    @PCINA
      C                   PARM                    @PFRLS
      C                   PARM                    @PRTCD
+     C                   PARM                    @DRCR                                     AR1076807
      C                   MOVE      @PDINA        @DDINA
      C                   MOVE      @PCINA        @DCINA
 
@@ -442,6 +464,7 @@
      C                   PARM                    @PCINA
      C                   PARM      'LAST '       @PFRLS
      C                   PARM                    @PRTCD
+     C                   PARM                    @DRCR                                     AR1076807
 
       ** Set the flag to say the routine has been run
      C                   MOVE      'YES'         @FIRST

@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER042  *CREATE    Date 11May11               *
+      *  Last Amend No. MD060847           Date 26Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060847 - correct retrieval of InterestScaleStart date      *
       *  MD046248 - Finastra Rebranding                               *
       *  CER042 - Interest Scale Report Correspondence                *
       *           (Upgrade of FGE178/179)                             *
@@ -29,6 +31,9 @@
  
       ** Retail History by Account and Date
      FREHISLS   IF   E           K DISK    USROPN
+     FACCNTL0   IF   E           K DISK                                                     MD060847
+     F                                     PREFIX(A_)                                       MD060847
+      ** ACCNTAB by Account                                                                 MD060847
  
      D @PFRLS          S              5A
      D @PRTCD          S              7A
@@ -103,6 +108,14 @@
      C                   KFLD                    @KACSQ
      C                   KFLD                    @KEDAT
  
+      ** Key for Accntab                                                                    MD060847
+     C     KEYACC        KLIST                                                              MD060847
+     C                   KFLD                    @KCNUM                                     MD060847
+     C                   KFLD                    @KCCY                                      MD060847
+     C                   KFLD                    @KACOD                                     MD060847
+     C                   KFLD                    @KACSQ                                     MD060847
+     C                   KFLD                    @KBRCA                                     MD060847
+                                                                                            MD060847
       ** Define the work fields
      C     *LIKE         DEFINE    BRCA          @PBRCA
      C     *LIKE         DEFINE    CNUM          @PCNUM
@@ -174,19 +187,88 @@
       ** Clear the return code
      C                   MOVE      *BLANKS       @PRTCD
  
+      ** Check Capitalisation Frequency (from ACCNTAB)                                      MD060847
+     C                   EXSR      RtvAcc                                                   MD060847
+                                                                                            MD060847
       ** Postion to the end of interest period in file
+     C                   MOVE      ' '           Found             1                        MD060847
      C     @HLKEY        SETLL     REHISLS
  
       ** Read the pervious equal record for last interest date
      C     @HSKEY        READPE    REHISLS                                89
  
+     C     *IN89         DOWNE     '1'                                                      MD060847
+                                                                                            MD060847
+     C     *In89         IFEQ      '0'                                                      MD060847
+      ** No discrepancy between DR/CR capitalisation frequency                              MD060847
+      ** Interest start date matching the last capitalisation event                         MD060847
+     C     CFRQ          IFEQ      'QQ'                                                     MD060847
+     C     CFRQ          OREQ      'MM'                                                     MD060847
+     C     CFRQ          OREQ      'ZZ'                                                     MD060847
+     C                   Z-ADD     HISD          @PINFD                                     MD060847
+     C                   MOVE      'Y'           Found                                      MD060847
+     C                   MOVE      '1'           *In89                                      MD060847
+     C                   LEAVE                                                              MD060847
+     C                   ELSE                                                               MD060847
+      ** There is a discrepancy between DR/CR capitalisation frequency                      MD060847
+      ** Check for last Credit capitalisation date                                          MD060847
+     C     A_CRIF        IFEQ      'Q'                                          Credit      MD060847
+     C     A_CRIF        OREQ      'M'                                                      MD060847
+     C     SCICI         IFEQ      'Y'                                                      MD060847
+     C                   Z-ADD     HISD          @PINFD                                     MD060847
+     C                   MOVE      'Y'           Found                                      MD060847
+     C                   MOVE      '1'           *In89                                      MD060847
+     C                   LEAVE                                                              MD060847
+     C                   ENDIF                                                              MD060847
+     C                   ENDIF                                                              MD060847
+      ** There is a discrepancy between DR/CR capitalisation frequency                      MD060847
+      ** Check for last Debit capitalisation date                                           MD060847
+     C     A_DRIF        IFEQ      'Q'                                          Debit       MD060847
+     C     A_DRIF        OREQ      'M'                                                      MD060847
+     C     SDICI         IFEQ      'Y'                                                      MD060847
+     C                   Z-ADD     HISD          @PINFD                                     MD060847
+     C                   MOVE      'Y'           Found                                      MD060847
+     C                   MOVE      '1'           *In89                                      MD060847
+     C                   LEAVE                                                              MD060847
+     C                   ENDIF                                                              MD060847
+     C                   ENDIF                                                              MD060847
+      *                                                                                     MD060847
+     C                   ENDIF                                                              MD060847
+      *                                                                                     MD060847
+     C                   ENDIF                                                              MD060847
+      *                                                                                     MD060847
+     C     @HSKEY        READPE    REHISLS                                89                MD060847
+     C                   Enddo                                                              MD060847
+                                                                                            MD060847
       ** If no record found use the start date of the deal
      C     *IN89         IFEQ      *ON
+     C     Found         ANDEQ     ' '                                                      MD060847
      C                   Z-ADD     @PVDAT        @PINFD
  
       ** If a record found use this date as the interest from date
-     C                   ELSE
-     C                   Z-ADD     HISD          @PINFD
+     C**********         ELSE                                                               MD060847
+     C**********         Z-ADD     HISD          @PINFD                                     MD060847
      C                   ENDIF
  
      C                   ENDSR
+      *****************************************************************                     MD060847
+      /EJECT                                                                                MD060847
+      *****************************************************************                     MD060847
+      *                                                                                     MD060847
+      *  RTVACC SR. Retrieve Capitalisation Frequency                                       MD060847
+      *                                                                                     MD060847
+      *  Called by :  Detail routine                                                        MD060847
+      *  Calls     :  none                                                                  MD060847
+      *                                                                                     MD060847
+      *****************************************************************                     MD060847
+     C     RTVACC        BEGSR                                                              MD060847
+      *                                                                                     MD060847
+     C     KEYACC        CHAIN     ACCNTABF                           90                    MD060847
+     C     *IN90         IFEQ      '0'                                                      MD060847
+     C                   MOVEL     A_DRIF        CFRQ              2            Debit cap.F MD060847
+     C                   MOVE      A_CRIF        CFRQ                           CreditCap.F MD060847
+     C                   ENDIF                                                              MD060847
+                                                                                            MD060847
+     C                   ENDSR                                                              MD060847
+                                                                                            MD060847
+      *****************************************************************                     MD060847

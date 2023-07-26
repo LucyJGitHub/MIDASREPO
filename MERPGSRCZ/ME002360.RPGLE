@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783             Date 28May12               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056963           Date 07Jun23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 223783             Date 28May12               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR647426           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -33,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056963 - Apply DDS change to SDNWRKPD during incorporation *
+      *             of BA6026                                         *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Include GSH041                                      *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
@@ -53,6 +59,12 @@
       ** Midas GL Network Accounts MT94x Details - Update
       *
  
+     FA6NW94L1  UF A E           K DISK    INFSR(*PSSR)                                      BA6026
+     F                                     RENAME(A6NW94D0:A6NW94D1)                         BA6026
+     F                                     COMMIT                                            BA6026
+      ** Midas GL Network Accounts MT94x Extensiion Details - Update                         BA6026
+      *                                                                                      BA6026
+                                                                                             BA6026
      FGLACBTL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL Account Balances Today
       *
@@ -140,6 +152,25 @@
      D NewFilRcd     E DS                  EXTNAME(GLNW94PD) PREFIX(NEW_)
       ** New Network File Record (i.e. new state after amendments)
       *
+     D CurFilRcd2    E DS                  EXTNAME(A6NW94PD)                                  BA6026
+      ** Current Network Extension File Record                                                BA6026
+      *                                                                                       BA6026
+     D PrvFilRcd2    E DS                  EXTNAME(A6NW94PD) PREFIX(PR2_)                     BA6026
+      ** Previous Network Extension File Record                                               BA6026
+      *                                                                                       BA6026
+     D NewFilRcd2    E DS                  EXTNAME(A6NW94PD) PREFIX(NW2_)                     BA6026
+      ** New Network Extension File Record                                                    BA6026
+      *                                                                                       BA6026
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     BA6026
+      ** First DS for Access Programs, Short Data Structure                                   BA6026
+      *                                                                                       BA6026
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                     BA6026
+      ** DS (longest) used as output parameter for Access Objects                             BA6026
+      *                                                                                       BA6026
+     D*DsNWRK***     E DS                  EXTNAME(SDNWRKPD)                         BA6026 MD056963
+     D DsNWRK        E DS                  EXTNAME(SDNWKJW0)                                MD056963
+      ** Network details record format data structure                                         BA6026
+      *                                                                                       BA6026
  
      D PrvSchRcd     E DS                  EXTNAME(GLGS94PD) PREFIX(PRV_)
      D  PrecQQACCD   E                     EXTFLD(QQACCD)                                     CGL029
@@ -173,6 +204,30 @@
       *
      D MsgType         S                   LIKE(MGMTPY)
  
+      ** Work fields for AOSVALR0                                                             BA6026
+     D SVALK1          C                   'A6Fld86AddChg'                                    BA6026
+     D SVOP01          S             20A                                                      BA6026
+     D SVVL01          S            200A                                                      BA6026
+     D SVOP02          S             20A                                                      BA6026
+     D SVVL02          S            200A                                                      BA6026
+     D SVOP03          S             20A                                                      BA6026
+     D SVVL03          S            200A                                                      BA6026
+     D SVOP04          S             20A                                                      BA6026
+     D SVVL04          S            200A                                                      BA6026
+     D SVOP05          S             20A                                                      BA6026
+     D SVVL05          S            200A                                                      BA6026
+     D SVOP06          S             20A                                                      BA6026
+     D SVVL06          S            200A                                                      BA6026
+     D SVOP07          S             20A                                                      BA6026
+     D SVVL07          S            200A                                                      BA6026
+     D SVOP08          S             20A                                                      BA6026
+     D SVVL08          S            200A                                                      BA6026
+     D SVOP09          S             20A                                                      BA6026
+     D SVVL09          S            200A                                                      BA6026
+     D SVOP10          S             20A                                                      BA6026
+     D SVVL10          S            200A                                                      BA6026
+     D A6Fld86AddChg   S              1A   INZ('N')                                           BA6026
+                                                                                              BA6026
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
@@ -186,6 +241,8 @@
      C                   PARM                    ActionCode
      C                   PARM                    PrvFilRcd
      C                   PARM                    NewFilRcd
+     C                   PARM                    PrvFilRcd2                                   BA6026
+     C                   PARM                    NewFilRcd2                                   BA6026
  
       ** Key lists
       *
@@ -293,6 +350,26 @@
      C                   EVAL      N4CHTP = 'I'
      C                   EVAL      N4USER = PSUser
      C                   WRITE     GLNW94D0
+      *                                                                                       BA6026
+      ** Insert the new record to the extension file.                                         BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   Movel     NewFilRcd2    CurFilRcd2                                   BA6026
+     C                   Eval      G4RECI = 'D'                                               BA6026
+      *                                                                                       BA6026
+     C                   If        G4SF86 = *Blank                                            BA6026
+     C                   If        A6Fld86AddChg = 'N'                                        BA6026
+     C                   Eval      G4SF86 = 'N'                                               BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      G4SF86 = 'Y'                                               BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   Write     A6NW94D1                                                   BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
       *    ----------    ------
      C     @InsertRcd    ENDSR
  
@@ -318,6 +395,18 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
+      *                                                                                       BA6026
+      ** If record already modified by another user, issue error.                             BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   If        CurFilRcd2 <> PrvFilRcd2                                   BA6026
+     C                   Move      'ME00051'     ZAMSID                                       BA6026
+     C                   Exsr      $ZaSndMsg                                                  BA6026
+     C                   Movel(P)  '*MSG'        RetcodeOut                                   BA6026
+     C                   Exsr      $ExitMod                                                   BA6026
+     C                   EndIf                                                                BA6026
+ E3  C                   EndIf                                                                BA6026
  
       ** Amend the record
       *
@@ -360,6 +449,26 @@
      C                   EXSR      $ExitMod                                                 AR647426
      C                   ENDIF                                                              AR647426
       *                                                                                     AR647426
+      ** Amend the record in extension file.                                                  BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   Movel     NewFilRcd2    CurFilRcd2                                   BA6026
+     C                   Eval      G4RECI = 'D'                                               BA6026
+      *                                                                                       BA6026
+     C                   If        G4SF86 = *Blank                                            BA6026
+     C                   If        A6Fld86AddChg = 'N'                                        BA6026
+     C                   Eval      G4SF86 = 'N'                                               BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      G4SF86 = 'Y'                                               BA6026
+     C                   EndIf                                                                BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   Update    A6NW94D1                                                   BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
+
       *    ----------    ------
      C     @UpdateRcd    ENDSR
  
@@ -527,6 +636,18 @@
      C                   MOVEL(P)  '*MSG'        RetcodeOut
      C                   EXSR      $ExitMod
      C                   ENDIF
+      *                                                                                      BA6026
+      ** If record already modified by another user, issue error.                            BA6026
+      *                                                                                      BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                    BA6026
+     C                             N4G940 = 'Y'                                              BA6026
+     C                   If        CurFilRcd2 <> PrvFilRcd2                                  BA6026
+     C                   Move      'ME00053'     ZAMSID                                      BA6026
+     C                   Exsr      $ZaSndMsg                                                 BA6026
+     C                   Movel(P)  '*MSG'        RetcodeOut                                  BA6026
+     C                   Exsr      $ExitMod                                                  BA6026
+     C                   EndIf                                                               BA6026
+     C                   EndIf                                                               BA6026
  
       ** Delete the eventual linked Generation Schedules
       *
@@ -564,6 +685,12 @@
      C                   EVAL      N4CHTP = 'D'
      C                   EVAL      N4USER = PSUser
      C                   UPDATE    GLNW94D0
+      *
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   Eval      G4RECI = '*'                                               BA6026
+     C                   Update    A6NW94D1                                                   BA6026
+     C                   EndIf                                                                BA6026
       *    ----------    ------
      C     @DeleteRcd    ENDSR
  
@@ -632,6 +759,88 @@
       ** Access file on the specified Key
       *
      C     KGLNW94L0     CHAIN     GLNW94D0                           27
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *BLANKS       WRTCD             7                          BA6026
+     C                   Parm      '*VERIFY'     WOPTN             7                          BA6026
+     C                   Parm      'BA6026'      WSARD             6                          BA6026
+     C                   Parm                    DSFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+     C                   When      WRTCD=*BLANKS                                              BA6026
+     C                   Move      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C                   When      WRTCD='*NRF   '                                            BA6026
+     C                   Move      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   Other                                                                BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  001                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   EndSl                                                                BA6026
+     C                                                                                        BA6026
+      ** Retrieve Transaction Type system values                                              BA6026
+     C                   CALL      'AOSVALR0'                                                 BA6026
+     C                   PARM      *BLANKS       PRtCdIn           7                          BA6026
+     C                   PARM      SVALK1        SVOP01                                       BA6026
+     C                   PARM      *BLANKS       SVVL01                                       BA6026
+     C                   PARM      *BLANKS       SVOP02                                       BA6026
+     C                   PARM      *BLANKS       SVVL02                                       BA6026
+     C                   PARM      *BLANKS       SVOP03                                       BA6026
+     C                   PARM      *BLANKS       SVVL03                                       BA6026
+     C                   PARM      *BLANKS       SVOP04                                       BA6026
+     C                   PARM      *BLANKS       SVVL04                                       BA6026
+     C                   PARM      *BLANKS       SVOP05                                       BA6026
+     C                   PARM      *BLANKS       SVVL05                                       BA6026
+     C                   PARM      *BLANKS       SVOP06                                       BA6026
+     C                   PARM      *BLANKS       SVVL06                                       BA6026
+     C                   PARM      *BLANKS       SVOP07                                       BA6026
+     C                   PARM      *BLANKS       SVVL07                                       BA6026
+     C                   PARM      *BLANKS       SVOP08                                       BA6026
+     C                   PARM      *BLANKS       SVVL08                                       BA6026
+     C                   PARM      *BLANKS       SVOP09                                       BA6026
+     C                   PARM      *BLANKS       SVVL09                                       BA6026
+     C                   PARM      *BLANKS       SVOP10                                       BA6026
+     C                   PARM      *BLANKS       SVVL10                                       BA6026
+                                                                                              BA6026
+     C                   IF        PRtCdIn <> *Blanks  AND                                    BA6026
+     C                             PRtCdIn <> '*NRF   '                                       BA6026
+     C     *LOCK         IN        LDA                                                        BA6026
+     C                   EVAL      DBFILE = 'SDSVALPD'                                        BA6026
+     C                   EVAL      DBKEY = 'SVOP01'                                           BA6026
+     C                   EVAL      DBASE = 903                                                BA6026
+     C                   OUT       LDA                                                        BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   EndIf                                                                BA6026
+     C                                                                                        BA6026
+     C                   Eval      A6Fld86AddChg = SVVL01                                     BA6026
+     C                   If        A6Fld86AddChg <> 'Y'                                       BA6026
+     C                             And A6Fld86AddChg <> 'N'                                   BA6026
+     C                   Eval      A6Fld86AddChg = 'N'                                        BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Retrieve the associated network record                                               BA6026
+      *                                                                                       BA6026
+     C                   CallB     'AONWRKR1'                                                 BA6026
+     C                   Parm      *Blanks       WRTCD                                        BA6026
+     C                   Parm      '*KEY'        WOPTN                                        BA6026
+     C                   Parm      NEW_N4NWRK    @NWRK             6                          BA6026
+     C     DsNWRK        Parm                    DSLDY                                        BA6026
+      *                                                                                       BA6026
+     C                   If        WRTCD <> *Blanks                                           BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  002                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   Endif                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             NEW_N4G940 = 'Y'                                           BA6026
+     C     KGLNW94L0     CHAIN     A6NW94D1                           27                      BA6026
+ E3  C                   EndIf                                                                BA6026
       *    ----------    ------
      C     @INZSR        ENDSR
  

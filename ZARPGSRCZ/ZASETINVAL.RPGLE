@@ -7931,7 +7931,7 @@
      C                   PARM                    @KEY1                                      MD061359
      C                   PARM      *BLANKS       @KYST                                      MD061359
      C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
-     C                   ELSE
+     C                   ELSE                                                               MD061359
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -8424,7 +8424,7 @@
      C                   PARM                    @CSCN                                      MD061359
      C                   PARM                    @KYST                                      MD061359
      C     SDCUST        PARM      SDCUST        DSLDY                                      MD061359
-     C                   ELSE
+     C                   ELSE                                                               MD061359
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7

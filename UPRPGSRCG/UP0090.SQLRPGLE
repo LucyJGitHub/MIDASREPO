@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD061274             Date 09May23             *
-      *  Prev Amend No. MD060877             Date 01Jan23             *
+      *  Last Amend No. MD061518             Date 23Jul23             *
+      *  Prev Amend No. MD061576             Date 23Jul23             *
+      *                 MD061503             Date 23Jun23             *
+      *                 MD061577             Date 18Jul23             *
+      *                 MD061274             Date 09May23             *
+      *                 MD060877             Date 01Jan23             *
       *                 CSW101               Date 03Feb23             *
       *                 MD060964             Date 24Jan23             *
       *                 MD060352             Date 22Aug22             *
@@ -105,6 +109,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
+      *  MD061576 - Deliverable Data Split for T_GRMENU*              *
+      *  MD061503 - Deliverable Data Split for Replication _R files   *
+      *  MD061577 - Deliverable Data Split for UPDDSFPD               *
       *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD  *
       *  CSW101 - PAYplus Interface.                                  *
@@ -1353,6 +1361,12 @@
      C                             or ChkFile = 'SDIDCXTD'                                    CSW101
      C                             or ChkFile = 'SMBFPXTD'                                  MD060877
      C                             or ChkFile = 'SMRLSXTD'                                  MD060877
+     C                             or ChkFile = 'UPDDSXTD'                                  MD061577
+     C                             or ChkFile = 'UPADMXTD'                                  MD061576
+     C                             or ChkFile = 'ZZGBLXTD'                                  MD061518
+     C                             or ChkFile = 'RPACIXTD'                                  MD061503
+     C                             or ChkFile = 'RPASIXTD'                                  MD061503
+     C                             or ChkFile = 'RPMSGXTD'                                  MD061503
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1467,7 +1481,8 @@
      C                             or Member = 'GPSRSCTD'                                   MD055681
      C                             or Member = 'GPTRGCTD'                                   MD055682
      C                             or Member = 'GPSRTCTD'                                   MD055682
-     C                             or Member = 'UPDDSFPD'                                   MD056694
+     C**********                   or Member = 'UPDDSFPD'                          MD056694 MD061577
+     C                             or Member = 'UPDDSCTD'                                   MD061577
      C                             or Member = 'GPGLFCTD'                                   MD056556
      C                             or Member = 'GPJARCTD'                                   MD056889
      C                             or Member = 'GPNDCCTD'                                   MD056564
@@ -1534,6 +1549,8 @@
      C                             or Member = 'GPRELCTD'                                   MD060352
      C                             or Member = 'SMBFPCTD'                                   MD060877
      C                             or Member = 'SMRLSCTD'                                   MD060877
+     C                             or Member = 'UPADMCTD'                                   MD061576
+     C                             or Member = 'ZZGBLCTD'                                   MD061518
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1723,6 +1740,9 @@
      C                             or Member = 'SDARRCTD'                                   MD061274
      C                             or Member = 'SCRELCTD'                                   MD060352
      C                             or Member = 'SDIDCCTD'                                     CSW101
+     C                             or Member = 'RPACICTD'                                   MD061503
+     C                             or Member = 'RPASICTD'                                   MD061503
+     C                             or Member = 'RPMSGCTD'                                   MD061503
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

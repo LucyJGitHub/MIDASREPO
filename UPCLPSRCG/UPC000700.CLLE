@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD061274           Date 09May23              */
-/*       Prev Amend No. MD060877           Date 01Jan23              */
+/*       Last Amend No. MD061518           Date 23Jul23              */
+/*       Prev Amend No. MD061576           Date 23Jul23              */
+/*                      MD061577           Date 18Jul23              */
+/*                      MD061274           Date 09May23              */
+/*                      MD060877           Date 01Jan23              */
 /*                      MD060910           Date 11Jan23              */
 /*                      MD060813           Date 08Dec22              */
 /*                      MD060352           Date 22Aug22              */
@@ -89,6 +92,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLAN*/
+/*       MD061576 - Deliverable Data Split for T_GRMENU*             */
+/*       MD061577 - Deliverable Data Split for UPDDSFPD              */
 /*       MD061274 - Deliverable Data Split for SDARRTTD              */
 /*       MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD */
 /*       MD060910 - TABLEV4 data take-on not done as file is not     */
@@ -256,6 +262,10 @@
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD056555*/
 
 
+/* UPADMCTD is a special file (replacing T_GRMENUL delivery, skip process */            /*MD061576*/
+             IF         COND(&FILE *EQ 'UPADMCTD') THEN(GOTO +
+                          CMDLBL(UPADMCTD))                                             /*MD061576*/
+                                                                                        /*MD061576*/
 /* For validation list files, call new pgm to perform synch */                          /*MD058672*/
              IF         COND(%SUBSTRING(&FILE 3 6) *EQ 'VLLCTD') +
                           THEN(DO)                                                      /*MD058672*/
@@ -4275,7 +4285,37 @@
              CALL       PGM(UP000703) PARM(&ERROR &FILE +
                           &OLDLIB 'SDARRTTD')                                           /*MD061274*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD061274*/
-             ENDDO                                                                      /*MD061274*/                                                                                       
+             ENDDO                                                                      /*MD061274*/
+                                                                                        /*MD061577*/
+  /* UPDDSCTD */                                                                        /*MD061577*/
+             IF         COND(&FILE *EQ 'UPDDSCTD') THEN(DO)                             /*MD061577*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD061577*/
+             CHKOBJ     OBJ(&LIBMOV/UPDDSFPD) OBJTYPE(*FILE)                            /*MD061577*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD061577*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD061577*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061577*/
+             ADDLIBLE   LIB(&LIBMOV) POSITION(*LAST)                                    /*MD061577*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'UPDDSFPD')                                           /*MD061577*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD061577*/
+             ENDDO                                                                      /*MD061577*/
+                                                                                        /*MD061577*/
+                                                                                        /*MD061518*/
+  /* ZZGBLCTD */                                                                        /*MD061518*/
+             IF         COND(&FILE *EQ 'ZZGBLCTD') THEN(DO)                             /*MD061518*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT %SUBSTRING(&OLDLIB 1 2) +
+                             *TCAT 'GMLIB')                                             /*MD061518*/
+             CHKOBJ     OBJ(&LIBMOV/ZZGBLANG) OBJTYPE(*FILE)                            /*MD061518*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD061518*/
+             RMVLIBLE   LIB(&LIBMOV)                                                    /*MD061518*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061518*/
+             ADDLIBLE   LIB(&LIBMOV) POSITION(*LAST)                                    /*MD061518*/
+             CALL       PGM(UP000703) PARM(&ERROR &FILE +
+                          &OLDLIB 'ZZGBLANG')                                           /*MD061518*/
+             IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD061518*/
+             ENDDO                                                                      /*MD061518*/
+                                                                                        /*MD061518*/
              ENDDO                                                                      /*MD054560*/
                                                                                         /*MD054955*/
 /* If No Display Condition fields */                                                    /*MD056564*/
@@ -4303,6 +4343,9 @@
              CALL       PGM(UP0819)                                                     /*MD055891*/
              ENDDO                                                                      /*MD055891*/
                                                                                         /*MD055891*/
+/* Special process for UPADMCTD will be added here */                                   /*MD061576*/
+UPADMCTD:                                                                               /*MD061576*/
+                                                                                        /*MD061576*/
              GOTO       CMDLBL(END)
 
 ABNOR:

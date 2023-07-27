@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. CSW101               Date 03Feb23             *
-      *  Prev Amend No. MD060848             Date 28Dec22             *
+      *  Last Amend No. MD061518             Date 23Jul23             *
+      *  Prev Amend No. MD061673             Date 21Jul23             *
+      *                 CSW101               Date 03Feb23             *
+      *                 MD060848             Date 28Dec22             *
       *                 MD058830             Date 01Oct21             *
       *                 MD060547             Date 12Dec22             *
       *                 MD056602             Date 04Sep20             *
@@ -42,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
+      *  MD061673 - Consider field SDNWRKPD.EDCONV                    *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
@@ -145,6 +149,7 @@
      C                   Other                                                              MD055681
      C                   If        XINDEX <> 'CBDPRCTD'                                     MD055891
      C                             and XINDEX <> 'CBMEXCTD'                                 MD055891
+     C                             and XINDEX <> 'ZZGBLCTD'                                 MD061518
       * Update Extension file with content of 'old file'
      C                   If        %SUBST(XINDEX:2:4) <> 'PDFL'                             MD056565
      C                   exsr      SR_UpdExt
@@ -456,6 +461,7 @@
       ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
      C                   If        WHFLDI = 'A1FTPT'                                        MD060547
      C                             or WHFLDI = 'ROUAPL'                                     MD060848
+     C                             or WHFLDI = 'EDCONV'                                     MD061673
      C                   eval      OLDSCHEMA = '#.' + KMSCHEMA                              MD060547
      C                   If        WHFLDI = 'A1FTPT'                                        MD060848
      C/EXEC SQL                                                                             MD060547
@@ -464,11 +470,19 @@
      C+ = :OLDFILE and DBIFLD = 'A1FTPT'                                                    MD060547
      C/END-EXEC                                                                             MD060547
      C                   else                                                               MD060848
+     C                   If        WHFLDI = 'EDCONV'                                        MD061673
+     C/EXEC SQL                                                                             MD061673
+     C+ select count(*) into :RcdCount                                                      MD061673
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD061673
+     C+ = :OLDFILE and DBIFLD = 'EDCONV'                                                    MD061673
+     C/END-EXEC                                                                             MD061673
+     C                   else                                                               MD061673
      C/EXEC SQL                                                                             MD060848
      C+ select count(*) into :RcdCount                                                      MD060848
      C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD060848
      C+ = :OLDFILE and DBIFLD = 'ROUAPL'                                                    MD060848
      C/END-EXEC                                                                             MD060848
+     C                   Endif                                                              MD061673
      C                   Endif                                                              MD060848
      C                   If        RcdCount = 0                                             MD060547
      C                   eval      PINSERT = %trimr(PINSERT) + ',B.' + WHFLDI               MD060547
@@ -524,6 +538,11 @@
      C                   eval      OLDFILE = 'GPNSECPD'                                     MD054346
      C                   endif                                                              MD054346
                                                                                             MD054346
+      * for ZZGBLCTD migration, the bespoke record will come from ZZGBXXLANG                MD061518
+     C                   if        EXTINDEX = 'ZZGBLBTD'                                    MD061518
+     C                   eval      OLDFILE = 'ZZGBXXLANG'                                   MD061518
+     C                   endif                                                              MD061518
+                                                                                            MD061518
       * for T_WIPACT migration                                                              MD056891
      C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
      C                             or EXTINDEX = 'T_APIBTD'                                 MD056602
@@ -733,8 +752,23 @@
      C                   eval      PSELECT = %trimr(PSELECT) + 'A.' + WHFLDI
      C                   eval      First = 'N'
      C                   ELSE
+     C                   If        WHFLDI = 'EDCONV'                                        MD061673
+     C/EXEC SQL                                                                             MD061673
+     C+ select count(*) into :RcdCount                                                      MD061673
+     C+ from QADBILLB WHERE DBILIB = :OLDSCHEMA and DBIFIL                                  MD061673
+     C+ = :OLDFILE and DBIFLD = 'EDCONV'                                                    MD061673
+     C/END-EXEC                                                                             MD061673
+     C                   If        RcdCount = 0                                             MD061673
+     C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD061673
+     C                   eval      PSELECT = %trimr(PSELECT) + ', '  + ''' '''              MD061673
+     C                   Else                                                               MD061673
+     C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI                 MD061673
+     C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI               MD061673
+     C                   Endif                                                              MD061673
+     C                   else                                                               MD061673
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI
      C                   eval      PSELECT = %trimr(PSELECT) + ',A.' + WHFLDI
+     C                   Endif                                                              MD061673
      C                   ENDIF
      C                   else
      C                   eval      PINSERT = %trimr(PINSERT) + ',' + WHFLDI

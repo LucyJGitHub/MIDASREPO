@@ -16,11 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSW037A            Date 02May05               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -144,7 +146,7 @@
      F                                     PREFIX(G1)
       *
       ** SD Standing Data Controls by filename for file update.
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PsSR)
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
      F                                     COMMIT
       *
       ** Securities Clients details for retrieval.
@@ -301,14 +303,14 @@
      D PParmRTCD       S             10A
      D PParmCSNO       S              6A
      D PParmACTN       S              1A
- 
+
      D PKeyC           S             10A
      D PKySt           S              7A
- 
+
      D PRtcd           S              7A
      D POptn           S              7A
      D PSARd           S              6A
- 
+
      D WCOTT           S              2A
      D WScrn           S              1A
      D WError          S              1A
@@ -316,15 +318,15 @@
      D W_Rrn           S              5P 0
      D W_Trn           S              5P 0
      D W_Cnt           S              5P 0
- 
+
      D CSE024          S              1A
- 
+
      D WErrOnU         S              1A   INZ(*Blanks)
      D WLetter         S              6A   INZ(*Blanks)
      D WNumber         S              6  0
- 
+
      D MainFlName      S             10A   INZ('SDWTCSPD  ')
- 
+
      D DelRequested    S              1A   INZ(*Blanks)
      D FilUpdNeeded    S              1A   INZ(*Blanks)
      D SflUpdNeeded    S              1A   INZ(*Blanks)
@@ -332,7 +334,7 @@
       ** Index for arrays of error message IDs
      D Ix              S              3P 0
      D IdX             S              3P 0
- 
+
      D PMsgFl          S             10A   INZ('GBSDUSRMSG')
      D PMsgId          S             10A   INZ(*Blanks)
       *
@@ -390,7 +392,7 @@
       ** discretionary, otherwise not allowed.
       *
      C     PParmCSNO     CHAIN     SDSECSL0                           83
- 
+
      C**************     IF        RecNotFnd = True OR (BFCLAS <> 'S'           186001
      C**************               AND BFCLAS <> 'D')                           186001
      C                   IF        RecNotFnd = True OR (BFCLAS <> 'S'           186001
@@ -413,7 +415,7 @@
       ** message 'No withholding tax details exist.'.
       *
      C                   IF        EndOfFile = True
- 
+
      C                   IF        PParmACTN = 'I' OR PParmACTN = 'A'
      C                   EVAL      WScrn = 'A'
      C                   GOTO      ESRBldBrw
@@ -422,7 +424,7 @@
      C                   EVAL      WScrn = 'T'
      C                   GOTO      ESRBldBrw
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Set footer for change mode and initialize subfile relative record
@@ -489,7 +491,7 @@
       *
       ** Read next record.
      C                   EXSR      SRReadRec
- 
+
      C                   ENDDO
       *
       ** Retrieve time for display.
@@ -503,9 +505,9 @@
       *
       ** Write and read the subfile control if records exist for browse processing.
      C                   IF        SSFRN <> 0
- 
+
      C                   EXFMT     SD0372C0
- 
+
      C                   SELECT
       *
       ** If F3, bypass further processing for this module.
@@ -537,9 +539,9 @@
       *
       ** Enter key, process active subfile for update.
      C                   OTHER
- 
+
      C                   IF        RollUpKey <> True
- 
+
      C                   EXSR      SRValUpdSfl
       *
       ** Reset subfile to pointer if enter key selected instead of rollup
@@ -549,7 +551,7 @@
      C                   EVAL      *IN81 = *On
      C                   WRITE     SD0372C0
      C                   EVAL      *IN81 = *Off
- 
+
      C                   EVAL      WCOTT = WCRTT
      C     WithKey       SETLL     SDWTCSL0                           84
       *
@@ -559,23 +561,23 @@
      C                   ELSE
      C                   EXSR      SRReadRec
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      SSFRN = W_Err
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      W_Rrn = W_Trn
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ELSE
      C                   EVAL      WScrn = 'A'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     ESRBldBrw     ENDSR
       *****************************************************************
       /EJECT
@@ -594,14 +596,14 @@
       *
       ** Read the file by customer and country of tax treaty.
      C     PParmCSNO     READE     SDWTCSL0                               84
- 
+
      C                   IF        EndOfFile = False
      C                   EVAL      WError = '0'
      C                   EVAL      OldDetlWT = OrgDetlWT
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -665,7 +667,7 @@
       ** Tax Identification Number                                                            186000
       *                                                                                       186000
      C                   EVAL      SWTIN = WHTIN                                              186000
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -685,7 +687,7 @@
       ** changed.
       *
      C                   DOU       EndOfSfile = True
- 
+
      C                   IF        WScrn = 'B'
      C                   READC     SD0372S0                               85
      C                   ELSE
@@ -698,7 +700,7 @@
       *
       ** Remember that atleast one record in the subfile has been changed.
      C                   EVAL      SflUpdNeeded = 'Y'
- 
+
      C                   IF        CurDetlWT <> *BLANK
      C                   EVAL      Ix = 0
      C                   EXSR      SRValidate
@@ -724,20 +726,20 @@
      C                   IF        WScrn = 'B'
      C                   UPDATE    SD0372S0
      C                   ELSE
- 
+
      C                   IF        WScrn = 'A'
      C                   UPDATE    SD0372S1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Make sure that error indicators are reset after each update of
       ** the subfile record.
      C                   MOVEA     WZeroise      *IN(20)
      C                   EVAL      *IN94 = *Off
- 
+
      C                   ENDDO
       *
       ** If more than 1 error message is to be displayed, seton
@@ -746,11 +748,11 @@
      C                   IF        IdX > 1
      C                   EVAL      *IN99 = *Off
      C                   ELSE
- 
+
      C                   IF        W_Err = 0
      C                   EVAL      W_Err = W_Rrn
      C                   ENDIF
- 
+
      C                   EVAL      *IN99 = *On
      C                   ENDIF
       *
@@ -761,7 +763,7 @@
      C                             DelRequested = 'Y'
      C                   EXSR      SRUpdDel
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -771,7 +773,7 @@
       *                                                               *
       *****************************************************************
      C     SRClearErr    BEGSR
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      W_Err = 0
      C                   EVAL      *IN99 = *On
@@ -779,7 +781,7 @@
      C                   EVAL      SflUpdNeeded = *BLANK
      C                   EVAL      DelRequested = *BLANK
      C                   MOVEA     WZeroise      *IN(20)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -801,27 +803,27 @@
      C                   EVAL      PMsgId = 'USR7503'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   EVAL      *IN20 = *Off
- 
+
      C                   IF        SOPTN = 'D'
      C                   EVAL      DelRequested = 'Y'
      C                   EVAL      FilUpdNeeded = 'Y'
      C                   GOTO      ESRValidate
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate country of tax treaty field.
       *
      C                   IF        WScrn = 'A'
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      '*Blanks '    PRtcd
      C                   PARM      '*KEY    '    POptn
      C                   PARM                    SCRTT
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        Prtcd <> *Blanks
      C                   EVAL      *IN21 = *On
      C                   EVAL      Ix = Ix + 1
@@ -830,12 +832,12 @@
      C                   EVAL      PMsgId = 'USR7504'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   EVAL      SCRTT = A4CNCD
       *
       ** Make sure no record for this country exist on file.
      C     WTaxKey       CHAIN     SDWTCSL1                           83
- 
+
      C                   IF        RecNotFnd = False
      C                   EVAL      *IN21 = *On
      C                   EVAL      Ix = Ix + 1
@@ -844,12 +846,12 @@
      C                   EVAL      PMsgId = 'USR7505'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   EVAL      *IN21 = *Off
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate intermediary status.
@@ -864,7 +866,7 @@
      C                   EVAL      PMsgId = 'USR7506'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   IF        (SINTS = 'NQI' OR SINTS = 'FTE') AND
      C                             CSE024 <> 'Y'
      C                   EVAL      *IN22 = *On
@@ -876,7 +878,7 @@
      C                   ELSE
      C                   EVAL      *IN22 = *Off
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate documentation received field.
@@ -930,9 +932,9 @@
      C                   EVAL      PMsgId = 'USR7523'                           186001
      C                   EXSR      SRSndMsg                                     186001
      C                   ENDIF                                                  186001
- 
+
      C***********        ELSE                                                   185994
- 
+
      C                   IF        *IN23 = *OFF                                 185994
      C                   IF        (SINTS = 'WA' OR SINTS = 'QI' OR
      C                             SINTS = 'NQI' OR SINTS = 'FTE') AND
@@ -946,7 +948,7 @@
      C                   ELSE
      C                   EVAL      *IN23 = *Off
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate documentation expiry date.
@@ -956,7 +958,7 @@
      C                   MOVE      SDCEX         WNumber
      C                   EVAL      WLetter = *Blanks
      C                   MOVE      WNumber       WLetter
- 
+
      C                   IF        WLetter = SDCEX
      C                   MOVE      *Blanks       PDateIs
      C                   MOVEL     SDCEX         PDateIs
@@ -964,7 +966,7 @@
      C                   ELSE
      C                   EVAL      PErrorFlag = 'Y'
      C                   ENDIF
- 
+
      C                   IF        PErrorFlag = 'Y'
      C                   EVAL      *IN24 = *On
      C                   EVAL      Ix = Ix + 1
@@ -975,7 +977,7 @@
      C                   ELSE
      C                   EVAL      *IN24 = *Off
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate exemption code.
@@ -983,7 +985,7 @@
      C                   IF        SEXCD <> *BLANK
      C     ExCoKey       CHAIN     SDEXEML1                           83
      C                   ENDIF
- 
+
      C                   IF        SDCRC = 'E' AND SEXCD = *BLANK OR
      C                             SDCRC <> 'E' AND SEXCD <> *BLANK OR
      C                             RecNotFnd = True AND SEXCD <> *BLANK
@@ -1008,7 +1010,7 @@
      C                   EVAL      PMsgId = 'USR7511'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   IF        SINTS = 'QI ' AND SBCWA = 'Y'
      C                   EVAL      *IN26 = *On
      C                   EVAL      Ix = Ix + 1
@@ -1017,23 +1019,23 @@
      C                   EVAL      PMsgId = 'USR7521'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   EVAL      *IN26 = *Off
       *
       ** Default backup withholding applicable field if necessary.
       *
      C                   IF        SBCWA = *BLANK
- 
+
      C                   IF        SDCRC = 'U' AND SINTS <> 'QI'
      C                   EVAL      SBCWA = 'Y'
      C                   ELSE
      C                   EVAL      SBCWA = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate recipient code.
@@ -1043,7 +1045,7 @@
      C                             SRPCD <> *BLANK )                            186001
                                                                                 186001
      C     RcCoKey       CHAIN     SDRPCDL1                           83
- 
+
      C                   IF        RecNotFnd = True
      C                   EVAL      *IN27 = *On
      C                   EVAL      Ix = Ix + 1
@@ -1062,7 +1064,7 @@
      C                   IF        STXBS <> *BLANK
      C     TxBsKey       CHAIN     SDTXBSL1                           83
      C                   ENDIF
- 
+
      C                   IF        SDBTT = 'N' AND STXBS = *Blanks OR
      C                             SDCRC = 'E' AND STXBS = *Blanks OR           186048
      C                             RecNotFnd = True AND STXBS <> *Blanks
@@ -1120,7 +1122,7 @@
      C                   ELSE
      C                   EVAL      FilUpdNeeded = 'N'
      C                   ENDIF
- 
+
      C     ESRValidate   ENDSR
       *****************************************************************
       /EJECT
@@ -1134,14 +1136,14 @@
       ** Read subfile for records awaiting deletion.
       *
      C                   DOU       EndOfSfile = True
- 
+
      C                   READC     SD0372S0                               85
       *
       ** Apply deletion to master database.
      C                   IF        EndOfSFile = False
      C                   EXSR      SRUPDATE
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Make sure subfile page is rebuild every after successful record
@@ -1152,7 +1154,7 @@
      C                   EVAL      W_Rrn = 0
      C                   EVAL      SSFRN = W_Rrn
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1162,13 +1164,13 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
      C                   EVAL      WErrOnU = *Blanks
      C                   MOVEA     WZeroise      *IN(20)
- 
+
      C                   EVAL      WCOTT = SCRTT
      C     WithKey       CHAIN     SDWTCSL0                           83
- 
+
      C                   IF        WScrn = 'A'
       *
       ** Display error message "Record already existing." if appropriate.
@@ -1184,7 +1186,7 @@
      C                   WRITE     @WTCSL0
      C                   CLEAR                   CurDetlWT
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Display error message "Record missing on file." if appropriate.
@@ -1196,9 +1198,9 @@
      C                   EVAL      PMsgId = 'USR7517'
      C                   EXSR      SRSndMsg
      C                   ELSE
- 
+
      C                   IF        OldDetlWT = OrgDetlWT
- 
+
      C                   SELECT
      C                   WHEN      SOPTN = 'D'
      C                   DELETE    @WTCSL0
@@ -1206,7 +1208,7 @@
      C                   EXSR      SRFmtWitUpd
      C                   UPDATE    @WTCSL0
      C                   ENDSL
- 
+
      C                   ELSE
       *
       ** RECUPD, display error message "Record updated by another user." on
@@ -1218,16 +1220,30 @@
      C                   EVAL      PMsgId = 'USR7518'
      C                   EXSR      SRSndMsg
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Update standing data trailer record if no errors encountered.
       *
      C                   IF        WErrOnU <> 'Y'
-     C     MainFlName    CHAIN     SDFCTLL0                           83
- 
+     C*****MainFlName    CHAIN     SDFCTLL0                           83                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      MainFlName    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       83                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        83                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
      C                   IF        RecNotFnd = True
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDFCTLPA'
@@ -1236,7 +1252,7 @@
      C                   OUT       LDA
      C                   EXSR      *PsSR
      C                   ENDIF
- 
+
      C                   SELECT
       *
       ** Insert.
@@ -1253,8 +1269,17 @@
      C                   EVAL      AHNODL = AHNODL + 1
      C                   EVAL      AHNORC = AHNORC - 1
      C                   ENDSL
- 
-     C                   UPDATE    @AHREAU
+
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   ENDIF
       *
       ** If no errors encountered during update of detail and trailer file,
@@ -1276,7 +1301,7 @@
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
      C                   ENDIF
- 
+
      C     ESRUpdate     ENDSR
       *****************************************************************
       /EJECT
@@ -1336,7 +1361,7 @@
      C                   ELSE
      C                   EVAL      WHTYLC = 'A'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1408,7 +1433,7 @@
       *
       ** Write and read the subfile control.
      C                   EXFMT     SD0372C1
- 
+
      C                   SELECT
       *
       ** If F3, bypass further processing for this module.
@@ -1436,11 +1461,11 @@
       ** Rollup, add more record to the subfile.
       ** Enter key, process active subfile for update.
      C                   OTHER
- 
+
      C                   IF        RollUpKey <> True
- 
+
      C                   EXSR      SRValUpdSfl
- 
+
      C                   IF        IdX = 0
      C                   EXSR      SRClearSFL
      C                   Z-ADD     0             W_Rrn
@@ -1450,18 +1475,18 @@
      C                   ELSE
      C                   EVAL      SSFRN = W_Err
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      W_Rrn = W_Trn
      C                   MOVEA     WZeroise      *IN(20)
      C                   EXSR      SRClearSFL
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1476,11 +1501,11 @@
       *
      C                   CLEAR                   CurDetlWT
      C                   EXSR      SRClearErr
- 
+
      C                   IF        RollUpKey <> True
      C                   CALL      'ZA0250'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1490,13 +1515,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDatI     BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *Blanks       PADateOut
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1506,13 +1531,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDatO     BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDateIs
      C                   PARM      *ZERO         PDayNoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1523,11 +1548,11 @@
       *                                                               *
       *****************************************************************
      C     SRSndMsg      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PMsgFl
      C                   PARM                    PMsgID
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1591,7 +1616,7 @@
      C                   OUT       LDA
      C                   EXSR      *PsSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *Blanks
      C                   EVAL      CSE024 = 'Y'
      C                   ELSE
@@ -1695,7 +1720,7 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1712,27 +1737,27 @@
       *                                                                   *
       *********************************************************************
      C     *PsSR         BEGSR
- 
+
      C                   IF        RunBefore = *BLANK
- 
+
      C                   DUMP
- 
+
      C                   EVAL      RunBefore = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001
 **  WZeroise

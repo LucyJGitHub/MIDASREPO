@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
@@ -36,8 +38,8 @@
      F                                     INFSR(*PSSR)
       * Midas SD Country Codes - LU Ext. File
 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
+     F**********                           INFSR(*PSSR)                                     MD061008
       * Midas SD Standing Data Controls index
 
       *****************************************************************
@@ -808,7 +810,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDCTRYPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WKFLNM        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9899                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        98                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -841,7 +860,16 @@
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
      C                   ENDSR
      C****************************************************************

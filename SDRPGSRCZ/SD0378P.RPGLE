@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -71,7 +73,7 @@
      FSDBNFOL1  IF   E           K DISK    INFSR(*PSSR)
       *
       ** Control file retrieval index
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
       *
       ** Beneficial Owners - Detail
      FSD0378P1  O    E             PRINTER INFDS(SPOOL1)
@@ -104,10 +106,10 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *
@@ -291,9 +293,9 @@
       ** End of DO until.
       *
      C                   ENDDO
- 
+
      C                   EXSR      SRTotPct
- 
+
      C                   EXSR      SREnd
       *
       *****************************************************************
@@ -306,9 +308,9 @@
       *  SRPrnt - Print details                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPrint       BEGSR
- 
+
      C                   IF        WOpen <> 'Y'
       *
      C                   EVAL      WOpen = 'Y'
@@ -400,7 +402,7 @@
      C                   MOVE      ZField        RPAHD
       *
      C                   WRITE     DETAIL1
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -410,7 +412,7 @@
       *  SRFIlHdr2 - Fill up HEADER 2 screen fields                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFilHdr2     BEGSR
       *
       ** Retrieve new data if first record on file or next customer.
@@ -455,7 +457,7 @@
      C                   EVAL      RDEPT = WDept
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -465,7 +467,7 @@
       *  SRTotPct - Write total percentage to report                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTotPct      BEGSR
       *
       ** For total percentage allocation holding, then write to report
@@ -487,13 +489,13 @@
       *  SRFmtAmt - Format printer file fields amount                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAmt      BEGSR
       *
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZField
      C                   PARM                    ZADec
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -503,7 +505,7 @@
       *  SREnd - Write trailer in report                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SREnd         BEGSR
       *
      C                   EVAL      RqdLn1 = 4
@@ -519,7 +521,21 @@
       ** Check control details.
       *
      C                   EVAL      WFName = 'SDBNFOPD'
-     C     WFName        CHAIN     SDFCTLL1                           02
+     C*****WFName        CHAIN     SDFCTLL1                           02                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFName        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       02                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        02                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       ** Database error.
       *
@@ -548,7 +564,7 @@
      C                   EXSR      SRAudit
      C                   EVAL      *INLR = '1'
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -558,7 +574,7 @@
       *  SRAudit - Write audit report                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
       *
      C                   OPEN      SD0378PM
@@ -603,7 +619,7 @@
       *
      C                   EVAL      *INLR ='1'
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -617,7 +633,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
@@ -654,7 +670,7 @@
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PRTLN1 = 0
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -671,9 +687,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blank
      C                   EVAL      WRun = 'Y'
      C                   EVAL      *INU7 = *On

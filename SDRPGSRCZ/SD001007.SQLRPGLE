@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG21195           Date 25Sep08               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG21195 - COB - SCC0411-ZFINDDATE failed when called by     *
@@ -104,8 +106,8 @@
      F**********                           RENAME(SDDSTCD0:SDDSTCUF)                        MD058085
       * UPD : Midas SD Branch codes update                                                  BUG21251
       *                                                                                     BUG21251
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)                                     BUG21251
-     F                                     COMMIT                                           BUG21251
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                           BUG21251 MD061008
+     F**********                           COMMIT                                  BUG21251 MD061008
       *                                                                                     BUG21251
 
       *****************************************************************
@@ -913,12 +915,31 @@
       ** Move key fields to @AHREAU                                                         BUG21251
      C                   MOVEL     'SDBRCHPD'    Filename         10                        BUG21251
       *                                                                                     BUG21251
-     C     Filename      CHAIN     SDFCTLL0                                                 BUG21251
-     C                   IF        %Found(SDFCTLL0)                                         BUG21251
+     C*****FileName      CHAIN     SDFCTLL0                                        BUG21251 MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      FileName      AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+
+     C**********         IF        %Found(SDFCTLL0)                                BUG21251 MD061008
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061008
       ** Increment number of Amendments.                                                    BUG21251
      C                   EVAL      AHNOAM = AHNOAM + 1                                      BUG21251
-     C                   UPDATE    @AHREAU                                                  BUG21251
-     C                   UNLOCK    SDFCTLL0                                                 BUG21251
+     C**********         UPDATE    @AHREAU                                         BUG21251 MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C**********         UNLOCK    SDFCTLL0                                        BUG21251 MD061008
      C                   ENDIF                                                              BUG21251
       ** TABLETR - Branch Codes  *                                                          BUG21251
      C                   CALL      'TABLETR'                            90                  BUG21251

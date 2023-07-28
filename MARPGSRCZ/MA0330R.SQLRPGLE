@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -81,8 +83,8 @@
      F                                     COMMIT
       * UPD: Reports For Collation     Update index
       *
-     FSDFCTLL0  UF   E           K DISK    USROPN
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    USROPN                                          MD061008
+     F**********                           COMMIT                                           MD061008
       * UPD: Standing Data Controls    Update index
       *
      D AENA            S             78    DIM(3) CTDATA PERRCD(1)
@@ -1000,7 +1002,23 @@
       *
      C     KLCHSE        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSE        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSE        CHAIN     @AHREAU                            9091      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9091                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -1031,7 +1049,21 @@
      C                   Z-ADD     WUNOAM        AHNOAM                         No. of Amends
      C                   Z-ADD     WUNODL        AHNODL                         No. of Deletes
       *
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       91                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C     *IN91         IFEQ      '1'
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
@@ -1128,7 +1160,23 @@
       *
      C     KLCHSG        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSG        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSG        CHAIN     @AHREAU                            9091      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9091                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -1159,7 +1207,21 @@
      C                   Z-ADD     WUNOAM        AHNOAM                         No. of Amends
      C                   Z-ADD     WUNODL        AHNODL                         No. of Deletes
       *
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       91                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C     *IN91         IFEQ      '1'
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
@@ -1264,7 +1326,23 @@
       *
      C     KLCHSI        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSI        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSI        CHAIN     @AHREAU                            9091      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9091                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -1295,7 +1373,21 @@
      C                   Z-ADD     WUNOAM        AHNOAM                         No. of Amends
      C                   Z-ADD     WUNODL        AHNODL                         No. of Deletes
       *
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       91                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C     *IN91         IFEQ      '1'
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
@@ -1481,7 +1573,7 @@
      C                   EXSR      ZYEXPG
      C                   END
      C                   OPEN      MARCOLL0
-     C                   OPEN      SDFCTLL0
+     C**********         OPEN      SDFCTLL0                                                 MD061008
       * Select initial mode.
      C     @1NROP        IFEQ      *ZERO
      C                   MOVEL     'ADD'         W0PMD             3            Add mode

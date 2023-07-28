@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  BUG11892 - Effective date defaults to blank on zonal         *
@@ -61,20 +63,20 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Narrative Code Update Logical File
      FSDACOFL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** SD Control Update Logical File
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
- 
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
+
       ** SD Account Officer Update Logical File
      FSDAACOL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -92,10 +94,10 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -104,38 +106,38 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Midas SD Account Officer Acceptance File
      D AACOFilFmt    E DS                  ExtName(SDZACOFPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       ** Entry Parameters
      D PData           S           4000A
      D PRetCode        S              7A
      D PProgram        S             10A
- 
+
       ** Parameters
      D PCommand        S             80A
      D PLength         S             15  5
@@ -147,17 +149,17 @@
      D PZfield         S             16
      D PZdecimals      S              1P 0
      D PZdigits        S              2P 0
- 
+
       ** Work Fields
      D WUNORC          S              5  0
      D WUNOAM          S              5  0
      D WUNODL          S              5  0
      D WUNOIN          S              5  0
- 
+
       ** Variables
      D C_Count         S              3  0
      D C_Update        S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -168,34 +170,34 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Read in Installation Data
- 
+
      C                   EVAL      AACOFilFmt = PData
      C                   EXSR      SrConvert
- 
+
      C                   IF        AZAACC = 'Y' or
      C                             PProgram = 'SDC000061'
      C                   EXSR      SrZone
      C                   ELSE
      C                   EXSR      SrAccp
      C                   ENDIF
- 
+
       ** Commit changes if there are no errors, otherwise rollback
- 
+
      C                   IF        PRetCode = *BLANKS
      C                   COMMIT
      C                   ELSE
      C                   ROLBK
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -203,11 +205,11 @@
       * SRCONVERT - Convert Fields to Numeric Definition              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCONVERT     BEGSR
- 
+
       ** Convert fields from character to numeric format
- 
+
      C                   IF        ZZLCD  = *Blanks
      C                   EVAL      AZLCD  = *Zeros
      C                   ELSE
@@ -217,7 +219,7 @@
      C                   EXSR      SrAlign
      C                   MOVE      PZfield       AZLCD
      C                   ENDIF
- 
+
      C                   IF        ZZACOT = *Blanks
      C                   EVAL      AZACOT = *Zeros
      C                   ELSE
@@ -229,7 +231,7 @@
      C**********         EXSR      SrAlign                                                  BUG11863
      C**********         MOVE      PZfield       AZACOT                                     BUG11863
      C**********         ENDIF                                                              BUG11863
- 
+
      C                   IF        ZZEACC = *Blanks
      C                   EVAL      AZEACC = *Zeros
      C                   ELSE
@@ -240,9 +242,9 @@
      C                   EXSR      SrAlign
      C                   MOVE      PZfield       AZEACC
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -250,17 +252,17 @@
       * SRALIGN - Align Numeric Values                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SRALIGN       BEGSR
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    PZreturn
      C                   PARM                    PZfield
      C                   PARM                    PZdecimals
      C                   PARM                    PZdigits
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -272,19 +274,19 @@
       * Calls: Sr_UpdTrl                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZONE        BEGSR
- 
+
       ** Update Account Officer File
- 
+
      C                   EXSR      Sr_UpdAcc
- 
+
       ** Update Trailer File
- 
+
      C                   EXSR      Sr_UpdTrl
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -296,70 +298,70 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdAcc     BEGSR
- 
+
      C                   EVAL      C_Count = 0
      C                   DO        100           C_Count
- 
+
      C                   IF        C_Count <> 1
      C                   EXSR      Sr_Qcmd
      C                   ENDIF
- 
+
      C     AZACOC        CHAIN(E)  @AZREBP
      C                   IF        %ERROR
      C                   ITER
      C                   ENDIF
- 
+
      C                   IF        %FOUND(SDACOFL0)
- 
+
       ** Reload input data
- 
+
      C                   EVAL      AACOFilFmt = PData
      C                   EXSR      SrConvert
- 
+
      C                   EVAL      AZTYLC = 'A'
      C                   EVAL      AZEACC = BJRDNB
      C                   EVAL      AZLCD  = BJRDNB
- 
+
      C                   UPDATE(E) @AZREBP
      C                   IF        %ERROR
      C                   ITER
      C                   ELSE
- 
+
       ** USER: Processing after Data update
- 
+
      C                   EVAL      WUNORC = 0
      C                   EVAL      WUNOAM = 1
      C                   EVAL      WUNODL = 0
      C                   EVAL      WUNOIN = 0
      C                   ENDIF
- 
+
      C                   Else
- 
+
      C                   EVAL      AZTYLC = 'I'
      C                   EVAL      AZEACC = BJRDNB
      C                   EVAL      AZLCD  = BJRDNB
- 
+
      C                   WRITE(E)  @AZREBP
      C                   IF        %ERROR
      C                   ITER
      C                   ELSE
- 
+
       ** USER: Processing after Data update
- 
+
      C                   EVAL      WUNORC = 1
      C                   EVAL      WUNOAM = 0
      C                   EVAL      WUNODL = 0
      C                   EVAL      WUNOIN = 1
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      C_Update = 'Y'
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        C_Update <> 'Y'
      C                   EVAL      PFile =  'SDACOFL0'
      C                   EVAL      PKey  =  AZACOC
@@ -367,9 +369,9 @@
      C                   EVAL      PProc =  'SR/Sr_UpdAcc'
      C                   EXSR      Sr_DbError
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -381,34 +383,54 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_UpdTrl     BEGSR
- 
+
      C                   EVAL      C_Count = 0
      C                   DO        100           C_Count
- 
+
      C                   IF        C_Count <> 1
      C                   EXSR      Sr_Qcmd
      C                   ENDIF
- 
+
      C                   EVAL      AHFLNM = 'SDACOFPD'
-     C     AHFLNM        CHAIN(E)  @AHREAU
-     C                   IF        %ERROR
+     C*****AHFLNM        CHAIN(E)  @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+     C**********         IF        %ERROR                                                   MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
      C                   ITER
      C                   ENDIF
- 
-     C                   IF        %FOUND(SDFCTLL0)
- 
+
+     C**********         IF        %FOUND(SDFCTLL0)                                         MD061008
+     C                   IF        ZRETRN = *blanks                                         MD061008
+
       ** Move non-key fields to @AHREAU
- 
+
      C                   ADD       WUNORC        AHNORC
      C                   ADD       WUNOIN        AHNOIN
      C                   ADD       WUNOAM        AHNOAM
-     C                   UPDATE(E) @AHREAU
-     C                   IF        %ERROR
+     C**********         UPDATE(E) @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C**********         IF        %ERROR                                                   MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
      C                   ITER
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      PFile =  'SDFCTLL0'
      C                   EVAL      PKey  =  AHFLNM
@@ -416,12 +438,12 @@
      C                   EVAL      PProc =  'SR/Sr_UpdTrl'
      C                   EXSR      Sr_DbError
      C                   ENDIF
- 
+
      C                   EVAL      C_Update = 'Y'
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        C_Update <> 'Y'
      C                   EVAL      PFile =  'SDFCTLL0'
      C                   EVAL      PKey  =  AHFLNM
@@ -429,9 +451,9 @@
      C                   EVAL      PProc =  'SR/Sr_UpdTrl'
      C                   EXSR      Sr_DbError
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -443,46 +465,46 @@
       * Calls: *None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRACCP        BEGSR
- 
+
      C                   EVAL      C_Count = 0
      C                   DO        100           C_Count
- 
+
      C                   IF        C_Count <> 1
      C                   EXSR      Sr_Qcmd
      C                   ENDIF
- 
+
      C     AZACOC        CHAIN(E)  SDACOFD0
      C                   IF        %ERROR
      C                   ITER
      C                   ENDIF
- 
+
      C                   IF        %FOUND(SDAACOL0)
- 
+
       ** Reload input data
- 
+
      C                   EVAL      AACOFilFmt = PData
      C                   EXSR      SrConvert
- 
+
      C                   UPDATE(E) SDACOFD0
      C                   IF        %ERROR
      C                   ITER
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   WRITE(E)  SDACOFD0
      C                   IF        %ERROR
      C                   ITER
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      C_Update = 'Y'
      C                   LEAVE
- 
+
      C                   ENDDO
- 
+
      C                   IF        C_Update <> 'Y'
      C                   EVAL      PFile =  'SDAACOL0'
      C                   EVAL      PKey  =  AZACOC
@@ -490,9 +512,9 @@
      C                   EVAL      PProc =  'SR/SRACCP'
      C                   EXSR      Sr_DbError
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -504,17 +526,17 @@
       * Calls: *None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_Qcmd       BEGSR
- 
+
      C                   EVAL      PCommand = 'DLYJOB DLY(1)'
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCommand
      C                   PARM      80            PLength
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -526,9 +548,9 @@
       * Calls: *None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     Sr_DbError    BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  PFile
      C                   EVAL      DBKEY  =  PKey
@@ -539,9 +561,9 @@
      C                   OUT       LDA
      C                   EVAL      PRetCode = '*ERROR'
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -553,27 +575,27 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    PData
      C                   PARM                    PRetcode
      C                   PARM                    PProgram
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Datebase error
- 
+
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
      C                   EVAL      DBKEY  =  @OPTN
@@ -583,11 +605,11 @@
      C                   EVAL      DBPROC =  'SR/*INZSR '
      C                   EXSR      *PSSR
      C                   OUT       LDA
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *
       /EJECT
       *****************************************************************

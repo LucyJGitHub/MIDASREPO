@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1075401          Date 01Jun20               *      
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD0610081          Date 31Dec21               *
+      *  Prev Amend No. AR1075401          Date 01Jun20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CGL132             Date 01May13               *
@@ -61,8 +62,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  AR1075401 - Increase QFOAMT length in PMHOLDPD. Recompiled.  *
-      *              (Child: AR1075402)                               *      
+      *              (Child: AR1075402)                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -147,8 +149,8 @@
      FPMMFHLPDUF  E           K        DISK
      F            PMHOLDP0                          KRENAMEPMHOLDP1
      F                                              KINFSR *PSSR
-     FSDFCTLL0UF  E           K        DISK                      A
-     F                                              KINFSR *PSSR
+     F*SDFCTLL0UF  E           K        DISK                      A                         MD061008
+     F**********                                    KINFSR *PSSR                            MD061008
      FSECTY   UF  E           K        DISK
      F                                              KINFSR *PSSR
      FSDCTRYL0UF  E           K        DISK
@@ -337,6 +339,13 @@
      I                                        3   5 WWMLUP                183604
      I                                        6   70WWYLUP                183604
      I                                        1   7 WWHLUP                183604
+     IQSDFC1      DS                                                                        MD061008
+     I                                        1  10 AHFLNM                                  MD061008
+     I                                    P  11  130AHNORC                                  MD061008
+     I                                    P  14  160AHNOIN                                  MD061008
+     I                                    P  17  190AHNOAM                                  MD061008
+     I                                    P  20  220AHNODL                                  MD061008
+      *                                                                                     MD061008
       *****************************************************************
       /EJECT
       *
@@ -385,17 +394,40 @@
       *
      C           KLCHSB    KLIST
      C                     KFLD           AHFLNM           Filename
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE   4                                         MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN 10                                         MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD1         AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ELSE
      C                     ADD  1         AHNORC           No. of Records
-     C                     UPDAT@AHREAU
+     C**********           UPDAT@AHREAU                                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*UPD'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM           AHNORC                                            MD061008
+     C                     PARM           AHNOIN                                            MD061008
+     C                     PARM           AHNOAM                                            MD061008
+     C                     PARM           AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
      C                     ENDIF
       *
      C                     ENDIF
@@ -414,17 +446,40 @@
      C                     MOVE *BLANK    AHFLNM           Filename
      C                     MOVEL'SDNATUPD'AHFLNM           Filename
       *
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD1         AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ELSE
      C                     ADD  1         AHNORC           No. of Records
-     C                     UPDAT@AHREAU
+     C**********           UPDAT@AHREAU                                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*UPD'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM           AHNORC                                            MD061008
+     C                     PARM           AHNOIN                                            MD061008
+     C                     PARM           AHNOAM                                            MD061008
+     C                     PARM           AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
      C                     ENDIF
       *
      C                     ENDIF
@@ -446,17 +501,40 @@
      C**********           MOVEL'SDWEIGPD'AHFLNM           Filename                           CGP001
      C                     MOVEL'GPWEIGPD'AHFLNM           Filename                           CGP001
       *
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD1         AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ELSE
      C                     ADD  1         AHNORC           No. of Records
-     C                     UPDAT@AHREAU
+     C**********           UPDAT@AHREAU                                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*UPD'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM           AHNORC                                            MD061008
+     C                     PARM           AHNOIN                                            MD061008
+     C                     PARM           AHNOAM                                            MD061008
+     C                     PARM           AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
      C                     ENDIF
       *
      C                     ENDIF
@@ -464,40 +542,82 @@
      C                     MOVE *BLANK    AHFLNM           Filename
      C                     MOVEL'SDECOSPD'AHFLNM           Filename
       *
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD*ZEROS    AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ENDIF
       *
      C                     MOVE *BLANK    AHFLNM           Filename
      C                     MOVEL'PBRATIPD'AHFLNM           Filename
       *
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD*ZEROS    AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ENDIF
       *
      C                     MOVE *BLANK    AHFLNM           Filename
      C                     MOVEL'PBTOBSPD'AHFLNM           Filename
       *
-     C           KLCHSB    CHAIN@AHREAU              89
+     C********** KLCHSB    CHAIN@AHREAU              89                                     MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *
      C           *IN89     IFEQ '1'
      C                     Z-ADD*ZEROS    AHNORC           No. of Records
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes
-     C                     WRITE@AHREAU
+     C**********           WRITE@AHREAU                                                     MD061008
      C                     ENDIF
       *
      C                     READ PMCPOSZ0                 89
@@ -905,11 +1025,34 @@
      C                     MOVE *BLANK    AHFLNM           Filename       183604
      C                     MOVEL'SDECOSPD'AHFLNM           Filename       183604
       *                                                                   183604
-     C           KLCHSB    CHAIN@AHREAU              89                   183604
+     C********** KLCHSB    CHAIN@AHREAU              89                   183604            MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *                                                                   183604
      C           *IN89     IFEQ '0'                                       183604
      C                     ADD  1         AHNORC           No. of Records 183604
-     C                     UPDAT@AHREAU                                   183604
+     C**********           UPDAT@AHREAU                                   183604            MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*UPD'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM           AHNORC                                            MD061008
+     C                     PARM           AHNOIN                                            MD061008
+     C                     PARM           AHNOAM                                            MD061008
+     C                     PARM           AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
      C                     ENDIF                                          183604
      C                     ENDIF                                          183604
       *
@@ -966,17 +1109,40 @@
      C                     MOVE *BLANK    AHFLNM           Filename       183604
      C                     MOVEL'SDINDSPD'AHFLNM           Filename       183604
       *                                                                   183604
-     C           KLCHSB    CHAIN@AHREAU              89                   183604
+     C********** KLCHSB    CHAIN@AHREAU              89                   183604            MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *                                                                   183604
      C           *IN89     IFEQ '0'                                       183604
      C                     ADD  1         AHNORC           No. of Records 183604
-     C                     UPDAT@AHREAU                                   183604
+     C**********           UPDAT@AHREAU                                   183604            MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*UPD'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM           AHNORC                                            MD061008
+     C                     PARM           AHNOIN                                            MD061008
+     C                     PARM           AHNOAM                                            MD061008
+     C                     PARM           AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
      C                     ELSE                                           183604
      C                     Z-ADD1         AHNORC           No. of Records 183604
      C                     Z-ADD*ZEROS    AHNOIN           No. of Inserts 183604
      C                     Z-ADD*ZEROS    AHNOAM           No. of Amends  183604
      C                     Z-ADD*ZEROS    AHNODL           No. of Deletes 183604
-     C                     WRITE@AHREAU                                   183604
+     C**********           WRITE@AHREAU                                   183604            MD061008
      C                     ENDIF                                          183604
       *                                                                   183604
      C                     MOVEL*BLANK    W0RTN   7                       183604
@@ -1006,11 +1172,25 @@
      C                     MOVE *BLANK    AHFLNM           Filename       183604
      C                     MOVEL'PBRATIPD'AHFLNM           Filename       183604
       *                                                                   183604
-     C           KLCHSB    CHAIN@AHREAU              89                   183604
+     C********** KLCHSB    CHAIN@AHREAU              89                   183604            MD061008
+     C                     CALL 'SD000119'                                                  MD061008
+     C                     PARM '*RTV'    ZMODE                                             MD061008
+     C                     PARM           AHFLNM                                            MD061008
+     C                     PARM 0         AHNORC                                            MD061008
+     C                     PARM 0         AHNOIN                                            MD061008
+     C                     PARM 0         AHNOAM                                            MD061008
+     C                     PARM 0         AHNODL                                            MD061008
+     C                     PARM *BLANKS   ZRETRN                                            MD061008
+      *                                                                                     MD061008
+     C                     SETOF                     89                                     MD061008
+     C           ZRETRN    IFEQ '*NRF'                                                      MD061008
+     C                     SETON                     89                                     MD061008
+     C                     ENDIF                                                            MD061008
+      *                                                                                     MD061008
       *                                                                   183604
      C           *IN89     IFEQ '0'                                       183604
      C                     ADD  1         AHNORC           No. of Records 183604
-     C                     WRITE@AHREAU                                   183604
+     C**********           WRITE@AHREAU                                   183604            MD061008
      C                     ENDIF                                          183604
      C                     ENDIF                                          183604
       *                                                                   183604

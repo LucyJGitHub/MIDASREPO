@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -41,8 +43,8 @@
       /EJECT
      FSDWHTTL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
      FSDWHTTL4  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDWHTTD0:SDWHTTD4)
      FSDTXBSL1  IF   E           K DISK    INFSR(*PSSR)
@@ -168,7 +170,7 @@
      D ZField          S             16
      D ZADEC           S              1P 0
      D ZADIG           S              2P 0
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -181,41 +183,41 @@
       *                                                               *
       *****************************************************************
      C                   MOVEA     CPY@          BIS@             80
- 
+
      C                   MOVE      BJMRDT        SRUNA
      C                   Z-ADD     1             RRN
- 
+
      C                   DOW       *INKC = *Off
- 
+
      C                   EVAL      *IN05 = *On
      C                   EVAL      *IN10 = *Off
      C                   EVAL      *IN12 = *Off
- 
+
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377F1
      C                   CALL      'ZA0250'
- 
+
       ** If F5 is pressed
- 
+
      C                   IF        *INKC = *Off
      C                   IF        *INKE = *On
      C                   MOVEA     '00000'       *IN(50)
      C                   CLEAR                   SD0377F1
      C                   ELSE
- 
+
       ** Validate Input
- 
+
      C                   MOVEA     '0000'        *IN(50)
      C                   EXSR      SRValActCode
      C                   EXSR      SRValCtryTax
      C                   EXSR      SRValInvType
- 
+
       ** Process Action Code
- 
+
      C                   IF        *IN50 = *Off
- 
+
      C                   SELECT
      C                   WHEN      SACTN = 'I'
      C                   EXSR      SRInsert
@@ -226,7 +228,7 @@
      C                   WHEN      SACTN = 'E'
      C                   EXSR      SREnquire
      C                   ENDSL
- 
+
      C                   MOVEA     '0000'        *IN(50)
      C                   EVAL      *IN63 = *Off
      C                   EVAL      *IN66 = *Off
@@ -234,9 +236,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   MOVE      *ON           *INLR
       *****************************************************************
       /EJECT
@@ -250,18 +252,18 @@
       *                                                               *
       *****************************************************************
      C     SRInsert      BEGSR
- 
- 
+
+
      C                   EVAL      *IN05 = *On
      C                   EVAL      *IN10 = *Off
      C                   EVAL      *IN12 = *On
- 
+
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KINVT = SINVT
      C     Key1          CHAIN     SDWHTTD4                           40
- 
+
       ** If record does not exist, display subheader first
- 
+
      C                   DOW       *INKC = *Off
      C                   IF        *IN40 = *On or *INKL = *On
      C                   EXSR      SRInsNew
@@ -269,14 +271,14 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Display subheader with fields protected and Add record
- 
+
      C                   IF        *IN50 = *Off
      C                   EXSR      SRInsAdd
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -290,30 +292,30 @@
       *                                                               *
       *****************************************************************
      C     SRInsNew      BEGSR
- 
+
      C                   MOVEA     '10010'       *IN(63)
      C                   MOVE      '0'           *IN69
      C                   EXSR      SRLoadSubH
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
- 
+
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
      C                   WRITE     SD0377F1
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
       ** If F5 is pressed
- 
+
      C                   EVAL      *IN50 = *Off
      C                   IF        *INKE = *On
      C                   MOVEA     '000000000'   *IN(50)
      C                   EXSR      SRLoadSubH
      C                   ELSE
- 
+
       ** Validate Fields
- 
+
      C                   IF        *INKL = *Off
      C                   EXSR      SRValSubHdr
      C                   IF        *IN50 = *Off
@@ -324,7 +326,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -338,13 +340,13 @@
       *                                                               *
       *****************************************************************
      C     SRInsAdd      BEGSR
- 
+
      C                   EVAL      *IN50 = *Off
      C                   MOVEA     '11010'       *IN(63)
      C                   EVAL      *IN69 = *On
      C                   EXSR      SRBuildE
      C                   Z-ADD     1             RRN
- 
+
      C                   IF        *IN40 = *Off
      C                   EVAL      SDBDC = WTDBDC
      C                   EVAL      SDRBW = WTDRBW
@@ -353,18 +355,18 @@
      C                   EVAL      SEXPI = WTEXPI
      C                   EVAL      SPFEX = WTPFEX
      C                   ENDIF
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
- 
+
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
      C                   WRITE     SD0377F1
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
       ** If F5 is pressed, rebuild empty subfile
- 
+
      C                   IF        *INKC = *Off
      C                   EVAL      *IN50 = *Off
      C                   IF        *INKE = *Off and *INKL = *Off
@@ -376,7 +378,7 @@
      C                   MOVEA     '0000000000'  *IN(50)
      C                   EXSR      SRValSubF
      C                   ENDIF
- 
+
      C                   IF        *IN50 = *Off
      C                   COMMIT
      C                   EXSR      SRBuildE
@@ -385,9 +387,9 @@
      C                   ROLBK
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -401,48 +403,48 @@
       *                                                               *
       *****************************************************************
      C     SRAmend       BEGSR
- 
+
      C                   EVAL      *IN05 = *On
      C                   EVAL      *IN10 = *Off
      C                   EVAL      *IN12 = *On
- 
+
      C                   MOVEA     '00010011'    *IN(60)
      C                   MOVE      '1'           *IN69
      C                   EXSR      SRLoadSubH
      C                   Z-ADD     1             RRN
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
- 
+
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
      C                   WRITE     SD0377F1
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
       ** If F5 is pressed
- 
+
      C                   IF        *INKE = *On
      C                   MOVEA     '000000000'   *IN(50)
      C                   MOVEA     '000'         *IN(60)
      C                   EXSR      SRLoadSubH
      C                   Z-ADD     1             RRN
      C                   ELSE
- 
+
       ** Validate Subfile
- 
+
      C                   IF        *INKC = *Off and *INKL = *Off
      C                   IF        RRN1 = 0
      C                   Z-ADD     1             RRN
      C                   ELSE
      C                   Z-ADD     RRN1          RRN
      C                   ENDIF
- 
+
      C                   EXSR      SRValSubHdr
      C                   EXSR      SRValSubF
- 
+
       ** If no errors, rebuild subfile
- 
+
      C                   IF        *IN50 = *Off
      C                   COMMIT
      C                   EXSR      SRLoadSubH
@@ -452,9 +454,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -468,15 +470,15 @@
       *                                                               *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
      C                   EVAL      *IN05 = *Off
      C                   EVAL      *IN10 = *On
      C                   EVAL      *IN12 = *On
- 
+
      C                   MOVEA     '111'         *IN(63)
      C                   EVAL      *IN69 = *Off
      C                   EXSR      SRLoadSubH
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
@@ -484,9 +486,9 @@
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
       ** If F10 is not pressed
- 
+
      C                   IF        *INKC = *Off and *INKL = *Off
      C                   IF        *INKJ = *On
      C                   EXSR      SRDelRec
@@ -496,7 +498,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -511,31 +513,31 @@
       *                                                               *
       *****************************************************************
      C     SRLoadSubH    BEGSR
- 
+
      C                   Z-ADD     1             RRN
      C                   MOVEA     '00'          *IN(70)
      C                   EVAL      *IN73 = *Off
      C                   WRITE     SD0377C0
      C                   MOVEA     '00000'       *IN(54)
      C                   MOVE      '0'           *IN68
- 
+
      C                   EVAL      SDBDC = *Blanks
      C                   EVAL      SDRBW = *Blanks
      C                   EVAL      SDTSU = *Blanks
      C                   EVAL      SALDY = *Blanks
      C                   EVAL      SEXPI = *Blanks
      C                   EVAL      SPFEX = *Blanks
- 
+
       ** Load Subheader details
- 
+
      C                   EVAL      *IN50 = *Off
      C                   EVAL      *IN63 = *On
- 
+
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KINVT = SINVT
      C     Key1          SETLL     SDWHTTD4
      C     Key1          READE     SDWHTTD4                               72
- 
+
      C                   IF        *IN72 = *Off
      C                   EVAL      SDBDC = WTDBDC
      C                   EVAL      SDRBW = WTDRBW
@@ -544,35 +546,35 @@
      C                   EVAL      SEXPI = WTEXPI
      C                   EVAL      SPFEX = WTPFEX
      C                   ENDIF
- 
+
       ** Load Subfile
- 
+
      C                   IF        SACTN <> 'D'
      C                   DOW       *IN72 = *Off
- 
+
      C                   EVAL      SCRRS = WTCRRS
      C                   EVAL      STXBS = WTTXBS
      C                   EVAL      SEXCD = WTEXCD
      C                   WRITE     SD0377S0
      C                   Add       1             RRN
      C     Key1          READE     SDWHTTD4                               72
- 
+
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   IF        RRN = 1
      C                   MOVEA     '01'          *IN(70)
      C                   ELSE
      C                   MOVEA     '11'          *IN(70)
      C                   ENDIF
- 
+
      C                   EVAL      PrvDBDC = SDBDC
      C                   EVAL      PrvDRBW = SDRBW
      C                   EVAL      PrvDTSU = SDTSU
      C                   EVAL      PrvALDY = SALDY
      C                   EVAL      PrvEXPI = SEXPI
      C                   EVAL      PrvPFEX = SPFEX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -586,16 +588,16 @@
       *                                                               *
       *****************************************************************
      C     SREnquire     BEGSR
- 
+
      C                   EVAL      *IN05 = *Off
      C                   EVAL      *IN10 = *Off
      C                   EVAL      *IN12 = *On
- 
+
      C                   MOVEA     '11111'       *IN(63)
      c                   MOVE      '1'           *IN69
      C                   EXSR      SRLoadSubH
      C                   Z-ADD     1             RRN
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
@@ -603,14 +605,14 @@
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
      C                   IF        *INKC = *Off
      C                   IF        *INKL = *On
      C                   CLEAR                   SD0377F1
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -624,7 +626,7 @@
       *                                                               *
       *****************************************************************
      C     SRValActCode  BEGSR
- 
+
      C                   IF        SACTN <> 'I' and SACTN <> 'A' and
      C                             SACTN <> 'D' and SACTN <> 'E'
      C                   MOVE      *ON           *IN50
@@ -632,14 +634,14 @@
      C                   MOVEL     'USR7665'     WZMsgID
      C                   EXSR      SRErrMsg
      C                   ENDIF
- 
+
      C                   IF        PMODE = 'E' and SACTN <> 'E'
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN51
      C                   MOVEL     'USR7665'     WZMsgID
      C                   EXSR      SRErrMsg
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -653,26 +655,26 @@
       *                                                               *
       *****************************************************************
      C     SRValCtryTax  BEGSR
- 
+
       ** Country of Tax Treaty must be entered if Action Code is Entered
- 
+
      C                   IF        *IN51 = *Off
      C                   IF        SCRTT = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN52
      C                   MOVEL     'USR7650'     WZMsgID
      C                   EXSR      SRErrMsg
- 
+
      C                   ELSE
- 
+
       ** Country of Tax Treaty must be valid
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRetCode          7
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      SCRTT         PCTRY             2
      C     SDCTRY        PARM      SDCTRY        DSSDY
- 
+
      C                   IF        PRetCode <> *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN52
@@ -683,7 +685,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -697,7 +699,7 @@
       *                                                               *
       *****************************************************************
      C     SRValInvType  BEGSR
- 
+
      C                   IF        SINVT <> *Blanks
      C     SINVT         CHAIN     INVTPDF                            53
      C                   IF        *IN53 = *On
@@ -706,15 +708,15 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if record exist in file
- 
+
      C                   IF        *IN51 = *Off and *IN52 = *Off
      C                   IF        SACTN='A' or SACTN='E' or SACTN='D'
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KINVT = SINVT
      C     Key1          CHAIN     SDWHTTD4                           40
- 
+
      C                   IF        *IN40 = *On
      C                   MOVEA     '1111'        *IN(50)
      C                   MOVEL     'USR7668'     WZMsgID
@@ -722,7 +724,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -736,12 +738,12 @@
       *                                                               *
       *****************************************************************
      C     SRValSubHdr   BEGSR
- 
+
      C                   MOVEA     '000000000'   *IN(50)
      C                   MOVE      '0'           *IN68
- 
+
       ** Validate Default Basket for No documentation
- 
+
      C                   IF        SDBDC = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN54
@@ -751,7 +753,7 @@
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KTXBS = SDBDC
      C     Key2          CHAIN     SDTXBSD1                           42
- 
+
      C                   IF        *IN42 = *On
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN54
@@ -759,9 +761,9 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Default Basket for Backup Withholding
- 
+
      C                   IF        SDRBW = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN55
@@ -771,7 +773,7 @@
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KTXBS = SDRBW
      C     Key2          CHAIN     SDTXBSD1                           42
- 
+
      C                   IF        *IN42 = *On
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN55
@@ -779,9 +781,9 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Deduct Tax
- 
+
      C                   IF        SDTSU = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN56
@@ -795,35 +797,35 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Allocation Days
- 
+
      C                   IF        SALDY <> *Blanks
      C                   MOVE      *Blanks       ZField
      C                   MOVE      SALDY         ZField
      C                   Z-ADD     0             ZADEC
      C                   Z-ADD     2             ZADIG
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZAlignOk
      C                   PARM                    ZField
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZAlignOk = 'N'
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN57
      C                   MOVEL     'USR7663'     WZMsgID
      C                   EXSR      SRErrMsg
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      SALDY = '01'
      C                   ENDIF
- 
+
       ** Validate Default Exemption Code for Portfolio Interest
- 
+
      C                   IF        SEXPI <> *Blanks
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KEXCD = SEXPI
@@ -835,9 +837,9 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Default Basket for Portfolio Exemption
- 
+
      C                   IF        SPFEX = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN68
@@ -847,7 +849,7 @@
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KTXBS = SPFEX
      C     Key2          CHAIN     SDTXBSD1                           42
- 
+
      C                   IF        *IN42 = *On
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN68
@@ -855,9 +857,9 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Save Current Screen Value
- 
+
      C                   IF        *IN50 = *Off
      C                   EVAL      CurDBDC = SDBDC
      C                   EVAL      CurDRBW = SDRBW
@@ -867,7 +869,7 @@
      C                   EVAL      CurPFEX = SPFEX
      C                   EXSR      SRUpdSHdr
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -881,12 +883,12 @@
       *                                                               *
       *****************************************************************
      C     SRBuildE      BEGSR
- 
+
      C                   EVAL      *IN50 = *Off
      C                   MOVEA     '00'          *IN(70)
      C                   WRITE     SD0377C0
      C                   Z-ADD     1             RRN
- 
+
      C     1             DO        300           A                 3 0
      C                   EVAL      *IN73 = *Off
      C                   EVAL      *IN74 = *Off
@@ -899,7 +901,7 @@
      C                   ADD       1             RRN
      C                   ENDDO
      C                   MOVEA     '111'         *IN(70)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -913,20 +915,20 @@
       *                                                               *
       *****************************************************************
      C     SRValSubF     BEGSR
- 
+
      C                   READC     SD0377S0                               41
- 
+
      C                   DOW       *IN41 = *Off
- 
+
      C                   IF        ValFlds <> *Blanks
      C                   MOVEA     '000'         *IN(60)
      C                   EXSR      SRValFlds
- 
+
      C                   IF        *IN50 = *On
      C                   EVAL      *IN73 = *On
      C                   UPDATE    SD0377S0
      C                   ELSE
- 
+
      C                   MOVEA     '000'         *IN(60)
      C                   UPDATE    SD0377S0
      C                   SELECT
@@ -935,14 +937,14 @@
      C                   WHEN      SACTN = 'A'
      C                   EXSR      SRUpdate
      C                   ENDSL
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READC     SD0377S0                               41
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -956,24 +958,24 @@
       *                                                               *
       *****************************************************************
      C     SRValFlds     BEGSR
- 
+
       ** Validate Country of Residence
- 
+
      C                   IF        SACTN = 'I'
      C                   IF        SCRRS = *Blanks
      C                   EVAL      *IN50 = *On
      C                   EVAL      *IN60 = *On
      C                   MOVEL     'USR7653'     WZMsgId
      C                   EXSR      SRErrMsg
- 
+
      C                   ELSE
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      SCRRS         PCTRY
      C     SDCTRY        PARM      SDCTRY        DSSDY
- 
+
      C                   IF        PRetCode <> *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN60
@@ -982,14 +984,14 @@
      C                   ELSE
      C                   MOVE      A4CNCD        SCRRS
      C                   ENDIF
- 
+
       ** Record must not exist
- 
+
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KINVT = SINVT
      C                   EVAL      KCRRS = SCRRS
      C     Key5          CHAIN     SDWHTTD4                           42
- 
+
      C                   IF        *IN42 = *Off
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN60
@@ -998,17 +1000,17 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Tax Basket
- 
+
      C                   IF        STXBS = *Blanks
      C                   MOVE      *ON           *IN50
      C                   MOVE      *ON           *IN61
      C                   MOVEL     'USR7660'     WZMsgID
      C                   EXSR      SRErrMsg
- 
+
      C                   ELSE
- 
+
      C                   IF        *IN60 = *Off
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KTXBS = STXBS
@@ -1021,9 +1023,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Exemption Code
- 
+
      C                   IF        SEXCD <> *Blanks
      C                   EVAL      KCRTT = SCRTT
      C                   EVAL      KEXCD = SEXCD
@@ -1035,7 +1037,7 @@
      C                   EXSR      SRErrMsg
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1049,7 +1051,7 @@
       *                                                               *
       *****************************************************************
      C     SRBuildSubF   BEGSR
- 
+
      C                   Z-ADD     1             RRN
      C                   MOVEA     '00'          *IN(70)
      C                   EVAL      *IN69 = *On
@@ -1057,9 +1059,9 @@
      C                   WRITE     SD0377C0
      C     Key1          SETLL     SDWHTTD4
      C     Key1          READE     SDWHTTD4                               72
- 
+
       ** Load Subfile
- 
+
      C                   DOW       *IN72 = *Off
      C                   EVAL      S1SEL = *Blanks
      C                   EVAL      SCRRS = WTCRRS
@@ -1069,13 +1071,13 @@
      C                   Add       1             RRN
      C     Key1          READE     SDWHTTD4                               72
      C                   ENDDO
- 
+
      C                   IF        RRN = 1
      C                   MOVEA     '01'          *IN(70)
      C                   ELSE
      C                   MOVEA     '11'          *IN(70)
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1089,18 +1091,18 @@
       *                                                               *
       *****************************************************************
      C     SRDelRec      BEGSR
- 
+
      C     Key1          SETLL     SDWHTTD0
      C     Key1          READE     SDWHTTD0                               40
- 
+
      C                   DOW       *IN40 = *Off
      C                   DELETE    SDWHTTD0
      C                   EXSR      SRTrailer
      C     Key1          READE     SDWHTTD0                               40
      C                   ENDDO
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1114,28 +1116,28 @@
       *                                                               *
       *****************************************************************
      C     SRProDel      BEGSR
- 
+
      C                   EVAL      *IN05 = *On
      C                   EVAL      *IN10 = *Off
      C                   EVAL      *IN12 = *On
- 
+
      C                   EVAL      *IN59 = *Off
      C                   MOVEA     '11100'       *IN(63)
      C                   MOVE      '0'           *IN69
      C                   EXSR      SRBuildSubF
      C                   Z-ADD     1             RRN
- 
+
       ** Process subfile action
- 
+
      C                   DOW       *INKC = *Off and *INKL = *Off
- 
+
      C                   WRITE     SD0377F0
      C                   WRITE     #MSGCTL
      C                   WRITE     SD0377F1
      C                   WRITE     SD0377F3
      C                   EXFMT     SD0377C0
      C                   CALL      'ZA0250'
- 
+
      C                   IF        *INKE = *On
      C                   EVAL      *IN50 = *Off
      C                   EVAL      *IN59 = *Off
@@ -1143,21 +1145,21 @@
      C                   EXSR      SRBuildSubF
      C                   Z-ADD     1             RRN
      C                   ELSE
- 
+
       ** Process Deleted Records
- 
+
      C                   READC     SD0377S0                               41
      C                   DOW       *IN41 = *Off
- 
+
       ** Validate Action Code
- 
+
      C                   IF        S1SEL <> 'D'
      C                   EVAL      *IN50 = *On
      C                   EVAL      *IN59 = *On
      C                   MOVEL     'USR7665'     WZMsgID
      C                   EXSR      SRErrMsg
      C                   ENDIF
- 
+
      C                   IF        *IN50 = *On
      C                   EVAL      *IN73 = *On
      C                   UPDATE    SD0377S0
@@ -1170,12 +1172,12 @@
      C                   EXSR      SRTrailer
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READC     SD0377S0                               41
      C                   ENDDO
- 
+
       ** Rebuild subfile after delete
- 
+
      C                   IF        *IN50 = *Off
      C                   COMMIT
      C                   EXSR      SRBuildSubF
@@ -1187,9 +1189,9 @@
      C                   ROLBK
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1203,7 +1205,7 @@
       *                                                               *
       *****************************************************************
      C     SRWrite       BEGSR
- 
+
      C                   EVAL      WTRECI = 'D'
      C                   EVAL      WTCRTT = SCRTT
      C                   EVAL      WTINVT = SINVT
@@ -1220,7 +1222,7 @@
      C                   EVAL      WTLCD = BJRDNB
      C                   WRITE     SDWHTTD0
      C                   EXSR      SRTrailer
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1234,9 +1236,9 @@
       *                                                               *
       *****************************************************************
      C     SRUpdSHdr     BEGSR
- 
+
       ** If Subheader details are changed
- 
+
      C                   IF        PrvDtls <> CurDtls
      C     Key1          SETLL     SDWHTTD0
      C     Key1          READE     SDWHTTD0                               40
@@ -1254,7 +1256,7 @@
      C     Key1          READE     SDWHTTD0                               40
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1268,9 +1270,9 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
       ** If Subfile Details is amended
- 
+
      C                   EVAL      KCRRS = SCRRS
      C     Key5          CHAIN     SDWHTTD0                           40
      C                   EVAL      WTTXBS = STXBS
@@ -1278,11 +1280,11 @@
      C                   EVAL      WTTYLC = 'A'
      C                   EVAL      WTLCD = BJRDNB
      C                   UPDATE    SDWHTTD0
- 
+
      C                   IF        PrvDtls = CurDtls
      C                   EXSR      SRTrailer
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1296,24 +1298,47 @@
       *                                                               *
       *****************************************************************
      C     SRTrailer     BEGSR
- 
-     C     Key3          CHAIN     @AHREAU                            81
- 
+
+     C*****Key3*         CHAIN     @AHREAU                            81                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KAHFLNM       AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       81                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        81                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
      C                   SELECT
      C                   WHEN      SACTN = 'A'
      C                   ADD       1             AHNOAM
- 
+
      C                   WHEN      SACTN = 'D'
      C                   ADD       1             AHNODL
      C                   SUB       1             AHNORC
- 
+
      C                   WHEN      SACTN = 'I'
      C                   ADD       1             AHNOIN
      C                   ADD       1             AHNORC
      C                   ENDSL
- 
-     C                   UPDATE    @AHREAU
- 
+
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1329,60 +1354,60 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        Plist
      C                   PARM                    PMODE             1
- 
+
       ** Read in Installation Data
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C     *LOCK         IN        LDA
      C                   MOVEL     'SD0377'      DBPGM
      C                   OUT       LDA
- 
+
      C                   Eval      SPGM = PsProcName
      C                   Eval      SWSID = PSJobName
      C                   Eval      SUSER = PSUser
- 
+
       ** Get Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     Key1          KLIST
      C                   KFLD                    KCRTT             2
      C                   KFLD                    KINVT             3
- 
- 
+
+
      C     Key2          KLIST
      C                   KFLD                    KCRTT
      C                   KFLD                    KTXBS             2
- 
+
      C     Key3          KLIST
      C                   KFLD                    KAHFLNM          10
- 
+
      C     Key4          KLIST
      C                   KFLD                    KCRTT
      C                   KFLD                    KEXCD             2
- 
+
      C     Key5          KLIST
      C                   KFLD                    KCRTT
      C                   KFLD                    KINVT
      C                   KFLD                    KCRRS             2
- 
+
      C                   MOVEL     'SDWHTTPD'    KAHFLNM
- 
+
       ** Initialise Fields
- 
+
      C                   EVAL      KCRTT = *Blanks
      C                   EVAL      KINVT = *Blanks
      C                   EVAL      KCRRS = *Blanks
      C                   EVAL      KTXBS = *Blanks
      C                   EVAL      KEXCD = *Blanks
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1400,11 +1425,11 @@
       *                                                               *
       *****************************************************************
      C     SRErrMsg      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM      'SDUSRMSG'    WZMsgFile        10
      C                   PARM                    WZMsgID          10
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1421,7 +1446,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     WRUN          IFEQ      *BLANK
      C                   MOVE      'Y'           WRUN              1
      C                   DUMP
@@ -1429,12 +1454,12 @@
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       ********************************************************************
 **  CPY@

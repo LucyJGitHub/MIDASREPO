@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -81,21 +83,21 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Hedge Strategy Table File
      FSDHGSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** RTV: Standing Data Controls Retrieval index
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
- 
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
+
       ** UPD: Standing Data Controls Update index
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
- 
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+
       ** SD Hedge Strategy Table detail report
      FSD000743P1O    E             PRINTER USROPN
      F                                     INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -109,50 +111,50 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Switchable Features Details                              CAS006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS006
                                                                                               CAS006
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** File Information Data Structure for SD000743P1
      D SPOOL1          DS
      D  PSFile1               83     92
@@ -164,12 +166,12 @@
      D SPOOLU          DS
      D  PSFileU               83     92
      D  PSFNumU              123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PLevel          S              1
@@ -177,41 +179,41 @@
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       ** Parameters for access object programs
      D PRTCD           S              7
      D POPTN           S              7
      D PSard           S              6                                                       CAS006
- 
+
      D PMode           S              1
      D PFlag           S              1
- 
+
      D RqdLn1          S              3P 0
      D DifLn1          S              4P 0
      D WorkNum         S              5P 0
      D PReptNam        S             10
- 
+
      D WHead1          S             16
      D WLine1          S             16
      D WHead2          S             18
      D WLine2          S             18
- 
+
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
      D KFilNam         S             10
      D WNORC           S                   LIKE(AHNORC)
      D WNORC2          S                   LIKE(AHNORC)
      D WNOIN           S                   LIKE(AHNOIN)
      D WNOAM           S                   LIKE(AHNOAM)
      D WNODL           S                   LIKE(AHNODL)
- 
+
      D WError          S              1
      D CAS006          S              1                                                       CAS006
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -222,17 +224,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   EXSR      SRAUDT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -244,15 +246,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
       ** RCF Processing for rinter File.
- 
+
      C                   EXSR      SRRCFP1
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RqdLn1  = 0
      C                   EVAL      DifLn1  = 0
      C                   EVAL      RTOTAL  = 0
@@ -261,7 +263,7 @@
      C                   EVAL      *IN11 = '0'
      C                   EVAL      PFlag = *BLANKS
      C                   EVAL      WError = 'N'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -274,21 +276,21 @@
       * Calls: SRPRNT                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPROC        BEGSR
- 
+
       ** Print Header
      C                   WRITE     HEADP1
- 
+
      C     *LOVAL        SETLL     SDHGSTL1
- 
+
       ** SD Hedge Strategy
      C                   READ      SDHGSTL1                               01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   EVAL      WorkNum = WorkNum + 1
- 
+
       ** If AUDIT mode, process only records whose LCD = Rundate
       ** If report is requested, process only live records
      C                   IF        ((PMode = 'A') AND (FSLCD = BJRDNB))
@@ -296,25 +298,25 @@
      C                             (FSCHTP <> 'D'))
      C                   EXSR      SRPRNT
      C                   ENDIF
- 
+
      C                   READ      SDHGSTL1                               01
- 
+
      C                   ENDDO
- 
+
       ** When EOF, write trailer
      C                   IF        *IN01 = *ON
      C                   EVAL      RqdLn1 = 8
      C                   EXSR      SRCHKLIN
- 
+
      C                   IF        RTOTAL = 0
      C                   EVAL      *IN11 = '1'
      C                   ENDIF
- 
+
      C                   WRITE     TRAILP1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -326,25 +328,25 @@
       * Calls: SRBRCH                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPRNT        BEGSR
- 
+
       ** Check for overflow
      C                   EVAL      RqdLn1 = 14
      C                   EXSR      SRCHKLIN
- 
+
       ** Put details to printer fields.
- 
+
      C                   EVAL      RHESN = FSHESN
      C                   EVAL      RHELD = FSHELD
      C                   EVAL      RBRCD = FSBRCA
- 
+
       ** Obtain Branch Name
      C                   EXSR      SRBRCH
- 
+
       ** Get Last Change type
      C                   EXSR      SRCHTP
- 
+
      C                   EVAL      RPRTP = FSPRTP
      C                   EVAL      RPRST = FSPRST
                                                                                               CAS006
@@ -355,21 +357,21 @@
      C                   EVAL      REFUP = FSEFUP
      C                   EVAL      REFLO = FSEFLO
      C                   EVAL      REFFQ = FSEFFQ
- 
+
       ** Convert midas rundate to appropriate date format
      C                   EXSR      SRDATE
- 
+
       ** Put remaining fields in printer file
      C                   EXSR      SRFLDS
- 
+
      C                   EVAL      RTOTAL = RTOTAL + 1
- 
+
       ** Write Detail
       *
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -381,37 +383,51 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAUDT        BEGSR
- 
+
       ** Process SDFCTLPA only in audit mode
      C                   IF        PMode = 'A'
- 
+
      C                   EVAL      KFilNam = 'SDHGSTPD  '
-     C     KFILE         CHAIN     SDFCTLL1                           12
- 
+     C*****KFILE         CHAIN     SDFCTLL1                           12                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KFilNam       AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       12                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        12                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
       ** DBerror if record not found
      C                   IF        *IN12 = '1'
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EVAL      DBASE = 3
      C                   EVAL      DBKEY = KFilNam
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WNORC = AHNORC
      C                   EVAL      WNOIN = AHNOIN
      C                   EVAL      WNOAM = AHNOAM
      C                   EVAL      WNODL = AHNODL
      C                   ENDIF
- 
+
       ** Compare # of records read to the # of records in file
                                                                                               228125
      C                   EVAL      WorkNum = WorkNum - WNODL                                  228125
      C                   IF        WorkNum <> WNORC
      C                   EVAL      PFlag = 'N'
      C                   ENDIF
- 
+
       ** Call Audit Printfile override program, SD Data Controls
      C                   CALL      'SDC540P'                            13
      C                   PARM      'SD000743AU'  PReptNam
@@ -423,30 +439,30 @@
      C                   PARM                    WNORC
      C                   PARM                    RTITLE
      C                   PARM                    RUNDLN
- 
+
       ** Call to program ended in error
      C                   IF        *IN13 = '1'
      C                   EVAL      WError = 'Y'
      C                   ENDIF
- 
+
       ** If work flag is incorrect
      C                   IF        PFlag = 'N'
      C                   EVAL      *INU8 = '1'
      C                   ENDIF
- 
+
       ** If audit program ended normally
      C                   IF        WError = 'N'
      C                   EXSR      SRUPDAT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** END OF PROGRAM
      C                   EVAL      *INLR = '1'
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -458,9 +474,9 @@
       * Calls: ZSFILE                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRCFP1       BEGSR
- 
+
      C                   OPEN      SD000743P1
       *
       ** Ensure Detail Spool File recorded by RCF.
@@ -481,9 +497,9 @@
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -495,9 +511,9 @@
       * Calls: AOBRCHR0                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBRCH        BEGSR
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRTCD
@@ -505,7 +521,7 @@
      C                   PARM                    FSBRCA
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
       ** Database Error
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -514,11 +530,11 @@
      C                   EVAL      DBPGM = 'SD000743P'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RBRNM = A8BRNM
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -530,13 +546,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCHTP        BEGSR
- 
+
       ** Populate action fields only in AUDIT mode
- 
+
      C                   IF        PMode = 'A'
- 
+
      C                   EVAL      RACT  = 'ACTION:'
      C                   SELECT
      C                   WHEN      FSCHTP = 'I'
@@ -546,14 +562,14 @@
      C                   WHEN      FSCHTP = 'D'
      C                   EVAL      RACTION = 'DELETE'
      C                   ENDSL
- 
+
      C                   ELSE
      C                   EVAL      RACT = *BLANKS
      C                   EVAL      RACTION = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -565,19 +581,19 @@
       * Calls: ZDATE2                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDATE        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    FSFSDT
      C                   PARM                    BJDFIN
      C                   PARM      *ZEROS        ZDATE
      C                   PARM      *BLANKS       ZADATE
- 
+
      C                   MOVE      ZADATE        RFSDT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -589,11 +605,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFLDS        BEGSR
- 
+
      C                   EVAL      *IN10 = '0'
- 
+
       ** Effectiveness Assessment Method                                                      CAS006
                                                                                               CAS006
      C                   IF        CAS006 = 'Y'                                               CAS006
@@ -607,7 +623,7 @@
      C                   EVAL      R1DVT3 = FSDVT3
      C                   EVAL      R1DVT4 = FSDVT4
      C                   EVAL      R1DVT5 = FSDVT5
- 
+
      C                   IF        (FSDVT6 <> *BLANKS) OR
      C                             (FSDVT7 <> *BLANKS) OR
      C                             (FSDVT8 <> *BLANKS) OR
@@ -620,7 +636,7 @@
      C                   EVAL      R1DVT9 = FSDVT9
      C                   EVAL      R1DVT10 = FSDVT10
      C                   ENDIF
- 
+
       ** Derivative Sub Types
      C                   EVAL      R1DST1 = FSDST1
      C                   EVAL      R1DST2 = FSDST2
@@ -632,7 +648,7 @@
      C                   EVAL      R1DST8 = FSDST8
      C                   EVAL      R1DST9 = FSDST9
      C                   EVAL      R1DST10 = FSDST10
- 
+
       ** Derivative Book Codes
      C                   EVAL      R1DBK1 = FSDBK1
      C                   EVAL      R1DBK2 = FSDBK2
@@ -644,7 +660,7 @@
      C                   EVAL      R1DBK8 = FSDBK8
      C                   EVAL      R1DBK9 = FSDBK9
      C                   EVAL      R1DBK10 = FSDBK10
- 
+
       ** Hedged Deal/Investment Types
      C                   EVAL      R1HDT1 = FSHDT1
      C                   EVAL      R1HDT2 = FSHDT2
@@ -656,7 +672,7 @@
      C                   EVAL      R1HDT8 = FSHDT8
      C                   EVAL      R1HDT9 = FSHDT9
      C                   EVAL      R1HDT10 = FSHDT10
- 
+
       ** Hedged Deal Sub Types
      C                   EVAL      R1HST1 = FSHST1
      C                   EVAL      R1HST2 = FSHST2
@@ -668,7 +684,7 @@
      C                   EVAL      R1HST8 = FSHST8
      C                   EVAL      R1HST9 = FSHST9
      C                   EVAL      R1HST10 = FSHST10
- 
+
       ** Hedged Deal Book Codes
      C                   EVAL      R1HBK1 = FSHBK1
      C                   EVAL      R1HBK2 = FSHBK2
@@ -680,9 +696,9 @@
      C                   EVAL      R1HBK8 = FSHBK8
      C                   EVAL      R1HBK9 = FSHBK9
      C                   EVAL      R1HBK10 = FSHBK10
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -694,12 +710,29 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUPDAT       BEGSR
- 
+
      C                   EVAL      KFilNam = 'SDHGSTPD  '
-     C     KFILE         CHAIN     SDFCTLL0                           1214
- 
+     C*****KFILE         CHAIN     SDFCTLL0                           1214                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KFilNam       AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       1214                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        12                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        14                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
       ** DBerror if record not found
      C                   IF        *IN12 = '1'
      C                   EVAL      DBFILE = 'SDFCTLPA'
@@ -707,36 +740,50 @@
      C                   EVAL      DBKEY = KFilNam
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record Locked dont continue update
      C                   IF        *IN14 = '1'
      C                   EVAL      *IN14 = '1'
      C                   ELSE
- 
+
       ** Save values in work fields
      C                   EVAL      WNORC2 = AHNORC
      C                   EVAL      WNOIN  = AHNOIN
      C                   EVAL      WNOAM  = AHNOAM
      C                   EVAL      WNODL  = AHNODL
- 
+
       ** Update File fields
      C                   EVAL      AHNORC = WNORC2
      C                   EVAL      AHNOIN = 0
      C                   EVAL      AHNOAM = 0
      C                   EVAL      AHNODL = 0
- 
-     C                   UPDATE    @AHREAU                              15
+
+     C**********         UPDATE    @AHREAU                              15                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       15                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        15                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C                   IF        *IN15 = '1'
      C                   EVAL      DBASE = 5
      C                   EVAL      DBKEY = '*UPDATE'
      C                   EVAL      DBFILE = 'SDFCTLPA'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -748,17 +795,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCHKLIN      BEGSR
- 
+
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -770,24 +817,24 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    PMode
      C                   PARM                    PSeq
      C                   PARM                    PLevel
      C                   PARM                    PEnty
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
       ** Access Bank Details
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -819,11 +866,11 @@
      C                   EVAL      DBASE  =  2                                                CAS006
      C                   EXSR      *PSSR                                                      CAS006
      C                   ENDIF                                                                CAS006
- 
+
       ** Prepare the Header Title to be used (must be centered)
      C                   EVAL      WHead1 = 'HEDGE STRATEGIES'
      C                   EVAL      WLine1 = '----------------'
- 
+
      C                   IF        PMode = 'A'
      C                   EVAL      WHead2 = ' MAINTENANCE TODAY'
      C                   EVAL      WLine2 = '------------------'
@@ -832,7 +879,7 @@
      C                   EVAL      RUNDLN = '          ' +
      C                                      WLine1 + WLine2
      C                   ELSE
- 
+
      C                   EVAL      WHead2 = ' LISTING'
      C                   EVAL      WLine2 = '--------'
      C                   EVAL      RTITLE = '               ' +
@@ -840,13 +887,13 @@
      C                   EVAL      RUNDLN = '               ' +
      C                                      WLine1 + WLine2
      C                   ENDIF
- 
+
       ** Define Key List Foe SDFCTLPA
      C     KFILE         KLIST
      C                   KFLD                    KFilNam
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -861,26 +908,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        RunBefore = *BLANK
      C                   EVAL      RunBefore = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      ReturnCode = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2002

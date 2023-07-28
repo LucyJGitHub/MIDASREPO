@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058953 *CREATE     Date 29Sep21             *
+      *  Last Amend No. MD061577             Date 18Jul23             *
+      *  Prev Amend No. MD058953 *CREATE     Date 29Sep21             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061577 - Deliverable Data Split for UPDDSFPD               *
       *  MD058953 - Problem with DDS data take-on                     *
       *                                                               *
       *****************************************************************
@@ -58,7 +60,8 @@
       * if UPDDSFPD is not part of the delivery, assume no NEW DDS file (hence no take-on)
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RtnCode          10
-     C                   PARM      'UPDDSFPD'    ObjFil           10
+     C**********         PARM      'UPDDSFPD'    ObjFil           10                        MD061577
+     C                   PARM      'UPDDSCTD'    ObjFil           10                        MD061577
      C                   PARM                    DLDTALIB
      C                   PARM      '*FILE'       ObjType           8
      C                   PARM                    ChkMbr           10

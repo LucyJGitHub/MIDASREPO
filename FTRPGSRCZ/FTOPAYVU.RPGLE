@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD054059           Date 28Nov19               *
+      *  Last Amend No. MD061240           Date 25May23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -109,6 +110,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061240 - Charges are defaulted during OPAY amend. Add      *
+      *             validation to execute the defaulting of charges   *
+      *             only if action is insert.                         *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054059 - Missing outgoing payment reference in the         *
@@ -1264,6 +1268,7 @@
       * Validate Charges/Commission details
       *  - Default values
      C                   IF        @CFT009 = 'N'
+     C                             AND SACTION = 'I'                                        MD061240
      C                   EXSR      DeftCCDetl
      C                   ENDIF
 

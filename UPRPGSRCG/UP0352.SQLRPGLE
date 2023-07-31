@@ -117,7 +117,8 @@
       * retrieve corresponding name of the non-DDS file, these are stored in
       * UPDDSFPD which may not be up-to-date yet as the file is part of the delivery
      C                   eval      SQLDynStmt = 'select DDSORF from ' +
-     C                             %trim(DLDTALIB) + '/UPDDSFPD where ' +
+     C**********                   %trim(DLDTALIB) + '/UPDDSFPD where ' +                   MD061577
+     C                             %trim(DLDTALIB) + '/UPDDSCTD where ' +                   MD061577
      C                             ' DDSNWF = ' + '''' + AUMBNM + ''''
 
      C/EXEC SQL

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060750           Date 18Jan23               *
-      *  Prev Amend No. MD060411           Date 15Nov22               *
+      *  Last Amend No. 263718             Date 06Jul23               *
+      *  Prev Amend No. MD060750           Date 18Jan23               *
+      *                 MD060411           Date 15Nov22               *
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058815           Date 28Sep21               *
@@ -111,6 +112,11 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263718 - Fee detail errors in reports LER180P1 and LER180P3. *
+      *         - Upgrade client fix BF7069 to MP1.4. Add fee past    *
+      *           due amount to 'Accrued Amount' for LER180P1.        *
+      *         - Reverse core fix 246309, this is to ensure correct  *
+      *           format for all reports.                             *
       *  MD060750 - Duplicate record key in member LEFHSTLB during    *
       *             migration. (Recompile)                            *
       *  MD060411 - Correct the calculation of fee amount using       *
@@ -1470,6 +1476,7 @@
      C                     ADD  FELPAM    POSTD0                          052703
      C/COPY WNCPYSRC,LER180C004
      C***********          ADD  FEAMTP    POSTD0                   052703 138421
+     C                     ADD  FEAMTP    POSTD0                                              263718
      C                     ENDIF                                          140840
      C/COPY WNCPYSRC,LER180C005
      C           FELPDT    IFGT CODT                                      103019
@@ -1479,6 +1486,7 @@
      C                     SUB  FEPAMP    POSTD0                          140840
      C                     ELSE                                           140840
      C***********          ADD  FEPAMP    POSTD0                   103019 138421
+     C                     ADD  FEPAMP    POSTD0                                              263718
      C                     ENDIF                                          140840
      C                     END                                            103019
      C***********          END                                     052703 100658
@@ -1516,6 +1524,7 @@
      C                     SUB  FEPAMP    POSTD0                          140840
      C                     ELSE                                           140840
      C***********          ADD  FEPAMP    POSTD0                   100658 138421
+     C                     ADD  FEPAMP    POSTD0                                              263718
      C                     ENDIF                                          140840
      C                     ELSE                                           100658
       ** If Fee is a payment then subtract fee amount                     140840
@@ -1523,6 +1532,7 @@
      C                     SUB  FEAMTP    POSTD0                          140840
      C                     ELSE                                           140840
      C***********          ADD  FEAMTP    POSTD0                          138421
+     C                     ADD  FEAMTP    POSTD0                                              263718
      C                     ENDIF                                          140840
      C                     END                                            100658
      C                     END
@@ -3451,11 +3461,11 @@
      C********** FEPIND    IFNE 'A'                                                           CLE071
      C           WKPIND    IFNE 'A'                                                           CLE071
      C           FHOFAM    IFGT 0                                                             246018
-     C           FHOFAM    IFNE 0                                                             246309
+     C********** FHOFAM    IFNE 0                                                      246309 263718
      C           WAMT      DIV  FHOFAM    WRK155    H
-     C                     ELSE                                                               246309
-     C                     Z-ADD0         WRK155                                              246309
-     C                     ENDIF                                                              246309
+     C**********           ELSE                                                        246309 263718
+     C**********           Z-ADD0         WRK155                                       246309 263718
+     C**********           ENDIF                                                       246309 263718
      C                     ELSE                                                               246018
      C                     Z-ADD0         WRK155                                              246018
      C                     ENDIF                                                              246018

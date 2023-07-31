@@ -77,7 +77,7 @@
              CHGVAR     VAR(&XXMIDAS) VALUE(&MMMUser)                                   /*MD061653*/
                                                                                         /*MD061653*/
              CALL       PGM(QSYGETPH) PARM(&XXMIDAS '*NOPWD    ' &HANDLE)               /*MD061653*/
-   MONMSG     MSGID(CPF22E3) EXEC(DO)                                                   /*MD061653*/
+             MONMSG     MSGID(CPF22E3) EXEC(DO)                                         /*MD061653*/
                 GOTO       CMDLBL(ENDCLPGM)                                             /*MD061653*/
              Enddo                                                                      /*MD061653*/
              CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)                             /*MD061653*/

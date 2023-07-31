@@ -81,7 +81,7 @@
                 GOTO       CMDLBL(ENDCLPGM)                                             /*MD061653*/
              Enddo                                                                      /*MD061653*/
              CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)                             /*MD061653*/
-
+                                                                                        /*MD061653*/
 /* Set MMM Archive Library */
 
              Addlible   Lib(&ArchMMMDb) Position(*First)

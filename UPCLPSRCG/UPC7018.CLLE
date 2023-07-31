@@ -11,10 +11,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP045   *CREATE   Date 01Jun22              */
+/*       Last Amend No. MD061067           Date 17Jul23              */
+/*       Prev Amend No. CUP045   *CREATE   Date 01Jun22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061067 - Missing process for UDF tables                   */
+/*                - Applied for MD061569.                            */
 /*       CUP045 - One Touch Bridge - refresh                         */
 /*                                                                   */
 /*********************************************************************/
@@ -40,6 +43,10 @@
              DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&GBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD061067*/
+             DCL        VAR(&ZPRX) TYPE(*CHAR) LEN(2)                                   /*MD061067*/
+             DCL        VAR(&CURGRCV) TYPE(*CHAR) LEN(10)                               /*MD061067*/
+             DCL        VAR(&CURGSEQ) TYPE(*DEC) LEN(10 0)                              /*MD061067*/
 
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
 
@@ -77,6 +84,47 @@
              IF         COND(&RTNFLAG *NE ' ') THEN(GOTO ERROR)
 
 
+/* Additional process for *ZONE */                                                      /*MD061067*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD061067*/
+/* Set previous rundate field in JNSTAT                                                 /*MD061067*/
+             CALL       PGM(UP7012) PARM(&RTNFLAG)                                      /*MD061067*/
+             IF         COND(&RTNFLAG *NE ' ') THEN(GOTO ERROR)                         /*MD061067*/
+/* Clear SCJSEQPD */                                                                    /*MD061067*/
+             CLRPFM     FILE(SCJSEQPD)                                                  /*MD061067*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD061067*/
+             SCWRTJREG EVENT(NDSUJR) TEXT('RESET')                                      /*MD061067*/
+/* Call program to update trailers SDFCTLPA and TABLETZ. */                             /*MD061067*/
+             CALL       PGM(SM1195)                                                     /*MD061067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Update journalling sequence in various files */                                      /*MD061067*/
+             CALL       PGM(SCHAEXIT) PARM(&PRFX)                                       /*MD061067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD061067*/
+                                                                                        /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
+/* Additional process for *GLOBAL */                                                    /*MD061067*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061067*/
+/* Clear GPAUJCPD */                                                                    /*MD061067*/
+             CLRPFM     FILE(GPAUJCPD)                                                  /*MD061067*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD061067*/
+/* Update GPZONEPD */                                                                   /*MD061067*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX)                              /*MD061067*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GPZONEPD set +
+                        ZOMSYS = ' *BCAT '''' *TCAT &ZPRX *TCAT '''')                   /*MD061067*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+                                                                                        /*MD061067*/
+/* Determine the most recent global journal sequence number and currently rcv */        /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             RTVJRNE    JRN(GPJRN) FROMENT(*LAST) +
+                          RTNSEQNBR(&CURGSEQ) RTNRCV(&CURGRCV)                          /*MD061067*/
+/**/                                                                                    /*MD061067*/
+/* Call UPGPUT to update the file GPUTJSPD.                                             /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             CALL       PGM(GPUTJSEQ) PARM(&CURGRCV &CURGSEQ)                           /*MD061067*/
+/**/                                                                                    /*MD061067*/
+             ENDDO                                                                      /*MD061067*/
+                                                                                        /*MD061067*/
 /* Start subsystem */
              CALL       PGM(UPC000146) PARM(&LAYER &PRFX &RTNFLAG)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)

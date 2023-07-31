@@ -14,14 +14,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060271             Date 21Jul22             *
-      *  Prev Amend No. MD059751             Date 25Mar22             *
+      *  Last Amend No. MD061690             Date 27Jul23             *
+      *  Prev Amend No. MD060271             Date 21Jul22             *
+      *                 MD059751             Date 25Mar22             *
       *                 MD059742             Date 23Mar22             *
       *                 MD058089             Date 01Sep21             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061690 - File GPSRAJW0 was deleted because one of its      *
+      *             dependency was deleted                            *
       *  MD060271 - UDF tables are reported but should be ignored     *
       *  MD059751 - SQL view statement change is not detected by aDBU *
       *  MD059742 - Cope with change in Alternative field name        *
@@ -41,6 +44,8 @@
      D Ix              S              5  0
      D Cnt             S              5  0
      D RcdCount        S              5  0
+     D TotalDel        S              5  0                                                  MD061690
+     D IGNORE          S              1                                                     MD061690
 
      D S_JOB           S             10
      D S_FILE          S             10
@@ -311,6 +316,8 @@
 
       * If Logical File (WJOB is DV or GV), check that file is not part of dependent files.
       * If yes, it has been reported as 'Affected files' already. Then ignore now.
+      * Unless it is found in dependent because at least one of its dependency has been     MD061690
+      * deleted                                                                             MD061690
      C                   If        %subst(WJOB:4:1) = 'V'
      C                   If        LAYER = '*GLOBAL'
      C/exec SQL
@@ -319,7 +326,10 @@
      C/end-exec
 
      C                   If        RcdCount > 0
+     C                   exsr      Check_Del                                                MD061690
+     C                   If        IGNORE = 'Y'                                             MD061690
      C                   goto      DetailsE
+     C                   Endif                                                              MD061690
      C                   ENDIF
      C                   ENDIF
      C                   If        LAYER = '*ZONE'
@@ -329,7 +339,10 @@
      C/end-exec
 
      C                   If        RcdCount > 0
+     C                   exsr      Check_Del                                                MD061690
+     C                   If        IGNORE = 'Y'                                             MD061690
      C                   goto      DetailsE
+     C                   Endif                                                              MD061690
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -624,6 +637,69 @@
      C                   ENDSR
 
       ********************************************************************
+      /EJECT                                                                                MD061690
+      ********************************************************************                  MD061690
+      *                                                                  *                  MD061690
+      * Check_Del - GPSRAJW0 is reported as dependent because            *                  MD061690
+      *             GPRELHPD has been made redundant. But GPSRAJW0       *                  MD061690
+      *             should not be deleted, its script must be updated    *                  MD061690
+      *             instead.                                             *                  MD061690
+      *             This SR checks that if a dependent file is reported  *                  MD061690
+      *             1. it does exist in the reference system             *                  MD061690
+      *             2. if yes, it checks if its dependency (in the ref   *                  MD061690
+      *             system) are existing in UPGLOGPD. If it is the case  *                  MD061690
+      *             then it can be ignored as it will be automatically   *                  MD061690
+      *             rebuild with the dependency.                         *                  MD061690
+      *             But if it is not the case, then it cannot be ignored *                  MD061690
+      *                                                                  *                  MD061690
+      ********************************************************************                  MD061690
+      *                                                                                     MD061690
+     C     Check_Del     BEGSR                                                              MD061690
+                                                                                            MD061690
+     C                   eval      IGNORE = 'Y'                                             MD061690
+     C                   eval      TotalDel = 0                                             MD061690
+                                                                                            MD061690
+      ** Does file exist in reference system?                                               MD061690
+     C                   If        LAYER = '*GLOBAL'                                        MD061690
+     C                   eval      C_LIB = Lib2 + 'GVLIB'                                   MD061690
+     C                   else                                                               MD061690
+     C                   eval      C_LIB = Lib2   + 'DVLIB'                                 MD061690
+     C                   Endif                                                              MD061690
+                                                                                            MD061690
+     C                   CALL      'UTCHKOBJ'                                               MD061690
+     C                   PARM      *blanks       ExistYN          10                        MD061690
+     C                   PARM      WFILE         DFFILE           10                        MD061690
+     C                   PARM                    C_LIB            10                        MD061690
+     C                   PARM      '*FILE'       ObjectType        8                        MD061690
+     C                   PARM      *blanks       Member           10                        MD061690
+                                                                                            MD061690
+      ** If it does, check its dependency                                                   MD061690
+     C                   IF        ExistYN = 'Exist     '                                   MD061690
+                                                                                            MD061690
+     C                   If        LAYER = '*GLOBAL'                                        MD061690
+     C/exec SQL                                                                             MD061690
+     C+ select count(*) into :TotalDel from UPGLOGPD                                        MD061690
+     C+ where WFILE in (select DBFFIL  from QADBFDEP                                        MD061690
+     C+ where DBFFDP = :WFILE  and DBFLDP = :C_LIB)                                         MD061690
+     C/end-exec                                                                             MD061690
+     C                   else                                                               MD061690
+     C/exec SQL                                                                             MD061690
+     C+ select count(*) into :TotalDel from UPZLOGPD                                        MD061690
+     C+ where WFILE in (select DBFFIL  from QADBFDEP                                        MD061690
+     C+ where DBFFDP = :WFILE  and DBFLDP = :C_LIB)                                         MD061690
+     C/end-exec                                                                             MD061690
+     C                   Endif                                                              MD061690
+                                                                                            MD061690
+      ** If none of the dependencies are found, do not ignore                               MD061690
+     C                   If        TotalDel = 0                                             MD061690
+     C                   eval      IGNORE = 'N'                                             MD061690
+     C                   Endif                                                              MD061690
+     C                                                                                      MD061690
+     C                   ENDIF                                                              MD061690
+                                                                                            MD061690
+     C                   ENDSR                                                              MD061690
+      *                                                                                     MD061690
+      ********************************************************************                  MD061690
       /EJECT
       *****************************************************************
       *                                                               *

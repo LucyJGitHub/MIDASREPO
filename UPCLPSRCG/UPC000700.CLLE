@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD061274           Date 09May23              */
-/*       Prev Amend No. MD060877           Date 01Jan23              */
+/*       Last Amend No. MD061461           Date 01Jun23              */
+/*       Prev Amend No. MD061274           Date 09May23              */
+/*                      MD060877           Date 01Jan23              */
 /*                      MD060910           Date 11Jan23              */
 /*                      MD060813           Date 08Dec22              */
 /*                      MD060352           Date 22Aug22              */
@@ -89,6 +90,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061461 - Include BTD and XTD update                       */
 /*       MD061274 - Deliverable Data Split for SDARRTTD              */
 /*       MD060877 - Deliverable Data Split for SMRLSLPD and SMBFPRTD */
 /*       MD060910 - TABLEV4 data take-on not done as file is not     */
@@ -199,6 +201,14 @@
 
 /* Find out where the current deliverable data file is. */
              RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&OLDLIB)
+                                                                                        /*MD061461*/
+/* If BTD call UP000719 */                                                              /*MD061461*/
+             IF         COND(%SUBSTRING(&FILE 6 3) *EQ 'BTD') +
+                          THEN(DO)                                                      /*MD061461*/
+             CALL       PGM(UP000719) PARM(&ERROR &FILE &NEWLIB &OLDLIB)                /*MD061461*/
+             IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)                  /*MD061461*/
+             GOTO CMDLBL(END)                                                           /*MD061461*/
+             ENDDO                                                                      /*MD061641*/
                                                                                         /*MD060488*/
 /* Reset flag for when UTMNUCTD is updated                                              /*MD060488*/
                                                                                         /*MD060488*/
@@ -4275,7 +4285,7 @@
              CALL       PGM(UP000703) PARM(&ERROR &FILE +
                           &OLDLIB 'SDARRTTD')                                           /*MD061274*/
              IF         COND(&ERROR = '*Error   ') THEN(GOTO ABNOR)                     /*MD061274*/
-             ENDDO                                                                      /*MD061274*/                                                                                       
+             ENDDO                                                                      /*MD061274*/
              ENDDO                                                                      /*MD054560*/
                                                                                         /*MD054955*/
 /* If No Display Condition fields */                                                    /*MD056564*/

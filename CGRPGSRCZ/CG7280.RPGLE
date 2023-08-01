@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR869511A          Date 24Nov11               *
+      *  Last Amend No. AR1076807          Date 26Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR869511A          Date 24Nov11               *
       *                 AR869511           Date 23Nov11               *
       *                 AR847818           Date 26Apr13               *
       *                 CLE148             Date 23Jul12               *
@@ -21,6 +22,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1076807 - Various errors in german feature CER042. Wrong   *
+      *              interest is computed when DR Cap date <> CR Cap  *
+      *              date. (Child: AR1076808)                         *
+      *              Applied for MD60847                              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR869511A- Wrong details extracted for some accounts         *
       *             (Child:AR869512)                                  *
@@ -67,6 +72,13 @@
       ** Data structure to allow passed alpha field credit interest
      D @DCINA          DS
      D  @DCINN                 1      9P 0
+                                                                                           AR1076807
+      ** Data structure for aditional parameters                                           AR1076807
+     D @DRCR           DS                                                                  AR1076807
+     D  @SDICI                 1      1A                                                   AR1076807
+     D  @SCICI                 2      2A                                                   AR1076807
+     D  @DAIC                  3     11P 0                                                 AR1076807
+     D  @CAIC                 12     20P 0                                                 AR1076807
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -122,6 +134,7 @@
      C                   PARM                    @PCINA
      C                   PARM                    @PFRLS
      C                   PARM                    @PRTCD
+     C                   PARM                    @DRCR                                     AR1076807
  
       ** Short key list for the retail history file
      C     @HSKEY        KLIST
@@ -227,6 +240,7 @@
      C     @HSKEY        READE     REHISDL                                89
  
       ** Store the initial read of the values for comparrison
+     C     *IN89         IFEQ      '0'                                                     AR1076807
      C                   Z-ADD     HISD          @OHISD
      C                   Z-SUB     HISB          @OHISB
      C                   Z-ADD     DRIR          @ODRIR
@@ -260,9 +274,20 @@
       ** Calculate the number of days
      C     @PINTD        SUB       @OHISD        Z6DAYS
      C                   Z-ADD     @ODRIR        Z6RATE
+      *                                                                                    AR1076807
+      ** If Credit Cap date <> Debit Cap date, calculate difference                        AR1076807
+      ** between calculated and accrued from file                                          AR1076807
+      *                                                                                    AR1076807
+     C     @SCICI        IFNE      ' '                                                     AR1076807
+     C     @SDICI        ANDEQ     ' '                                                     AR1076807
+     C     @DEBI         ANDEQ     0                                                       AR1076807
+     C     @DAIC         SUB       @DDINN        Z6INTA                                    AR1076807
+     C                   ELSE                                                              AR1076807
  
       ** Calculate the difference between vcalculated and posted int.
      C     @DEBI         SUB       @DDINN        Z6INTA
+     C                   ENDIF                                                             AR1076807
+      *                                                                                    AR1076807
      C                   Z-ADD     @DEBI         @DDINN
  
       ** Set the manual adjustment flag to no
@@ -283,9 +308,20 @@
       ** Calculate the number of days
      C     @PINTD        SUB       @OHISD        Z6DAYS
      C                   Z-ADD     @OCRIR        Z6RATE
+      *                                                                                    AR1076807
+      ** If Credit Cap date <> Debit Cap date, calculate difference                        AR1076807
+      ** between calculated and accrued from file                                          AR1076807
+      *                                                                                    AR1076807
+     C     @SDICI        IFNE      ' '                                                     AR1076807
+     C     @SCICI        ANDEQ     ' '                                                     AR1076807
+     C     @CREI         ANDEQ     0                                                       AR1076807
+     C     @CAIC         SUB       @DCINN        Z6INTA                                    AR1076807
+     C                   ELSE                                                              AR1076807
  
       ** Calculate the difference between vcalculated and posted int.
      C     @CREI         SUB       @DCINN        Z6INTA
+     C                   ENDIF                                                             AR1076807
+      *                                                                                    AR1076807
      C                   Z-ADD     @CREI         @DCINN
  
       ** Set the manual adjustment flag to no
@@ -299,6 +335,7 @@
       ** Move the net interest to the parameter field
      C                   MOVE      @DDINA        @PDINA
      C                   MOVE      @DCINA        @PCINA
+     C                   ENDIF                                                             AR1076807
  
      C                   ENDSR
       *****************************************************************
@@ -365,21 +402,26 @@
       ***Calculate*the*number*of*days**********************************                     AR869511
      C*****HISD*         SUB       @OHISD        Z6DAYS                                     AR869511
  
+      ** Move the details to the file fields                                               AR1076807
+     C                   Z-ADD     @OHISD        Z6MOVD                                    AR1076807
+     C                   Z-ADD     @OHISB        Z6ABAL                                    AR1076807
+     C     HISD          SUB       @OHISD        Z6DAYS                                    AR1076807
+      *                                                                                    AR1076807
       ** Only do debit interest if not debit interest capitalisation
      C     PDID          IFNE      HISD
-                                                                                            AR869511
-      ** Move the details to the file fields                                                AR869511
-     C                   Z-ADD     @OHISD        Z6MOVD                                    AR869511A
-     C                   Z-ADD     @OHISB        Z6ABAL                                    AR869511A
-     C     HISD          SUB       @OHISD        Z6DAYS                                    AR869511A
-                                                                                           AR869511A
-      ** Use current details if initial read of record                                     AR869511A
-     C                   IF        @INIT = 0                                               AR869511A
-     C                   Z-ADD     PDID          Z6MOVD                                     AR869511
-     C     HISD          SUB       PDID          Z6DAYS                                     AR869511
-     C     HISB          SUB       DMVT          Z6ABAL                                     AR869511
-     C                   Z-SUB     Z6ABAL        Z6ABAL                                     AR869511
-     C                   ENDIF                                                             AR869511A
+      *****************************************************************           AR869511 AR1076807
+      ***Move*the*details*to*the*file*fields***************************           AR869511 AR1076807
+     C**********         Z-ADD     @OHISD        Z6MOVD                          AR869511A AR1076807
+     C**********         Z-ADD     @OHISB        Z6ABAL                          AR869511A AR1076807
+     C*****HISD*         SUB       @OHISD        Z6DAYS                          AR869511A AR1076807
+                                                                                 AR869511A AR1076807
+      ** Use current details if initial read of record                           AR869511A AR1076807
+     C**********         IF        @INIT = 0                                     AR869511A AR1076807
+     C**********         Z-ADD     PDID          Z6MOVD                           AR869511 AR1076807
+     C*****HISD*         SUB       PDID          Z6DAYS                           AR869511 AR1076807
+     C*****HISB*         SUB       DMVT          Z6ABAL                           AR869511 AR1076807
+     C**********         Z-SUB     Z6ABAL        Z6ABAL                           AR869511 AR1076807
+     C**********         ENDIF                                                   AR869511A AR1076807
  
       ** Calculate the changed debit interest
      C                   Z-SUB     DAID          Z6INTA
@@ -400,10 +442,11 @@
      C                   MOVE      'N'           Z6MANA
  
      C                   IF        Z6INTA <> 0                                              AR847818
+     C                             AND Z6DAYS <> 0                                         AR1076807
      C                   WRITE     CGISDDD0
      C                   ENDIF                                                              AR847818
  
-      ***Store*the*old*amounts*for*comparrison*************************                     AR865055
+      ***Store*the*old*amounts*for*comparrison************************                      AR865055
      C**********         Z-ADD     HISD          @OHISD                                     AR865055
      C**********         Z-ADD     DRIR          @ODRIR                                     AR865055
      C**********         Z-ADD     CRIR          @OCRIR                                     AR865055
@@ -435,6 +478,7 @@
      C                   MOVE      'N'           Z6MANA
  
      C                   IF        Z6INTA <> 0                                              AR847818
+     C                             AND Z6DAYS <> 0                                         AR1076807
      C                   WRITE     CGISDDD0
      C                   ENDIF                                                              AR847818
  

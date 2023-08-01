@@ -15,13 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061533           Date 27Jun23               *
-      *  Prev Amend No. MD061361           Date 04May23               *
+      *  Last Amend No. MD061632           Date 13Jul23               *
+      *  Prev Amend No. MD061533           Date 27Jun23               *
+      *                 MD061361           Date 04May23               *
       *                 MD060396           Date 20Sep22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061632 - *U library for client package can be either core  *
+      *             or client                                         *      
       *  MD061533 - Amendments to INSP screen and process             *
       *  MD061361 - Correct package name when calling PGM             *
       *  MD060396 - Only X should be used to select layers            *
@@ -102,6 +105,7 @@
      D etc             S              3
      D LIBP            S             10                                                     MD061533
      D RTN             S             10                                                     MD061533
+     D LIBU            S             10A                                                    MD061632
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
 
@@ -930,7 +934,9 @@
      C                   ENDIF
 
       * *U
+      * Check first using core package                                                      MD061632
      C                   eval      LibName = XPACK + 'U'
+     C                   EVAL      LIBU = LibName                                           MD061632
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD           10
      C                   PARM      LibName       P2OBNM           10
@@ -938,6 +944,17 @@
      C                   PARM      '*LIB'        P2OBTP            8
      C                   PARM      *blanks       CHKMBR           10
       *
+      * If libary does not exist, check with client package                                 MD061632
+     C     RTNCOD        IFNE      'Exist'                                                  MD061632
+     C                   eval      LibName = XPACK2 + 'U'                                   MD061632
+     C                   EVAL      LIBU = LibName                                           MD061632
+     C                   CALL      'UTCHKOBJ'                                               MD061632
+     C                   PARM      *BLANK        RTNCOD           10                        MD061632
+     C                   PARM      LibName       P2OBNM           10                        MD061632
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061632
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061632
+     C                   PARM      *blanks       CHKMBR           10                        MD061632
+                                                                                            MD061632
       * If libary does not exist, send message
      C     RTNCOD        IFNE      'Exist'
      C                   seton                                        30
@@ -947,6 +964,7 @@
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
      C                   ENDIF
+     C                   ENDIF                                                              MD061632
 
       * *D
      C                   If        XCUM = 'Y'
@@ -1152,7 +1170,8 @@
 
      C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +
      C                             '/GPSVLXTD set GIVAL = ' + '''' +
-     C                             XPACK + 'U' + '''' + ' where GISVAL = ' +
+     C**********                   XPACK + 'U' + '''' + ' where GISVAL = ' +                MD061632
+     C                             LIBU        + '''' + ' where GISVAL = ' +                MD061632
      C                             '''' + 'BrgDeliveredSrcLib' + ''''
 
      C/EXEC SQL
@@ -1248,7 +1267,8 @@
 
      C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +
      C                             '/SDSVLXTD set GIVAL = ' + '''' +
-     C                             XPACK + 'U' + '''' + ' where GISVAL = ' +
+     C**********                   XPACK + 'U' + '''' + ' where GISVAL = ' +                MD061632
+     C                             LIBU        + '''' + ' where GISVAL = ' +                MD061632
      C                             '''' + 'BrgDeliveredSrcLib' + ''''
 
      C/EXEC SQL

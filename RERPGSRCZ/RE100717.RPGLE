@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR857262           Date 01Aug23               *
-      *  Prev Amend No. MD048582           Date 25Jul23               *
+      *  Last Amend No. AR857251           Date 01Aug23               *
+      *  Prev Amend No. AR857262           Date 01Aug23               *
+      *                 MD048582           Date 25Jul23               *
       *                 AR857272           Date 25Jul23               *
       *                 MD046248           Date 27Oct17               *
       *                 AR676213           Date 19Nov10               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR857251 - Apply 235715.  Always delete accrual even if      *
+      *             SUB ON.  (Child: AR857252)                        *
+      *           - Applied for MD-48585.                             *
       *  AR857262 - Do not delete accrual postings for off balance    *
       *             top accounts                                      *
       *           - When moving postings between accounts,            *
@@ -529,9 +533,9 @@
      C     CLCCAT        WHENEQ    'L'
      C                   MOVEL     'DEL*'        R_ACTN
      C     CLCCAT        WHENEQ    'S'
-     C     GDTOPB        IFEQ      'Y'
+     C*****GDTOPB        IFEQ      'Y'                                                      AR857251
      C                   MOVEL     'DEL*'        R_ACTN
-     C                   ENDIF
+     C**********         ENDIF                                                              AR857251
      C                   ENDSL
 
      C                   IF        %SUBST(R_ACTN:1:3) = 'DEL'

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. A1090832           Date 20Feb13              */
+/*       Last Amend No. MD058080           Date 15Jun23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      A1090832           Date 20Feb13              */
 /*                      A1084804           Date 29Jan13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -19,6 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058080 - Deliverable Data Split for SPF                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       A1090832 - Do not duplicate triggers.                       */
 /*       A1084804 - Ensure user description is brought across.       */
@@ -30,7 +32,7 @@
 /**********               &MITEMDD)                                                  */ /*A1084804*/
              PGM        PARM(&USRP &FMSYS &TOSYS &RTNCOD &RUSRP +
                           &MITEMDD &USRTXT)                                             /*A1084804*/
- 
+
              DCL        VAR(&USRP) TYPE(*CHAR) LEN(10)
              DCL        VAR(&FMSYS) TYPE(*CHAR) LEN(2)
              DCL        VAR(&TOSYS) TYPE(*CHAR) LEN(2)
@@ -38,24 +40,26 @@
              DCL        VAR(&RUSRP) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MITEMDD) TYPE(*CHAR) LEN(1)
              DCL        VAR(&USRTXT) TYPE(*CHAR) LEN(25)                                /*A1084804*/
- 
+
              DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TDTALIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TDVLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2006')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Set up library names for the PFs and LFs used in this program. */
              CHGVAR     VAR(&FDTALIB) VALUE(&FMSYS *TCAT 'DTALIB')
-             CHGVAR     VAR(&TDTALIB) VALUE(&TOSYS *TCAT 'DTALIB')
+/* As SPF files have been moved to DMLIB... */                                          /*MD058080*/
+/**********  CHGVAR     VAR(&TDTALIB) VALUE(&TOSYS *TCAT 'DTALIB') */                   /*MD058080*/
+             CHGVAR     VAR(&TDTALIB) VALUE(&TOSYS *TCAT 'DMLIB')                       /*MD058080*/
              CHGVAR     VAR(&TDVLIB) VALUE(&TOSYS *TCAT 'DVLIB')
- 
+
 /* Copy old versions of user files to latest format. */
              DLTF       FILE(QTEMP/FMUSERDDQT)
              MONMSG     MSGID(CPF0000)
@@ -117,7 +121,7 @@
                           TOFILE(QTEMP/FMCMPSDDQT) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
- 
+
 /* If the old profile does match the new profile and MITEMDD is being      */
 /*  processed then create copy of MACUB1.  This is used to process MACBRDD */
 /*  keyed.                                                                 */
@@ -158,7 +162,7 @@
                 CRTDUPOBJ  OBJ(MCMPSDD) FROMLIB(&TDTALIB) +
                              OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(MCMPSDDQT)
              ENDDO
- 
+
 /**********  CALL       PGM(SM001071) PARM(&USRP &RUSRP &MITEMDD)                    */ /*A1084804*/
              CALL       PGM(SM001071) PARM(&USRP &RUSRP &MITEMDD +
                           &USRTXT)                                                      /*A1084804*/
@@ -171,7 +175,7 @@
                 CALL       PGM(SCC0010) PARM('SM001071' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* If the old profile does not match the new profile then copy temporary */
 /*  versions to the "to" database.                                       */
              IF         COND(&USRP *NE &RUSRP) THEN(DO)
@@ -190,11 +194,11 @@
                 CPYF       FROMFILE(QTEMP/MCMPSDDQT) +
                              TOFILE(&TDTALIB/MCMPSDD) MBROPT(*ADD)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 ENDPGM:
              ENDPGM

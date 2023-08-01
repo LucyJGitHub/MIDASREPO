@@ -76,7 +76,7 @@
       *
       ** Parameters for the QMQM calls.
       *
-     D*** CID             S              9P 0
+     D*** CID             S              9P 0                                               MD041126
      D*** HCONN           S              9P 0                                               MD041126
      D*** HOBJ            S              9P 0                                               MD041126
      D*** BUFLEN          S              9P 0                                               MD041126

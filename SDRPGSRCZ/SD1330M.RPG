@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026184           Date 19Aug14               *
+      *  Last Amend No. 255007             Date 03Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026184           Date 19Aug14               *
       *                 AR1021136          Date 24Apr13               *
       *                 CLE148             Date 23Jul12               *
       *                 CSC043             Date 18Jun10               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255007 - Do not reset the Next Available Loan No.(#1NALN)    *
+      *           when Last Loan in Range is amended. Applied for     *
+      *           AR853695. (Child: AR853696)                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026184 -  Next available loan number is out of range       *
       *           -  Change the error message to a warning message    *
@@ -1530,15 +1534,15 @@
      C                     MOVE WUZASF    #RFLSF
      C*
      C                     MOVE WUZAFF    #1FRAN           First Loan No.
-      *                                                                                       193890
-      ** If first loan in range was amended, next available loan no.                          193890
-      ** should be updated to be equal to the amended first loan in                           193890
-      ** range.                                                                               193890
-      *                                                                                       193890
+      **********                                                                       193890 255007
+      ***If*first*loan*in*range*was*amended,*next*available*loan*no.***                193890 255007
+      ***should*be*updated*to*be*equal*to*the*amended*first*loan*in****                193890 255007
+      ** range.********************************************************                193890 255007
+      **********                                                                       193890 255007
      C********** F9FRAN    IFNE #1FRAN                                                 193890 CLE148
-     C           F9FRAA    IFNE #1FRAN                                                        CLE148
-     C                     MOVE WUZAFF    #1NALN                                              193890
-     C                     ENDIF                                                              193890
+     C********** F9FRAA    IFNE #1FRAN                                                 193890 255007
+     C**********           MOVE WUZAFF    #1NALN                                       193890 255007
+     C**********           ENDIF                                                       193890 255007
      C                     END                             *FI
      C                     END                             *FI
       * Last Loan in Range Validation
@@ -1836,6 +1840,21 @@
      C                     END                             *FI
      C                     END                             *FI
      C                     END                             *FI
+      *                                                                                       255007
+      ** If first loan in range was amended, next available loan no.                          255007
+      ** should be updated to be equal to the amended first loan in                           255007
+      ** range.                                                                               255007
+      *                                                                                       255007
+     C                     MOVEL#1RGNB    F9RGNB                                              255007
+     C           KLCHSG    CHAIN@LENOL0              44                                       255007
+      *                                                                                       255007
+     C           *IN44     IFEQ '0'                                                           255007
+     C           *IN98     ANDEQ'0'                                                           255007
+     C           F9FRAA    IFNE #1FRAN                                                        255007
+     C                     MOVEL#1FRAN    #1NALN                                              255007
+     C                     ENDIF                                                              255007
+     C                     ENDIF                                                              255007
+      *                                                                                       255007
       * CASE: PGM.*Program mode is *CHANGE
      C           W0PMD     IFEQ 'CHG'                      *IF
       * CASE: RCD.Last Loan No. in Range LT RCD.Next Available Loan No.
@@ -1854,6 +1873,7 @@
      C                     END                             *FI
       * CASE: WRK.save first deal workfield EQ RCD.Next Available Loan No
      C           WUSFDW    IFEQ #1NALN                     *IF
+     C           *IN98     ANDEQ'0'                                                           255007
      C**********           Z-ADD#1FRAN    #1NALN           Next Available                     CLE148
      C                     MOVEL#1FRAN    #1NALN                                              CLE148
      C                     END                             *FI

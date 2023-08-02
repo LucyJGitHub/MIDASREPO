@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW101             Date 03Feb23               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. CMG011             Date 27Jul23               *
+      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *                 MD058830           Date 01Oct21               *
       *                 CGL094             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR898442           Date 24Feb12               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG011 - CGL013 field 25 (exclude IBAN in account ID)        *
       *  CSW101 - PayPlus Interface.                                  *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CGL094 - Allow External Destination for MT940 Message.       *
@@ -562,6 +564,7 @@
      D CGL094          S              1    INZ('N')                                           CGL094
      D P@NWRK          S              6A                                        Network Code  CGL094
      D P@SARD          S              6A                                        Feature       CGL094
+     D CMG011          S              1    INZ('N')                                           CMG011
       *                                                                                       CER030
      D                 DS
      D  KNwrk                  1      6
@@ -944,6 +947,7 @@
      C                   Eval      ACFMTPGM =  'MGFLD25'                                      CMG006
      C                   Exsr      ACNTFMT                                                    CMG006
      C                   When      MGIBAN <> *Blank
+     C                             and CMG011 = 'N'                                           CMG011
      C                   Movel     MGIBAN        WAccount
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        WAccount
@@ -3875,6 +3879,18 @@
      C     P@RTCD        IFEQ      *BLANKS                                                    CGL094
      C                   MOVE      'Y'           CGL094                                       CGL094
      C                   ENDIF                                                                CGL094
+      *                                                                                       CMG011
+      ** Check if feature CMG011 is enabled                                                   CMG011
+      *                                                                                       CMG011
+     C                   CALL      'AOSARDR0'                                                 CMG011
+     C                   PARM      *BLANKS       P@RTCD                                       CMG011
+     C                   PARM      '*KEY   '     P@OPTN                                       CMG011
+     C                   PARM      'CMG011'      P@SARD                                       CMG011
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG011
+      *                                                                                       CMG011
+     C     P@RTCD        IFEQ      *BLANKS                                                    CMG011
+     C                   MOVE      'Y'           CMG011                                       CMG011
+     C                   ENDIF                                                                CMG011
       *
       **  Convert history retention date to YYMMDD
       *

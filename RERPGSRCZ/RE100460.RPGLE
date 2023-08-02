@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059561           Date 21Feb22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061459           Date 08Jun23               *
+      *  Prev Amend No. MD059561           Date 21Feb22               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061459 - Account ID always displayed as invalid            *
+      *             on hierarchy enquiry (after F10).                 *
+      *             Use DSSDY instead of DSFDY as data structure      *
+      *             passed to AOACODR0.                               *
       *  MD059561 - Manual sweeps are failing with decimal data error *
       *             in field I_CCUS.                                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -899,7 +904,8 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C**********         PARM      DDACOD        @ACOD             4                          CGL029
      C                   PARM      DDACOD        @ACOD            10                          CGL029
-     C     SDACOD        PARM      SDACOD        DSFDY
+     C*****SDACOD        PARM      SDACOD        DSFDY                                      MD061459
+     C     SDACOD        PARM      SDACOD        DSSDY                                      MD061459
 
       * 'Invalid Account Code'
 

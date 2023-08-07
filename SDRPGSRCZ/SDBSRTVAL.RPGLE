@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 25May23               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. AR543969           Date 27Jul23               *
+      *  Prev Amend No. MD060620           Date 25May23               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057746           Date 18Mar21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR543969 - Date cannot be before back value date             *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *           - Applied fix for MD-61250.                         *
       *  MD059368 - Inhibit LIBOR fields if feature CSD103 is         *
@@ -167,6 +169,7 @@
      D AlphaBSRC       C                   Const('AlphaBaseRateCode')                         CSD103
      D Uppercase       C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                       CSD103
      D Numbers         C                   '0123456789'                                       CSD103
+     D DefaultVal      C                   Const('DefaultValDateInBSRT')                    AR543969
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -861,6 +864,20 @@
 
       * Value Date must be after the back value Date
      C                   WHEN      WVDNR  <  WBVRD
+      * Default value date with back value date                                             AR543969
+     C                   IF        WDefVal = 'Y'                                            AR543969
+     C                   Z-ADD     WBVRD         WVDNR                                      AR543969
+     C                   Z-ADD     WVDNR         BVVDNR                                     AR543969
+     C                   Z-ADD     BVVDNR        BVVDRC                                     AR543969
+     C                   Z-ADD     WBVRD         ZDAYNO                                     AR543969
+     C                   CALLB     'ZDATE2'                                                 AR543969
+     C                   PARM                    ZDAYNO                                     AR543969
+     C                   PARM                    BJDFIN                                     AR543969
+     C                   PARM                    ZDATE                                      AR543969
+     C                   PARM                    ZADATE                                     AR543969
+     C                   MOVEL     *BLANKS       DDVDNR                                     AR543969
+     C                   MOVEL     ZDATE         DDVDNR                                     AR543969
+     C                   ELSE                                                               AR543969
      C                   Z-ADD     WBVRD         ZDAYNO
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
@@ -876,6 +893,7 @@
      C                   EVAL      MsgDtaXAr(Ix) = LenStr + %Trim(MsgDtaTmp)                MD000091
      C                   MOVEL     'DDVDNR'      FldNamXAr(Ix)
      C                   MOVEL     'USR4444'     MsgIdXAr(Ix)
+     C                   ENDIF                                                              AR543969
      C**********         MOVEL     'N'           WFLAG1                              210546 BUG26041
 
       * Value Date cannot be after today's date
@@ -1363,7 +1381,8 @@
      C                   PARM      *BLANKS       @RTCD                                        CSD103
      C                   PARM      AlphaBSRC     PSysVal01        20                          CSD103
      C                   PARM      *BLANKS       PCurSet01       200                          CSD103
-     C                   PARM      *BLANKS       PSysVal02        20                          CSD103
+     C**********         PARM      *BLANKS       PSysVal02        20                 CSD103 AR543969
+     C                   PARM      DefaultVal    PSysVal02        20                        AR543969
      C                   PARM      *BLANKS       PCurSet02       200                          CSD103
      C                   PARM      *BLANKS       PSysVal03        20                          CSD103
      C                   PARM      *BLANKS       PCurSet03       200                          CSD103
@@ -1384,8 +1403,10 @@
       * If the system value is not found then default value to 'N'                            CSD103
      C     @RTCD         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      'N'           AlphaCode         1                          CSD103
+     C                   MOVE      'N'           WDefVal           1                        AR543969
      C                   ELSE                                                                 CSD103
      C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
+     C                   MOVEL     PCurSet02     WDefVal                                    AR543969
      C                   ENDIF                                                                CSD103
 
       ** Program, module and procedure names for database error processing.

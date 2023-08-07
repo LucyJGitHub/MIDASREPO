@@ -14,12 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG23742 *CREATE   Date 09May09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Add parameters to MG001901 call.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23742 - Improper handling of Ext Narr from Batch          *
@@ -168,6 +171,11 @@
       *
      D WIdx            S              2S 0
       *
+     D PPNarr          S             30A                                                      BA6026
+     D PNaty           S              1A                                                      BA6026
+     D PDstn           S             11A                                                      BA6026
+     D PPNar2          S             30A                                                      BA6026
+      *                                                                                       BA6026
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -253,6 +261,9 @@
      C                   PARM                    PAcsq
      C                   PARM                    PDCInd
      C                   PARM                    PTranTp
+     C                   PARM                    PPNarr                                       BA6026
+     C                   PARM                    PNaty                                        BA6026
+     C                   PARM                    PDstn                                        BA6026
       *
       ** Extended Narratives of length 22 * 35
       *
@@ -290,6 +301,7 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
+     C                   PARM                    PPNar2                                       BA6026
       *
       *
      C                   ENDSR

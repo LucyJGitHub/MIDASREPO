@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 223783             Date 28May12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD023885           Date 02Dec13               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
+      *           Include GSH026                                      *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -62,6 +65,10 @@
      FGLPOSTL0  UF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages.
 
+     FA6NW94L1  UF   E           K DISK                   INFSR(*PSSR)                        BA6026
+     F                                     RENAME(A6NW94D0:A6NW94D1)                          BA6026
+      ** Midas GL Network Accounts - MT94x Extension Update                                   BA6026
+      *                                                                                       BA6026
      F/COPY OFCPYSRCZ,CGL146_135                                                            MD023885
       *========================================================================*
       *                                                                        *
@@ -379,6 +386,12 @@
       ** Delete physically the Network Account.
 
      C                   Delete    GLNW94D0
+      *                                                                                      BA6026
+      ** Include physical delete of Network Account - Extension File.                        BA6026
+      *                                                                                      BA6026
+     C                   If        BA6026 = 'Y'                                              BA6026
+     C                   Exsr      DelGLNwExt                                                BA6026
+     C                   EndIf                                                               BA6026
 
       ** If the Network Account has been modified today.
 
@@ -638,6 +651,19 @@
 
       *    --------      -----
      C     @RmvRqst      ENDSR
+      *                                                                                      BA6026
+      *================================================================                      BA6026
+      * DelGLNwExt: Delete GL Network Accounts - Extension File       *                      BA6026
+      *----------------------------------------------------------------                      BA6026
+      *                                                                                      BA6026
+     C     DelGLNwExt    BEGSR                                                               BA6026
+      *                                                                                      BA6026
+     C     KA6NW94L1     Chain     A6NW94D1                           98                     BA6026
+     C                   If        *IN98 = *Off                                              BA6026
+     C                   Delete    A6NW94D1                                                  BA6026
+     C                   EndIf                                                               BA6026
+      *
+     C                   ENDSR
 
       *========================================================================*
       * *INZSR    : Init Processing                                            *
@@ -676,7 +702,41 @@
      C                   KFLD                    KeyDSTN                        Destination
      C                   KFLD                    KeyMTPY                        Message Type
      C/COPY OFCPYSRCZ,CGL146_138                                                            MD023885
-
+      *                                                                                       BA6026
+      ** Key lists                                                                            BA6026
+      *                                                                                       BA6026
+     C     KA6NW94L1     KLIST                                                                BA6026
+     C                   KFLD                    NwAcNWRK                                     BA6026
+     C                   KFLD                    NwAcBRCH                                     BA6026
+     C                   KFLD                    NwAcCNUM                                     BA6026
+     C                   KFLD                    NwAcCCY                                      BA6026
+     C                   KFLD                    NwAcACOD                                     BA6026
+     C                   KFLD                    NwAcACSQ                                     BA6026
+     C                   KFLD                    NwAcNATY                                     BA6026
+     C                   KFLD                    NwAcDSTN                                     BA6026
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *BLANKS       WRTCD             7                          BA6026
+     C                   Parm      '*VERIFY'     WOPTN             7                          BA6026
+     C                   Parm      'BA6026'      WSARD             6                          BA6026
+     C                   Parm                    DSFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+     C                   When      WRTCD=*BLANKS                                              BA6026
+     C                   Move      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C                   When      WRTCD='*NRF   '                                            BA6026
+     C                   Move      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   Other                                                                BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  001                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   EndSl                                                                BA6026
+      *                                                                                       BA6026
       *    ------        -----
      C     @INZSR        ENDSR
 

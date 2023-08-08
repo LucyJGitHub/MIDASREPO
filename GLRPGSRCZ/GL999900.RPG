@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD013193           Date 09Mar21               *
+      *  Last Amend No. MD058445           Date 02Aug23               *
+      *  Prev Amend No. MD056343           Date 02Aug23               *
+      *                 MD053240           Date 02Aug23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD013193           Date 09Mar21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041820           Date 04Oct16               *
       *                 MD038186           Date 07Apr14               *
@@ -41,6 +44,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058445 - The file GLHIBLPD contains zero dates after ATU.  *
+      *             Amended DS to avoid overwrite                     *
+      *  MD056343 - Duplicate records are created in GLHIBLPD by the  *
+      *             Account Transfer utility.                         *
+      *           - Use GLHBCGPD in assigning values in GLHIBLPD for  *
+      *             OTTP and ASOC fields.                             *
+      *  MD053240 - Imbalance between ACCNTAB and GLHIBLPD. Update    *
+      *             Closign Balance for every ATU posting.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD013193 - Account Transfer Utility error in ACCNTAC update  *
@@ -115,6 +126,17 @@
      F                                              KCOMIT                                  BUG27442
       * Midas GL Accounts Master Extension File                                             BUG27442
       *                                                                                     BUG27442
+     FGLHBCGL0UF  E           K        DISK         KINFSR *PSSR                            MD053240
+     F                                              KCOMIT                                  MD053240
+      ** Historic Balance Control group                                                     MD053240
+      *                                                                                     MD053240
+     FGLHIBLL0UF  E           K        DISK         KINFSR *PSSR A    UC                    MD053240
+     F                                              KCOMIT                                  MD053240
+      ** Midas MC historic Balances                                                         MD053240
+      *                                                                                     MD053240
+     FGLPERDL1IF  E           K        DISK                                                 MD053240
+      ** Period details                                                                     MD053240
+      *                                                                                     MD053240
      E/EJECT
      E                    CPY@    1   1 80
       *
@@ -124,6 +146,13 @@
       *
      I/EJECT
       *
+     IACCNTACF                                                                              MD053240
+      *                                                                                     MD053240
+     I              CNUM                            CNUMC                                   MD053240
+     I              CCY                             CCYC                                    MD053240
+     I              ACOD                            ACODC                                   MD053240
+     I              ACSQ                            ACSQC                                   MD053240
+     I              BRCA                            BRCAC                                   MD053240
      ILDA       E DSLDA                         256
       *
       ** Local data area for database error details
@@ -198,6 +227,16 @@
      I                                       18  19 SEC                                     BUG27421
      I                                       21  23 MILSEC                                  BUG27421
      I                                       24  26 MICSEC                                  BUG27421
+      *                                                                                     MD053240
+     IOVRHBL      DS                                                                        MD053240
+     I I            'OVRDBF FILE(GLHIBLL0-    1  26 OVR1                                    MD053240
+     I              ') MBR('                                                                MD053240
+     I                                       27  28 OVR2                                    MD053240
+     I I            ')'                      29  29 OVR3                                    MD053240
+     IDLTHBL      DS                                                                        MD053240
+     I I            'DLTOVR FILE(GLHIBLL0-    1  21 OVR4                                    MD053240
+     I              ')'                                                                     MD053240
+      *                                                                                     MD053240
      ID@ACOD    E DSSDACODPD
       *
       ** Account Codes DS for assigning data from Access
@@ -207,6 +246,7 @@
       *
       ** Long Data Structure for Incoming Data from Access Program
       *
+     IDSFDY     E DSDSFDY                                                                   MD053240
      IDSSDY     E DSDSSDY                                                                     238259
       ** Second Data Structure for Access Programs, long data structure                       238259
       *                                                                                       238259
@@ -218,6 +258,18 @@
       *
       **  Branch Codes
       *
+     ISCSARD    E DSSCSARDPD                                                                MD053240
+      ** Switcheable feature                                                                MD053240
+      *                                                                                     MD053240
+     ISDPCAC    E DSSDPCACPD                                                                MD053240
+     I              QQFNIC                          FNICQQ                                  MD053240
+     I              QQFNAA                          FNAAQQ                                  MD053240
+      **  PCA Details                                                                       MD053240
+      *                                                                                     MD053240
+     IGLHBCG    E DSGLHBCGPD                                                                MD053240
+      **  Historic Balance Control Groups                                                   MD053240
+      *                                                                                     MD053240
+     I            DS                                                                        MD058445
       **  Hash totalling fields
      I                                        1  153ZZAMT
      I                                       16  300ZZAMTI
@@ -463,6 +515,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Entry 2
       *
@@ -481,6 +534,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Entry 3
       *
@@ -501,6 +555,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Entry 4
       *
@@ -519,6 +574,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Calculate trailer
       *
@@ -561,6 +617,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Entry 2
       *
@@ -579,6 +636,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
      C           DSFBRC    IFNE DSTBRC
       *
@@ -599,6 +657,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Entry 4
       *
@@ -617,6 +676,7 @@
      C                     Z-ADDBJRDNB    VALD
      C                     WRITEAPOSTPDF
      C                     EXSR ACCUPD                                                        238259
+     C                     EXSR HBLUPD                                                      MD053240
       *
       ** Calculate trailer
       *
@@ -1330,6 +1390,158 @@
      C                     ENDSR                                                              238259
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD053240
+      *                                                               *                     MD053240
+      *  HBLUPD - Update GLHIBLPD for the posting                     *                     MD053240
+      *                                                               *                     MD053240
+      *  Called By:                                                   *                     MD053240
+      *                                                               *                     MD053240
+      *  Calls:                                                       *                     MD053240
+      *                                                               *                     MD053240
+      *****************************************************************                     MD053240
+     C           HBLUPD    BEGSR                                                            MD053240
+      *                                                                                      MD05324
+     C           CMC001    IFEQ 'Y'                                                         MD053240
+      *                                                                                     MD053240
+      * Override GLHIBLPD                                                                   MD053240
+     C                     MOVELFTPRCG    OVR2                                              MD053240
+     C                     CALL 'QCMDEXC'                                                   MD053240
+     C                     PARM           OVRHBL                                            MD053240
+     C                     PARM 29        CMDLEN 155                                        MD053240
+      *                                                                                     MD053240
+     C                     MOVELCNUM      XCNUM                                             MD053240
+     C                     MOVELACOD      XACOD                                             MD053240
+     C                     MOVELCCY       XCCY                                              MD053240
+     C                     MOVELACSQ      XACSQ                                             MD053240
+     C                     MOVELBRCA      XBRCA                                             MD053240
+     C                     MOVELFTPRCG    XCGCD                                             MD053240
+     C                     MOVELPRFC      XPCCD                                             MD053240
+     C           WABPC     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   XPCCD                                             MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELBOKC      XBKCD                                             MD053240
+     C           WABBK     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   XBKCD                                             MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELOTTP      XOTTP                                             MD053240
+     C           WABTT     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   XOTTP                                             MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELTRST      XTSTY                                             MD053240
+     C           WABTS     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   XTSTY                                             MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELASOC      XACNB                                             MD053240
+     C           WASCU     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   XACNB                                             MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELHCCPNB    XXCPNB  6                                         MD053240
+     C           2         SUBSTXXCPNB:1  XPDCT                                             MD053240
+     C           2         SUBSTXXCPNB:3  XPDYR                                             MD053240
+     C           2         SUBSTXXCPNB:5  XPDNY                                             MD053240
+      *                                                                                     MD053240
+     C                     OPEN GLHIBLL0                                                    MD053240
+     C           HBKEY     CHAINGLHIBLL0             05                                     MD053240
+     C           *IN05     IFEQ *OFF                                                        MD053240
+      *                                                                                     MD053240
+     C           DRCR      IFEQ 1                                                           MD053240
+     C                     SUB  PSTA      HBPDCB                                            MD053240
+     C                     ELSE                                                             MD053240
+     C                     ADD  PSTA      HBPDCB                                            MD053240
+     C                     ENDIF                                                            MD053240
+      *                                                                                     MD053240
+     C                     UPDAT@BORED6                                                     MD053240
+     C                     ELSE                                                             MD053240
+     C                     CLEAR@BORED6                                                     MD053240
+     C                     MOVELFTPRCG    HBCGCD                                            MD053240
+     C                     MOVELBRCA      HBBRCD                                            MD053240
+     C                     MOVELCCY       HBCYCD                                            MD053240
+     C                     MOVELCNUM      HBCUST                                            MD053240
+     C                     MOVELACOD      HBACCD                                            MD053240
+     C                     MOVELACSQ      HBACSN                                            MD053240
+     C                     MOVELPRFC      HBPCCD                                            MD053240
+     C           WABPC     IFEQ ' '                                                         MD056343
+     C                     MOVEL*BLANKS   HBPCCD                                            MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELBOKC      HBBKCD                                            MD053240
+     C           WABBK     IFEQ ' '                                                         MD056343
+     C                     MOVEL*BLANKS   HBBKCD                                            MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELOTTP      HBOTTP                                            MD053240
+     C           WABTT     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   HBOTTP                                            MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELTRST      HBTSTY                                            MD053240
+     C           WABTS     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   HBTSTY                                            MD056343
+     C                     ENDIF                                                            MD056343
+     C                     MOVELASOC      HBACNB                                            MD053240
+     C           WASCU     IFEQ ' '                                                         MD056343
+     C                     MOVE *BLANKS   HBACNB                                            MD056343
+     C                     ENDIF                                                            MD056343
+     C           2         SUBSTXXCPNB:1  HBPDCT                                            MD053240
+     C           2         SUBSTXXCPNB:3  HBPDYR                                            MD053240
+     C           2         SUBSTXXCPNB:5  HBPDNY                                            MD053240
+      *                                                                                     MD053240
+     C                     MOVELHCPSTC    KPSTC                                             MD053240
+     C                     MOVELHBPDCT    KPDCT                                             MD053240
+     C                     MOVELHBPDYR    KPDYR                                             MD053240
+     C                     MOVELHBPDNY    KPDNY                                             MD053240
+     C           PRKEY     CHAINGLPERDL1             06                                     MD053240
+     C           *IN06     IFEQ *OFF                                                        MD053240
+     C                     Z-ADDDTSOYD    HBSOYD                                            MD053240
+     C                     Z-ADDDTST1D    HBST1D                                            MD053240
+     C                     Z-ADDDTST2D    HBST2D                                            MD053240
+     C                     Z-ADDDTSPDD    HBSPDD                                            MD053240
+     C                     Z-ADDDTEPDD    HBEPDD                                            MD053240
+     C                     ENDIF                                                            MD053240
+      *                                                                                     MD053240
+     C           DRCR      IFEQ 1                                                           MD053240
+     C                     SUB  PSTA      HBPDOB                                            MD053240
+     C                     SUB  PSTA      HBPDCB                                            MD053240
+     C                     SUB  PSTA      HBPMTD                                            MD053240
+     C                     SUB  PSTA      HBT1MT                                            MD053240
+     C                     SUB  PSTA      HBT2MT                                            MD053240
+     C                     SUB  PSTA      HBYMTD                                            MD053240
+     C                     SUB  PSTA      HBWPBL                                            MD053240
+     C                     SUB  PSTA      HBWT1B                                            MD053240
+     C                     SUB  PSTA      HBWT2B                                            MD053240
+     C                     SUB  PSTA      HBWYBL                                            MD053240
+     C                     ELSE                                                             MD053240
+     C                     ADD  PSTA      HBPDOB                                            MD053240
+     C                     ADD  PSTA      HBPDCB                                            MD053240
+     C                     ADD  PSTA      HBPMTD                                            MD053240
+     C                     ADD  PSTA      HBT1MT                                            MD053240
+     C                     ADD  PSTA      HBT2MT                                            MD053240
+     C                     ADD  PSTA      HBYMTD                                            MD053240
+     C                     ADD  PSTA      HBWPBL                                            MD053240
+     C                     ADD  PSTA      HBWT1B                                            MD053240
+     C                     ADD  PSTA      HBWT2B                                            MD053240
+     C                     ADD  PSTA      HBWYBL                                            MD053240
+     C                     ENDIF                                                            MD053240
+     C                     MOVELACSC      HBACSC                                            MD053240
+     C                     MOVELVALD      HBLMDT                                            MD053240
+     C                     WRITE@BORED6                                                     MD053240
+      *                                                                                     MD053240
+     C                     ENDIF                                                            MD053240
+      * Delete Override                                                                     MD053240
+     C                     CALL 'QCMDEXC'                                                   MD053240
+     C                     PARM           DLTHBL                                            MD053240
+     C                     PARM 21        CMDLEN                                            MD053240
+     C                     CLOSEGLHIBLL0                                                    MD053240
+      *                                                                                     MD053240
+     C           FTPRCG    CHAINGLHBCGL0             07                                     MD053240
+     C           *IN07     IFEQ *OFF                                                        MD053240
+     C                     MOVELPSTD      HCLPDT                                            MD053240
+     C                     MOVE PTIM      HCLPDT                                            MD053240
+     C                     UPDAT@BNREDZ                                                     MD053240
+     C                     ENDIF                                                            MD053240
+     C                     ENDIF                                                            MD053240
+      *                                                                                     MD053240
+     C                     ENDSR                                                            MD053240
+      *                                                                                     MD053240
+      *****************************************************************                     MD053240
+      /EJECT                                                                                MD053240
       *****************************************************************
       *                                                               *
       *  HASH - TO ADD ZZAMT TO HASH TOTALS IN ARRAYS INT & DEC       *
@@ -1465,6 +1677,100 @@
      C                     KFLD           VCCY                                                238259
      C                     KFLD           VACOD                                               238259
      C                     KFLD           VACSQ                                               238259
+      *                                                                                     MD053240
+     C           HBKEY     KLIST                                                            MD053240
+     C                     KFLD           XCGCD   2                                         MD053240
+     C                     KFLD           XBRCA   3                                         MD053240
+     C                     KFLD           XCCY    3                                         MD053240
+     C                     KFLD           XACOD  10                                         MD053240
+     C                     KFLD           XCNUM   6                                         MD053240
+     C                     KFLD           XACSQ   2                                         MD053240
+     C                     KFLD           XPCCD   4                                         MD053240
+     C                     KFLD           XBKCD   2                                         MD053240
+     C                     KFLD           XOTTP  10                                         MD053240
+     C                     KFLD           XTSTY  10                                         MD053240
+     C                     KFLD           XACNB   6                                         MD053240
+     C                     KFLD           XPDCT   2                                         MD053240
+     C                     KFLD           XPDYR   2                                         MD053240
+     C                     KFLD           XPDNY   2                                         MD053240
+      *                                                                                     MD053240
+     C           PRKEY     KLIST                                                            MD053240
+     C                     KFLD           KPSTC   1                                         MD053240
+     C                     KFLD           KPDCT   2                                         MD053240
+     C                     KFLD           KPDYR   2                                         MD053240
+     C                     KFLD           KPDNY   2                                         MD053240
+      *                                                                                     MD053240
+      **  Check if Management Accounts Enhancement for PCA is installed                     MD053240
+      *                                                                                     MD053240
+     C                     MOVE 'N'       CMC001  1                                         MD053240
+     C                     CALL 'AOSARDR0'                                                  MD053240
+     C                     PARM *BLANKS   @RTCD                                             MD053240
+     C                     PARM '*VERIFY' @OPTN                                             MD053240
+     C                     PARM 'CMC001'  @SARN   6                                         MD053240
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD053240
+      *                                                                                     MD053240
+      **  If error in accessing SAR details, issue DB error                                 MD053240
+      *                                                                                     MD053240
+     C           P@RTCD    IFNE *BLANKS                                                     MD053240
+     C           P@RTCD    IFNE '*NRF'                                                      MD053240
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD053240
+     C                     MOVEL'011'     DBASE                                             MD053240
+     C                     MOVEL@SARN     DBKEY                                             MD053240
+     C                     EXSR *PSSR                                                       MD053240
+     C                     ENDIF                                                            MD053240
+     C                     ELSE                                                             MD053240
+     C                     MOVE 'Y'       CMC001                                            MD053240
+     C                     ENDIF                                                            MD053240
+      *                                                                                     MD053240
+      **  If Management Accounts enhancement is installed, access PCA                       MD053240
+      **  details to get 'Prime Mgmt A/C Group'                                             MD053240
+      *                                                                                     MD053240
+     C           CMC001    IFEQ 'Y'                                                         MD053240
+     C                     CALL 'AOPCACR0'                                                  MD053240
+     C                     PARM *BLANKS   @RTCD                                             MD053240
+     C                     PARM '*FIRST ' @OPTN                                             MD053240
+     C           SDPCAC    PARM SDPCAC    DSFDY                                             MD053240
+      *                                                                                     MD053240
+      **  If no PCA details, issue DB error                                                 MD053240
+      *                                                                                     MD053240
+     C           @RTCD     IFNE *BLANKS                                                     MD053240
+     C                     MOVEL'SDPCACPD'DBFILE                                            MD053240
+     C                     MOVEL'012'     DBASE                                             MD053240
+     C                     MOVEL@OPTN     DBKEY                                             MD053240
+     C                     EXSR *PSSR                                                       MD053240
+      *                                                                                     MD053240
+      **  Otherwise, access GLHBCGPD for Analysis Fields using 'Prime                       MD053240
+      **  Mgmt A/C Group'                                                                   MD053240
+      *                                                                                     MD053240
+     C                     ELSE                                                             MD053240
+     C                     MOVE *BLANK    WABPC   1                                         MD056343
+     C                     MOVE *BLANK    WABBK   1                                         MD056343
+     C                     MOVE *BLANK    WABTT   1                                         MD056343
+     C                     MOVE *BLANK    WABTS   1                                         MD056343
+     C                     MOVE *BLANK    WASCU   1                                         MD056343
+     C                     CALL 'AOHBCGR0'                                                  MD053240
+     C                     PARM *BLANKS   @RTCD                                             MD053240
+     C                     PARM '*KEY   ' @OPTN                                             MD053240
+     C                     PARM FTPRCG    @CGCD   2                                         MD053240
+     C           GLHBCG    PARM GLHBCG    DSFDY                                             MD053240
+      *                                                                                     MD053240
+      **  If error in accessing GLHBCGPD besides *NRF, issue DB error                       MD053240
+      *                                                                                     MD053240
+     C           @RTCD     IFNE *BLANKS                                                     MD053240
+     C           @RTCD     IFNE '*NRF'                                                      MD053240
+     C                     MOVEL'GLHBCGPD'DBFILE                                            MD053240
+     C                     MOVEL'013'     DBASE                                             MD053240
+     C                     MOVEL@CGCD     DBKEY                                             MD053240
+     C                     EXSR *PSSR                                                       MD053240
+     C                     ENDIF                                                            MD053240
+     C                     ENDIF                                                            MD053240
+     C                     ENDIF                                                            MD053240
+     C                     MOVE HCABPC    WABPC                                             MD056343
+     C                     MOVE HCABBK    WABBK                                             MD056343
+     C                     MOVE HCABTT    WABTT                                             MD056343
+     C                     MOVE HCABTS    WABTS                                             MD056343
+     C                     MOVE HCASCU    WASCU                                             MD056343
+     C                     ENDIF                                                            MD053240
       *                                                                                     MD038186
      C                     CALL 'AOGELRR1'                                                  MD038186
      C                     PARM '*MSG   ' @RTCD                                             MD038186

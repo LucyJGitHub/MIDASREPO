@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 21Jan19               *
-      *  Prev Amend No. CSW125             Date 20Mar23               *
+      *  Last Amend No. MD061719           Date 07Aug23               *
+      *  Prev Amend No. MD041126           Date 21Jan19               *
+      *                 CSW125             Date 20Mar23               *
       *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
       *                 AR989496           Date 13Jun12               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061719 - Compilation issue on MSRPGSRCZ/MS6110M, redefine  *
+      *             missing field definition from CSW125.             *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-60517                              *
       *  CSW125 -  MIR and MOR Sequence Generator                     *
@@ -476,6 +479,17 @@
      D PMDNO           S              5P 0                                                  MD051624
      D PDATE6          S              6  0                                                  MD051624
      D PDATE7          S              7                                                     MD051624
+      *                                                                                       CSW125
+      ** Entry Parameters for MS100003                                                        CSW125
+      *                                                                                       CSW125
+     DIN_MSGTYPE       S              3A                                                      CSW125
+     DIN_UETR          S             36A                                                      CSW125
+     DIN_MIR           S             28A                                                      CSW125
+     DIN_MOR           S             28A                                                      CSW125
+     DOUT_MIR          S             28A                                                      CSW125
+     DOUT_MOR          S             28A                                                      CSW125
+     DOUT_MORERR       S             10A                                                      CSW125
+     DOUT_MIRERR       S             10A                                                      CSW125
                                                                                             MD041126
       ** MQ Parameters                                                                      MD041126
      D HCONN           S             10I 0                                                  MD041126

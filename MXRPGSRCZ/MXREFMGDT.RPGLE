@@ -26,7 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMX016 - Allow LIKE and NLIKE selection.                     *
+      *  CMX016 - Allow LIKE and NLIKE selection                      *
       *  AR902158 - Start position out of range when field length     *
       *             being exported is 20,0.  (Child: AR902159)        *
       *  MD046248 - Finastra Rebranding                               *

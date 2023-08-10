@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061162           Date 12Apr23               *
+      *  Last Amend No. MD061162           Date 08Aug23               *
       *  Prev Amend No. MD059943           Date 16May22               *
       *                 MD058986           Date 11Oct21               *
       *                 MD055891           Date 01Sep20               *
@@ -29,6 +29,7 @@
       *  MD061162 - Avoid duplicate key error when deleting records   *
       *             by making sure the unique no. (DIDRUN) is unique  *
       *             whether records are logically deleted or not      *
+      *           - Applied for MD061617.                             *
       *  MD059943 - Update tables using the 5 fields to avoid         *
       *             duplicate key record.                             *
       *  MD058986 - Add Logical Delete for components and dependencies*

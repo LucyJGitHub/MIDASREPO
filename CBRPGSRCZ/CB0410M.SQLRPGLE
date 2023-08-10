@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061162           Date 12Apr23               *
+      *  Last Amend No. MD061162           Date 08Aug23               *
       *  Prev Amend No. MD058986           Date 11Oct21               *
       *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +37,7 @@
       *  MD061162 - Avoid duplicate key error when deleting records   *
       *             by making sure the unique no. (DIDRUN) is unique  *
       *             whether records are logically deleted or not      *
+      *           - Applied for MD061617.                             *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *

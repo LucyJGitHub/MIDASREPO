@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR902158           Date 04May23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMX016             Date 04Aug23               *
+      *  Prev Amend No. AR902158           Date 04May23               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMX016 - Allow LIKE and NLIKE selection                      *
       *  AR902158 - Start position out of range when field length     *
       *             being exported is 20,0.  (Child: AR902159)        *
       *  MD046248 - Finastra Rebranding                               *
@@ -33,7 +35,7 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -51,41 +53,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       * R E F O R M A T   D A T A
      D/COPY MXCPYSRC,MXRFMDD
- 
+
       * G E T   F O R M A T   F I E L D S
      D/COPY MXCPYSRC,MXGTFF
- 
- 
+
+
       ** Number field 30,10
      D*InNumber*       S             30S10                                                  AR902158
      D InNumber        S             31S10                                                  AR902158
- 
+
       ** Alpha field 32 long, returned from reformatting procedures
      D fmAlpNum32      S             32A
- 
+
       ** Length and decimal positions passed in to reformatting procedures
      D fmLength        S              2S 0
      D fmDecPos        S              2S 0
- 
+
       ** Required decimal separator passed in to reformatting procedures
      D fmDecSep        S              1A
- 
+
       ** Show Positive Sign flag passed in to reformatting procedures
      D fmShwPsSgn      S              1A
- 
+
      DFmtInp           DS
      D FmtInp30A               1     30A
      D FmtInp01P               1     01P 0
@@ -133,23 +135,27 @@
      D FmtInp28S               1     28S 0
      D FmtInp29S               1     29S 0
      D FmtInp30S               1     30S 0
- 
- 
+
+
      D  InAlpha        S             30A   INZ(*BLANKS)
      D  InPtr          S              2S 0 INZ(1)
      D  OutPtr         S              2S 0 INZ(1)
- 
- 
+
+
      D FieldOsize      S              4P 0
      D FieldO          S             30A
      D FieldSiz        S              4P 0
- 
- 
+
+
       * Reference ID SubFields & Sizes
      D REFSF           S             20    DIM(9)
      D REFSFSZ         S              4S 0 DIM(9)
- 
- 
+
+     D DSFDY         E DS                  EXTNAME(DSFDY)                       CMX016
+                                                                                CMX016
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CMX016
+      ** EXTERNAL DS FOR SAR DETAILS                                            CMX016
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -163,99 +169,113 @@
      C                   PARM                    OutData
      C                   PARM                    ReferID
      C                   PARM                    Select_EXP
- 
+
+      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED            CMX016
+      *                                                                         CMX016
+     C                   CALL      'AOSARDR0'                                   CMX016
+     C                   PARM      *BLANKS       @RTCD             7            CMX016
+     C                   PARM      '*VERIFY'     @OPTN             7            CMX016
+     C                   PARM      'CMX016'      @SARD             6            CMX016
+     C     SCSARD        PARM      SCSARD        DSFDY                          CMX016
+      *                                                                         CMX016
+     C     @RTCD         IFEQ      *BLANK                                       CMX016
+     C                   MOVEL     'Y'           CMX016            1            CMX016
+     C                   ELSE                                                   CMX016
+     C                   MOVEL     'N'           CMX016                         CMX016
+     C                   ENDIF                                                  CMX016
+
       * Clear outputs
- 
+
      C                   Z-ADD     1             OutPos
      C                   Clear                   OutData
      C                   MOVEL     *BLANK        ReferID
      C                   MOVEL     'N'           Select_EXP
- 
+
       * Clear Reference ID SubFields & Sizes
- 
+
      C                   Clear                   REFSF
      C                   Clear                   REFSFSZ
- 
+
       * Error if no fields are supplied
- 
+
      C     #_FLDD(1)     IFEQ      *BLANK
      C                   EVAL      I#ERMS = 'NO DATA PASSED TO MXREFMGDT'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Set up the variables for formatting that will not change if
       * Replication formatting is required.
       * Decimal separator is '.', Signs are not shown for Positive numbers
- 
+
      C                   EVAL      fmDecSep = '.'
      C                   EVAL      fmShwPsSgn = 'N'
- 
+
       ** Process all fields on the format.
- 
+
      C                   Z-ADD     1             FD                5 0
      C     #_FLDD(FD)    DOWNE     *BLANK
      C                   MOVEL     #_FLDD(FD)    FLDD
- 
+
       ** Select type of processing required according to field type ..
      C                   SELECT
- 
+
       * Field Type = PACKED Numeric
- 
+
      C     WHFLDT        WHENEQ    'P'
      C                   EXSR      #SRPack
      C                   EVAL      %subst(OutData:OutPos:FieldOSize) =
      C                               %subst(fmAlpNum32:1:FieldOSize)
- 
+
       * Field Type = SIGNED Numeric
- 
+
      C     WHFLDT        WHENEQ    'S'
      C                   EXSR      #SRSign
      C                   EVAL      %subst(OutData:OutPos:FieldOSize) =
      C                               %subst(fmAlpNum32:1:FieldOSize)
- 
+
       * Field Type = 'OTHER' (ALPHAMERIC)
- 
+
      C                   OTHER
      C                   EVAL      FieldOSize  = WHFLDB
      C                   EVAL      %subst(OutData:OutPos:FieldOSize) =
      C                               %subst(InData:WHFOBO:WHFLDB)
- 
+
      C                   ENDSL
- 
+
       * Update output position
- 
+
      C                   EVAL      OutPos = OutPos + FieldOSize
- 
+
       * Update Reference ID Sub-Fields
- 
+
      C     WHSREF        IFNE      *BLANK
      C                   EXSR      UPD_REFSF
      C                   ENDIF
- 
+
       * Update Field Values of Fields For Selection
- 
+
      C     Fld_4_Sel     IFEQ      'Y'
      C                   EXSR      UPD_FLDVL
      C                   ENDIF
- 
+
       ** Process next record
      C                   ADD       1             FD
      C                   ENDDO
- 
+
       * Determine Reference ID
- 
+
      C                   EXSR      DET_REFID
- 
+
       * Determine whether to select for export
- 
+
      C     #_SELC(1)     IFNE      *BLANK
      C                   EXSR      DET_SELECT
      C                   ELSE
      C                   MOVEL     'Y'           Select_EXP
      C                   ENDIF
- 
+
       * Return
- 
+
      C                   RETURN
       *
      C/SPACE 5
@@ -267,16 +287,16 @@
       *                                                               *
       *****************************************************************
      C     #SRPack       BEGSR
- 
+
       ** Packed field
      C                   EVAL      fmLength = WHFLDD
      C                   EVAL      fmDecPos = WHFLDP
      C                   EVAL      FmtInp30A  = %Subst(InData:WHFOBO:WHFLDB)
- 
+
      C     FmtInp30A     IFEQ      *BLANK
      C                   EVAL      InNumber   = 0
      C                   ELSE
- 
+
      C                   SELECT
      C     WHFLDB        WHENEQ    01
      C                   EVAL      InNumber   = FmtInp01P
@@ -312,7 +332,7 @@
      C                   EVAL      InNumber   = 0
      C                   ENDSL
      C                   ENDIF
- 
+
       ** Adjust input field for the number of decimal places.
      C                   SELECT
      C     fmDecPos      WHENEQ    0
@@ -323,9 +343,9 @@
      C                   OTHER
      C                   EVAL      InNumber    = InNumber  /(10**fmDecPos)
      C                   endsl
- 
+
      C                   EXSR      RPPSIGN
- 
+
      C                   EVAL      FieldOSize  = WHFLDD + 2
       *
      C                   ENDSR
@@ -344,11 +364,11 @@
      C                   EVAL      fmLength = WHFLDD
      C                   EVAL      fmDecPos = WHFLDP
      C                   EVAL      FmtInp30A  = %Subst(InData:WHFOBO:WHFLDB)
- 
+
      C     FmtInp30A     IFEQ      *BLANK
      C                   EVAL      InNumber   = 0
      C                   ELSE
- 
+
      C                   SELECT
      C     WHFLDB        WHENEQ    01
      C                   EVAL      InNumber   = FmtInp01S
@@ -414,7 +434,7 @@
      C                   EVAL      InNumber   = 0
      C                   ENDSL
      C                   ENDIF
- 
+
       ** Adjust input field for the number of decimal places.
      C                   SELECT
      C     fmDecPos      WHENEQ    0
@@ -425,9 +445,9 @@
      C                   OTHER
      C                   EVAL      InNumber    = InNumber  /(10**fmDecPos)
      C                   endsl
- 
+
      C                   EXSR      RPPSIGN
- 
+
      C                   EVAL      FieldOSize  = WHFLDD + 2
       *
      C                   ENDSR
@@ -439,38 +459,38 @@
       *                                                               *
       *****************************************************************
      C     RPPSIGN       BEGSR
- 
+
      C                   MOVEL     *BLANK        InAlpha
      C                   Z-ADD     1             InPtr
      C                   Z-ADD     1             OutPtr
      C                   CLEAR                   fmAlpNum32
- 
+
       ** Place the incoming number into an alpha field for substringing
       **  purposes
      C                   movel     InNumber      InAlpha
- 
+
       ** If the number of decimal places is 0, increase the length by 1
       **  so that a leading zero is introduced.
- 
+
      C                   If        fmDecPos = 0
      C                   Eval      fmLength = fmLength + 1
      C                   EndIf
- 
+
       ** Set the first byte of the Output field as the sign, only put in
       **  a positive sign if specifically requested.
      C                   if        InNumber < 0
      C                   eval      %subst(fmAlpNum32:OutPtr:1) = '-'
- 
+
      C                   else
- 
+
      C                   if        fmShwPsSgn = 'Y'
      C                   eval      %subst(fmAlpNum32:OutPtr:1) = '+'
      C                   endif
- 
+
      C                   endif
- 
+
      C                   eval      OutPtr = OutPtr + 1
- 
+
       ** Extract the digits to the left of the decimal point
       ** As the whole number is aligned on the decimal point, and there are
       **  20 character to the left of the dp, this data will start at
@@ -480,29 +500,29 @@
      C                   eval      InPtr = 21 - (fmLength-fmDecPos) + 1                     AR902158
      C                   eval      %subst(fmAlpNum32:OutPtr:(fmLength-fmDecPos))
      C                              = %subst(InAlpha:InPtr:(fmLength-fmDecPos))
- 
+
      C                   eval      InPtr = InPtr + (fmLength-fmDecPos)
      C                   eval      OutPtr = OutPtr + (fmLength-fmDecPos)
- 
+
       ** If requested, insert a decimal separator and there are any decimals
      C                   if            fmDecSep <> *blank
      C                             and fmDecPos > 0
- 
+
      C                   eval      %subst(fmAlpNum32:OutPtr:1) = fmDecSep
- 
+
      C                   eval      OutPtr = OutPtr + 1
- 
+
      C                   endif
- 
+
       ** Extract the digits to the right of the decimal point if there are
       **  any
      C                   if        fmDecPos > 0
- 
+
      C                   eval      %subst(fmAlpNum32:OutPtr:fmDecPos) =
      C                              %subst(InAlpha:InPtr:fmDecPos)
- 
+
      C                   endif
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -510,9 +530,9 @@
       * Update Reference ID Sub-Fields
       ********************************************************************
      C     UPD_REFSF     BEGSR
- 
+
      C                   MOVEL     WHSREF        SQ_RF             1 0
- 
+
      C     WHFLDT        IFEQ      'P'
      C     WHFLDT        OREQ      'S'
      C                   EVAL      FieldO = %subst(fmAlpNum32:3:WHFLDD)
@@ -523,7 +543,7 @@
      C                   MOVEL     FieldO        REFSF(SQ_RF)
      C                   Z-ADD     WHFLDB        REFSFSZ(SQ_RF)
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -531,20 +551,20 @@
       * Update Field Values of Fields For Selection
       ********************************************************************
      C     UPD_FLDVL     BEGSR
- 
+
      C                   Z-ADD     1             SC                5 0
      C     WHFOBO        LOOKUP    #_FLDS(SC)                             99    *
      C     *in99         DOWEQ     '1'
- 
+
      C     WHFLDT        IFEQ      'P'
      C     WHFLDT        OREQ      'S'
      C                   EVAL      Fld_Value = %subst(fmAlpNum32:3:WHFLDD)
      C                   ELSE
      C                   EVAL      Fld_Value = %subst(InData:WHFOBO:WHFLDB)
      C                   ENDIF
- 
+
      C                   MOVE      Fld_Value     #_SELC(SC)
- 
+
      C                   ADD       1             SC
      C     SC            IFLE      99
      C     WHFOBO        LOOKUP    #_FLDS(SC)                             99    *
@@ -552,7 +572,7 @@
      C                   MOVE      '0'           *IN99
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -560,29 +580,29 @@
       * Determine Reference ID
       ********************************************************************
      C     DET_REFID     BEGSR
- 
+
       * Step through Reference ID Sub-Fields
       * to create the Reference ID
- 
+
      C                   Z-ADD     1             RIDPtr            4 0
      C                   Z-ADD     *ZERO         SQ_RF
- 
+
      C     SQ_RF         DOUEQ     9
- 
+
      C                   ADD       1             SQ_RF
- 
+
      C                   EVAL      FieldO     = REFSF(SQ_RF)
      C                   EVAL      FieldSiz   = REFSFSZ(SQ_RF)
- 
+
      C     FieldSiz      ifne      *ZERO
      C     RIDPtr        andle     40
      C                   EVAL      %subst(ReferID:RIDPtr:FieldSiz) =
      C                               %subst(FieldO:1:FieldSiz)
      C                   EVAL      RIDPtr = RIDPtr + FieldSiz
      C                   endif
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -590,16 +610,16 @@
       * Determine whether to select for export
       ********************************************************************
      C     DET_SELECT    BEGSR
- 
+
      C                   Z-ADD     1             SC                5 0
      C                   Z-ADD     *ZERO         No_VCmps          5 0
      C                   Z-ADD     *ZERO         No_Cmps           5 0
- 
+
      C     SC            DOWLE     99
      C     #_SELC(SC)    ANDNE     *BLANK
- 
+
      C                   MOVEL     #_SELC(SC)    SELC
- 
+
      C     ESSIAO        IFEQ      'IF '
      C     ESSIAO        OREQ      'OR '
      C     No_VCmps      IFNE      *ZERO
@@ -610,7 +630,7 @@
      C                   Z-ADD     *ZERO         No_VCmps
      C                   Z-ADD     *ZERO         No_Cmps
      C                   ENDIF
- 
+
      C                   SELECT
      C     ESSCMP        WHENEQ    'EQ'
      C     Fld_Value     COMP      ESSCPV                                 99    *
@@ -624,27 +644,67 @@
      C     Fld_Value     COMP      ESSCPV                               99      *
      C     ESSCMP        WHENEQ    'LE'
      C     Fld_Value     COMP      ESSCPV                               9999    *
+     C     ESSCMP        WHENEQ    'LK'                                         CMX016
+     C     CMX016        ANDEQ     'Y'                                          CMX016
+     C                   EXSR      LIKE_COMPARI                                 CMX016
+     C     ESSCMP        WHENEQ    'NL'                                         CMX016
+     C     CMX016        ANDEQ     'Y'                                          CMX016
+     C                   EXSR      LIKE_COMPARI                                 CMX016
      C                   ENDSL
- 
+
      C   99              ADD       1             No_VCmps          5 0
      C                   ADD       1             No_Cmps           5 0
- 
+
      C                   ADD       1             SC
      C                   ENDDO
- 
+
      C     No_VCmps      IFNE      *ZERO
      C     No_VCmps      ANDEQ     No_Cmps
      C                   MOVEL     'Y'           Select_Exp
      C                   ENDIF
- 
+
      C                   ENDSR
+      ********************************************************************      CMX016
+      * LIKE_COMPARI - LIKE COMPARISON                                          CMX016
+      ********************************************************************      CMX016
+     C     LIKE_COMPARI  BEGSR                                                  CMX016
+     C                   SETON                                        99        CMX016
+      * Scan for search string                                                  CMX016
+     C                   CALL      'QCLSCAN'                                    CMX016
+     C                   PARM                    Fld_Value                      CMX016
+      * Length                                                                  CMX016
+     C                   PARM      30            WQA3N             3 0          CMX016
+      * Start                                                                   CMX016
+     C                   PARM      1             WQB3N             3 0          CMX016
+      * Mask                                                                    CMX016
+     C                   PARM                    ESSCPV                         CMX016
+      * Length                                                                  CMX016
+     C                   PARM      30            WQC3N             3 0          CMX016
+      * Translate                                                               CMX016
+     C                   PARM      '1'           WQD1              1            CMX016
+      * Trim                                                                    CMX016
+     C                   PARM      '1'           WQE1              1            CMX016
+      * Wild                                                                    CMX016
+     C                   PARM      '?'           WQF1              1            CMX016
+      * Result                                                                  CMX016
+     C                   PARM                    WQG3N             3 0          CMX016
+     C                   IF        ESSCMP = 'LK'                                CMX016
+     C     WQG3N         IFLT      1                                            CMX016
+     C                   SETOFF                                       99        CMX016
+     C                   ENDIF                                                  CMX016
+     C                   ELSE                                                   CMX016
+     C     WQG3N         IFGE      1                                            CMX016
+     C                   SETOFF                                       99        CMX016
+     C                   ENDIF                                                  CMX016
+     C                   ENDIF                                                  CMX016
+     C                   ENDSR                                                  CMX016
       ********************************************************************
      C/SPACE 5
       ********************************************************************
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5

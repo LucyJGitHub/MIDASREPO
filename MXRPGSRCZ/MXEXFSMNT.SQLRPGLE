@@ -30,7 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMX016 - Allow LIKE and NLIKE selection                      *
+      *  CMX016 - Allow LIKE and NLIKE selection.                     *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes                                   *

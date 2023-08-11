@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054911           Date 30Apr20               *
-      *  Prev Amend No. MD053861           Date 16Aug19               *
+      *  Last Amend No. MD059804           Date 07Aug23               *
+      *  Prev Amend No. MD054911           Date 30Apr20               *
+      *                 MD053861           Date 16Aug19               *
       *                 MD053582           Date 16Aug19               *
       *                 MD053532           Date 27May19               *
       *                 MD053362           Date 24Apr19               *
@@ -105,6 +106,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059804 - Introduce System Value = AllowBEIasSWIFTDest      *
+      *             Generated MT300 with Network SWIFT and Status     *
+      *             Transmitted when SWIFT ID = Blanks and BEI details*
+      *             defined.                                          *
+      *           - Applied for MD-61612.                             *
       *  MD054911 - MT300 57A receiving agent missing Beneficiary     *
       *             Account number                                    *
       *  MD053861 - Change Request: SWIFT 2019 /CLRC/ in MT300        *
@@ -461,6 +467,7 @@
      I              'SupF58onMT3CustEqBen'C         SUP58                                   MD052277
      I              'ReplaceJFormatSlash' C         AJFORM                                    CSW219
      I              'Fld57AcctLineDtls   'C         A57ACC                                  MD054911
+     I              'AllowBEIasSWIFTDest' C         ASWFTB                                  MD059804
       *                                                                                       190127
       **  Data structure for related reference                                                190127
      I@HREF       DS                         16                                               190127
@@ -1216,7 +1223,8 @@
      C**********           PARM *BLANKS   P@OP04 20                                 255986B MD054911
      C                     PARM A57ACC    P@OP04 20                                         MD054911
      C                     PARM *BLANKS   P@VL04200                                          255986B
-     C                     PARM *BLANKS   P@OP05 20                                          255986B
+     C**********           PARM *BLANKS   P@OP05 20                                 255986B MD059804
+     C                     PARM ASWFTB    P@OP05 20                                         MD059804
      C                     PARM *BLANKS   P@VL05200                                          255986B
      C                     PARM *BLANKS   P@OP06 20                                          255986B
      C                     PARM *BLANKS   P@VL06200                                          255986B
@@ -1232,11 +1240,13 @@
      C                     MOVEL'N'       PAPOPB  1                                          255986B
      C                     MOVEL' '       WS      1                                           CSW219
      C                     MOVEL*BLANKS   W57     1                                         MD054911
+     C                     MOVEL'N'       PSWFBD  1                                         MD059804
      C           @RTCD     IFEQ *BLANK                                                       255986B
      C                     MOVELP@VL01    PAPOPB                                             255986B
      C**********           MOVELP@VL02    WS                                         CSW219 MD053532
      C                     MOVELP@VL03    WS                                                MD053532
      C                     MOVELP@VL04    W57                                               MD054911
+     C                     MOVELP@VL05    PSWFBD                                            MD059804
      C                     ENDIF                                                             255986B
       *                                                                                     MD052277
      C                     MOVEL'N'       WSUP58  1                                         MD052277
@@ -1622,6 +1632,16 @@
      C                     ENDIF                                                              CSW037
      C                     ENDIF                                                              CSW024
       *                                                                                       CSW024
+     C           BBCSID    IFEQ *BLANKS                                                     MD059804
+     C           DSCBEI    ANDNE*BLANKS                                                     MD059804
+      *                                                                                     MD059804
+     C           PSWFBD    IFEQ 'Y'                                                         MD059804
+     C                     MOVEL'SWIFT'   NWRK                                              MD059804
+     C                     MOVELDSCBEI    NWDS                                              MD059804
+     C                     ENDIF                                                            MD059804
+      *                                                                                     MD059804
+     C                     ENDIF                                                            MD059804
+      *                                                                                     MD059804
      C                     ENDSR
      C/EJECT
       *****************************************************************

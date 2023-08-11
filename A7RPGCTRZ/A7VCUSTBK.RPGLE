@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Validate cust, book, port & profit centre')   *
@@ -7,12 +7,13 @@
       *                                                               *
       *  Midas - Standard subprograms                                 *
       *                                                               *
-      *  FXVCUSTBK - Validate Customer, Book, Portfolio, Profit Centre*
+      *  A7VCUSTBK - Validate Customer, Book, Portfolio, Profit Centre*
       *                                                               *
-      *       N.B.  Any changes this module might require changes     *                       BA7106
-      *             to module A7VCUSTBK                               *                       BA7106
-      *                                                               *                       BA7106
-      *  (c) Finastra International Limited 2001                      *
+      *  NOTE: this is a local copy of FXVCUSTBK. Fixes applied to   *
+      *        this module might also be applicable to its core       *
+      *        sibling                                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2023                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -20,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. BA7106             Date 08Aug23               *
-      *  Prev Amend No. MD050870           Date 31May18               *
+      *  Last Amend No. BA7106  *CREATE    Date 08Aug23               *
+      * --------------------------------------------------------------*
+      *                 MD050870           Date 31May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 MD000091           Date 07May13               *
@@ -60,6 +62,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
+      *                                                               *
+      *---------------------------------------------------------------*
       *  MD050870 - Blank Profit Center doesn't default when amending *
       *             an FXDL transaction when CLE051 is switched Off   *
       *  MD046248 - Finastra Rebranding                               *
@@ -179,7 +183,6 @@
       ** Array of transaction types
      D @TT             S              2    DIM(40)
 
-
      D*RelDealDts      DS           100                                                       248269
      D RelDealDts      DS           113                                                       248269
       ** Related Deal Details (when deal is option takedown or swap.
@@ -219,7 +222,9 @@
                                                                                               CTI004
      D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                  CTI004
       **  TI ICD FIle                                                                         CTI004
-
+      ** External data structure for deal sub-type                                            BA7106
+     D SDDLST        E DS                  EXTNAME(SDDLSTPD)                                  BA7106
+                                                                                              BA7106
      D I@PARM          DS           256
      D  I#PORS                 1      1
      D  I#R997                 2      5
@@ -248,6 +253,9 @@
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
+
+      ** In-house program
+     D GLCVPM          S             20A   INZ('DLSubTypeDefaultPgm')                         BA7106
 
       ** Customer number
      D*F3DCNO***       S              6S 0                                                    CSD027
@@ -286,6 +294,17 @@
       * CUSTV - CUSTOMER VALIDATION
       *
      C                   EXSR      CUSTV
+      *                                                                                       BA7106
+      * DLSTV - Default deal sub-type if customer valid and                                   BA7106
+      *         auto deal sub-type CAR is present                                             BA7106
+      *         and deal sub-type is blank and action insert                                  BA7106
+      *                                                                                       BA7106
+     C     DDCustOK      IFEQ      'Y'                                                        BA7106
+     C     BA7106        ANDEQ     'Y'                                                        BA7106
+     C     DDDlst        ANDEQ     *BLANK                                                     BA7106
+     C     DDActn        ANDEQ     'I'                                                        BA7106
+     C                   EXSR      DLSTV                                                      BA7106
+     C                   ENDIF                                                                BA7106
       *
       * BOKCV - BOOK CODE VALIDATION
       *
@@ -518,6 +537,41 @@
      C                   ENDSR
       *******************************************************************
      C/EJECT
+      * DLSTV - Default deal sub-type                                                         BA7106
+      *****************************************************************                       BA7106
+     C     DLSTV         BEGSR                                                                BA7106
+      *                                                                                       BA7106
+      **  Call UNIBANK in-house program to get the Deal subtype                               BA7106
+      *                                                                                       BA7106
+     C                   MOVE      BBCUST        WLCUST                                       BA7106
+     C                   CALL      W#PGM                                                      BA7106
+     C                   PARM                    WLCUST            6                          BA7106
+     C                   PARM                    DDDLTP            2                          BA7106
+     C                   PARM                    DDDLST            2                          BA7106
+     C                   PARM                    DDBCCY                                       BA7106
+     C                   PARM                    DDSCCY                                       BA7106
+      *                                                                                       BA7106
+      **  Check deal subtype using access object AODLSTR0.                                    BA7106
+      *                                                                                       BA7106
+     C                   CALL      'AODLSTR0'                                                 BA7106
+     C                   PARM      *BLANKS       @RTCD                                        BA7106
+     C                   PARM      '*KEY   '     @OPTN                                        BA7106
+     C                   PARM      DDDLST        @AQCD             2                          BA7106
+     C     SDDLST        PARM      SDDLST        DSFDY                                        BA7106
+      *                                                                                       BA7106
+      **  If no record is found, the deal sub type is invalid                                 BA7106
+      *                                                                                       BA7106
+     C     @RTCD         IFNE      *BLANKS                                                    BA7106
+     C                   MOVE      'N'           DDDlstOK                                     BA7106
+     C                   ADD       1             Idx                                          BA7106
+     C                   MOVEL     'DDDLST'      FldNamXAr(Idx)                               BA7106
+     C                   MOVEL     'FXM0246'     MsgIdXAr(Idx)                                BA7106
+     C                   ENDIF                                                                BA7106
+     C                   ENDSR                                                                BA7106
+      *******************************************************************                     BA7106
+      *                                                                                       BA7106
+     C/EJECT                                                                                  BA7106
+      *****************************************************************                       BA7106
       *****************************************************************
       * BOKCV - BOOK CODE VALIDATION
       *****************************************************************
@@ -1026,6 +1080,12 @@
      C                   PARM                    F3BOKC            2            book
      C                   PARM                    F3PTFR            4            portfolio
      C                   PARM                    F3PRFC            4            profit centre
+      * Pass in auto deal sub-type CAR number and Deal Type OK flag                           BA7106
+     C                   PARM                    BA7106            1                          BA7106
+     C                   PARM                    DealTpOK          1                          BA7106
+     C                   PARM                    DDDlstOK          1                          BA7106
+     C                   PARM                    DDBCCY            3                          BA7106
+     C                   PARM                    DDSCCY            3                          BA7106
       *                                                                         CAP050
       ** Check if Midas/ToF Interface feature is present                        CAP050
      C                   CALLB     'AOSARDR0'                                   CAP050
@@ -1079,6 +1139,45 @@
      C                   MOVE      'N'           CTI006                                     MD030956
      C                   ENDIF                                                              MD030956
                                                                                             MD030956
+      * Retrieve in-house program name                                                        BA7106
+     C                   CALL      'AOSVALR0'                                                 BA7106
+     C                   PARM      *BLANKS       @RTCD                                        BA7106
+     C                   PARM      GLCVPM        SVALK1           20                          BA7106
+     C                   PARM                    SVAL1           200                          BA7106
+     C                   PARM      *BLANK        SVALK2           20                          BA7106
+     C                   PARM                    SVAL2           200                          BA7106
+     C                   PARM      *BLANK        SVALK3           20                          BA7106
+     C                   PARM                    SVAL3           200                          BA7106
+     C                   PARM      *BLANK        SVALK4           20                          BA7106
+     C                   PARM                    SVAL4           200                          BA7106
+     C                   PARM      *BLANK        SVALK5           20                          BA7106
+     C                   PARM                    SVAL5           200                          BA7106
+     C                   PARM      *BLANK        SVALK6           20                          BA7106
+     C                   PARM                    SVAL6           200                          BA7106
+     C                   PARM      *BLANK        SVALK7           20                          BA7106
+     C                   PARM                    SVAL7           200                          BA7106
+     C                   PARM      *BLANK        SVALK8           20                          BA7106
+     C                   PARM                    SVAL8           200                          BA7106
+     C                   PARM      *BLANK        SVALK9           20                          BA7106
+     C                   PARM                    SVAL9           200                          BA7106
+     C                   PARM      *BLANK        SVALK0           20                          BA7106
+     C                   PARM                    SVAL10          200                          BA7106
+      *                                                                                       BA7106
+     C     @RTCD         IFNE      *BLANKS                                                    BA7106
+     C                   MOVEL     '010'         DBASE                                        BA7106
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       BA7106
+     C     SVAL1         IFEQ      '*NRF'                                                     BA7106
+     C                   MOVEL     SVALK1        DBKEY                                        BA7106
+     C                   ENDIF                                                                BA7106
+     C     SVAL2         IFEQ      '*NRF'                                                     BA7106
+     C                   MOVEL     SVALK2        DBKEY                                        BA7106
+     C                   ENDIF                                                                BA7106
+     C                   SETON                                        U7U8LR                  BA7106
+     C                   EXSR      *PSSR                                                      BA7106
+     C                   ENDIF                                                                BA7106
+      *                                                                                       BA7106
+     C                   MOVEL     SVAL1         W#PGM            10                          BA7106
+
      C/COPY WNCPYSRC,FXH00108
       *
       ** Program, module and procedure names for database error processing.
@@ -1095,4 +1194,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Finastra International Limited 2023

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Val deal type/sub-type & fed funds ind')
@@ -7,12 +7,13 @@
       *                                                               *
       *  Midas - Standard subprograms                                 *
       *                                                               *
-      *  FXVDEALTPS - Validate Deal Type/Sub Type & Fed Funds Ind     *
+      *  A7VDEALTPS - Validate Deal Type/Sub Type & Fed Funds Ind     *
       *                                                               *
-      *       N.B.  Any changes this module might require changes     *                       BA7106
-      *             to module A7VDEALTPS                              *                       BA7106
-      *                                                               *                       BA7106
-      *  (c) Finastra International Limited 2001                      *
+      *  NOTE: this is a local copy of FXVDEALTPS. Fixes applied to   *
+      *        this module might also be applicable to its core       *
+      *        sibling                                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2023                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -20,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. BA7106             Date 08Aug23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA7106  *CREATE    Date 08Aug23               *
+      * --------------------------------------------------------------*
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +40,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
+      *                                                               *
+      *---------------------------------------------------------------*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CDL038 - Extended Deal Sub Type                              *
@@ -198,6 +202,10 @@
      C     DDDlstOK      ANDEQ     'Y'                                          147748
      C     DDClasOK      ANDEQ     'Y'                                          CDL038
      C*****DDDLST        ANDNE     *BLANKS                                      CDL038
+     C     CDL038        ANDEQ     'Y'                                                        BA7106
+     C     DDDltpOK      OrEq      'Y'                                                        BA7106
+     C     DDDlstOK      AndEq     'Y'                                                        BA7106
+     C     DDDLST        AndNe     *BLANKS                                                    BA7106
      C                   EXSR      DTDSV
      C                   END
       *
@@ -259,7 +267,10 @@
      C     DLSTV         BEGSR
       *
       ** Deal sub type must be defined
-      *
+      ** If CAR off or deal sub-type entered, process as before                               BA7106
+      *                                                                                       BA7106
+     C     BA7106        IFNE      'Y'                                                        BA7106
+     C     DDDLST        ORNE      *BLANK                                                     BA7106
      C     DDDLST        IFEQ      *BLANKS
      C                   MOVE      'N'           DDDlstOK
      C                   ADD       1             Idx
@@ -285,6 +296,7 @@
      C                   END
      C                   END
      C                   END
+     C                   END                                                                  BA7106
       *
      C                   ENDSR
       *****************************************************************
@@ -424,6 +436,7 @@
      C                   PARM                    DDDlstOK          1            deal sub type
      C                   PARM                    DDClasOK          1            class         CDL038
      C                   PARM                    DDFedfOK          1            fed funds ind
+     C                   PARM                    BA7106            1                          BA7106
                                                                                               CDL038
                                                                                               CDL038
       ** Determine if CDL038 (Extended Deal Sub-Types) is installed                           CDL038
@@ -454,4 +467,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Finastra International Limited 2023

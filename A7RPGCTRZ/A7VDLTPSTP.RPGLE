@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate deal type and subtype')
@@ -7,7 +7,11 @@
       *                                                               *
       *  Midas - Money Market Dealing Module                          *
       *                                                               *
-      *  MMVDLTPSTP - Validate deal type and subtype                  *
+      *  A7VDLTPSTP - Validate deal type and subtype                  *
+      *                                                               *
+      *  NOTE: this is a local copy of MMVDLTPSTP. Fixes applied to   *
+      *        this module might also be applicable to its core       *
+      *        sibling                                                *
       *                                                               *
       *  Function:  This module receives parameters containing        *
       *             putative deal type and subtype, and both checks   *
@@ -19,10 +23,7 @@
       *                                                               *
       *  Component of: MMVALIDATE - MM validation service program     *
       *                                                               *
-      *       N.B.  Any changes this module might require changes     *                       BA7106
-      *             to module A7VDLTPSTP                              *                       BA7106
-      *                                                               *                       BA7106
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Finastra International Limited 2023                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -30,8 +31,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. BA7106             Date 08Aug23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BA7106  *CREATE    Date 08Aug23               *
+      * --------------------------------------------------------------*
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -50,6 +52,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
+      *                                                               *
+      *---------------------------------------------------------------*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG9827- Pass CDL006 parameter                               *
@@ -208,6 +212,10 @@
 
      C                   ENDIF
 
+      ** If CAR off or deal sub-type entered, process as before                               BA7106
+     C     BA7106        IFNE      'Y'                                                        BA7106
+     C     DDSTYP        ORNE      *BLANK                                                     BA7106
+                                                                                              BA7106
       ** Validate the subtype
      C                   RESET                   ReturnCode
      C                   CALLB     'MMVDLSTYPE'
@@ -220,6 +228,7 @@
      C                   IF        ReturnCode <> *blanks
      C                   EVAL      ErrorFound = 'Y'
      C                   ENDIF
+     C                   ENDIF                                                                BA7106
       *                                                                         CDL038
       * CLASV - CLASS VALIDATION                                                CDL038
       *                                                                         CDL038
@@ -234,6 +243,8 @@
      C*****DDSTYP********IFNE*******BLANKS                                      CDL038
      C     MsgID2        IFEQ      *BLANK                                       CDL038
      C     MsgID2C       ANDEQ     *BLANK                                       CDL038
+     C     CDL038        AndEq     'Y'                                                        BA7106
+     C     DDSTYP        OrNe      *Blanks                                                    BA7106
      C                   EXSR      ChkCombo
      C                   ENDIF
 
@@ -356,6 +367,7 @@
      C                   PARM                    PWMsgID1          7            CDL006
       ** Fiduciary deals                                                                      CDL033
      C                   PARM                    CDL006            1                         BUG9827
+     C                   PARM                    BA7106            1                          BA7106
                                                                                               CDL038
                                                                                               CDL038
       ** Determine if CDL038 (Extended Deal Sub-Types) is installed                           CDL038
@@ -395,4 +407,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Finastra International Limited 2023

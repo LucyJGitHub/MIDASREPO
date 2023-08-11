@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251863             Date 22May20               *
-      *  Prev Amend No. MD057657           Date 09Mar21               *
+      *  Last Amend No. BA7106             Date 08Aug23               *
+      *  Prev Amend No. 251863             Date 22May20               *
+      *                 MD057657           Date 09Mar21               *
       *                 MD052014           Date 05Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -92,6 +93,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
       *  251863 - Applied fix 238023.                                 *
       *  238023 - Added parameter F3MGBS upon calling FXVEXCHVAM.     *
       *  MD057657 - Passed Local Currency BLCCY to FXVEXCHVAM         *
@@ -582,6 +584,11 @@
                                                                                 CPB002
       * Defautl Deal Type/Sub type if necessary                                 CPB002
       *                                                                         CPB002
+     C     BA7106        IFEQ      'Y'                                                        BA7106
+      * Call Unibank version of deal-subtype validation                                       BA7106
+     C                   EXSR      VDLTPUNI                                                   BA7106
+     C                   ELSE                                                                 BA7106
+      *                                                                                       BA7106
      C*****'?'**         SCAN      DDCUST                                 01           202132 213799
      C**********         IF        *IN01 <> *On                                        202132 213799
       *****************************************************************                202132 213799
@@ -633,6 +640,8 @@
       *                                                                         CDL038
      C                   EXSR      VDEALTPS
       *
+     C                   ENDIF                                                                BA7106
+      *                                                                                       BA7106
       /COPY WNCPYSRC,FXFXDLV005
 
       ** Validate Booking and Originating Branch
@@ -667,7 +676,12 @@
       *
       /COPY WNCPYSRC,FXFXDLV012
 
+      *                                                                         CPB002
+     C     BA7106        IFEQ      'Y'                                                        BA7106
+     C                   EXSR      VCSTUNI                                                    BA7106
+     C                   ELSE                                                                 BA7106
      C                   EXSR      VCUSTBK
+     C                   ENDIF                                                                BA7106
       *
       /COPY WNCPYSRC,FXFXDLV013
       *                                                                                       CGL058
@@ -983,6 +997,60 @@
       *
      C                   ENDSR
       *****************************************************************
+     C/EJECT                                                                                  BA7106
+      *****************************************************************                       BA7106
+      ** VDLTPUNI - Validate Deal Type/Sub Type & Fed Funds Ind                               BA7106
+      **            Unibank version                                                           BA7106
+      *****************************************************************                       BA7106
+     C     VDLTPUNI      BEGSR                                                                BA7106
+                                                                                              BA7106
+      * Reset variables updated by each module                                                BA7106
+                                                                                              BA7106
+     C                   EXSR      RESETERRS                                                  BA7106
+      *                                                                                       BA7106
+      ** Validate Deal Type/Sub Type & Fed Funds Ind                                          BA7106
+      *                                                                                       BA7106
+     C                   CALLB     'A7VDEALTPS'                                               BA7106
+      *                                                                                       BA7106
+      * INPUTS                                                                                BA7106
+      *                                                                                       BA7106
+      ** Return Code                                                                          BA7106
+     C                   PARM                    RetCodeOut                                   BA7106
+      *                                                                                       BA7106
+      ** Deal Screen fields                                                                   BA7106
+     C                   PARM                    DDDLTP            2            deal type     BA7106
+     C                   PARM                    DDDLST            2            deal sub type BA7106
+     C                   PARM                    DDCLAS            4            class         BA7106
+     C                   PARM                    DDFEDF            1            fed funds ind BA7106
+     C                   PARM                    DDBCCY            3            buy ccy       BA7106
+     C                   PARM                    DDSCCY            3            sell ccy      BA7106
+      *                                                                                       BA7106
+      * ICD                                                                                   BA7106
+     C                   PARM                    BLUSCY            3                          BA7106
+      *                                                                                       BA7106
+      * OUTPUTS                                                                               BA7106
+      *                                                                                       BA7106
+      * Error fields/message IDs/message data (arrays) from/to caller                         BA7106
+     C                   PARM                    FldNamXAr                                    BA7106
+     C                   PARM                    MsgIDXAr                                     BA7106
+     C                   PARM                    MsgDtaXAr                                    BA7106
+      *                                                                                       BA7106
+      ** Deal Type - OK                                                                       BA7106
+      ** Deal Sub-Type - OK                                                                   BA7106
+      ** Class         - OK                                                                   BA7106
+      ** Federal Funds - OK                                                                   BA7106
+     C                   PARM                    DDDltpOK          1            deal type     BA7106
+     C                   PARM                    DDDlstOK          1            deal sub type BA7106
+     C                   PARM                    DDClasOK          1            class         BA7106
+     C                   PARM                    DDFedfOK          1            fed funds ind BA7106
+     C                   PARM                    BA7106            1                          BA7106
+                                                                                              BA7106
+      * Update error info with that returned from the validation module                       BA7106
+                                                                                              BA7106
+     C                   EXSR      UPDATERRS                                                  BA7106
+      *                                                                                       BA7106
+     C                   ENDSR                                                                BA7106
+      *****************************************************************                       BA7106
      C/EJECT
       *****************************************************************
       ** VBRANCHS - Validate Booking and Originating Branch
@@ -1332,6 +1400,107 @@
       *                                                                                      BUG6124
      C                   ENDSR
       *****************************************************************
+     C/EJECT                                                                                  BA7106
+      *****************************************************************                       BA7106
+      ** VCSTUNI - Validate Customer, Book, Portfolio & Profit Centre                         BA7106
+      **           Unibank version                                                            BA7106
+      *****************************************************************                       BA7106
+     C     VCSTUNI       BEGSR                                                                BA7106
+                                                                                              BA7106
+      * Reset variables updated by each module                                                BA7106
+                                                                                              BA7106
+     C                   EXSR      RESETERRS                                                  BA7106
+      *                                                                                       BA7106
+      ** Validate Customer, Book, Portfolio & Profit Centre                                   BA7106
+      *                                                                                       BA7106
+     C                   CALLB     'A7VCUSTBK'                                                BA7106
+      *                                                                                       BA7106
+      * INPUTS                                                                                BA7106
+      *                                                                                       BA7106
+      ** Return Code                                                                          BA7106
+     C                   PARM                    RetCodeOut                                   BA7106
+      *                                                                                       BA7106
+      ** Deal Screen fields                                                                   BA7106
+     C                   PARM                    DDACTN            1            action code   BA7106
+     C                   PARM                    DDDLTP            2            deal type     BA7106
+     C                   PARM                    DDDLST            2            deal sub type BA7106
+     C                   PARM                    DDBRSN            3            booking branchBA7106
+      *                                                                                       BA7106
+     C                   PARM                    DDCUST           10            customer      BA7106
+     C                   PARM                    DDBOKC            2            book          BA7106
+     C                   PARM                    DDPTFR            4            portfolio     BA7106
+     C                   PARM                    DDPRFC            4            profit centre BA7106
+     C                   PARM                    DDNBUY            1                          BA7106
+     C                   PARM                    DDNSEL            1                          BA7106
+      *                                                                                       BA7106
+      ** Related deal details                                                                 BA7106
+     C                   PARM                    RelDealDts                     SW/OP branch  BA7106
+      *                                                                                       BA7106
+      ** Swap/Opt Deal no OK                                                                  BA7106
+      ** Booking branch OK                                                                    BA7106
+     C                   PARM                    DDBrsnOK          1            booking branchBA7106
+     C                   PARM                    DDSdnoOK          1            SW/OP deal no.BA7106
+      *                                                                                       BA7106
+      * ICD                                                                                   BA7106
+     C                   PARM                    BNBCOP            1            new dl status BA7106
+     C                   PARM                    BNBKCD            2            new dl status BA7106
+     C                   PARM                    BGPFMG            1                          BA7106
+     C                   PARM                    BGUDRS            1                          BA7106
+     C                   PARM                    BKPRCU            1                          BA7106
+     C                   PARM                    BKPCDU            1                          BA7106
+     C                   PARM                    FCR997            4                          BA7106
+     C                   PARM                    FCPORS            1                          BA7106
+     C                   PARM                    BGN0ST            1                          BA7106
+     C                   PARM                    CDL002            1                          BA7106
+     C                   PARM                    BGN4ST            1            CPB001        BA7106
+      * Dept from ZMUSER                                                                      BA7106
+     C                   PARM                    DEPT              3                          BA7106
+      * customer format                                                                       BA7106
+      * N = customer number, else customer shortname                                          BA7106
+     C                   PARM                    CustFormat        1                          BA7106
+      *                                                                                       BA7106
+      * OUTPUTS                                                                               BA7106
+      *                                                                                       BA7106
+      * Error fields/message IDs/message data (arrays) from/to caller                         BA7106
+     C                   PARM                    FldNamXAr                                    BA7106
+     C                   PARM                    MsgIDXAr                                     BA7106
+     C                   PARM                    MsgDtaXAr                                    BA7106
+      *                                                                                       BA7106
+      ** Customer - OK                                                                        BA7106
+      ** Book - OK                                                                            BA7106
+      ** Portfolio - OK                                                                       BA7106
+      ** Profit Centre - OK                                                                   BA7106
+      ** Deal Type - OK                                                                       BA7106
+      ** Net Buy Ind - OK                                                                     BA7106
+      ** Net Sell Ind - OK                                                                    BA7106
+     C                   PARM                    DDCustOK          1            customer      BA7106
+     C                   PARM                    DDBokcOK          1            book          BA7106
+     C                   PARM                    DDPtfrOK          1            portfolio     BA7106
+     C                   PARM                    DDPrfcOK          1            profit centre BA7106
+     C                   PARM                    DDDltpOK          1            profit centre BA7106
+     C                   PARM                    DDNbuyOK          1            profit centre BA7106
+     C                   PARM                    DDNselOK          1            profit centre BA7106
+      *                                                                                       BA7106
+      ** Deal Customer number/shortname, book, portfolio, profit centre                       BA7106
+      *                                                                                       BA7106
+     C                   PARM                    F3DCNO                         customer no   BA7106
+     C                   PARM                    F3DCSN           10            customer shtnaBA7106
+     C                   PARM                    F3BOKC            2            book          BA7106
+     C                   PARM                    F3PTFR            4            portfolio     BA7106
+     C                   PARM                    F3PRFC            4            profit centre BA7106
+      * Pass in auto deal sub-type CAR number and Deal Type OK flag                           BA7106
+     C                   PARM                    BA7106            1                          BA7106
+     C                   PARM                    DDDltpOK          1                          BA7106
+     C                   PARM                    DDDlstOK          1                          BA7106
+     C                   PARM                    DDBCCY            3                          BA7106
+     C                   PARM                    DDSCCY            3                          BA7106
+                                                                                              BA7106
+      * Update error info with that returned from the validation module                       BA7106
+                                                                                              BA7106
+     C                   EXSR      UPDATERRS                                                  BA7106
+      *                                                                                       BA7106
+     C                   ENDSR                                                                BA7106
+      *****************************************************************                       BA7106
      C/EJECT
       *****************************************************************
       ** VLNKN - Validate Linked Reference Number
@@ -3281,6 +3450,20 @@
      C                   IF        PRTCD = *BLANKS                                            CDL099
      C                   EVAL      CDL099 = 'Y'                                               CDL099
      C                   ENDIF                                                                CDL099
+      *                                                                                       BA7106
+      ** Access SAR details file to determine if BA7106 is switched on                        BA7106
+      *                                                                                       BA7106
+     C                   CallB     'AOSARDR0'                                                 BA7106
+     C                   Parm      *Blanks       PRTCD                                        BA7106
+     C                   Parm      '*VERIFY'     POPTN                                        BA7106
+     C                   Parm      'BA7106'      PSARD                                        BA7106
+     C     SCSARD        Parm      SCSARD        DSFDY                                        BA7106
+      *                                                                                       BA7106
+     C                   Move      'N'           BA7106            1                          BA7106
+     C                   If        PRTCD = *Blanks                                            BA7106
+     C                   Eval      BA7106 = 'Y'                                               BA7106
+     C                   Endif                                                                BA7106
+      *                                                                                       BA7106
      C/COPY OFCPYSRCZ,CDL091_014                                                              CDL091
       *
      C/COPY WNCPYSRC,FXH00019

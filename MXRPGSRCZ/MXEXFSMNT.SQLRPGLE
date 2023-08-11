@@ -80,8 +80,8 @@
       ** External DS for BANK details
      D DSFDY         E DS                  EXTNAME(DSFDY)
 
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CMX016
-      ** EXTERNAL DS FOR SAR DETAILS                                            CMX016
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                  CMX016
+      ** EXTERNAL DS FOR SAR DETAILS                                                          CMX016
 
      D MXEXFF        E DS                  EXTNAME(MXEXFJW0)                                MD056612
      D MXEXFS        E DS                  EXTNAME(MXEXSJW0)                                MD056612
@@ -133,19 +133,19 @@
      C                   PARM                    @INKC             1
      C                   PARM                    @INKL             1
 
-      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED            CMX016
-      *                                                                         CMX016
-     C                   CALL      'AOSARDR0'                                   CMX016
-     C                   PARM      *BLANKS       @RTCD             7            CMX016
-     C                   PARM      '*VERIFY'     @OPTN             7            CMX016
-     C                   PARM      'CMX016'      @SARD             6            CMX016
-     C     SCSARD        PARM      SCSARD        DSFDY                          CMX016
-      *                                                                         CMX016
-     C     @RTCD         IFEQ      *BLANK                                       CMX016
-     C                   MOVEL     'Y'           CMX016            1            CMX016
-     C                   ELSE                                                   CMX016
-     C                   MOVEL     'N'           CMX016                         CMX016
-     C                   ENDIF                                                  CMX016
+      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED                          CMX016
+      *                                                                                       CMX016
+     C                   CALL      'AOSARDR0'                                                 CMX016
+     C                   PARM      *BLANKS       @RTCD             7                          CMX016
+     C                   PARM      '*VERIFY'     @OPTN             7                          CMX016
+     C                   PARM      'CMX016'      @SARD             6                          CMX016
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMX016
+      *                                                                                       CMX016
+     C     @RTCD         IFEQ      *BLANK                                                     CMX016
+     C                   MOVEL     'Y'           CMX016            1                          CMX016
+     C                   ELSE                                                                 CMX016
+     C                   MOVEL     'N'           CMX016                                       CMX016
+     C                   ENDIF                                                                CMX016
 
       * Set up file and file sequence for MXEXFSPD
 
@@ -483,20 +483,20 @@
 
       * CHECK COMPARISON
 
-     C     CMX016        IFEQ      'Y'                                          CMX016
-     C     DDSCMP        IFNE      'EQ'                                         CMX016
-     C     DDSCMP        ANDNE     'NE'                                         CMX016
-     C     DDSCMP        ANDNE     'GT'                                         CMX016
-     C     DDSCMP        ANDNE     'GE'                                         CMX016
-     C     DDSCMP        ANDNE     'LT'                                         CMX016
-     C     DDSCMP        ANDNE     'LE'                                         CMX016
-     C     DDSCMP        ANDNE     'LK'                                         CMX016
-     C     DDSCMP        ANDNE     'NL'                                         CMX016
-     C                   MOVEL     'MX00713'     ZAMSID                         CMX016
-     C                   EXSR      ZASNMS                                       CMX016
-     C                   MOVE      '1'           *IN43                          CMX016
-     C                   END                                                    CMX016
-     C                   ELSE                                                   CMX016
+     C     CMX016        IFEQ      'Y'                                                        CMX016
+     C     DDSCMP        IFNE      'EQ'                                                       CMX016
+     C     DDSCMP        ANDNE     'NE'                                                       CMX016
+     C     DDSCMP        ANDNE     'GT'                                                       CMX016
+     C     DDSCMP        ANDNE     'GE'                                                       CMX016
+     C     DDSCMP        ANDNE     'LT'                                                       CMX016
+     C     DDSCMP        ANDNE     'LE'                                                       CMX016
+     C     DDSCMP        ANDNE     'LK'                                                       CMX016
+     C     DDSCMP        ANDNE     'NL'                                                       CMX016
+     C                   MOVEL     'MX00713'     ZAMSID                                       CMX016
+     C                   EXSR      ZASNMS                                                     CMX016
+     C                   MOVE      '1'           *IN43                                        CMX016
+     C                   END                                                                  CMX016
+     C                   ELSE                                                                 CMX016
      C     DDSCMP        IFNE      'EQ'
      C     DDSCMP        ANDNE     'NE'
      C     DDSCMP        ANDNE     'GT'
@@ -507,7 +507,7 @@
      C                   EXSR      ZASNMS
      C                   MOVE      '1'           *IN43
      C                   END
-     C                   END                                                    CMX016
+     C                   END                                                                  CMX016
 
       * CHECK COMPARISON VALUE IS ENTERED
       * IF THE FIELD IS A NUMBER

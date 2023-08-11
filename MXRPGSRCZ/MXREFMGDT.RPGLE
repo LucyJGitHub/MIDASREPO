@@ -151,10 +151,10 @@
      D REFSF           S             20    DIM(9)
      D REFSFSZ         S              4S 0 DIM(9)
 
-     D DSFDY         E DS                  EXTNAME(DSFDY)                       CMX016
-                                                                                CMX016
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CMX016
-      ** EXTERNAL DS FOR SAR DETAILS                                            CMX016
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CMX016
+                                                                                              CMX016
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                  CMX016
+      ** EXTERNAL DS FOR SAR DETAILS                                                          CMX016
 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
@@ -170,19 +170,19 @@
      C                   PARM                    ReferID
      C                   PARM                    Select_EXP
 
-      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED            CMX016
-      *                                                                         CMX016
-     C                   CALL      'AOSARDR0'                                   CMX016
-     C                   PARM      *BLANKS       @RTCD             7            CMX016
-     C                   PARM      '*VERIFY'     @OPTN             7            CMX016
-     C                   PARM      'CMX016'      @SARD             6            CMX016
-     C     SCSARD        PARM      SCSARD        DSFDY                          CMX016
-      *                                                                         CMX016
-     C     @RTCD         IFEQ      *BLANK                                       CMX016
-     C                   MOVEL     'Y'           CMX016            1            CMX016
-     C                   ELSE                                                   CMX016
-     C                   MOVEL     'N'           CMX016                         CMX016
-     C                   ENDIF                                                  CMX016
+      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED                          CMX016
+      *                                                                                       CMX016
+     C                   CALL      'AOSARDR0'                                                 CMX016
+     C                   PARM      *BLANKS       @RTCD             7                          CMX016
+     C                   PARM      '*VERIFY'     @OPTN             7                          CMX016
+     C                   PARM      'CMX016'      @SARD             6                          CMX016
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMX016
+      *                                                                                       CMX016
+     C     @RTCD         IFEQ      *BLANK                                                     CMX016
+     C                   MOVEL     'Y'           CMX016            1                          CMX016
+     C                   ELSE                                                                 CMX016
+     C                   MOVEL     'N'           CMX016                                       CMX016
+     C                   ENDIF                                                                CMX016
 
       * Clear outputs
 
@@ -644,12 +644,12 @@
      C     Fld_Value     COMP      ESSCPV                               99      *
      C     ESSCMP        WHENEQ    'LE'
      C     Fld_Value     COMP      ESSCPV                               9999    *
-     C     ESSCMP        WHENEQ    'LK'                                         CMX016
-     C     CMX016        ANDEQ     'Y'                                          CMX016
-     C                   EXSR      LIKE_COMPARI                                 CMX016
-     C     ESSCMP        WHENEQ    'NL'                                         CMX016
-     C     CMX016        ANDEQ     'Y'                                          CMX016
-     C                   EXSR      LIKE_COMPARI                                 CMX016
+     C     ESSCMP        WHENEQ    'LK'                                                       CMX016
+     C     CMX016        ANDEQ     'Y'                                                        CMX016
+     C                   EXSR      LIKE_COMPARI                                               CMX016
+     C     ESSCMP        WHENEQ    'NL'                                                       CMX016
+     C     CMX016        ANDEQ     'Y'                                                        CMX016
+     C                   EXSR      LIKE_COMPARI                                               CMX016
      C                   ENDSL
 
      C   99              ADD       1             No_VCmps          5 0
@@ -664,40 +664,40 @@
      C                   ENDIF
 
      C                   ENDSR
-      ********************************************************************      CMX016
-      * LIKE_COMPARI - LIKE COMPARISON                                          CMX016
-      ********************************************************************      CMX016
-     C     LIKE_COMPARI  BEGSR                                                  CMX016
-     C                   SETON                                        99        CMX016
-      * Scan for search string                                                  CMX016
-     C                   CALL      'QCLSCAN'                                    CMX016
-     C                   PARM                    Fld_Value                      CMX016
-      * Length                                                                  CMX016
-     C                   PARM      30            WQA3N             3 0          CMX016
-      * Start                                                                   CMX016
-     C                   PARM      1             WQB3N             3 0          CMX016
-      * Mask                                                                    CMX016
-     C                   PARM                    ESSCPV                         CMX016
-      * Length                                                                  CMX016
-     C                   PARM      30            WQC3N             3 0          CMX016
-      * Translate                                                               CMX016
-     C                   PARM      '1'           WQD1              1            CMX016
-      * Trim                                                                    CMX016
-     C                   PARM      '1'           WQE1              1            CMX016
-      * Wild                                                                    CMX016
-     C                   PARM      '?'           WQF1              1            CMX016
-      * Result                                                                  CMX016
-     C                   PARM                    WQG3N             3 0          CMX016
-     C                   IF        ESSCMP = 'LK'                                CMX016
-     C     WQG3N         IFLT      1                                            CMX016
-     C                   SETOFF                                       99        CMX016
-     C                   ENDIF                                                  CMX016
-     C                   ELSE                                                   CMX016
-     C     WQG3N         IFGE      1                                            CMX016
-     C                   SETOFF                                       99        CMX016
-     C                   ENDIF                                                  CMX016
-     C                   ENDIF                                                  CMX016
-     C                   ENDSR                                                  CMX016
+      ********************************************************************                    CMX016
+      * LIKE_COMPARI - LIKE COMPARISON                                                        CMX016
+      ********************************************************************                    CMX016
+     C     LIKE_COMPARI  BEGSR                                                                CMX016
+     C                   SETON                                        99                      CMX016
+      * Scan for search string                                                                CMX016
+     C                   CALL      'QCLSCAN'                                                  CMX016
+     C                   PARM                    Fld_Value                                    CMX016
+      * Length                                                                                CMX016
+     C                   PARM      30            WQA3N             3 0                        CMX016
+      * Start                                                                                 CMX016
+     C                   PARM      1             WQB3N             3 0                        CMX016
+      * Mask                                                                                  CMX016
+     C                   PARM                    ESSCPV                                       CMX016
+      * Length                                                                                CMX016
+     C                   PARM      30            WQC3N             3 0                        CMX016
+      * Translate                                                                             CMX016
+     C                   PARM      '1'           WQD1              1                          CMX016
+      * Trim                                                                                  CMX016
+     C                   PARM      '1'           WQE1              1                          CMX016
+      * Wild                                                                                  CMX016
+     C                   PARM      '?'           WQF1              1                          CMX016
+      * Result                                                                                CMX016
+     C                   PARM                    WQG3N             3 0                        CMX016
+     C                   IF        ESSCMP = 'LK'                                              CMX016
+     C     WQG3N         IFLT      1                                                          CMX016
+     C                   SETOFF                                       99                      CMX016
+     C                   ENDIF                                                                CMX016
+     C                   ELSE                                                                 CMX016
+     C     WQG3N         IFGE      1                                                          CMX016
+     C                   SETOFF                                       99                      CMX016
+     C                   ENDIF                                                                CMX016
+     C                   ENDIF                                                                CMX016
+     C                   ENDSR                                                                CMX016
       ********************************************************************
      C/SPACE 5
       ********************************************************************

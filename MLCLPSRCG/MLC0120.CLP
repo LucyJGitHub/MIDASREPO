@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD061518           Date 23Jul23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC017             Date 14Feb03              */
+/*                      CSC017             Date 14Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CUT004             Date 25Sep98              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLAN*/
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC017 - Change to 250 library list.                        */
 /*       CUT004 - Allow Core and Non-Core mode of compilation for    */
@@ -33,7 +35,7 @@
 /*************************&QUALOUTQ)                                /* CUT004 */
              PGM        PARM(&SOURCE &LIBRAIRIE &SRCF &MULTLIB +
                           &QUALOUTQ &CORE)                          /* CUT004 */
- 
+
              DCL        VAR(&LIBRAIRIE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MULTLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
@@ -59,7 +61,7 @@
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /*    Save job attributes                                          */
              RTVJOBA    JOB(&WSTN) USER(&USER) TYPE(&BATINT) +
                           USRLIBL(&LIBL) SBMMSGQ(&SBMM) +
@@ -67,7 +69,7 @@
              IF         COND(&BATINT *EQ '0') THEN(DO)
              CHGVAR     VAR(&WSTN) VALUE(&SBMM)
              ENDDO
- 
+
 /*    Recreate MSGQ for later report                               */
              DLTMSGQ    MSGQ(QTEMP/RPGMSGQ)
              MONMSG     MSGID(CPF0000)
@@ -75,7 +77,7 @@
              MONMSG     MSGID(CPF0000)
              SNDMSG     MSG('LIST OF RPG PROGRAMS NEEDED TO BE +
                               CHANGED') TOMSGQ(QTEMP/RPGMSGQ)
- 
+
 /*    Ensure DTALIB and DPLIB are in library list                  */
              IF         COND(&MULTLIB *NE '          ') THEN(DO)
              ADDLIBLE   LIB(&MULTLIB) POSITION(*LAST)
@@ -85,30 +87,30 @@
              ADDLIBLE   LIB(&LIBRAIRIE) POSITION(*LAST)
              MONMSG     MSGID(CPF2103 CPF2110 CPF2118)
              ENDDO
- 
+
 /*    Apply overrides needed to set up temporary files             */
-             OVRDBF     FILE(MULTB) TOFILE(ZZGBLANG) SHARE(*NO)
-             OVRDBF     FILE(MULXB) TOFILE(ZZGBXXLANG) SHARE(*NO)   /* CUT004 */
-             OVRDBF     FILE(MULTLANG) TOFILE(ZZGBLANG) SHARE(*NO)
-             OVRDBF     FILE(MULTLANX) TOFILE(ZZGBXXLANG) SHARE(*NO)/* CUT004 */
-             OVRDBF     FILE(MULTA) TOFILE(ZZGBLANGL) SHARE(*NO)
-             OVRDBF     FILE(MULXA) TOFILE(ZZGBXLANGL) SHARE(*NO)   /* CUT004 */
-             OVRDBF     FILE(MULTO) TOFILE(ZZGBLANGO) SHARE(*NO)
-             OVRDBF     FILE(MULXO) TOFILE(ZZGBXLANGO) SHARE(*NO)   /* CUT004 */
-             OVRDBF     FILE(MULTN) TOFILE(ZZGBLANGN) SHARE(*NO)
+/**********  OVRDBF     FILE(MULTB) TOFILE(ZZGBLANG) SHARE(*NO) */                      /*MD061518*/
+/**********  OVRDBF     FILE(MULXB) TOFILE(ZZGBXXLANG) SHARE(*NO) *//* CUT004 */        /*MD061518*/
+/**********  OVRDBF     FILE(MULTLANG) TOFILE(ZZGBLANG) SHARE(*NO) */                   /*MD061518*/
+/**********  OVRDBF     FILE(MULTLANX) TOFILE(ZZGBXXLANG) SHARE(*NO)*/ /* CUT004 */     /*MD061518*/
+/**********  OVRDBF     FILE(MULTA) TOFILE(ZZGBLANGL) SHARE(*NO) */                     /*MD061518*/
+/**********  OVRDBF     FILE(MULXA) TOFILE(ZZGBXLANGL) SHARE(*NO) *//* CUT004 */        /*MD061518*/
+/**********  OVRDBF     FILE(MULTO) TOFILE(ZZGBLANGO) SHARE(*NO) */                     /*MD061518*/
+/**********  OVRDBF     FILE(MULXO) TOFILE(ZZGBXLANGO) SHARE(*NO) *//* CUT004 */        /*MD061518*/
+/**********  OVRDBF     FILE(MULTN) TOFILE(ZZGBLANGN) SHARE(*NO) */                     /*MD061518*/
              CHGVAR     VAR(&MSGFNM) VALUE('ZZGBMSGF')
              CHGVAR     VAR(&MSGFNX) VALUE('ZZGBXXMSGF')            /* CUT004 */
- 
+
 /************CALL*******PGM(MLC0110) PARM(&SOURCE &LIBRAIRIE &SRCF +/* CUT004 */
 /*************************&MSGFNM &MULTLIB)                         /* CUT004 */
              CALL       PGM(MLC0110) PARM(&SOURCE &LIBRAIRIE &SRCF +
                           &MSGFNM &MULTLIB &CORE &MSGFNX)           /* CUT004 */
- 
-             DLTOVR     FILE(MULTB)
-             DLTOVR     FILE(MULTLANG)
-             DLTOVR     FILE(MULTA)
-             DLTOVR     FILE(MULTO)
-             DLTOVR     FILE(MULTN)
+
+/**********  DLTOVR     FILE(MULTB) */                                                  /*MD061518*/
+/**********  DLTOVR     FILE(MULTLANG) */                                               /*MD061518*/
+/**********  DLTOVR     FILE(MULTA) */                                                  /*MD061518*/
+/**********  DLTOVR     FILE(MULTO) */                                                  /*MD061518*/
+/**********  DLTOVR     FILE(MULTN) */                                                  /*MD061518*/
 /**/
  ERROR:      RCVMSG     MSGDTA(&MSGDTA) MSGID(&MSGID)
 /**/
@@ -116,7 +118,7 @@
              SNDPGMMSG  MSGID(&MSGID) MSGF(QCPFMSG) MSGDTA(&MSGDTA)
              GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
              DSPMSG   MSGQ(QTEMP/RPGMSGQ) OUTPUT(*PRINT) START(*FIRST)
 /**/
 /*FIN:*******CHGVAR     VAR(&CMD) VALUE('CHGLIBL (' *CAT &LIBL *TCAT +                 */ /*CSC017*/
@@ -126,8 +128,8 @@ FIN:                                                                            
              CHGVAR     VAR(&CMD) VALUE('CHGLIBL (' *CAT &LIBL *TCAT +
                           ')')                                                            /*CSC017*/
              CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                      /*CSC017*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
      ENDPGM

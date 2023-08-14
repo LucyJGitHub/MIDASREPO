@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD056920           Date 06Oct20               *
-      *  Prev Amend No. MD056614           Date 21Sep20               *
+      *  Last Amend No. MD058080           Date 15Jun23               *
+      *  Prev Amend No. MD056920           Date 06Oct20               *
+      *                 MD056614           Date 21Sep20               *
       *                 MD050393           Date 13Apr18               *
       *                 MD032152           Date 22Jan15               *
       *                 MD022609           Date 27Sep13               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058080 - Deliverable Data Split for SPF                    *
       *  MD056920 - UXP Incorrect user migration for non-default zone.*
       *             If user is exist in T_USERMENU get zone.          *
       *  MD056614 - FM2.1 SP21 UXP1_ BFUpload does not add user/branch*
@@ -194,20 +196,28 @@
                                                                                          //AR1085933
          DoW SQLCODE = 0;                                                                //AR1085933
                                                                                          //AR1085933
-           USZONESTM = 'Update '+ ZOMSYS +'DTALIB/MUSERDD set USZONE = ''' +
+       //**USZONESTM*=*'Update*'+*ZOMSYS*+'DTALIB/MUSERDD*set*USZONE*=*'''*+****************MD058080
+       //**************ZOZONE*+*'''*where*USRP*in*(select*BFNAMEPK*'*+**********************MD058080
+       //**************'from BFTB_USER)';***************************************//AR1085933*MD058080
+           USZONESTM = 'Update '+ ZOMSYS +'DMLIB/MUSERDD set USZONE = ''' +
                        ZOZONE + ''' where USRP in (select BFNAMEPK ' +
-                       'from BFTB_USER)';                                                //AR1085933
+                       'from BFTB_USER)';                                                 //MD058080
            Exec SQL
                 Prepare MUSZONE from :USZONESTM;                                         //AR1085933
                                                                                          //AR1085933
            Exec SQL
                 Execute MUSZONE;                                                         //AR1085933
                                                                                          //AR1085933
-           USZONESTM = 'Insert into '+ ZOMSYS +'DTALIB/MBROSDD ' +
+       //**USZONESTM*=*'Insert*into*'+*ZOMSYS*+'DTALIB/MBROSDD*'*+**************************MD058080
+       //**************'(RECI,*USRP,*NOBR,*LCD,*LCT,*CHTP)*' +******************************MD058080
+       //**************'(select*''D'',*USRP,*0,*0,*0,*''I''*from*'*+************************MD058080
+       //**************ZOMSYS*+'DTALIB/MUSERDD*where*USRP*not*in*'*+************************MD058080
+       //**************'(select*USRP*from*'+*ZOMSYS*+'DTALIB/MBROSDD))';********//AR1085933*MD058080
+           USZONESTM = 'Insert into '+ ZOMSYS +'DMLIB/MBROSDD ' +
                        '(RECI, USRP, NOBR, LCD, LCT, CHTP) ' +
-                       '(select ''D'', USRP, 0, 0, 0, ''I'' from ' +
-                       ZOMSYS +'DTALIB/MUSERDD where USRP not in ' +
-                       '(select USRP from '+ ZOMSYS +'DTALIB/MBROSDD))';                 //AR1085933
+                       '(select ''D'',*USRP, 0, 0, 0, ''I'' from ' +
+                       ZOMSYS +'DMLIB/MUSERDD where USRP not in ' +
+                       '(select USRP from '+ ZOMSYS +'DMLIB/MBROSDD))';                   //MD058080
 
            Exec SQL
                 Prepare MUSZONE from :USZONESTM;                                         //AR1085933

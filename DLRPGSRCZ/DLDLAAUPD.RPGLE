@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058897           Date 14Aug23               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058897 - Serious Midas Error in DLAA message               *
+      *           - Bypass calling AOSPOSU0 if settlement method is   *
+      *             not '01', '02', '07', '08' or '12'.               *
+      *           - Applied for MD061605.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1096,6 +1101,10 @@
      C                   Z-ADD     003           C#RPNB                                     AR740564
      C                   MOVEL     'C'           C#RTYP                                     AR740564
      C                   MOVEL     BRCA          C#BBRN                                     AR740564
+      *                                                                                     MD058897
+      ** Bypass AOSPOSU0 if C#ATYP is blank.                                                MD058897
+      *                                                                                     MD058897
+     C                   IF        C#ATYP <> ' '                                            MD058897
       *                                                                                     AR740564
       ** Call AOSPOSU0 to add new details                                                   AR740564
       *                                                                                     AR740564
@@ -1110,6 +1119,7 @@
      C                   Z-ADD     902           W0ERNB            3 0                      AR740564
      C                   EXSR      SRERR                                                    AR740564
      C                   ENDIF                                                              AR740564
+     C                   ENDIF                                                              MD058897
       *                                                                                     AR740564
      C                   ENDSR                                                              AR740564
       *****************************************************************                     AR740564
@@ -1124,6 +1134,10 @@
       *                                                               *                     AR740564
       *****************************************************************                     AR740564
      C     SRUPD         BEGSR                                                              AR740564
+      *                                                                                     MD058897
+      ** Bypass AOSPOSU0 if C#ATYP is blank.                                                MD058897
+      *                                                                                     MD058897
+     C                   IF        C#ATYP <> ' '                                            MD058897
       *                                                                                     AR740564
       ** Call AOSPOSU0 to update                                                            AR740564
       *                                                                                     AR740564
@@ -1138,6 +1152,7 @@
      C                   Z-ADD     903           W0ERNB            3 0                      AR740564
      C                   EXSR      SRERR                                                    AR740564
      C                   ENDIF                                                              AR740564
+     C                   ENDIF                                                              MD058897
       *                                                                                     AR740564
      C                   ENDSR                                                              AR740564
       *****************************************************************                     AR740564

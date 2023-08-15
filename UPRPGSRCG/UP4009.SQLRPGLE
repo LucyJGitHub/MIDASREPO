@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060709             Date 08Nov22             *
-      *  Prev Amend No. MD060961             Date 23Jan23             *
+      *  Last Amend No. MD061690             Date 27Jul23             *
+      *  Prev Amend No. MD060709             Date 08Nov22             *
+      *                 MD060961             Date 23Jan23             *
       *                 MD059751             Date 25Mar22             *
       *                 MD059742             Date 23Mar22             *
       *                 MD058585             Date 17Aug21             *
@@ -21,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061690 - File GPSRAJW0 was deleted because one of its      *
+      *             dependency was deleted                            *
       *  MD060709 - Change in LF dynamic selection is omitted         *
       *             File is not deleted when both DTAARA and file     *
       *             have the same name.                               *
@@ -57,6 +60,8 @@
      D RcdCount3       S              5  0                                                  MD060961
      D @DTAQ           S              1
      D @DTAARA         S              1
+     D TotalDel        S              5  0                                                  MD061690
+     D IGNORE          S              1                                                     MD061690
 
      D UPGLOG        E DS                  EXTNAME(UPCLOGPD)
      D UPGDRV        E DS                  EXTNAME(UPGDRVTD)
@@ -91,11 +96,14 @@
      C                   DOW       SQLCODE = 0
 
       * If file is reported as dependent file, it can be ignored here
+      * Unless it is found in dependent because at least one of its dependency has been     MD061690
+      * deleted                                                                             MD061690
      C                   If        %SUBST(RdLib:4:1) = 'V'
      C/exec SQL
      C+ select count(*) into :RcdCount from UPGXRFPD
      C+ where PDEPF = :RdFile
      C/end-exec
+     C                   exsr      Check_Del                                                MD061690
 
      C                   eval      RcdCount3 = 0                                            MD060961
       * check if 'File missing'                                                             MD060961
@@ -122,6 +130,7 @@
 
      C                   If        %SUBST(RdLib:4:1) = 'V'
      C                             and RcdCount > 0
+     C                             and IGNORE = 'Y'                                         MD061690
      C                             or %SUBST(RdLib:4:1) = 'V'
      C                             and RcdCount2 = 0
      C                   else
@@ -791,4 +800,54 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
-
+      ********************************************************************                  MD061690
+      *                                                                  *                  MD061690
+      * Check_Del - GPSRAJW0 is reported as dependent because            *                  MD061690
+      *             GPRELHPD has been made redundant. But GPSRAJW0       *                  MD061690
+      *             should not be deleted, its script must be updated    *                  MD061690
+      *             instead.                                             *                  MD061690
+      *             This SR checks that if a dependent file is reported  *                  MD061690
+      *             1. it does exist in the reference system             *                  MD061690
+      *             2. if yes, it checks if its dependency (in the ref   *                  MD061690
+      *             system) are existing in UPGLOGPD. If it is the case  *                  MD061690
+      *             then it can be ignored as it will be automatically   *                  MD061690
+      *             rebuild with the dependency.                         *                  MD061690
+      *             But if it is not the case, then it cannot be ignored *                  MD061690
+      *                                                                  *                  MD061690
+      ********************************************************************                  MD061690
+      *                                                                                     MD061690
+     C     Check_Del     BEGSR                                                              MD061690
+                                                                                            MD061690
+     C                   eval      IGNORE = 'Y'                                             MD061690
+     C                   eval      TotalDel = 0                                             MD061690
+                                                                                            MD061690
+      ** Does file exist in reference system?                                               MD061690
+     C                   eval      C_LIB = RefSys + 'GVLIB'                                 MD061690
+                                                                                            MD061690
+     C                   CALL      'UTCHKOBJ'                                               MD061690
+     C                   PARM      *blanks       ExistYN                                    MD061690
+     C                   PARM      RdFile        DFFILE                                     MD061690
+     C                   PARM      C_LIB         Library                                    MD061690
+     C                   PARM      '*FILE'       ObjectType                                 MD061690
+     C                   PARM      *blanks       Member                                     MD061690
+                                                                                            MD061690
+      ** If it does, check its dependency                                                   MD061690
+     C                   IF        ExistYN = 'Exist     '                                   MD061690
+                                                                                            MD061690
+     C/exec SQL                                                                             MD061690
+     C+ select count(*) into :TotalDel from UPGLOGPD                                        MD061690
+     C+ where WFILE in (select DBFFIL  from QADBFDEP                                        MD061690
+     C+ where DBFFDP = :RdFile  and DBFLDP = :C_LIB)                                        MD061690
+     C/end-exec                                                                             MD061690
+                                                                                            MD061690
+      ** If none of the dependencies are found, do not ignore                               MD061690
+     C                   If        TotalDel = 0                                             MD061690
+     C                   eval      IGNORE = 'N'                                             MD061690
+     C                   Endif                                                              MD061690
+     C                                                                                      MD061690
+     C                   ENDIF                                                              MD061690
+                                                                                            MD061690
+     C                   ENDSR                                                              MD061690
+      *                                                                                     MD061690
+      ********************************************************************                  MD061690
+      /EJECT                                                                                MD061690

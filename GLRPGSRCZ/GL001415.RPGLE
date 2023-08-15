@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD059392           Date 18Jan22
+      *  Last Amend No. MD061783           Date 15Aug23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD059392           Date 18Jan22               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027367           Date 04Jun14               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061783 - MT950 are generated for all account in I/C        *
+      *             despite requested for one account                 *
+      *             Amend hook CGL146_127                             *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059392 - Preformance issues. Duplcate messages is now      *
       *             processed here instead of GL001415                *

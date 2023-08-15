@@ -7,10 +7,15 @@
 /*                                                                   */
 /*       SCC001125 - Run MPM Archiving                               */
 /*                                                                   */
-/*       Last Amend No. MD057372  *Create    Date 10Sep21            */
+/*       Last Amend No. MD061653  *Amend     Date 24Jul23            */
+/*       Prev Amend No. MD057372  *Create    Date 10Sep21            */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061653 - Component fails validating MMM user but MMM      */
+/*                  database is on SQL server not iSeries. Only      */
+/*                  validate MMM user if MMM libraries defined on    */
+/*                  system values.                                   */
 /*       MD057372 - Re-develop approach for MD-10209                 */
 /*                                                                   */
 /*********************************************************************/
@@ -56,16 +61,27 @@
 
              Call       Pgm(SC001120) Parm(&MPLusDbPfx &MainMMMDb &ArchMMMDb +
                           &MMMUser)
-/* Transfer job control to MPM archiving user xxMPMARC */
-/* Live or Test user is determined by PGM SC001120 */
-             CHGVAR     VAR(&XXMIDAS) VALUE(&MMMUser)
 
-             CALL       PGM(QSYGETPH) PARM(&XXMIDAS '*NOPWD    ' &HANDLE)
-             CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)
+/**Transfer*job control to MPM archiving user xxMPMARC**/                               /*MD061653*/
+/**Live*or*Test user is determined by PGM SC001120 */                                   /*MD061653*/
+/*********   CHGVAR     VAR(&XXMIDAS) VALUE(&MMMUser)                                   /*MD061653*/
+/*********                                                                              /*MD061653*/
+/*********   CALL       PGM(QSYGETPH) PARM(&XXMIDAS '*NOPWD    ' &HANDLE)               /*MD061653*/
+/*********   CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)                             /*MD061653*/
 
 /* Set Condition to Run when Libraries are Existing */
              If         Cond(&MainMMMDb *NE ' ' *AND &ArchMMMDb *NE ' ') THEN(DO)
 
+/* Transfer job control to MPM archiving user xxMPMARC */                               /*MD061653*/
+/* Live or Test user is determined by PGM SC001120 */                                   /*MD061653*/
+             CHGVAR     VAR(&XXMIDAS) VALUE(&MMMUser)                                   /*MD061653*/
+                                                                                        /*MD061653*/
+             CALL       PGM(QSYGETPH) PARM(&XXMIDAS '*NOPWD    ' &HANDLE)               /*MD061653*/
+             MONMSG     MSGID(CPF22E3) EXEC(DO)                                         /*MD061653*/
+                GOTO       CMDLBL(ENDCLPGM)                                             /*MD061653*/
+             Enddo                                                                      /*MD061653*/
+             CALL       PGM(QWTSETP) PARM(&HANDLE &ERRCODE)                             /*MD061653*/
+                                                                                        /*MD061653*/
 /* Set MMM Archive Library */
 
              Addlible   Lib(&ArchMMMDb) Position(*First)

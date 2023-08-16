@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD061005             Date 02Feb23             *
-      *  Prev Amend No. MD060848             Date 28Dec22             *
+      *  Last Amend No. MD061673             Date 21Jul23             *      
+      *  Prev Amend No. MD061005             Date 02Feb23             *
+      *                 MD060848             Date 28Dec22             *
       *                 MD060547             Date 12Dec22             *
       *                 MD060626             Date 13Oct22             *
       *                 MD059702             Date 15Mar22             *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061673 - Consider field SDNWRKPD.EDCONV                    *
+      *           - Applied for MD-61781                              *             
       *  MD061005 - Merging issue with MD060848                       *
       *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
       *  MD060547 - Issue with column A1FTPT in SDRETRPD              *
@@ -49,14 +52,22 @@
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
-     D WHERE           S            600A
-     D WHEREK          S            600A
-     D PINSERT         S            600A
-     D PSELECT         S            600A
-     D PINSERTX        S            600A
-     D PSELECTX        S            600A
-     D PINSERTB        S            600A
-     D PSELECTB        S            600A
+     D*WHERE****       S            600A                                                    MD061673
+     D WHERE           S           2000A                                                    MD061673
+     D*WHEREK***       S            600A                                                    MD061673
+     D WHEREK          S           2000A                                                    MD061673
+     D*PINSERT**       S            600A                                                    MD061673
+     D PINSERT         S           2000A                                                    MD061673
+     D*PSELECT**       S            600A                                                    MD061673
+     D PSELECT         S           2000A                                                    MD061673
+     D*PINSERTX*       S            600A                                                    MD061673
+     D PINSERTX        S           2000A                                                    MD061673
+     D*PSELECTX*       S            600A                                                    MD061673
+     D PSELECTX        S           2000A                                                    MD061673
+     D*PINSERTB*       S            600A                                                    MD061673
+     D PINSERTB        S           2000A                                                    MD061673
+     D*PSELECTB*       S            600A                                                    MD061673
+     D PSELECTB        S           2000A                                                    MD061673
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D O_File          S             10A
@@ -380,6 +391,12 @@
      C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''E'''             MD055681
      C                   else                                                               MD055681
                                                                                             MD060547
+      * for EDCONV field                                                                    MD061673
+     C                   IF        X_Field = 'EDCONV'                                       MD061673
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD061673
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + ''' '''             MD061673
+     C                   else                                                               MD061673
+                                                                                            MD061673
       ** if processing A1FTPT, check same field exists in SDRETRPD                          MD060547
      C                   If        X_Field = 'A1FTPT'                                       MD060547
      C                             or WHFLDI = 'ROUAPL'                                     MD060848
@@ -408,6 +425,7 @@
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field
      C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field
      C                   Endif                                                              MD060547
+     C                   ENDIF                                                              MD061673
      C                   ENDIF                                                              MD055681
      C                   ENDIF                                                              MD055681
      C                   ENDIF
@@ -741,8 +759,15 @@
      C                   Endif                                                              MD060547
      C                   Else                                                               MD060547
                                                                                             MD060547
+      ** if processing EDCONV, replace with '' ''                                           MD061673
+     C                   If        X_Field = 'EDCONV'                                       MD061673
+     C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field            MD061673
+     C                   eval      PSELECTX = %trimr(PSELECTX) + ', '  + ''' '''            MD061673
+     C                   Else                                                               MD061673
+                                                                                            MD061673
      C                   eval      PINSERTX = %trimr(PINSERTX) + ',B.' + X_Field
      C                   eval      PSELECTX = %trimr(PSELECTX) + ',A.' + X_Field
+     C                   Endif                                                              MD061673
      C                   Endif                                                              MD060547
      C                   ENDIF
      C                   ENDIF

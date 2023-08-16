@@ -800,6 +800,7 @@
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
      C**********         MOVEL     'LEF0279'     MsgIdArr(Ix)                               MD061786
      C                   MOVEL     '5049597'     MsgIdArr(Ix)                               MD061786
+     C                   LEAVESR                                                            MD061786
      C                   ENDIF
       *                                                                                       246694
      C     KEY#CA        Klist                                                                246694

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060108           Date 22Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD061786           Date 16Aug23               *
+      *  Prev Amend No. MD060108           Date 22Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 CLE125             Date 02Nov21               *
       *                 MD024809           Date 06Nov19               *
       *                 CLE071             Date 18Jul18               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061786 - Do not allow Facility Amendment on deleted        *
+      *             facilities.                                       *
       *  MD060108 - Duplicate facility class code change validation   *
       *  CLE138 - Class Codes for Facilities                          *
       *  CLE125 - Amendment to LE Authorization Rules                 *
@@ -781,18 +784,22 @@
      C                   MOVEL     'LEF0218'     MsgIdArr(Ix)
      C                   ENDIF
       *
-      * Reactivation of deleted facilities is not allowed
+      **Reactivation*of*deleted*facilities*is*not*allowed********                           MD061786
+      ** Facility Amendment of deleted facilities is not allowed                            MD061786
       *
-     C     S#FATP        IFEQ      'FR'
-     C     FC_RECI       ANDEQ     'R'
+     C*****S#FATP        IFEQ      'FR'                                                     MD061786
+     C*****FC_RECI       ANDEQ     'R'                                                      MD061786
+     C     FC_RECI       IFEQ      'R'                                                      MD061786
      C     WAggregate    ANDNE     'Y'                                                        CLE041
-     C     S#FATP        OREQ      'FR'                                                       CLE041
-     C     AGFC_RECI     ANDEQ     'R'                                                        CLE041
+     C*****S#FATP        OREQ      'FR'                                              CLE041 MD061786
+     C*****AGFC_RECI     ANDEQ     'R'                                               CLE041 MD061786
+     C     AGFC_RECI     OREQ      'R'                                                      MD061786
      C     WAggregate    ANDEQ     'Y'                                                        CLE041
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
-     C                   MOVEL     'LEF0279'     MsgIdArr(Ix)
+     C**********         MOVEL     'LEF0279'     MsgIdArr(Ix)                               MD061786
+     C                   MOVEL     '5049597'     MsgIdArr(Ix)                               MD061786
      C                   ENDIF
       *                                                                                       246694
      C     KEY#CA        Klist                                                                246694

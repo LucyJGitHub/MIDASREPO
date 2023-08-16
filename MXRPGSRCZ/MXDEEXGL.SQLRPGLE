@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053540           Date 04Jun21               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053540 - IBMi 7.4 Certification                            *
+      *             Applied for MD-58141                              *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *

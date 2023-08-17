@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW101             Date 03Feb23               *
-      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *  Last Amend No. MD056963           Date 07Jun23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CSW101             Date 03Feb23               *
+      *                 MD058755           Date 01Sep21               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
@@ -39,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056963 - Replace *IN81 with *IN82, *IN81 is already used   *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -85,6 +89,11 @@
      F                                     INFSR(*PSSR)
       * RTV : Midas SD Midas module flags retrieval
       *
+     FA6RETRL1  IF   E           K DISK    USROPN                                             BA6026
+     F                                     RENAME(A6RETRD0:A6RETRDB)                          BA6026
+     F                                     INFSR(*PSSR)                                       BA6026
+      ** Midas SD Retail Transaction Types - Extension File                                   BA6026
+      *                                                                                       BA6026
      D* Description     : Copyright notice for inclusion in all programs
      D*
      D********************************************************************
@@ -414,6 +423,15 @@
      C                   END
      C                   WRITE     #MSGCTL
      C                   WRITE     #CMDTXT2
+      *                                                                                       BA6026
+     C     BA6026        IFEQ      'Y'                                                        BA6026
+     C**********         MOVE      *ON           *IN81                               BA6026 MD056963
+     C                   MOVE      *ON           *IN82                                      MD056963
+     C                   ELSE                                                                 BA6026
+     C**********         MOVE      *OFF          *IN81                               BA6026 MD056963
+     C                   MOVE      *OFF          *IN82                                      MD056963
+     C                   ENDIF                                                                BA6026
+      *
      C                   EXFMT     #RCDDTL1
       * Enable PUTOVR
      C                   SETON                                        86
@@ -684,6 +702,12 @@
      C                   MOVEL     *BLANK        #1CLIN                         Clearing Indica
      C                   MOVE      *BLANKS       #1FTPT
      C                   MOVE      *BLANKS       #1IDCD                                       CSW101
+      *                                                                                       BA6026
+      ** Initialize screen field Transaction Type Identification Code.                        BA6026
+      *                                                                                       BA6026
+     C     BA6026        IFEQ      'Y'                                                        BA6026
+     C                   MOVEL     *BLANK        #1SIDC                                       BA6026
+     C                   ENDIF                                                                BA6026
       *================================================================
      CSR   MAEXIT        ENDSR
       /EJECT
@@ -709,6 +733,15 @@
      C                   MOVEL     A1CLIN        #1CLIN                         Clearing Indica
      C                   MOVEL     A1FTPT        #1FTPT
      C                   MOVEL     A1IDCD        #1IDCD                                       CSW101
+      *                                                                                       BA6026
+      ** Move file field Transaction Type Identification Code to screen.                      BA6026
+      *                                                                                       BA6026
+     C     BA6026        IFEQ      'Y'                                                        BA6026
+     C     KRTV          CHAIN     A6RETRDB                           89                      BA6026
+     C     *IN89         IFEQ      *OFF                                                       BA6026
+     C                   MOVEL     G1SIDC        #1SIDC                                       BA6026
+     C                   ENDIF                                                                BA6026
+     C                   ENDIF                                                                BA6026
       *================================================================
      CSR   MBEXIT        ENDSR
       /EJECT
@@ -1480,6 +1513,26 @@
      C                   MOVEL     W0CLPG        ZAMSDA                         Message data
      C                   EXSR      ZASNMS
      C                   END
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   CALL      'AOSARDR0'                                                 BA6026
+     C                   PARM      *BLANKS       WRTCD             7                          BA6026
+     C                   PARM      '*VERIFY'     WOPTN             7                          BA6026
+     C                   PARM      'BA6026'      WSARD             6                          BA6026
+     C                   PARM                    WUFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   SELECT                                                               BA6026
+     C     WRTCD         WHENEQ    *BLANKS                                                    BA6026
+     C                   MOVE      'Y'           BA6026            1                          BA6026
+     C                   OPEN      A6RETRL1                                                   BA6026
+      *                                                                                       BA6026
+     C     WRTCD         WHENEQ    '*NRF'                                                     BA6026
+     C                   MOVE      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   OTHER                                                                BA6026
+     C                   EXSR      *PSSR                                                      BA6026
+     C                   ENDSL                                                                BA6026
       *
       * Does the switchable feature CRT001 exist ?
       * CASE: WRK.Access Pgm Return Code is *Normal

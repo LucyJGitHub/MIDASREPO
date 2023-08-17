@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW101             Date 03Feb23               *
-      *  Prev Amend No. MD060966           Date 25Jan23               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *                 MD060966           Date 25Jan23               *
       *                 MD060784           Date 02Dec22               *
       *                 MD058830           Date 01Oct21               *
       *                 MD058285           Date 22Jun21               *
@@ -61,6 +62,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
+      *           Include GSH026, MD-28413 and MD-27371B              *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060966 - Re-deliver correct source                         *
       *  MD060784 - Program fails with decimal data error             *
@@ -137,6 +140,8 @@
       ** Midas SD Network Transaction Identifier.                                             CGL152
      FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 CMG008
       ** SWIFT Character Conversion file                                                      CMG008
+     FA6RETRL1  IF   E           K DISK                      INFSR(*PSSR)                     BA6026
+      ** Midas Retail Transaction Types - Extension File.                                     BA6026
                                                                                               CMG008
       *****************************************************************
       *                                                               *
@@ -397,6 +402,51 @@
      C                   EVAL      MGDRCR = 'C '                                            BUG26832
      C                   ENDIF                                                              BUG26832
      C                   ENDIF                                                              BUG26832
+      *                                                                                       BA6026
+      ** If BA6026 is ON, retrieve the assigned Tx Type Identification Code                   BA6026
+      ** using posting's RE Transaction Type (GLTRAT).                                        BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   Move      *Blanks       WKSIDC            4                          BA6026
+     C                   Move      *Blanks       WGLTRAT           5                          BA6026
+     C                   Move      GLTRAT        WGLTRAT                                      BA6026
+     C     WGLTRAT       Chain     A6RETRL1                           99                      BA6026
+      *                                                                                       BA6026
+      ** If found, retrieve the defined Tx Type Identification Code (if no code               BA6026
+      ** defined, default to 'NMSC').                                                         BA6026
+     C                   If        *IN99 = *Off And G1SIDC <> *Blanks                         BA6026
+     C                   Eval      WKSIDC = G1SIDC                                            BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Assign equivalent DRCR values.                                                       BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+      *                                                                                       BA6026
+      ** Tx Type Identification Code = 'NRTI'                                                 BA6026
+      *                                                                                       BA6026
+     C                   When      WKSIDC = 'NRTI'                                            BA6026
+     C                   If        GLDRCR = 0                                                 BA6026
+     C                   Eval      MGDRCR = 'RC'                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        GLDRCR = 1                                                 BA6026
+     C                   Eval      MGDRCR = 'RD'                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+      ** Tx Type Identification Code <> 'NRTI'                                                BA6026
+      *                                                                                       BA6026
+     C                   When      WKSIDC <> 'NRTI'                                           BA6026
+     C                   If        GLDRCR = 0                                                 BA6026
+     C                   Eval      MGDRCR = 'D '                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   If        GLDRCR = 1                                                 BA6026
+     C                   Eval      MGDRCR = 'C '                                              BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndSl                                                                BA6026
+     C                   EndIf                                                                BA6026
 
      C                   EVAL      MGSFD6 = *BLANKS                             Sub field 6
      C                   EVAL      MGSFD7 = *BLANKS                             Sub field 7 - Ref to
@@ -644,7 +694,25 @@
      C                   ENDIF                                                                CSW101
                                                                                               CSW101
      C                   ENDIF                                                                CSW101
-                                                                                              CSW101
+      *                                                                                       BA6026
+      ** Update Subfield 6 of MT940 Gen. Extract File (Posting Detail).                       BA6026
+      ** If no Identification Code defined, default to 'NMSC' (miscellaneous).                BA6026
+     C                   If        BA6026 = 'Y'                                               BA6026
+      *                                                                                       BA6026
+     C                   If        WKSIDC = *Blanks                                           BA6026
+     C                   Eval      MGSFD6 = 'NMSC'                                            BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      MGSFD6 = WKSIDC                                            BA6026
+      *                                                                                       BA6026
+      ** If WKSIDC is 'NCHG', also pass GLPNAR (posting narrative)                            BA6026
+     C                   If        WKSIDC = 'NCHG'                                            BA6026
+     C                   Movel     GLPNAR        MG8620                                       BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
+      *                                                                                       BA6026
+     C                   EndIf                                                                BA6026
+
       *    --------      -----
      C     @SubFld6      ENDSR
 
@@ -703,6 +771,21 @@
      C/COPY WNCPYSRC,GLH00630
 
      C                   ENDSL
+      *                                                                                       BA6026
+     C                   IF        BA6026 = 'Y'                                               BA6026
+     C                   EVAL      MGTRAT = *ZEROS                                            BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+      ** Update Subfield 7 of MT940 Gen. Extract File (Posting Detail)                        BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And WKSIDC <> *Blanks                         BA6026
+     C                             or BA6026 = 'Y' and MGSFD6 = 'NMSC'                        BA6026
+     C                             and GLTRAT <> 0 and MGSFD6 = 'NMSC'                        BA6026
+     C                   Eval      MGSFD7 = WGLTRAT                                           BA6026
+      *                                                                                       BA6026
+      ** also populate MGTRAT with RE Transaction Type                                        BA6026
+     C                   Z-Add     GLTRAT        MGTRAT                                       BA6026
+     C                   EndIf                                                                BA6026
 
       ** If CMG008 is ON, convert French characters based on translation table.               CMG008
       ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008
@@ -934,6 +1017,9 @@
      C                   EVAL      MG8664 = BAEX20                                          BUG25147
      C                   EVAL      MG8665 = BAEX21                                          BUG25147
      C**********         EVAL      MG8632 = BAEX22                                BUG25147 MD055642A
+     C                   If        BA6026 = 'Y'                                               BA6026
+     C                   EVAL      MG8632 = BAEX22                                            BA6026
+     C                   Endif                                                                BA6026
      C                   EVAL      MG8635 = 'Y'                                             BUG25311
      C                   ELSE                                                               BUG25147
 
@@ -1485,6 +1571,21 @@
      C                   EVAL      CSW101 = 'Y'                                               CSW101
      C                   ENDIF                                                                CSW101
                                                                                               CSW101
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Move      'N'           BA6026            1                          BA6026
+     C                   CallB     'AOSARDR0'                                                 BA6026
+     C                   Parm      *Blanks       P@RTCD                                       BA6026
+     C                   Parm      '*VERIFY'     P@OPTN                                       BA6026
+     C                   Parm      'BA6026'      P@SARD                                       BA6026
+      *                                                                                       BA6026
+      ** Set BA6026 variable to 'Y' if feature is installed.                                  BA6026
+      *                                                                                       BA6026
+     C                   If        P@RTCD = *BLANKS                                           BA6026
+     C                   Move      'Y'           BA6026                                       BA6026
+     C                   EndIf                                                                BA6026
+     C                                                                                        BA6026
       *    ------        -----
      C     @INZSR        ENDSR
 

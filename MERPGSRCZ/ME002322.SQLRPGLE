@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. BA6026             Date 18Jan23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -151,6 +153,14 @@
       ** New Network Account MT94x Details File Record (i.e. new state after amendments)
       *
 
+      *                                                                                       BA6026
+     D NewFilRcd2    E DS                  EXTNAME(A6NW94PD)                                  BA6026
+      ** New Network Account MT94x Details Extension File                                     BA6026
+      *                                                                                       BA6026
+     D*DSFDY****     E DS                  EXTNAME(DSFDY)                                     BA6026
+      ** First DS for Access Programs, Short Data Structure                                   BA6026
+      *                                                                                       BA6026
+
      D ScrLayout     E DS                  EXTNAME(ME002322DF:ME002322F2)
       ** Details 2 Screen Layout
       *
@@ -206,6 +216,7 @@
      C                   PARM      *INKJ         KJOut             1
      C     *INKL         PARM      *INKL         KLOut             1
      C                   PARM                    NewFilRcd
+     C                   PARM                    NewFilRcd2                                   BA6026
 
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
@@ -216,6 +227,18 @@
       ** Main loop until F3 or F10 or F12 or no error
       *  ============================================
  B1  C                   DOU       *INKC OR *INKJ OR *INKL OR NOT *IN40
+      *                                                                                       BA6026
+      ** Display the new field.                                                               BA6026
+      *                                                                                       BA6026
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   Eval      *IN52  = *ON                                               BA6026
+      *                                                                                       BA6026
+      ** Non-display the new field.                                                           BA6026
+      *                                                                                       BA6026
+     C                   Else                                                                 BA6026
+     C                   Eval      *IN52  = *OFF                                              BA6026
+     C                   EndIf                                                                BA6026
 
       ** -- Display the screen
       *     ------------------
@@ -335,6 +358,8 @@
      C                   PARM                    ScrLayout
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
+     C                   PARM                    NewFilRcd2                                   BA6026
+     C                   PARM                    SrWarn            1                          BA6026
      C                   ENDIF
 
       ** Set up error indicators
@@ -404,6 +429,10 @@
      C                   EVAL      F20SFR = N40SFR
      C                   EVAL      F20SDM = N40SDM
      C                   EVAL      F20DSI = N40DSI
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   EVAL      F20F86 = G4SF86                                            BA6026
+     C                   EndIf                                                                BA6026
      C                   EVAL      F20MI1 = N40MI1
      C                   EVAL      F20MI2 = N40MI2
      C                   EVAL      F20MI3 = N40MI3
@@ -575,6 +604,10 @@
      C                   EVAL      N40SFR = F20SFR
      C                   EVAL      N40SDM = F20SDM
      C                   EVAL      N40DSI = F20DSI
+     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
+     C                             N4G940 = 'Y'                                               BA6026
+     C                   EVAL      G4SF86 = F20F86                                            BA6026
+     C                   EndIf                                                                BA6026
      C                   EVAL      N40MI1 = F20MI1
      C                   EVAL      N40MI2 = F20MI2
      C                   EVAL      N40MI3 = F20MI3
@@ -664,6 +697,28 @@
      C                   OUT       LDA                                          *=======*
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   Call      'AOSARDR0'                                                 BA6026
+     C                   Parm      *BLANKS       WRTCD             7                          BA6026
+     C                   Parm      '*VERIFY'     WOPTN             7                          BA6026
+     C                   Parm      'BA6026'      WSARD             6                          BA6026
+     C                   Parm                    DSFDY                                        BA6026
+      *                                                                                       BA6026
+     C                   Select                                                               BA6026
+     C                   When      WRTCD=*BLANKS                                              BA6026
+     C                   Move      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C                   When      WRTCD='*NRF   '                                            BA6026
+     C                   Move      'N'           BA6026                                       BA6026
+      *                                                                                       BA6026
+     C                   Other                                                                BA6026
+     C                   Eval      DBKEY =  WOPTN                                             BA6026
+     C                   Eval      DBFILE = 'SCSARDPD'                                        BA6026
+     C                   Eval      DBASE =  001                                               BA6026
+     C                   Exsr      *PSSR                                                      BA6026
+     C                   EndSl                                                                BA6026
 
       ** Format the screen according to the received action code
       *

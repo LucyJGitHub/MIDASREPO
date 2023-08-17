@@ -784,24 +784,33 @@
      C                   MOVEL     'LEF0218'     MsgIdArr(Ix)
      C                   ENDIF
       *
-      **Reactivation*of*deleted*facilities*is*not*allowed********                           MD061786
-      ** Facility Amendment of deleted facilities is not allowed                            MD061786
+      * Reactivation of deleted facilities is not allowed
       *
-     C*****S#FATP        IFEQ      'FR'                                                     MD061786
-     C*****FC_RECI       ANDEQ     'R'                                                      MD061786
-     C     FC_RECI       IFEQ      'R'                                                      MD061786
+     C     S#FATP        IFEQ      'FR'
+     C     FC_RECI       ANDEQ     'R'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
-     C*****S#FATP        OREQ      'FR'                                              CLE041 MD061786
-     C*****AGFC_RECI     ANDEQ     'R'                                               CLE041 MD061786
-     C     AGFC_RECI     OREQ      'R'                                                      MD061786
+     C     S#FATP        OREQ      'FR'                                                       CLE041
+     C     AGFC_RECI     ANDEQ     'R'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041
      C                   MOVE      'N'           S#FATPok
      C                   ADD       1             Ix
      C                   MOVEL     'S#FATP    '  FldNameArr(Ix)
-     C**********         MOVEL     'LEF0279'     MsgIdArr(Ix)                               MD061786
-     C                   MOVEL     '5049597'     MsgIdArr(Ix)                               MD061786
-     C                   LEAVESR                                                            MD061786
+     C                   MOVEL     'LEF0279'     MsgIdArr(Ix)
      C                   ENDIF
+      *                                                                                     MD061786
+      ** Facility Amendment of deleted facilities is not allowed                            MD061786
+      *                                                                                     MD061786
+     C     S#FATP        IFNE      'FR'                                                     MD061786
+     C     FC_RECI       ANDEQ     'R'                                                      MD061786
+     C     WAggregate    ANDNE     'Y'                                                      MD061786
+     C     S#FATP        ORNE      'FR'                                                     MD061786
+     C     AGFC_RECI     ANDEQ     'R'                                                      MD061786
+     C     WAggregate    ANDEQ     'Y'                                                      MD061786
+     C                   MOVE      'N'           S#FATPok                                   MD061786
+     C                   ADD       1             Ix                                         MD061786
+     C                   MOVEL     'S#FATP    '  FldNameArr(Ix)                             MD061786
+     C                   MOVEL     '5049597'     MsgIdArr(Ix)                               MD061786
+     C                   ENDIF                                                              MD061786
       *                                                                                       246694
      C     KEY#CA        Klist                                                                246694
      C                   Kfld                    FC_BRCA                                      246694

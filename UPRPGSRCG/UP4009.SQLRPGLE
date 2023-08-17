@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061690             Date 27Jul23             *
-      *  Prev Amend No. MD060709             Date 08Nov22             *
+      *  Last Amend No. MD061705             Date 01Aug23             *
+      *  Prev Amend No. MD061690             Date 27Jul23             *
+      *                 MD060709             Date 08Nov22             *
       *                 MD060961             Date 23Jan23             *
       *                 MD059751             Date 25Mar22             *
       *                 MD059742             Date 23Mar22             *
@@ -22,6 +23,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061705 - Take into account *ACCPTH where attribute APKSIN  *
+      *             can be reported as a consequence of a field type  *
+      *             change                                            *
       *  MD061690 - File GPSRAJW0 was deleted because one of its      *
       *             dependency was deleted                            *
       *  MD060709 - Change in LF dynamic selection is omitted         *
@@ -62,6 +66,7 @@
      D @DTAARA         S              1
      D TotalDel        S              5  0                                                  MD061690
      D IGNORE          S              1                                                     MD061690
+     D RcdCount4       S              5  0                                                  MD061705
 
      D UPGLOG        E DS                  EXTNAME(UPCLOGPD)
      D UPGDRV        E DS                  EXTNAME(UPGDRVTD)
@@ -606,6 +611,26 @@
      C                   iter
      C                   ENDIF
 
+      * If APKSIN                                                                           MD061705
+     C                   If        WFLDA = 'APKSIN'                                         MD061705
+     C                   eval      RcdCount4 = 0                                            MD061705
+      * check if there is field change type                                                 MD061705
+     C/exec SQL                                                                             MD061705
+     C+ select count(*) into :RcdCount4 from UPGLOGPD                                       MD061705
+     C+ where WFILE  = :RdFile and WFLDA = 'WHFLDT'                                         MD061705
+     C/end-exec                                                                             MD061705
+     C                   If        RcdCount4 > 0                                            MD061705
+      * Get next                                                                            MD061705
+     C/exec SQL                                                                             MD061705
+     C+ fetch next                                                                          MD061705
+     C+ from EachRdZ                                                                        MD061705
+     C+ into :UPGLOG                                                                        MD061705
+     C/end-exec                                                                             MD061705
+                                                                                            MD061705
+     C                   iter                                                               MD061705
+     C                   ENDIF                                                              MD061705
+     C                   ENDIF                                                              MD061705
+                                                                                            MD061705
      C                   DUMP
      C                   eval      DREXCP = 'Y'
       * Get next

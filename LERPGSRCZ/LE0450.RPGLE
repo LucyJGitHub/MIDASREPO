@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR924081           Date 23Mar23               *
-      *  Prev Amend No. AR981899           Date 27Feb23               *
+      *  Last Amend No. MD023220           Date 15Aug23               *
+      *  Prev Amend No. AR924081           Date 23Mar23               *
+      *                 AR981899           Date 27Feb23               *
       *                 AR1096206          Date 02Feb23               *
       *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
@@ -439,6 +440,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023220 - No postings generated on subtype change for       *
+      *             guarantee receiver of risk loan. Generate subtype *
+      *             change account keys for guarantee receiver.       *
+      *           - Applied for MD044339.                             *
       *  AR924081 - Incorrect COF accrual for loans with ADDI = 'B'.  *
       *             Extend fix 245082 to COF. Add one day to ZIEND    *
       *             if loan is setup with first & last day accrual.   *
@@ -12510,6 +12515,21 @@ L118 I                             P   72   77 7RTSPL
      C***********          SETON                     53             S01270BH3482
      C                   SETOFF                                       53                       BH348
      C                   EXSR      AKYOUT                                                      S0127
+      *                                                                                     MD023220
+      ** Account key generated with 'R' in AKY (in position 8) if                           MD023220
+      ** the receiver of guarantee is different to blanks.                                  MD023220
+      *                                                                                     MD023220
+     C     *IN26         IFEQ      '1'                                                      MD023220
+     C     WORECE        IFNE      *BLANKS                                                  MD023220
+     C                   MOVE      CNUML         WORK2                                      MD023220
+     C                   MOVE      WORECE        CNUML                                      MD023220
+     C                   MOVE      'R'           AKY(8)                                     MD023220
+     C                   EXSR      AKYOUT                                                   MD023220
+     C                   MOVE      WORK2         CNUML                                      MD023220
+     C                   MOVE      ' '           AKY(8)                                     MD023220
+     C                   ENDIF                                                              MD023220
+     C                   ENDIF                                                              MD023220
+      *                                                                                     MD023220
      C**                                                                  S01270
      C**   GENERATE NEW LOAN-TYPE/SUB-TYPE ACCOUNT KEYS                   S01270
       ** Processing types 68,69 and 72 are call parts purch, call parts   CLE005
@@ -12522,6 +12542,21 @@ L118 I                             P   72   77 7RTSPL
      C***********          SETOF                     53             S01270BH3482
      C                   SETON                                        53                       BH348
      C                   EXSR      AKYOUT                                                      S0127
+      *                                                                                     MD023220
+      ** Account key generated with 'R' in AKY (in position 8) if                           MD023220
+      ** the receiver of guarantee is different to blanks.                                  MD023220
+      *                                                                                     MD023220
+     C     *IN26         IFEQ      '1'                                                      MD023220
+     C     WORECE        IFNE      *BLANKS                                                  MD023220
+     C                   MOVE      CNUML         WORK2                                      MD023220
+     C                   MOVE      WORECE        CNUML                                      MD023220
+     C                   MOVE      'R'           AKY(8)                                     MD023220
+     C                   EXSR      AKYOUT                                                   MD023220
+     C                   MOVE      WORK2         CNUML                                      MD023220
+     C                   MOVE      ' '           AKY(8)                                     MD023220
+     C                   ENDIF                                                              MD023220
+     C                   ENDIF                                                              MD023220
+      *                                                                                     MD023220
      C                   SETOFF                                       53                       BH348
      C                   END                                                                   S0127
       *                                                                   CAC001

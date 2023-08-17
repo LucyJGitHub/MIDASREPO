@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD061673             Date 21Jul23             *
-      *  Prev Amend No. CSW101               Date 03Feb23             *
+      *  Last Amend No. MD061518             Date 23Jul23             *
+      *  Prev Amend No. MD061673             Date 21Jul23             *
+      *                 CSW101               Date 03Feb23             *
       *                 MD060848             Date 28Dec22             *
       *                 MD058830             Date 01Oct21             *
       *                 MD060547             Date 12Dec22             *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
       *  MD061673 - Consider field SDNWRKPD.EDCONV                    *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD060848 - Consider field SDLIBRTD.ROUPAL                    *
@@ -147,6 +149,7 @@
      C                   Other                                                              MD055681
      C                   If        XINDEX <> 'CBDPRCTD'                                     MD055891
      C                             and XINDEX <> 'CBMEXCTD'                                 MD055891
+     C                             and XINDEX <> 'ZZGBLCTD'                                 MD061518
       * Update Extension file with content of 'old file'
      C                   If        %SUBST(XINDEX:2:4) <> 'PDFL'                             MD056565
      C                   exsr      SR_UpdExt
@@ -535,6 +538,11 @@
      C                   eval      OLDFILE = 'GPNSECPD'                                     MD054346
      C                   endif                                                              MD054346
                                                                                             MD054346
+      * for ZZGBLCTD migration, the bespoke record will come from ZZGBXXLANG                MD061518
+     C                   if        EXTINDEX = 'ZZGBLBTD'                                    MD061518
+     C                   eval      OLDFILE = 'ZZGBXXLANG'                                   MD061518
+     C                   endif                                                              MD061518
+                                                                                            MD061518
       * for T_WIPACT migration                                                              MD056891
      C                   if        EXTINDEX = 'GPWATBTD'                                    MD056891
      C                             or EXTINDEX = 'T_APIBTD'                                 MD056602

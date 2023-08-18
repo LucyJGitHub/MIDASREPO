@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052119           Date 20Jun23               *      
-      *  Prev Amend No. MD051539           Date 12Apr23               *
+      *  Last Amend No. MD056630           Date 15Aug23               *
+      *  Prev Amend No. MD052119           Date 20Jun23               *
+      *                 MD051539           Date 12Apr23               *
       *                 203695             Date 21Feb23               *
       *                 178272             Date 21Feb23               *
       *                 261302             Date 21Feb23               *
@@ -220,7 +221,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  MD052119 - COB Failure in component DLC0604                  *      
+      *  MD056630 - Difference in Interest amount in message MT320    *
+      *             and MT202 for MM deal IT CT.                      *
+      *           - Pick up new base rate valued today when CDL019 is *
+      *             ON and Fix base rate is 'N'.                      *
+      *  MD052119 - COB Failure in component DLC0604                  *
       *  MD051539 - MM rollover deal does not produce MT202 when auto *
       *             rollover changed to No.                           *
       *  203695 - Pay/receive message should be generated for the     *
@@ -5824,6 +5829,10 @@
      C                     END                                            140335
      C**  Determine whether rate change should be considered              140335
      C                     MOVE 'N'       RCHG    1                       140335
+     C           DLNO      IFEQ 007504
+     C           DLNO      OREQ 007505
+     C                     MOVE DLNODC    DLNODC
+     C                     ENDIF
      C                     SELEC                                          140335
      C           DTYP      WHEQ 'CD'                                      140335
      C           DTYP      OREQ 'CL'                                      140335
@@ -5881,6 +5890,8 @@
      C           BRTT      ANDNE*BLANKS                                                       CSD103
      C           BAVDNR    ANDEQBJRDNB                                    140335
      C           RCHG      ANDEQ'Y'                                       140335
+     C           CDL019    ANDEQ'Y'                                                         MD056630
+     C           FSFBRT    ANDEQ'N'                                                         MD056630
      C                     Z-ADDBJRDNB    ZIEND                           140335
      C                     END                                            140335
      C                     EXSR GLINTC
@@ -5889,6 +5900,8 @@
      C           BRTT      ANDNE*BLANKS                                                       CSD103
      C           BAVDNR    ANDEQBJRDNB                                    140335
      C           RCHG      ANDEQ'Y'                                       140335
+     C           CDL019    ANDEQ'Y'                                                         MD056630
+     C           FSFBRT    ANDEQ'N'                                                         MD056630
      C                     Z-ADDZINTR     OLDINT                          140335
      C                     Z-ADDBJRDNB    ZIBEG                           140335
      C                     Z-ADDOLDEND    ZIEND                           140335
@@ -7464,7 +7477,7 @@
       *                                                                                     MD052119
      C                     ENDIF                                                            MD052119
      C                     ENDIF                                                            MD052119
-      *                                                                                     MD052119     
+      *                                                                                     MD052119
      C* IF AMOUNT NEGATIVE SETON '45'
      C*
      C* SUPPRESS OUTPUT IF NULL EAMT OR REQUIRED BRANCH CODE NOT FOUND.

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060840           Date 08May23               *
-      *  Prev Amend No. AR959687           Date 08May23               *
+      *  Last Amend No. BA7106             Date 08Aug23               *
+      *  Prev Amend No. MD060840           Date 08May23               *
+      *                 AR959687           Date 08May23               *
       *                 MD060620           Date 14Nov22               *
       *                 MD060583           Date 13Oct22               *
       *                 MD060532           Date 27Sep22               *
@@ -172,6 +173,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
       *  MD060840 - Unable to complete a TD/CF deal with              *
       *             regular/irregular interest rate change and/or     *
       *             interest payment                                  *
@@ -947,6 +949,7 @@
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
+     D GLCVPM          S             20A   INZ('DLSubTypeDefaultPgm')                         BA7106
       /COPY WNCPYSRC,MMLDNIV090
 
       *****************************************************************
@@ -975,6 +978,32 @@
                                                                                 CPB002
       * Defautl Deal Type/Sub type if necessary                                 CPB002
       *                                                                         CPB002
+     C     BA7106        IFEQ      'Y'                                                        BA7106
+                                                                                              BA7106
+      * Reset variables updated by each module before each call                               BA7106
+     C                   EXSR      RESETERRS                                                  BA7106
+                                                                                              BA7106
+     C                   CALLB     'A7VDLTPSTP'                                               BA7106
+     C                   PARM                    ReturnCode                                   BA7106
+     C                   PARM                    MSG1                                         BA7106
+     C                   PARM                    MSG2                                         BA7106
+     C                   PARM                    MSG2C                                        BA7106
+     C                   PARM                    MSG3                                         BA7106
+     C                   PARM                    DDTYPEOK                                     BA7106
+     C                   PARM                    DDTYPE                                       BA7106
+     C                   PARM                    DDSTYP                                       BA7106
+     C                   PARM                    DDCLAS                                       BA7106
+      ** Type of this transaction function (4A)                                               BA7106
+     C                   PARM                    LDNI                                         BA7106
+     C                   PARM                    SDDLST                                       BA7106
+     C                   PARM                    DDACTN                                       BA7106
+     C                   PARM                    CDL033                                       BA7106
+     C                   PARM      *BLANKS       PWMsgID1          7                          BA7106
+     C                   PARM                    CDL006                                       BA7106
+     C                   PARM                    BA7106            1                          BA7106
+      *                                                                                       BA7106
+     C                   ELSE                                                                 BA7106
+      *                                                                                       BA7106
      C     '?'           SCAN      DDCUST                                 01                  CAP067
      C                   IF        *IN01 <> *On                                               CAP067
                                                                                               CAP067
@@ -1044,6 +1073,8 @@
      C                   PARM      *BLANKS       PWMsgID1          7            CDL006
      C                   PARM                    CDL006                                      BUG9827
 
+     C                   ENDIF                                                                BA7106
+      *                                                                                       BA7106
       /COPY WNCPYSRC,MMLDNIV002
 
       ** Total amount of fiduciary takings should match amount of associated    CDL006
@@ -1831,6 +1862,24 @@
      C                   ENDIF                                                  CSE006
                                                                                 CSE006
       /COPY WNCPYSRC,MMLDNIV020
+      *                                                                                       BA7106
+      **  Call UNIBANK in-house program to get the Deal subtype                               BA7106
+      *                                                                                       BA7106
+     C     BA7106        IFEQ      'Y'                                                        BA7106
+     C     DDSTYP        ANDEQ     *BLANK                                                     BA7106
+     C     DDACTN        ANDEQ     'I'                                                        BA7106
+     C     MSG1          ANDEQ     *BLANK                                                     BA7106
+     C     MSG2          ANDEQ     *BLANK                                                     BA7106
+      *                                                                                       BA7106
+     C                   MOVE      BBCUST        WLCUST                                       BA7106
+     C                   CALL      W#PGM                                                      BA7106
+     C                   PARM                    WLCUST            6                          BA7106
+     C                   PARM                    DDTYPE                                       BA7106
+     C                   PARM                    DDSTYP                                       BA7106
+     C                   PARM                    DDCCY                                        BA7106
+     C                   PARM      *BLANKS       DDCCY2            3                          BA7106
+      *                                                                                       BA7106
+     C                   ENDIF                                                                BA7106
 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -1930,6 +1979,72 @@
                                                                                 CDL006
      C                   ENDIF                                                  CDL006
      C                   ENDIF                                                  CDL006
+      *                                                                                       BA7106
+      ** Re-validate deal type/sub-type in case sub-type has been                             BA7106
+      ** auto generated (if feature is on and insertion)                                      BA7106
+      *                                                                                       BA7106
+     C     BA7106        IFEQ      'Y'                                                        BA7106
+     C     DDACTN        ANDEQ     'I'                                                        BA7106
+                                                                                              BA7106
+      *  *-------------------------------*                                                    BA7106
+      *  * Validate Deal Type / Sub-Type *  #01                                               BA7106
+      *  *-------------------------------*                                                    BA7106
+                                                                                              BA7106
+      * Reset variables updated by each module before each call                               BA7106
+     C                   EXSR      RESETERRS                                                  BA7106
+                                                                                              BA7106
+     C                   CALLB     'A7VDLTPSTP'                                               BA7106
+     C                   PARM                    ReturnCode                                   BA7106
+     C                   PARM                    MSG1                                         BA7106
+     C                   PARM                    MSG2                                         BA7106
+     C                   PARM                    MSG2C                                        BA7106
+     C                   PARM                    MSG3                                         BA7106
+     C                   PARM                    DDTYPEOK                                     BA7106
+     C                   PARM                    DDTYPE                                       BA7106
+     C                   PARM                    DDSTYP                                       BA7106
+     C                   PARM                    DDCLAS                                       BA7106
+      ** Type of this transaction function (4A)                                               BA7106
+     C                   PARM                    LDNI                                         BA7106
+     C                   PARM                    SDDLST                                       BA7106
+     C                   PARM                    DDACTN                                       BA7106
+     C                   PARM                    CDL033                                       BA7106
+     C                   PARM      *BLANKS       PWMsgID1          7                          BA7106
+     C                   PARM                    CDL006                                       BA7106
+     C                   PARM                    BA7106            1                          BA7106
+                                                                                              BA7106
+     C     MSG1          IFNE      *BLANK                                                     BA7106
+     C                   ADD       1             Idx                                          BA7106
+     C                   EVAL      FldNameArr(Idx) = 'DDTYPE'                                 BA7106
+     C                   EVAL      MsgIDArr(Idx) = MSG1                                       BA7106
+     C                   MOVE      'N'           DDTypeOK                                     BA7106
+     C                   ENDIF                                                                BA7106
+     C     MSG2          IFNE      *BLANK                                                     BA7106
+     C                   ADD       1             Idx                                          BA7106
+     C                   EVAL      FldNameArr(Idx) = 'DDSTYP'                                 BA7106
+     C                   EVAL      MsgIDArr(Idx) = MSG2                                       BA7106
+     C                   MOVE      'N'           DDSTypOK                                     BA7106
+     C                   ENDIF                                                                BA7106
+     C     MSG2C         IFNE      *BLANK                                                     BA7106
+     C                   ADD       1             Idx                                          BA7106
+     C                   EVAL      FldNameArr(Idx) = 'DDCLAS'                                 BA7106
+     C                   EVAL      MsgIDArr(Idx) = MSG2C                                      BA7106
+     C                   MOVE      'N'           DDClasOK                                     BA7106
+     C                   ENDIF                                                                BA7106
+     C     MSG3          IFNE      *BLANK                                                     BA7106
+     C                   ADD       1             Idx                                          BA7106
+     C                   EVAL      FldNameArr(Idx) = 'DDTYPE'                                 BA7106
+     C                   EVAL      MsgIDArr(Idx) = MSG3                                       BA7106
+     C                   MOVE      'N'           DDTypeOK                                     BA7106
+     C                   MOVE      'N'           DDSTypOK                                     BA7106
+     C                   MOVE      'N'           DDClasOK                                     BA7106
+     C                   ENDIF                                                                BA7106
+                                                                                              BA7106
+      ** Use the return code's value to set the field's OK flag                               BA7106
+     C                   CALLB     'ZASETOKFLG'                                               BA7106
+     C                   PARM                    DDDltStpOK                                   BA7106
+     C                   PARM                    ReturnCode                                   BA7106
+     C                   PARM                    WarnGlobal                                   BA7106
+     C                   ENDIF                                                                BA7106
 
       /COPY WNCPYSRC,MMLDNIV021
 
@@ -4654,6 +4769,57 @@
      C                   If        PRTCD = *Blanks                                            CDE002
      C                   Eval      CDE002 = 'Y'                                               CDE002
      C                   Endif                                                                CDE002
+      *                                                                                       BA7106
+      ** Access SAR details file to determine if BA7106 is switched on                        BA7106
+      *                                                                                       BA7106
+     C                   CALLB     'AOSARDR0'                                                 BA7106
+     C                   PARM      *Blanks       PRTCD                                        BA7106
+     C                   PARM      '*VERIFY'     POPTN                                        BA7106
+     C                   PARM      'BA7106'      PSARD                                        BA7106
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA7106
+      *                                                                                       BA7106
+     C                   MOVE      'N'           BA7106            1                          BA7106
+     C     PRTCD         IFEQ      *BLANKS                                                    BA7106
+      *                                                                                       BA7106
+      * Retrieve in-house program name                                                        BA7106
+     C                   CALL      'AOSVALR0'                                                 BA7106
+     C                   PARM      *BLANKS       PRTCD                                        BA7106
+     C                   PARM      GLCVPM        SVALK1           20                          BA7106
+     C                   PARM                    SVAL1           200                          BA7106
+     C                   PARM      *BLANK        SVALK2           20                          BA7106
+     C                   PARM                    SVAL2           200                          BA7106
+     C                   PARM      *BLANK        SVALK3           20                          BA7106
+     C                   PARM                    SVAL3           200                          BA7106
+     C                   PARM      *BLANK        SVALK4           20                          BA7106
+     C                   PARM                    SVAL4           200                          BA7106
+     C                   PARM      *BLANK        SVALK5           20                          BA7106
+     C                   PARM                    SVAL5           200                          BA7106
+     C                   PARM      *BLANK        SVALK6           20                          BA7106
+     C                   PARM                    SVAL6           200                          BA7106
+     C                   PARM      *BLANK        SVALK7           20                          BA7106
+     C                   PARM                    SVAL7           200                          BA7106
+     C                   PARM      *BLANK        SVALK8           20                          BA7106
+     C                   PARM                    SVAL8           200                          BA7106
+     C                   PARM      *BLANK        SVALK9           20                          BA7106
+     C                   PARM                    SVAL9           200                          BA7106
+     C                   PARM      *BLANK        SVALK0           20                          BA7106
+     C                   PARM                    SVAL10          200                          BA7106
+      *                                                                                       BA7106
+     C     PRTCD         IFNE      *BLANKS                                                    BA7106
+     C                   MOVEL     '010'         DBASE                                        BA7106
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       BA7106
+     C     SVAL1         IFEQ      '*NRF'                                                     BA7106
+     C                   MOVEL     SVALK1        DBKEY                                        BA7106
+     C                   ENDIF                                                                BA7106
+     C                   SETON                                        U7U8LR                  BA7106
+     C                   EXSR      *PSSR                                                      BA7106
+     C                   ENDIF                                                                BA7106
+      *                                                                                       BA7106
+     C                   MOVEL     SVAL1         W#PGM            10                          BA7106
+      *                                                                                       BA7106
+     C                   MOVE      'Y'           BA7106            1                          BA7106
+     C                   ENDIF                                                                BA7106
+      *                                                                                       BA7106
      C/COPY WNCPYSRC,MMH00024
       *
       ** Access Profit Centre Accounting details via access program

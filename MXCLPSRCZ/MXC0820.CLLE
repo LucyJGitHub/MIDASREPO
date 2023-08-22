@@ -9,10 +9,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. CMX017   *CREATE   Date 04Aug23              */
+/*       Last Amend No. MD057830           Date 17Aug23              */
+/*       Prev Amend No. MD057445           Date 17Aug23              */
+/*                      CMX017  *CREATE    Date 04Aug23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD057830 - OPC job to transfer the jar file created by this */
+/*                  component failed because of authority issues.    */
+/*                  Need to run the jar file thru IFSAUT command     */
+/*                  Formalize local fix QC1832.                      */
+/*       MD057445 - JAR file created by MXC0820 cannot be sent in    */
+/*                  file transfer.                                   */
+/*                - Set the environment variable PASE_DEFAULT_UTF8   */
+/*                  to N (Job level).                                */
 /*       CMX017 - IFS File Compression of Data Export Files          */
 /*                                                                   */
 /*********************************************************************/
@@ -22,6 +32,7 @@
              DCL        VAR(&JARCMD) TYPE(*CHAR) LEN(9)            +
                           VALUE('jar -cvf ')
              DCL        VAR(&CDCMD) TYPE(*CHAR) LEN(205)
+             DCL        VAR(&IFSPATH) TYPE(*CHAR) LEN(220)                              /*MD057830*/
              DCL        VAR(&FLNAME) TYPE(*CHAR) LEN(18)
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
              DCL        VAR(&DATEF) TYPE(*CHAR) LEN(1)
@@ -99,6 +110,9 @@
 /*        - ZM0080 returns date in YYMMDD format always.                                        */
              CALL       PGM(ZM0080) PARM(&SDATE &DATEF)
 
+/** Default the CCSID of this Job **/                                                   /*MD057445*/
+             ADDENVVAR ENVVAR(PASE_DEFAULT_UTF8) VALUE(N) LEVEL(*JOB)                   /*MD057445*/
+                                                                                        /*MD057445*/
 /* Construct filename of the jar for the day                                                    */
              CHGVAR     VAR(&FLNAME) VALUE(&MXJFN *TCAT +
                           &SDATE *TCAT '.jar')
@@ -137,6 +151,11 @@
 
              QSH        CMD(&QSHCMD)
 
+ /*        - Update IFSPATH variable and Execute the IFSAUT Command  */                 /*MD057830*/
+             CHGVAR     VAR(&IFSPATH) VALUE(&EMIFS *TCAT &FLNAME)                       /*MD057830*/
+             IFSAUT     PATH(&IFSPATH)                                                  /*MD057830*/
+             MONMSG     MSGID(CPFA0A9)                                                  /*MD057830*/
+                                                                                        /*MD057830*/
              ENDDO
 
              DMPCLPGM                              /** Temp code to check contents of vars       */

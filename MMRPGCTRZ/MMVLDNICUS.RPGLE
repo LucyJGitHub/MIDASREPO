@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD060528           Date 16Sep22               *
-      *  Prev Amend No. CDL063             Date 02Nov21               *
+      *  Last Amend No. LCI001             Date 27Jul20               *      
+      *  Prev Amend No. MD060528           Date 16Sep22               *
+      *                 CDL063             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LCI001 - MM Deals Validation - Deal Type against Customer    *
+      *           Add hooks LCI001_001, LCI001_002, LCI001_003,       *
+      *            LCI001_004                                         *       
       *  MD060528 - CDL063 fix - Split system value AllowBankNBankCpty*
       *             into two - AllowBankForTDTIDeal and               *
       *             AllowNonBankForIPIT                               *
@@ -208,6 +212,7 @@
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
       **
+     D/COPY WNCPYSRC,LCI001_001
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -305,11 +310,13 @@
       **********                                                                     CDL063 MD060528
      C*****CDL063        IFNE      'Y'                                               CDL063 MD060528
      C     NBankIPIT     IFNE      'Y'                                                      MD060528
+     C/COPY WNCPYSRC,LCI001_003          
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM1065'     Msgid2
      C                   END
+     C/COPY WNCPYSRC,LCI001_004
      C                   ENDIF                                                                CDL063
      C                   END
 
@@ -429,6 +436,7 @@
      C                   EVAL      NBankIPIT = P@VL01                                       MD060528
      C                   EVAL      BankTDTI  = P@VL02                                       MD060528
 
+     C/COPY WNCPYSRC,LCI001_002 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

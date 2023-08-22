@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR1076352          Date 15Jun23               *
-      *  Prev Amend no. MD053935           Date 08Jun23               *
+      *  Last Amend No. MD035417           Date 22Aug23               *
+      *  Prev Amend No. AR1076352          Date 15Jun23               *
+      *                 MD053935           Date 08Jun23               *
       *                 MD060620           Date 25May23               *
       *                 MD061418           Date 24May23               *
       *                 MD059368           Date 17Dec21               *
@@ -130,6 +131,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035417 - Funding indicator 62 is never switched off.       *
+      *             Switch off *IN62 to skip funding spread rate/sign *
+      *             validation.                                       *
       *  AR1076352 - Allow amendment of rollover date and removal of  *
       *              rollover frequency and day number in one         *
       *              operation. (Child: AR1080330)                    *
@@ -647,7 +651,7 @@
      D  LBNOPSH                       1A                                                    MD060620
      D  LBNRRDP                       2S 0                                                  MD060620
      D  LBNDBAV                       1S 0                                                  MD060620
-      *                                                                                     MD060620 
+      *                                                                                     MD060620
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -7469,6 +7473,8 @@
                                                                                              BUG2579
      C     @FUNDING      IFEQ      'Y'                                                       BUG2579
      C                   MOVE      *ON           *IN62                                       BUG2579
+     C                   ELSE                                                               MD035417
+     C                   MOVE      *OFF          *IN62                                      MD035417
      C                   ENDIF                                                               BUG2579
                                                                                              BUG2579
       ** Check if Rollover rate fixing day enhancement - CLE011                              BUG2579

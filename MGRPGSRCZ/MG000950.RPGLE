@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *      
-      *  Prev Amend No. MD060344           Date 08Oct22               *
+      *  Last Amend No. BA3107             Date 15Aug23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 MD060344           Date 08Oct22               *
       *                 AR898442           Date 24Feb12               *
       *                 CMG008             Date 20Feb20               *
       *                 MD021108A          Date 16Jul13               *
@@ -57,7 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
+      *  BA3107 - Output IBAN in Sender Account Number field for MT950*
+      *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
       *           - Pattern the fix after MG0000940.                  *
       *  AR898442 - MT940 nacked if narrative starts with a /         *
@@ -1347,13 +1349,21 @@
      C                   Z-add     0             NSNO
 
      C                   Select
-      *                                                                                     MD042357
-      ** Don't use IBAN - Internal IUS pgms not designed to use.                            MD042357
-      ** Revert to Re AcNo                                                                  MD042357
-      *                                                                                     MD042357
+      *************                                                                  MD042357 BA3107
+      ***Don't*use*IBAN*-*Internal*IUS*pgms*not*designed*to*use.**                   MD042357 BA3107
+      ***Revert*to*Re*AcNo**                                                         MD042357 BA3107
+      *************                                                                         MD042357
      C**********         When      MGIBAN <> *Blank                                         MD042357
      C**********         Movel     MGIBAN        SACN                                       MD042357
      C**********         Movel     *blanks       AORR                                       MD042357
+                                                                                              BA3107
+      *  When BA3107 is ON, output the IBAN (if present) to Sender's Account                  BA3107
+                                                                                              BA3107
+     C                   When      MGIBAN <> *Blank                                           BA3107
+     C                             and BA3107 = 'Y'                                           BA3107
+     C                   Movel     MGIBAN        SACN                                         BA3107
+     C                   Movel     *blanks       AORR                                         BA3107
+                                                                                              BA3107
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        SACN
      C                   Movel     'R'           AORR
@@ -1718,6 +1728,17 @@
 
      C                   ENDIF                                                                CMG006
 
+     C                   CALL      'AOSARDR0'                                                 BA3107
+     C                   PARM      *BLANKS       P@RTCD                                       BA3107
+     C                   PARM      '*VERIFY'     P@OPTN                                       BA3107
+     C                   PARM      'BA3107'      P@SARD                                       BA3107
+                                                                                              BA3107
+     C     P@RTCD        IFEQ      *BLANKS                                                    BA3107
+     C                   MOVE      'Y'           BA3107            1                          BA3107
+     C                   ELSE                                                                 BA3107
+     C                   MOVE      'N'           BA3107                                       BA3107
+     C                   ENDIF                                                                BA3107
+                                                                                              BA3107
      C/COPY WNCPYSRC,MGH00094
      C/COPY OFCPYSRCZ,CGL146_064                                                              CGL146
      C/COPY OFCPYSRCZ,CGL146_094                                                             CGL146A

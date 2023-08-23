@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. AR582535           Date 23Aug23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 246192             Date 13May22               *
       *                 AR574541           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
@@ -170,6 +171,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR582535 - Incorrect YTD interest shown in LE1050P1 due to   *
+      *             value of Interest accrued YTD (YILN) of CLOANCK.  *
+      *             Reset fields of CLOANCK with values from LEVCLIKPD*
+      *             to ensure that fields are properly initialised.   *
+      *             Patterned fix from AR952668. (Child: AR582536)    *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -4944,7 +4950,8 @@
      C     L_CLNRPD      ANDLE     RLDT_M
      C                   Z-ADD     L_CLRAMT      ZAMTCI
      C                   EXSR      ZCONVZ1
-     C                   Z-ADD     ZAMTCO        NLRA
+     C**********         Z-ADD     ZAMTCO        NLRA                                       AR582535
+     C                   Z-ADD     ZAMTCO        NLRAK                                      AR582535
      C                   ENDIF
      C                   ENDIF
       *
@@ -4954,6 +4961,87 @@
       *
       *** Timestamp
      C                   EVAL      TMST=TimeStamp
+      *                                                                                     AR582535
+      ** MOVE/Z-ADD values from fields in LEVCLIKPD to fields in CLOANCK                    AR582535
+      ** to avoid details from previous loan amended on same job                            AR582535
+      ** be used in writing new record.                                                     AR582535
+      *                                                                                     AR582535
+     C                   Z-ADD     K_CLYPLN      YPLN                                       AR582535
+     C                   Z-ADD     K_CLYFLN      YFLN                                       AR582535
+     C                   Z-ADD     K_CLYWLN      YWLN                                       AR582535
+     C                   Z-ADD     K_CLABLN      ABLN                                       AR582535
+     C                   Z-ADD     K_CLYPLC      YPLC                                       AR582535
+     C                   Z-ADD     K_CLYFLC      YFLC                                       AR582535
+     C                   Z-ADD     K_CLYWLC      YWLC                                       AR582535
+     C                   Z-ADD     K_CLABLC      ABLC                                       AR582535
+     C                   Z-ADD     K_CLWWLN      WWLN                                       AR582535
+     C                   Z-ADD     K_CLIWLN      IWLN                                       AR582535
+     C                   Z-ADD     K_CLPWLN      PWLN                                       AR582535
+     C                   MOVE      K_CLZZ04      ZZ004                                      AR582535
+     C                   Z-ADD     K_CLRDST      RDST                                       AR582535
+     C                   Z-ADD     K_CLYILN      YILN                                       AR582535
+     C                   MOVE      K_CLF57U      F57U                                       AR582535
+     C                   MOVE      K_QQORVD      ORVDQQ                                     AR582535
+     C                   MOVE      K_CLTHRN      THRN                                       AR582535
+     C                   Z-ADD     K_CLNPRA      NPRAM                                      AR582535
+     C                   Z-ADD     K_CLNDAM      NDAM                                       AR582535
+     C                   MOVE      K_CLRLBR      RLBR                                       AR582535
+     C                   MOVE      K_CLZZ09      ZZ009                                      AR582535
+     C                   Z-ADD     K_CLRRST      RRST                                       AR582535
+     C                   MOVE      K_QQRRON      RRONQQ                                     AR582535
+     C                   MOVE      K_CLRRIB      RRIB                                       AR582535
+     C                   MOVE      K_CLRRBA      RRBA                                       AR582535
+     C                   MOVE      K_CLRROB      RROB                                       AR582535
+     C                   MOVE      K_CLRROC      RROC                                       AR582535
+     C                   MOVE      K_CLRIUS      RIUS                                       AR582535
+     C                   MOVE      K_CLRAUS      RAUS                                       AR582535
+     C                   MOVE      K_CLRXUS      RXUS                                       AR582535
+     C                   MOVE      K_CLRLSB      RLSB                                       AR582535
+     C                   Z-ADD     K_CLRPST      RPST                                       AR582535
+     C                   MOVE      K_QQRPON      RPONQQ                                     AR582535
+     C                   MOVE      K_CLRPIB      RPIB                                       AR582535
+     C                   MOVE      K_CLRPBA      RPBA                                       AR582535
+     C                   MOVE      K_CLRPOB      RPOB                                       AR582535
+     C                   MOVE      K_CLRPOC      RPOC                                       AR582535
+     C                   MOVE      K_CLRRCR      RRCR                                       AR582535
+     C                   MOVE      K_CLRRCA      RRCA                                       AR582535
+     C                   MOVE      K_CLRRVN      RRVN                                       AR582535
+     C                   MOVE      K_CLRAWB      RAWB                                       AR582535
+     C                   MOVE      K_CLRAWA      RAWA                                       AR582535
+     C                   MOVE      K_CLRBEN      RBEN                                       AR582535
+     C                   MOVE      K_CLRBNA      RBNA                                       AR582535
+     C                   MOVE      K_CLRDP1      RDP1                                       AR582535
+     C                   MOVE      K_CLRDP2      RDP2                                       AR582535
+     C                   MOVE      K_CLRDP3      RDP3                                       AR582535
+     C                   MOVE      K_CLRDP4      RDP4                                       AR582535
+     C                   MOVE      K_CLRDCH      RDCH                                       AR582535
+     C                   MOVE      K_CLRBB1      RBB1                                       AR582535
+     C                   MOVE      K_CLRBB2      RBB2                                       AR582535
+     C                   MOVE      K_CLRBB3      RBB3                                       AR582535
+     C                   MOVE      K_CLRBB4      RBB4                                       AR582535
+     C                   MOVE      K_CLRBB5      RBB5                                       AR582535
+     C                   MOVE      K_CLRBB6      RBB6                                       AR582535
+     C                   MOVE      K_CLRCVM      RCVM                                       AR582535
+     C                   MOVE      K_CLRRSC      RRSC                                       AR582535
+     C                   MOVE      K_CLRPSC      RPSC                                       AR582535
+     C                   MOVE      K_CLRICY      RICY                                       AR582535
+     C                   MOVE      K_CLECIN      ECIN                                       AR582535
+     C                   Z-ADD     K_CLRPSM      RPSM                                       AR582535
+     C                   MOVE      K_QQRPOS      RPOSQQ                                     AR582535
+     C                   MOVE      K_CLRPTS      RPTS                                       AR582535
+     C                   MOVE      K_CLRPSB      RPSB                                       AR582535
+     C                   MOVE      K_CLRFAO      RFAO                                       AR582535
+     C                   MOVE      K_CLFYLB      FSFYLB                                     AR582535
+     C                   Z-ADD     K_CLRRSR      RRSR                                       AR582535
+     C                   MOVE      K_CLRRSI      RRSI                                       AR582535
+     C                   Z-ADD     K_CLRPSR      RPSR                                       AR582535
+     C                   MOVE      K_CLRPSI      RPSI                                       AR582535
+     C                   MOVE      K_CLRSTA      RSTA                                       AR582535
+     C                   MOVE      L_CLAFRT      AFRT                                       AR582535
+     C                   MOVE      K_CLORVD      ORVD                                       AR582535
+     C                   MOVE      K_CLRRON      RRON                                       AR582535
+     C                   MOVE      K_CLRPON      RPON                                       AR582535
+     C                   MOVE      K_CLRPOS      RPOS                                       AR582535
       *
      C                   ENDSR
       ****************************************************************

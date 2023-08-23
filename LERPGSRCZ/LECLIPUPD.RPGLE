@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. AR582535           Date 23Aug23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 246192             Date 13May22               *
       *                 AR574541           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
@@ -170,6 +171,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR582535 - Incorrect YTD interest shown in LE1050P1 due to   *
+      *             value of Interest accrued YTD (YILN) of CLOANCK.  *
+      *             Reset fields of CLOANCK with values from LEVCLIKPD*
+      *             to ensure that fields are properly initialised.   *
+      *             Patterned fix from AR952668. (Child: AR582536)    *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -4944,7 +4950,8 @@
      C     L_CLNRPD      ANDLE     RLDT_M
      C                   Z-ADD     L_CLRAMT      ZAMTCI
      C                   EXSR      ZCONVZ1
-     C                   Z-ADD     ZAMTCO        NLRA
+     C**********         Z-ADD     ZAMTCO        NLRA                                       AR582535
+     C                   Z-ADD     ZAMTCO        NLRAK                                      AR582535
      C                   ENDIF
      C                   ENDIF
       *

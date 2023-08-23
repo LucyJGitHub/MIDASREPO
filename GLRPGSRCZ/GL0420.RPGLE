@@ -14,8 +14,10 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. LRI100   *AMEND    Date 05May20               *
+      *  Prev Amend No. LRI100             Date 17Mar20               *            
+      *                 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR1088283          Date 20Mar13               *
       *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
@@ -166,6 +168,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  LRI100 - Additional info. entries not statemented since      *
+      *           exists on history file                              *
+      *  LRI100 - Statement Format Changes                            *      
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

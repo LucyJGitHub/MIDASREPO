@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MDSC41274          Date 24Aug23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -150,6 +151,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MDSC41274-Collect AR547730                                   *
+      *           -Loan settlement should not be validated upon       *
+      *            reversal                                           *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
@@ -357,8 +361,8 @@
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
-      **   F-specs                               
-      **   =======                               
+      **  F-specs                              
+      **  =======                              
       ** +--------------------------------------+
       *****************************************************************
 
@@ -381,8 +385,8 @@
 
       *****************************************************************
       ** +--------------------------------------+
-      **   Automatically included D-specs        
-      **   ==============================        
+      **  Automatically included D-specs       
+      **  ==============================       
       ** +--------------------------------------+
                                                                                            AR1095041
       ** Array for LEPDUELB override                                                       AR1095041
@@ -429,8 +433,8 @@
       **--------------------------------------------------------------------------------------------
 
       ** +--------------------------------------+
-      **   End of automatically included D-specs 
-      **   ===================================== 
+      **  End of automatically included D-specs
+      **  =====================================
       ** +--------------------------------------+
 
       ** Array of Fields in error.                                                           BUG4685
@@ -452,20 +456,20 @@
       *****************************************************************
 
       ** +--------------------------------------+
-      **   Manually included D-specs             
-      **   =========================             
+      **  Manually included D-specs            
+      **  =========================            
       ** +--------------------------------------+
 
       ** +--------------------------------------+
-      **   Named constants                       
-      **   ===============                       
+      **  Named constants                      
+      **  ===============                      
       ** +--------------------------------------+
      D BLKFLR          C                   CONST('            ')                            MD057871
      D SCNSTR          C                   CONST('9999.9999999')                            MD057871
 
       ** +--------------------------------------+
-      **   Arrays and Data Structures            
-      **   ==========================            
+      **  Arrays and Data Structures           
+      **  ==========================           
       ** +--------------------------------------+
 
       *  Array for job name                                                                   CSC022
@@ -910,16 +914,16 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       * SD data area
       ** +--------------------------------------+                                             CSC022
-      **   Use of Indicator                                                                   CSC022
-      **   ================                                                                   CSC022
-      ** ¶                                      ¶                                             CSC022
-      ** ¶ 17      Used by LOOKUP               ¶                                             CSC022
+      **  Use of Indicator                                                                  CSC022
+      **  ================                                                                  CSC022
+      **                                                                                    CSC022
+      **  17      Used by LOOKUP                                                            CSC022
       ** +--------------------------------------+                                             CSC022
                                                                                               CSC022
 
       ** +--------------------------------------+
-      **   Declared variables                    
-      **   ==================                    
+      **  Declared variables                   
+      **  ==================                   
       ** +--------------------------------------+
       ** Work variables                          r                                            241519
      D WPARM           S             20A   INZ('LoanCustOriginPurch')                         241519
@@ -1035,14 +1039,14 @@
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
       ** +--------------------------------------+
-      **   End of D-specs                        
-      **   ==============                        
+      **  End of D-specs                       
+      **  ==============                       
       ** +--------------------------------------+
 
       ** +----------------------------------------+
-      **   Hook for non-core D-specs (all types)   
-      **   also any I-specs (if necessary)         
-      **   =====================================   
+      **  Hook for non-core D-specs (all types)  
+      **  also any I-specs (if necessary)        
+      **  =====================================  
       ** +----------------------------------------+
      D/COPY WNCPYSRC,LECLIPXD01
       *                                                                                      LLN022A
@@ -1064,10 +1068,10 @@
       /EJECT
       *****************************************************************
       ** +--- Start of Main processing -----------------------------------+
-      **                                                                   
-      **   Initial processing is performed automatically: the *INZSR is    
-      **   executed at program activation.                                 
-      **                                                                   
+      **                                                                 
+      **  Initial processing is performed automatically: the *INZSR is   
+      **  executed at program activation.                                
+      **                                                                 
       ** +----------------------------------------------------------------+
 
 
@@ -1324,6 +1328,8 @@
      C                   EVAL      WIdx = WIdx + 1                                           BUG6010
      C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                               BUG6010
      C                   EVAL      WMsgIDArr(WIdx) = 'LEL0701'                               BUG6010
+     C                   ELSE                                                              MDSC41274
+     C                   EVAL      ##PREC = 'Y'                                            MDSC41274
      C                   ENDIF                                                               BUG6010
      C                   ELSE                                                                BUG6010
       *                                                                                      BUG6010
@@ -1334,6 +1340,8 @@
      C                   EVAL      WIdx = WIdx + 1                                           BUG6010
      C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                               BUG6010
      C                   EVAL      WMsgIDArr(WIdx) = 'LEL0700'                               BUG6010
+     C                   ELSE                                                              MDSC41274
+     C                   EVAL      ##PPAY = 'Y'                                            MDSC41274
      C                   ENDIF                                                               BUG6010
      C                   ENDIF                                                               BUG6010
      C                   IF        ##PPAY = 'N' AND DDPSTM <> '00'                           BUG6010

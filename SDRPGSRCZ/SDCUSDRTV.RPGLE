@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1059515          Date 06Jul23               *	
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. MD028406           Date 23Aug23               *
+      *  Prev Amend No. AR1059515          Date 06Jul23               *
+      *                 MD059520           Date 21Feb22               *
       *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
       *                 260405             Date 04Apr20               *
@@ -155,6 +156,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028406 - Allow Closure/Release even if Manual Deletion is  *
+      *             Not Allowed.                                      *
       *  AR1059515 - COB fails at component GLC3300. Amended pgm in   *
       *              such a way that user will not be able to close   *
       *              a customer that has a live Collateral. Added a   *
@@ -2276,19 +2279,19 @@
       *
      C     BJMDEL        IFEQ      'N'
      C*****DDACTN        ANDEQ     'D'                                                        CSD007
-     C     DDACTN        IFEQ      'C'                                                        CSD007
-     C     DDACTN        OREQ      'R'                                                        CSD007
+     C*****DDACTN        IFEQ      'C'                                               CSD007 MD028406
+     C*****DDACTN        OREQ      'R'                                               CSD007 MD028406
 	
      C*****DDACTN        OREQ      'D'                                                 CSD007 254109
       ***Delete*Action*is*not*allowed**********************************                       254109
-     C                   MOVEL     'N'           OKACTN
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)
+     C**********         MOVEL     'N'           OKACTN                                     MD028406
+     C**********         ADD       1             Ix                                         MD028406
+     C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             MD028406
      C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
-     C                   MOVEL     '5049396'     MsgIdArr(Ix)                                 254109
-     C                   GOTO      EVAL
+     C**********         MOVEL     '5049396'     MsgIdArr(Ix)                        254109 MD028406
+     C**********         GOTO      EVAL                                                     MD028406
       *
-     C                   ENDIF
+     C**********         ENDIF                                                              MD028406
       *                                                                                       CSD007
      C     DDACTN        IFEQ      'D'                                                        254109
       *                                                                                       254109

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058151           Date 19May21               *
-      *  Prev Amend No. MD056364           Date 10Aug20               *
+      *  Last Amend No. MD060111           Date 22Aug23               *
+      *  Prev Amend No. MD058151           Date 19May21               *
+      *                 MD056364           Date 10Aug20               *
       *                 ERZ248             Date 18Nov19               *
       *                 MD021318           Date 26Jul13               *
       *                 262474             Date 29Jan13               *
@@ -179,6 +180,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060111 - IPAY processing failed being unable to allocate   *
+      *             INPAYDA.                                          *
+      *           - Condition lock of OTPAYD if CFT151 is OFF.        *
+      *           - Applied for MD-61769
       *  MD058151 - FTOPAY1SN *PGM was removed in the NC Layer        *
       *             during RBRU FM2021.A + Compatibility Patch        *
       *             Installation. Redeliver together wih *PGM.        *
@@ -9165,8 +9170,9 @@
                                                                                               209067
      C                   ELSE                                                                 209067
       *                                                                                       209067
+     C                   IF        CFT151 = 'N'                                             MD060111
      C     *LOCK         IN        OTPAYD                                                     209067
-     C                   IF        CFT151 = 'N'                                               CFT151
+     C**********         IF        CFT151 = 'N'                                      CFT151 MD060111
      C**************     z-add     prnum         svnum                                 209067 CFT151
      C                   eval      aprnum = prnum                                             CFT151
      C                   eval      svnum = nprnum                                             CFT151
@@ -9968,8 +9974,9 @@
      C                   OUT       RGPAYD                                                     204152
      C                   ELSE                                                                 204152
       *                                                                                       204152
+     C                   IF        CFT151 = 'N'                                             MD060111
      C     *LOCK         IN        OTPAYD                                                     204152
-     C                   IF        CFT151 = 'N'                                               CFT151
+     C**********         IF        CFT151 = 'N'                                      CFT151 MD060111
      C*************      z-add     prnum         svnum                                 209067 CFT151
      C                   eval      aprnum = prnum                                             CFT151
      C                   eval      svnum = nprnum                                             CFT151

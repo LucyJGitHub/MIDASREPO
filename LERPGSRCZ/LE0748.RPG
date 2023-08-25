@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD050457           Date 06Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR925304           Date 09Aug23               *
+      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 AR814485           Date 15Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -57,6 +58,13 @@
    7 F*                                                               *
 0007 F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR925304 - Missing facility amount, expiry and currency at   *
+      *             LE0748P1 report. Report details for loan records  *
+      *             when the account officer is changed to a different*
+      *             one. Apply part of fix 188865. Also, increase end *
+      *             position by 1 to prevent truncated branch under   *
+      *             UTILISED column due to field overlapping. Apply   *
+      *             fix 257471. (Child: AR925308)                     *
       *  MD050457 - Do not process DBERR when received *CUSCLS from   *
       *             AOCUSTR0. Patterned fix from 263371 and 261272.   *
       *  MD046248 - Finastra Rebranding                               *
@@ -134,6 +142,7 @@
      F*PORT2***IS**F*****122 33AI     2 DISK                           U2              CGL029 CLE042
      FPORT1   IP  F     126 33AI     2 DISK                           U1                      CLE042
      FPORT2   IS  F     126 33AI     2 DISK                           U2                      CLE042
+     FFCLTY   IF  F     256 11AI     2 DISK                                                 AR925304
      F/COPY WNCPYSRC,LE0748F001
 0015 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
 0016 F*CLINT***IF  F     256  7AI     2 DISK                              S01194
@@ -144,6 +153,9 @@
 0018 F* ID F  C  H  L    FUNCTION OF INDICATORS
 0019 F* 01            SFPOR - DETAIL RECORD
 0020 F* 02                  - TRAILER
+      * 04            Facility file                                                         AR925304
+      * 05            Loan record (Utilised)                                                AR925304
+      * 06            Facility found                                                        AR925304
 0021 F**03******      CLINT FILE - DETAIL RECORD                          S01194
 0022 F**04******      TABLE FILE - INSTALLATION CONTROL RECORD 1          S01194
 0023 F**05******                 -                      RECORD 5          S01194
@@ -323,6 +335,20 @@
      I**                                                                  S01117
      I**  PORT2 CATCHALL                                                  S01117
      I        NS                                                          S01117
+      *                                                                                     AR925304
+     IFCLTY   NS  06  13 CA                                                                 AR925304
+     I                                        1   1 RECI                                    AR925304
+     I                                    P  21  270FAMT                                    AR925304
+      *                                                                                     AR925304
+     I@FKEYA      DS                             11                                         AR925304
+     I                                        1  110@FKEY                                   AR925304
+     I                                        1   6 CNUMX                                   AR925304
+     I                                        7   90REFTA                                   AR925304
+     I                                       10  110REFTB                                   AR925304
+      *                                                                                     AR925304
+     IREFT        DS                             12                                         AR925304
+     I                                        1   30REFT1                                   AR925304
+     I                                        5   60REFT2                                   AR925304
 0101 I*
 0102 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.               S01194
 0103 I**********                                                          S01194
@@ -1126,7 +1152,13 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      C**
      C   L3NOFN33          SETON                     55
      C**
-0372 C   31 32             SETOF                     31
+0372 C***31*32**           SETOF                     31                                     AR925304
+     C           *IN31     IFEQ '1'                                                         AR925304
+     C           *IN32     ANDEQ'1'                                                         AR925304
+     C           *INL1     OREQ '1'                                                         AR925304
+     C           CRLT      ANDEQ'6'                                                         AR925304
+     C                     SETOF                     31                                     AR925304
+     C                     ENDIF                                                            AR925304
 0373 C  N31      GUIN      COMP 'G'                  323231
 0374 C   31      GUIN      COMP 'U'                      32
 0375 C                     SETOF                     39
@@ -1138,6 +1170,25 @@ Where *INLn is the Branch or Company level break indicator.               S01117
 0378 C   31N32             EXSR ZDATE2
 0379 C   31N32   EXPD      COMP RUND                   3939EXPIRED
 0380 C   31N32 39EXPD      COMP 0                    3939  EXPD=0,NOT EXP
+      *                                                                                     AR925304
+      ** Make sure the expiry date will also be reported.                                   AR925304
+      *                                                                                     AR925304
+     C           *IN31     IFEQ '0'                                                         AR925304
+     C           *IN32     ANDEQ'1'                                                         AR925304
+     C           *INL1     ANDEQ'1'                                                         AR925304
+     C           CRLT      ANDEQ'6'                                                         AR925304
+     C                     Z-ADDEXPD      ZDAYNO                                            AR925304
+     C                     EXSR ZDATE2                                                      AR925304
+     C           EXPD      IFLE RUND                                                        AR925304
+     C           EXPD      IFNE 0                                                           AR925304
+     C                     MOVE '1'       *IN39                                             AR925304
+     C                     ENDIF                                                            AR925304
+     C                     ENDIF                                                            AR925304
+     C                     MOVELCNUM      CNUMX                                             AR925304
+     C                     Z-ADDREFT1     REFTA                                             AR925304
+     C                     Z-ADDREFT2     REFTB                                             AR925304
+     C                     ENDIF                                                            AR925304
+      *                                                                                     AR925304
 0382 C****CONVERT*AMOUNT*TO*COMM*LOANS*CCY*EQUIV.**********************   S01339
      C*                                                                   S01339
 0382 C**  CONVERT AMOUNT TO BASE CURRENCY EQUIVALENT                      S01339
@@ -1183,6 +1234,32 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      C           MDIN      COMP 'D'                      77               BHF305
 0392 C**                                                                  BHF305
 0393 C                     Z-ADDGUAM      FCAMT
+      *                                                                                     AR925304
+      ** If the facility is changed, then look for the facility                             AR925304
+      ** to get the amount and to be converted to the base currency                         AR925304
+      ** so it can be accumulated to the customer's total credit                            AR925304
+      ** line amount.                                                                       AR925304
+      *                                                                                     AR925304
+     C                     MOVE '0'       *IN05                                             AR925304
+     C           *IN31     IFEQ '0'                                                         AR925304
+     C           *IN32     ANDEQ'1'                                                         AR925304
+     C           *INL1     ANDEQ'1'                                                         AR925304
+     C           CRLT      ANDEQ'6'                                                         AR925304
+     C           @FKEY     CHAINFCLTY                04                                     AR925304
+     C           *IN04     IFEQ '1'                                                         AR925304
+     C           *IN06     ORNE '1'                                                         AR925304
+     C                     MOVE '1'       *INU7                                             AR925304
+     C                     MOVE '1'       *INU8                                             AR925304
+     C                     MOVE '1'       *INLR            ************                     AR925304
+     C                     MOVEL'FCLTY'   DBFILE           * DBERR 14 *                     AR925304
+     C                     MOVEL@FKEYA    DBKEY            ************                     AR925304
+     C                     Z-ADD14        DBASE                                             AR925304
+     C                     GOTO END                                                         AR925304
+     C                     ELSE                                                             AR925304
+     C                     Z-ADDFAMT      FCAMT                                             AR925304
+     C                     ENDIF                                                            AR925304
+     C                     ENDIF                                                            AR925304
+      *                                                                                     AR925304
 0394 C                     EXSR CCYUS2
 0395 C**
 0397 C*****CONVERT*TO*'000'S*OF*COMM*LOANS*REPORTING*CCY***************   S01339
@@ -1193,9 +1270,33 @@ Where *INLn is the Branch or Company level break indicator.               S01117
 0399 C**
 0400 C**  ACCUMULATE GRANTED AND UTILISED AMOUNTS FOR CUSTOMER
 0401 C   31N32   CUSGRA    ADD  TUSD      CUSGRA 130
+      *                                                                                     AR925304
+      ** Accumulate the amount to the customer's total credit                               AR925304
+      ** line amount.                                                                       AR925304
+      *                                                                                     AR925304
+     C           *IN31     IFEQ '0'                                                         AR925304
+     C           *IN32     ANDEQ'1'                                                         AR925304
+     C           *INL1     ANDEQ'1'                                                         AR925304
+     C           CRLT      ANDEQ'6'                                                         AR925304
+     C           CUSGRA    ADD  TUSD      CUSGRA                                            AR925304
+     C                     Z-ADDTUSD      TUSDX  130                                        AR925304
+     C                     MOVE '1'       *IN05                                             AR925304
+     C                     Z-ADDGUAM      FCAMT                                             AR925304
+     C                     EXSR CCYUS2                                                      AR925304
+     C           USAMT     DIV  1000      TUSD      H                                       AR925304
+     C                     ENDIF                                                            AR925304
+      *                                                                                     AR925304
 0402 C**
 0403 C**  SAVE GRANTED AMOUNT FOR REF TYPE
-0404 C   31N32   GAMT      ADD  TUSD      GAMT   130
+0404 C***31N32** GAMT      ADD  TUSD      GAMT   130                                        AR925304
+     C           *IN05     IFEQ '1'                                                         AR925304
+     C           *IN31     OREQ '1'                                                         AR925304
+     C           *IN32     ANDEQ'0'                                                         AR925304
+     C           GAMT      ADD  TUSD      GAMT   130                                        AR925304
+     C                     ENDIF                                                            AR925304
+     C           *IN05     IFEQ '1'                                                         AR925304
+     C           GAMT      ADD  TUSDX     GAMT                                              AR925304
+     C                     ENDIF                                                            AR925304
 0405 C**
 0406 C** ACCUMULATE UTILISED AMOUNT FOR CUSTOMER AND REFERENCE TYPE
 0407 C**   DEPENDING ON RECORD SOURCE AND TRANS REF.
@@ -2236,6 +2337,9 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O                    31N32GUCY      31                                                   CLE042
      O                    31N32TUSD  K   49                                                   CLE042
      O                    31N32ZADATE    57                                                   CLE042
+     O                       05GUCY      31                                                 AR925304
+     O                       05TUSDX K   49                                                 AR925304
+     O                       05ZADATE    57                                                 AR925304
 0928 O**********       31N32 39         132 '***'                                             237647
      O                 31N32 39         146 '***'                                             237647
 0929 O**
@@ -2294,8 +2398,10 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O                    32N31LBRA      99                                                   CLE042
      O**********       32N31 50         115 '-'                                        CGL029 237647
      O**********          32N31LVDAT    132                               059259              237647
-     O                    32N31TUSD  K  116                                                   237647
-     O                 32N31 50         117 '-'                                               237647
+     O**********          32N31TUSD  K  116                                          237647 AR925304
+     O**********       32N31 50         117 '-'                                      237647 AR925304
+     O                    32N31TUSD  K  117                                                 AR925304
+     O                 32N31 50         118 '-'                                             AR925304
      O                    32N31LVDAT    146                                                   237647
 0935 O**
 0936 O**  PRINT FIRST UTILISED LINE AFTER GRANTED LINE
@@ -2355,8 +2461,10 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********               TUSD  K  114                                            CGL029 237647
      O                         LBRA      99                                                   CLE042
      O**********             50         115 '-'                                        CGL029 237647
-     O                         TUSD  K  116                                                   237647
-     O                       50         117 '-'                                               237647
+     O**********               TUSD  K  116                                          237647 AR925304
+     O**********             50         117 '-'                                      237647 AR925304
+     O                         TUSD  K  117                                                 AR925304
+     O                       50         118 '-'                                             AR925304
 0942 O**
 0943 O**  PRINT UTILISED DETAILS IF MORE THAN ONE UTILISED LINE
 0944 O        D 10     32N31NL1
@@ -2412,8 +2520,10 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********               TUSD  K  114                                            CGL029 237647
      O                         LBRA      99                                                   CLE042
      O**********             50         115 '-'                                        CGL029 237647
-     O                         TUSD  K  116                                                   237647
-     O                       50         117 '-'                                               237647
+     O**********               TUSD  K  116                                          237647 AR925304
+     O**********             50         117 '-'                                      237647 AR925304
+     O                         TUSD  K  117                                                 AR925304
+     O                       50         118 '-'                                             AR925304
 0949 O**  PARENT'S DETAIL REPORTING
 0950 O********D*11     33 L3                                              S01117
 0950 O        D 11     33 L3 10                                           S01117
@@ -2520,8 +2630,10 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********               TUSD  K  114                                            CGL029 237647
      O                         LBRA      99                                                   CLE042
      O**********             50         115 '-'                                        CGL029 237647
-     O                         TUSD  K  116                                                   237647
-     O                       50         117 '-'                                               237647
+     O**********               TUSD  K  116                                          237647 AR925304
+     O**********             50         117 '-'                                      237647 AR925304
+     O                         TUSD  K  117                                                 AR925304
+     O                       50         118 '-'                                             AR925304
 0978 O**
 0971 O**   PRINT UTILISED DETAILS IF MORE THAN ONE UTILISED LINE
 0979 O        D 10     62N61NL1
@@ -2578,8 +2690,10 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********               TUSD  K  114                                            CGL029 237647
      O                         LBRA      99                                                   CLE042
      O**********             50         115 '-'                                        CGL029 237647
-     O                         TUSD  K  116                                                   237647
-     O                       50         117 '-'                                               237647
+     O**********               TUSD  K  116                                          237647 AR925304
+     O**********             50         117 '-'                                      237647 AR925304
+     O                         TUSD  K  117                                                 AR925304
+     O                       50         118 '-'                                             AR925304
 0985 O**
 0986 O**  TOTAL L1 LINE - REFERENCE TYPE CHANGE
 0987 O        T  1     L1 34N33
@@ -2632,7 +2746,8 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********             42PETOT KB 125                               059259              237647
      O**********               PUTOT KB 114                                            CLE042 237647
      O                       42PETOT KB 134                               059259              237647
-     O                         PUTOT KB 116                                                   237647
+     O**********               PUTOT KB 116                                          237647 AR925304
+     O                         PUTOT KB 117                                                 AR925304
 1002 O**
 1003 O**  L3 CUSTOMER TOTAL LINE OUTPUT
 1004 O        T 12     L3 34N33
@@ -2653,7 +2768,8 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********          41   CEXAMTKB 125                               059259              237647
      O**********               UTCTOTJB 114                                            CLE042 237647
      O                    41   CEXAMTKB 134                               059259              237647
-     O                         UTCTOTJB 116                                                   237647
+     O**********               UTCTOTJB 116                                          237647 AR925304
+     O                         UTCTOTJB 117                                                 AR925304
 1002 O**                                                                  S01129
 1003 O**  L3 CUSTOMER TOTAL LINE OUTPUT - SECURITY HOLDINGS               S01129
 1004 O********T  2     L3 34N33                                     S01129E16812
@@ -2688,7 +2804,8 @@ Where *INLn is the Branch or Company level break indicator.               S01117
      O**********             44PARET KB 125                               059259              237647
      O**********               PARUT JB 114                                            CLE042 237647
      O                       44PARET KB 134                               059259              237647
-     O                         PARUT JB 116                                                   237647
+     O**********               PARUT JB 116                                          237647 AR925304
+     O                         PARUT JB 117                                                 AR925304
 1002 O**                                                                  S01129
 1003 O**  L4 PARENT TOTAL LINE OUTPUT - SECURITY HOLDINGS                 S01129
 1004 O        T  2     L4 33 34                                           S01129

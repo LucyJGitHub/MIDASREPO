@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD056558           Date 31Aug20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD034489           Date 23Aug23              */
+/*       Prev Amend No. MD056558           Date 31Aug20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD020696A          Date 01Jul13              */
 /*                      MD020696           Date 03Jun13              */
 /*                      MD020167           Date 23Apr13              */
@@ -28,6 +29,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD034489 - StartCOB job failed due to a duplicate key in    */
+/*                  GPDWNLL0. Allocate file GPDWNLPD so that StartCOB*/
+/*                  and MIDASSTS will not update at the same time.   */
 /*       MD056558 - Deliverable Data Split for GODTACPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD020696A - Reversed fix MD020696 such that program will    */
@@ -62,6 +66,7 @@
              DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
              DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ALC) TYPE(*CHAR) LEN(1) VALUE('N')                         /*MD034489*/
 /*******************************************************************/             /*CCB020 CCB023A*/
 /**Parameter*for*call*to*CBC001001**/                                             /*CCB020 CCB023A*/
 /**********  DCL        VAR(&WCOB) TYPE(*CHAR) LEN(4)              */             /*CCB020 CCB023A*/
@@ -147,6 +152,16 @@ READNEXT:
                 ENDDO
              ENDDO
 
+             IF         COND(&DCPROG *EQ 'GO000102') THEN(DO)                           /*MD034489*/
+             ALCOBJ     OBJ((GPDWNLPD *FILE *EXCL)) WAIT(3)                             /*MD034489*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                         /*MD034489*/
+              CHGVAR     VAR(&ALC) VALUE('N')                                           /*MD034489*/
+              GOTO       CMDLBL(SKIP)                                                   /*MD034489*/
+             ENDDO                                                                      /*MD034489*/
+              CHGVAR     VAR(&ALC) VALUE('Y')                                           /*MD034489*/
+             ENDDO                                                                      /*MD034489*/
+
+SKIP:                                                                                   /*MD034489*/
              IF         COND(&RUNPROGRAM *EQ 'Y') THEN(DO)
 /* Build up command string to call program. */
                 CHGVAR     VAR(&CMD) VALUE(' ')
@@ -175,6 +190,11 @@ READNEXT:
                 CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
              ENDDO
 
+             IF         COND(&ALC *EQ 'Y') THEN(DO)                                     /*MD034489*/
+             DLCOBJ     OBJ((GPDWNLPD *FILE *EXCL))                                     /*MD034489*/
+             CHGVAR     VAR(&ALC) VALUE('N')                                            /*MD034489*/
+             ENDDO                                                                      /*MD034489*/
+                                                                                        /*MD034489*/
 /* If mode is equal to *PHASE then reset RUNPROGRAM flag. */
              IF         COND(&MODE *EQ '*PHASE') THEN(DO)
                 CHGVAR     VAR(&RUNPROGRAM) VALUE('N')

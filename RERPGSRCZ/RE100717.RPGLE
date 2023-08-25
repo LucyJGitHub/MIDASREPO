@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD048582           Date 25Jul23               *
-      *  Prev Amend No. AR857272           Date 25Jul23               *
+      *  Last Amend No. AR857251           Date 01Aug23               *
+      *  Prev Amend No. AR857262           Date 01Aug23               *
+      *                 MD048582           Date 25Jul23               *
+      *                 AR857272           Date 25Jul23               *
       *                 MD046248           Date 27Oct17               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
@@ -32,6 +34,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR857251 - Apply 235715.  Always delete accrual even if      *
+      *             SUB ON.  (Child: AR857252)                        *
+      *           - Applied for MD-48585.                             *
+      *  AR857262 - Do not delete accrual postings for off balance    *
+      *             top accounts                                      *
+      *           - When moving postings between accounts,            *
+      *             generate interbranch postings if branches are not *
+      *             the same.  (Child: AR857263)                      *
+      *           - Applied for MD-48584.                             *
       *  MD048582 - Additional fix to AR857272. Reset PAGNUM and      *
       *             PRTLN1.                                           *
       *  AR857272 - Record ENTRY should use 2 lines to                *
@@ -62,6 +73,9 @@
      F                                     RENAME(REZSHLD0:REZSHLDU)
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(M2_)
+     FGEICPD    O    E           K DISK    INFSR(*PSSR)                                     AR857262
+     F                                     RENAME(APOSTPDF:APOSTPDZ)                        AR857262
+     F                                     PREFIX(Z_)                                       AR857262
      FRE100717P1O    E             PRINTER INFSR(*PSSR)  USROPN
      F                                     INFDS(SPOOL1)
 
@@ -107,6 +121,16 @@
      D M2_SDACOD     E DS                  EXTNAME(SDACODPD)
      D                                     PREFIX(M2_)
       ** A/C Code Details
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                AR857262
+     D                                     PREFIX(BK_)                                      AR857262
+      ** General Ledger Details                                                             AR857262
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                AR857262
+      ** Module details                                                                     AR857262
+     D SDPCAC        E DS                  EXTNAME(SDPCACPD)                                AR857262
+     D                                     PREFIX(FT_)                                      AR857262
+      ** Profit Centre ICD                                                                  AR857262
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                   AR857262
+      ** 2nd   DS for access programs                                                       AR857262
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs
 
@@ -179,6 +203,7 @@
       *   Open printer file
       *   Register P1 printer file with RCF
 
+     C   L4              Movel     ORBR          W_BRCH                                     AR857262
      C   L4              EXSR      ACS_BRCH
      C   L4P1Open        IFEQ      'Y'
      C                   EXSR      END_OF_REP
@@ -367,8 +392,10 @@
      C     ACS_BRCH      BEGSR
 
      C                   CALLB     'ZAACSBRCH'
-     C                   PARM                    ORBR
-     C                   PARM                    SDBRCH
+     C**********         PARM                    ORBR                                       AR857262
+     C**********         PARM                    SDBRCH                                     AR857262
+     C                   PARM                    W_BRCH            3                        AR857262
+     C     SDBRCH        PARM      SDBRCH        DSSDY                                      AR857262
 
       * Database error if branch not found
 
@@ -499,16 +526,16 @@
      C     CLHIER        CHAIN     REGAHDD0                           99        *
 
      C                   SELECT
-     C     CLCCAT        WHENEQ    'T'
-     C     GDTOPB        IFNE      'Y'
-     C                   MOVEL     'DEL*'        R_ACTN
-     C                   ENDIF
+     C*****CLCCAT        WHENEQ    'T'                                                      AR857262
+     C*****GDTOPB        IFNE      'Y'                                                      AR857262
+     C**********         MOVEL     'DEL*'        R_ACTN                                     AR857262
+     C**********         ENDIF                                                              AR857262
      C     CLCCAT        WHENEQ    'L'
      C                   MOVEL     'DEL*'        R_ACTN
      C     CLCCAT        WHENEQ    'S'
-     C     GDTOPB        IFEQ      'Y'
+     C*****GDTOPB        IFEQ      'Y'                                                      AR857251
      C                   MOVEL     'DEL*'        R_ACTN
-     C                   ENDIF
+     C**********         ENDIF                                                              AR857251
      C                   ENDSL
 
      C                   IF        %SUBST(R_ACTN:1:3) = 'DEL'
@@ -677,6 +704,9 @@
       * Move capitalized interest contra to internal expense/income a/c
       ********************************************************************
      C     MOV_CAP       BEGSR
+                                                                                            AR857262
+      * Save branch of original posting:                                                    AR857262
+     C                   MOVEL     XBRCA         W_OrigBrch        3                        AR857262
 
       * Access MOVE TO a/c and a/c code details:
 
@@ -708,9 +738,312 @@
 
      C                   EXCEPT    U_GEICL0
 
+      * Generate interbranch postings if needed:                                            AR857262
+     C                   IF        BRC <> W_OrigBrch                                        AR857262
+     C                   EXSR      Gen_Interbrch                                            AR857262
+     C                   Endif                                                              AR857262
+                                                                                            AR857262
      C                   ENDSR
       *********************************************************************
       /SPACE 5
+      ********************************************************************                  AR857262
+      * Generate Interbranch postings                                                       AR857262
+      ********************************************************************                  AR857262
+     C     Gen_Interbrch BEGSR                                                              AR857262
+      *                                                                                     AR857262
+      * Access branch details                                                               AR857262
+      *        hierarchy inc/exp account:                                                   AR857262
+     C                   Eval      W_BRCH = BRC                                             AR857262
+     C                   EXSR      ACS_BRCH                                                 AR857262
+     C                   Movel     A8BICN        H_BICN            6                        AR857262
+     C                   Movel     A8DFAC        H_DFAC           10 0                      AR857262
+     C                   Movel     A8DTAC        H_DTAC           10 0                      AR857262
+      *        original account                                                             AR857262
+     C                   Eval      W_BRCH = W_OrigBrch                                      AR857262
+     C                   EXSR      ACS_BRCH                                                 AR857262
+     C                   Movel     A8BICN        O_BICN            6                        AR857262
+     C                   Movel     A8DFAC        O_DFAC           10 0                      AR857262
+     C                   Movel     A8DTAC        O_DTAC           10 0                      AR857262
+      *        Main branch                                                                  AR857262
+     C                   Eval      W_BRCH = BK_BKMABR                                       AR857262
+     C                   EXSR      ACS_BRCH                                                 AR857262
+     C                   Movel     A8BICN        M_BICN            6                        AR857262
+     C                   Movel     A8DFAC        M_DFAC           10 0                      AR857262
+     C                   Movel     A8DTAC        M_DTAC           10 0                      AR857262
+     C                   Eval      A8BRCD = ORBR                                            AR857262
+                                                                                            AR857262
+      * (1)  Generate interbranch entry for hierarchy inc/exp account                       AR857262
+      *                                                                                     AR857262
+     C                   Clear                   APOSTPDZ                                   AR857262
+      *                                                                                     AR857262
+     C                   Movel     'P'           Z_RECI                                     AR857262
+     C                   Movel     O_BICN        Z_CNUM                                     AR857262
+     C                   If        BK_BKIEMB = 'Y'  And                                     AR857262
+     C                             BK_BKMABR <> BRC And                                     AR857262
+     C                             BK_BKMABR <> W_OrigBrch                                  AR857262
+     C                   Movel     M_BICN        Z_CNUM                                     AR857262
+     C                   Endif                                                              AR857262
+      *                                                                                     AR857262
+     C                   Movel     CCY           Z_CCY                                      AR857262
+     C                   Z-Add     1             Z_ACSQ                                     AR857262
+     C                   Z-Add     PSTD          Z_PSTD                                     AR857262
+     C                   Z-Add     VALD          Z_VALD                                     AR857262
+     C                   If        Z_VALD = 0                                               AR857262
+     C                   Z-Add     BJRDNB        Z_VALD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     TRAT          Z_TRAT                                     AR857262
+     C                   Movel     PNAR          Z_PNAR                                     AR857262
+     C                   Z-Add     PSTA          Z_PSTA                                     AR857262
+     C                   If        PSTA < 0                                                 AR857262
+     C                   Z-Add     H_DFAC        Z_ACOD                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Z-Add     H_DTAC        Z_ACOD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   If        DRCR = 0                                                 AR857262
+     C                   Z-add     1             Z_DRCR                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Z-add     0             Z_DRCR                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Movel     SPOS          Z_SPOS                                     AR857262
+     C                   Movel     BRC           Z_BRCA                                     AR857262
+      *                                                                                     AR857262
+     C                   MOVEL     Z_ACOD        X_ACCD                                     AR857262
+     C                   CALLB     'ZAACSACOD'                                              AR857262
+     C                   PARM                    X_ACCD           10                        AR857262
+     C                   PARM                    M2_SDACOD                                  AR857262
+      *        Database error if a/c code not found                                         AR857262
+     C     M2_A5ACCD     IFEQ      *BLANK                                                   AR857262
+     C                   EVAL      X_ERMS = 'BAD A/C CODE:' + X_ACCD                        AR857262
+     C                   EXSR      *PSSR                                                    AR857262
+     C                   ENDIF                                                              AR857262
+                                                                                            AR857262
+     C**********         Movel     A5ACTY        Z_ATYP                            AR857262 MD048584
+                                                                                            AR857262
+     C**********         If        ATYP = 'R'                                      AR857262 MD048584
+     C**********         Movel     '1'           Z_RIND                            AR857262 MD048584
+     C**********         Else                                                      AR857262 MD048584
+     C**********         Movel     '0'           Z_RIND                            AR857262 MD048584
+     C**********         Endif                                                     AR857262 MD048584
+     C                   Move      'G'           Z_ATYP                                     MD048584
+     C                   Move      '0'           Z_RIND                                     MD048584
+                                                                                            AR857262
+     C                   Movel     PRIN          Z_PRIN                                     AR857262
+     C                   Movel     'C'           Z_GETP                                     AR857262
+     C                   If        BGN0ST = 'Y'                                             AR857262
+     C                   Movel     FT_FTPRFP     Z_PRFC                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     PRFC          Z_PRFC                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     235959        Z_PTIM                                     AR857262
+     C                   Movel     A5ACSC        Z_ACSC                                     AR857262
+     C                   Movel     OTTP          Z_OTTP                                     AR857262
+                                                                                            AR857262
+     C                   Write     APOSTPDZ                                                 AR857262
+     C                   ADD       1             CNT_ADD                                    AR857262
+     C                   ADD       Z_PSTA        AMT_ADD                                    AR857262
+                                                                                            AR857262
+                                                                                            AR857262
+      * (2)  Generate interbranch entries via main branch (2 postings)                      AR857262
+      *                                                                                     AR857262
+     C                   If        BK_BKIEMB = 'Y'   And                                    AR857262
+     C                             BK_BKMABR <> BRC  And                                    AR857262
+     C                             BK_BKMABR <> W_OrigBrch                                  AR857262
+      *      first posting:                                                                 AR857262
+     C                   Clear                   APOSTPDZ                                   AR857262
+     C                   Movel     'P'           Z_RECI                                     AR857262
+     C                   Movel     H_BICN        Z_CNUM                                     AR857262
+     C                   Movel     CCY           Z_CCY                                      AR857262
+     C                   Z-Add     1             Z_ACSQ                                     AR857262
+     C                   Z-Add     PSTD          Z_PSTD                                     AR857262
+     C                   Z-Add     VALD          Z_VALD                                     AR857262
+     C                   If        Z_VALD = 0                                               AR857262
+     C                   Z-Add     BJRDNB        Z_VALD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     TRAT          Z_TRAT                                     AR857262
+     C                   Movel     PNAR          Z_PNAR                                     AR857262
+     C                   Z-Add     PSTA          Z_PSTA                                     AR857262
+     C                   If        PSTA < 0                                                 AR857262
+     C                   Z-Add     M_DTAC        Z_ACOD                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Z-Add     M_DFAC        Z_ACOD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   If        DRCR = 0                                                 AR857262
+     C                   Movel     0             Z_DRCR                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     1             Z_DRCR                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Movel     SPOS          Z_SPOS                                     AR857262
+     C                   Movel     BK_BKMABR     Z_BRCA                                     AR857262
+      *                                                                                     AR857262
+     C                   MOVEL     Z_ACOD        X_ACCD                                     AR857262
+     C                   CALLB     'ZAACSACOD'                                              AR857262
+     C                   PARM                    X_ACCD           10                        AR857262
+     C                   PARM                    M2_SDACOD                                  AR857262
+      *        Database error if a/c code not found                                         AR857262
+     C     M2_A5ACCD     IFEQ      *BLANK                                                   AR857262
+     C                   EVAL      X_ERMS = 'BAD A/C CODE:' + X_ACCD                        AR857262
+     C                   EXSR      *PSSR                                                    AR857262
+     C                   ENDIF                                                              AR857262
+                                                                                            AR857262
+     C**********         Movel     A5ACTY        Z_ATYP                            AR857262 MD048584
+                                                                                            AR857262
+     C**********         If        ATYP = 'R'                                      AR857262 MD048584
+     C**********         Movel     '1'           Z_RIND                            AR857262 MD048584
+     C**********         Else                                                      AR857262 MD048584
+     C**********         Movel     '0'           Z_RIND                            AR857262 MD048584
+     C**********         Endif                                                     AR857262 MD048584
+     C                   Move      'G'           Z_ATYP                                     MD048584
+     C                   Move      '0'           Z_RIND                                     MD048584
+                                                                                            AR857262
+     C                   Movel     PRIN          Z_PRIN                                     AR857262
+     C                   Movel     'C'           Z_GETP                                     AR857262
+     C                   If        BGN0ST = 'Y'                                             AR857262
+     C                   Movel     FT_FTPRFP     Z_PRFC                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     PRFC          Z_PRFC                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     235959        Z_PTIM                                     AR857262
+     C                   Movel     A5ACSC        Z_ACSC                                     AR857262
+     C                   Movel     OTTP          Z_OTTP                                     AR857262
+                                                                                            AR857262
+     C                   Write     APOSTPDZ                                                 AR857262
+     C                   ADD       1             CNT_ADD                                    AR857262
+     C                   ADD       Z_PSTA        AMT_ADD                                    AR857262
+                                                                                            AR857262
+      *      second posting:                                                                AR857262
+     C                   Clear                   APOSTPDZ                                   AR857262
+     C                   Movel     'P'           Z_RECI                                     AR857262
+     C                   Movel     O_BICN        Z_CNUM                                     AR857262
+     C                   Movel     CCY           Z_CCY                                      AR857262
+     C                   Z-Add     1             Z_ACSQ                                     AR857262
+     C                   Z-Add     PSTD          Z_PSTD                                     AR857262
+     C                   Z-Add     VALD          Z_VALD                                     AR857262
+     C                   If        Z_VALD = 0                                               AR857262
+     C                   Z-Add     BJRDNB        Z_VALD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     TRAT          Z_TRAT                                     AR857262
+     C                   Movel     PNAR          Z_PNAR                                     AR857262
+     C                   Z-Add     PSTA          Z_PSTA                                     AR857262
+     C                   If        PSTA < 0                                                 AR857262
+     C                   Z-Add     M_DFAC        Z_ACOD                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Z-Add     M_DTAC        Z_ACOD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   If        DRCR = 0                                                 AR857262
+     C                   Movel     1             Z_DRCR                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     0             Z_DRCR                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Movel     SPOS          Z_SPOS                                     AR857262
+     C                   Movel     BK_BKMABR     Z_BRCA                                     AR857262
+      *                                                                                     AR857262
+     C                   MOVEL     Z_ACOD        X_ACCD                                     AR857262
+     C                   CALLB     'ZAACSACOD'                                              AR857262
+     C                   PARM                    X_ACCD           10                        AR857262
+     C                   PARM                    M2_SDACOD                                  AR857262
+      *        Database error if a/c code not found                                         AR857262
+     C     M2_A5ACCD     IFEQ      *BLANK                                                   AR857262
+     C                   EVAL      X_ERMS = 'BAD A/C CODE:' + X_ACCD                        AR857262
+     C                   EXSR      *PSSR                                                    AR857262
+     C                   ENDIF                                                              AR857262
+                                                                                            AR857262
+     C**********         Movel     A5ACTY        Z_ATYP                            AR857262 MD048584
+                                                                                            AR857262
+     C**********         If        ATYP = 'R'                                      AR857262 MD048584
+     C**********         Movel     '1'           Z_RIND                            AR857262 MD048584
+     C**********         Else                                                      AR857262 MD048584
+     C**********         Movel     '0'           Z_RIND                            AR857262 MD048584
+     C**********         Endif                                                     AR857262 MD048584
+     C                   Move      'G'           Z_ATYP                                     MD048584
+     C                   Move      '0'           Z_RIND                                     MD048584
+                                                                                            AR857262
+     C                   Movel     PRIN          Z_PRIN                                     AR857262
+     C                   Movel     'C'           Z_GETP                                     AR857262
+     C                   If        BGN0ST = 'Y'                                             AR857262
+     C                   Movel     FT_FTPRFP     Z_PRFC                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     PRFC          Z_PRFC                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     235959        Z_PTIM                                     AR857262
+     C                   Movel     A5ACSC        Z_ACSC                                     AR857262
+     C                   Movel     OTTP          Z_OTTP                                     AR857262
+                                                                                            AR857262
+     C                   Write     APOSTPDZ                                                 AR857262
+     C                   ADD       1             CNT_ADD                                    AR857262
+     C                   ADD       Z_PSTA        AMT_ADD                                    AR857262
+     C                   Endif                                                              AR857262
+                                                                                            AR857262
+      * (3)  Generate interbranch entries for original account                              AR857262
+                                                                                            AR857262
+     C                   Clear                   APOSTPDZ                                   AR857262
+     C                   Movel     'P'           Z_RECI                                     AR857262
+     C                   Movel     H_BICN        Z_CNUM                                     AR857262
+     C                   If        BK_BKIEMB = 'Y'  And                                     AR857262
+     C                             BK_BKMABR <> BRC And                                     AR857262
+     C                             BK_BKMABR <> W_OrigBrch                                  AR857262
+     C                   Movel     M_BICN        Z_CNUM                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Movel     CCY           Z_CCY                                      AR857262
+     C                   Z-Add     1             Z_ACSQ                                     AR857262
+     C                   Z-Add     PSTD          Z_PSTD                                     AR857262
+     C                   Z-Add     VALD          Z_VALD                                     AR857262
+     C                   If        Z_VALD = 0                                               AR857262
+     C                   Z-Add     BJRDNB        Z_VALD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     TRAT          Z_TRAT                                     AR857262
+     C                   Movel     PNAR          Z_PNAR                                     AR857262
+     C                   Z-Add     PSTA          Z_PSTA                                     AR857262
+     C                   If        PSTA < 0                                                 AR857262
+     C                   Z-Add     M_DTAC        Z_ACOD                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Z-Add     M_DFAC        Z_ACOD                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   If        DRCR = 0                                                 AR857262
+     C                   Movel     0             Z_DRCR                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     1             Z_DRCR                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Movel     SPOS          Z_SPOS                                     AR857262
+     C                   Movel     W_OrigBrch    Z_BRCA                                     AR857262
+      *                                                                                     AR857262
+     C                   MOVEL     Z_ACOD        X_ACCD                                     AR857262
+     C                   CALLB     'ZAACSACOD'                                              AR857262
+     C                   PARM                    X_ACCD           10                        AR857262
+     C                   PARM                    M2_SDACOD                                  AR857262
+      *        Database error if a/c code not found                                         AR857262
+     C     M2_A5ACCD     IFEQ      *BLANK                                                   AR857262
+     C                   EVAL      X_ERMS = 'BAD A/C CODE:' + X_ACCD                        AR857262
+     C                   EXSR      *PSSR                                                    AR857262
+     C                   ENDIF                                                              AR857262
+                                                                                            AR857262
+     C**********         Movel     A5ACTY        Z_ATYP                            AR857262 MD048584
+                                                                                            AR857262
+     C**********         If        ATYP = 'R'                                      AR857262 MD048584
+     C**********         Movel     '1'           Z_RIND                            AR857262 MD048584
+     C**********         Else                                                      AR857262 MD048584
+     C**********         Movel     '0'           Z_RIND                            AR857262 MD048584
+     C**********         Endif                                                     AR857262 MD048584
+     C                   Move      'G'           Z_ATYP                                     MD048584
+     C                   Move      '0'           Z_RIND                                     MD048584
+                                                                                            AR857262
+     C                   Movel     PRIN          Z_PRIN                                     AR857262
+     C                   Movel     'C'           Z_GETP                                     AR857262
+     C                   If        BGN0ST = 'Y'                                             AR857262
+     C                   Movel     FT_FTPRFP     Z_PRFC                                     AR857262
+     C                   Else                                                               AR857262
+     C                   Movel     PRFC          Z_PRFC                                     AR857262
+     C                   Endif                                                              AR857262
+     C                   Z-Add     235959        Z_PTIM                                     AR857262
+     C                   Movel     A5ACSC        Z_ACSC                                     AR857262
+     C                   Movel     OTTP          Z_OTTP                                     AR857262
+                                                                                            AR857262
+     C                   Write     APOSTPDZ                                                 AR857262
+     C                   ADD       1             CNT_ADD                                    AR857262
+     C                   ADD       Z_PSTA        AMT_ADD                                    AR857262
+                                                                                            AR857262
+     C                   ENDSR                                                              AR857262
+      *******************************************************************                   AR857262
+      /SPACE 5                                                                              AR857262
       ********************************************************************
       * Access MOVE TO a/c details
       ********************************************************************
@@ -754,8 +1087,11 @@
 
      C     1             CHAIN     APOSTZZF                           99
      C                   SUB       CNT_DEL       NORE1
-0511 C                   MOVE      AMT_DEL       ZZAMT
-0511 C                   Z-SUB     ZZAMT         ZZAMT
+     C                   ADD       CNT_ADD       NORE1                                      AR857262
+0511 C**********         MOVE      AMT_DEL       ZZAMT                                      AR857262
+0511 C     AMT_ADD       SUB       AMT_DEL       W_ZZAMT          17 0                      AR857262
+0511 C                   MOVE      W_ZZAMT       ZZAMT                                      AR857262
+0511 C**********         Z-SUB     ZZAMT         ZZAMT                                      AR857262
 0510 C                   Z-ADD     HRWN          ZZTOTI
 0511 C                   Z-ADD     HRDC          ZZTOTD
 0512 C                   EXSR      GLZADD
@@ -918,6 +1254,37 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
+                                                                                            AR857262
+      *  Access GL details                                                                  AR857262
+                                                                                            AR857262
+     C                   CALL      'AOGELRR0'                                               AR857262
+     C                   PARM      *Blanks       @RTCD             7                        AR857262
+     C                   PARM      '*FIRST  '    @OPTN             7                        AR857262
+     C     SDGELR        PARM      SDGELR        DSFDY                                      AR857262
+     C*                                                                                     AR857262
+     C**   Control Date                                                                     AR857262
+     C     BK_BKAPDT     IFLT      BJDNWD                                                   AR857262
+     C                   Z-ADD     BK_BKAPDT     NAPDA                                      AR857262
+     C                   Else                                                               AR857262
+     C     BJDNWD        SUB       1             NAPDA             5 0                      AR857262
+     C                   ENDIF                                                              AR857262
+     C*                                                                                     AR857262
+                                                                                            AR857262
+      *  Access module details                                                              AR857262
+                                                                                            AR857262
+     C                   CALL      'AOMMODR0'                                               AR857262
+     C                   PARM      *Blanks       @RTCD             7                        AR857262
+     C                   PARM      '*FIRST  '    @OPTN             7                        AR857262
+     C     SDMMOD        PARM      SDMMOD        DSFDY                                      AR857262
+                                                                                            AR857262
+      *  Access profit centre ICD                                                           AR857262
+                                                                                            AR857262
+     C                   IF        BGN0ST = 'Y'                                             AR857262
+     C                   CALL      'AOPCACR0'                                               AR857262
+     C                   PARM      *Blanks       @RTCD             7                        AR857262
+     C                   PARM      '*FIRST  '    @OPTN             7                        AR857262
+     C     SDPCAC        PARM      SDPCAC        DSFDY                                      AR857262
+     C                   ENDIF                                                              AR857262
 
       * Throw a page
 
@@ -930,6 +1297,9 @@
      C                   Z-ADD     *ZERO         ASN
      C**********         MOVEL     ACCID         BlankAC          18                          CGL029
      C                   MOVEL     ACCID         BlankAC          24                          CGL029
+                                                                                            AR857262
+     C                   Z-ADD     0             CNT_ADD           5 0                      AR857262
+     C                   Z-ADD     0             AMT_ADD          17 0                      AR857262
      C                   Z-ADD     PRTLN1        PRTLN2                                     MD048582
 
       * key lists

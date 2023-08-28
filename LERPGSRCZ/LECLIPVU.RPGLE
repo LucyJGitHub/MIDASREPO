@@ -33,7 +33,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MDSC41274          Date 24Aug23               *
+      *  Last Amend No. AR547730           Date 28Aug23               *
       *  Prev Amend No. CLE138             Date 02Nov21               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057871           Date 30Apr21               *
@@ -151,8 +151,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MDSC41274-Collect AR547730                                   *
-      *           -Loan settlement should not be validated upon       *
+      *  AR547730 -Loan settlement should not be validated upon       *
       *            reversal                                           *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -1328,8 +1327,8 @@
      C                   EVAL      WIdx = WIdx + 1                                           BUG6010
      C                   EVAL      WFldNamArr(WIdx) = 'DDRSTM'                               BUG6010
      C                   EVAL      WMsgIDArr(WIdx) = 'LEL0701'                               BUG6010
-     C                   ELSE                                                              MDSC41274
-     C                   EVAL      ##PREC = 'Y'                                            MDSC41274
+     C                   ELSE                                                               AR547730
+     C                   EVAL      ##PREC = 'Y'                                             AR547730
      C                   ENDIF                                                               BUG6010
      C                   ELSE                                                                BUG6010
       *                                                                                      BUG6010
@@ -1340,8 +1339,8 @@
      C                   EVAL      WIdx = WIdx + 1                                           BUG6010
      C                   EVAL      WFldNamArr(WIdx) = 'DDPSTM'                               BUG6010
      C                   EVAL      WMsgIDArr(WIdx) = 'LEL0700'                               BUG6010
-     C                   ELSE                                                              MDSC41274
-     C                   EVAL      ##PPAY = 'Y'                                            MDSC41274
+     C                   ELSE                                                               AR547730
+     C                   EVAL      ##PPAY = 'Y'                                             AR547730
      C                   ENDIF                                                               BUG6010
      C                   ENDIF                                                               BUG6010
      C                   IF        ##PPAY = 'N' AND DDPSTM <> '00'                           BUG6010

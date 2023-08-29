@@ -10,8 +10,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD033997           Date 11May15              */
+/*       Last Amend No. MD035050           Date 23Aug23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD033997           Date 11May15              */
 /*                      AR1061928          Date 30Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
@@ -32,6 +33,9 @@
 /*                      S01194                  DATE  08FEB90       */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD035050 - Copy reversed facility records to back up file   */
+/*                  for later use on CFA keys generation.            */
+/*                - Applied for MD-34992.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD033997 - Move process of facility expiry on 2nd COB.     */
 /*       AR1061928 - LEC06 on MSGW during clean COB                 */
@@ -95,20 +99,23 @@
 /************CLRPFM     FILE(LKEY2HH)                            */ /*098436*/
 /************CLRPFM     FILE(LKEY2DP)                            */ /*098436*/
 /************CLRPFM     FILE(LKEY2ZZ)                            */ /*098436*/
- 
+
 /*       CHANGE TO TAKE COPY OF REVERSED & CLOSED                  */
 /*       FACILITY DETAILS BEFORE DROPPED                           */
- 
+
      CLRPFM FILE(PEFCLFM)
      CPYF FROMFILE(FCLTYFM) TOFILE(PEFCLFM) +
           MBROPT(*ADD) INCREL((*IF RECI *EQ 'R') (*OR RECI *EQ 'C'))
 /**/                                                                                      /*239910*/
+     CLRPFM     FILE(PEFCLFN)                                                          /**MD035050*/
+     CPYF       FROMFILE(FCLTYFN) TOFILE(PEFCLFN) MBROPT(*ADD) INCREL((*IF RECI +
+                  *EQ 'R'))                                                            /**MD035050*/
      CLRPFM FILE(PEFCLTQD)                                                                /*239910*/
      CPYF FROMFILE(LEFCLTQD) TOFILE(PEFCLTQD) +
           MBROPT(*ADD) CRTFILE(*NO)                                                       /*239910*/
 /**/                                                                                      /*239910*/
 /*/COPY WNCPYSRC,LEC0606A01                                          */
- 
+
 /**/
 /**/
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABLEEI)                  * *S01194*/

@@ -107,9 +107,9 @@
      CPYF FROMFILE(FCLTYFM) TOFILE(PEFCLFM) +
           MBROPT(*ADD) INCREL((*IF RECI *EQ 'R') (*OR RECI *EQ 'C'))
 /**/                                                                                      /*239910*/
-     CLRPFM     FILE(PEFCLFN) /**MD035050*/
+     CLRPFM     FILE(PEFCLFN)                                                          /**MD035050*/
      CPYF       FROMFILE(FCLTYFN) TOFILE(PEFCLFN) MBROPT(*ADD) INCREL((*IF RECI +
-                  *EQ 'R')) /**MD035050*/
+                  *EQ 'R'))                                                            /**MD035050*/
      CLRPFM FILE(PEFCLTQD)                                                                /*239910*/
      CPYF FROMFILE(LEFCLTQD) TOFILE(PEFCLTQD) +
           MBROPT(*ADD) CRTFILE(*NO)                                                       /*239910*/

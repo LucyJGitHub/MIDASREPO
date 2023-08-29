@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. AR645553           Date 03Nov21               *      
+      *  Last Amend No. MD049018           Date 10Aug23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 AR645553           Date 03Nov21               *
       *                 MD057589           Date 17Feb21               *
       *                 MD055600           Date 11Apr20               *
       *                 MD051884           Date 05Sep19               *
@@ -154,12 +155,14 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD049018 - LDNI MT320 Nack T61 021 Code word 'D' or 'M' error*
+      *           - Applied for MD-61654.                             *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
       *             Based from MD052690. (Recompile)                  *
       *  AR645553 - Swift MT320 confirmation msg error. Applied GEMS  *
-      *             263000 which initialize *IN25 for next transaction*     
+      *             263000 which initialize *IN25 for next transaction*
       *  MD057589 - Formatting error in MT320s which causes them to   *
       *             become stuck on MMM_SWIFTRep.                     *
       *           - Move MFLD to WRK22B if MGMATU = 'C' (COB).        *
@@ -437,6 +440,7 @@
      FMGOEXTPDO   E                    DISK                               183583
      F                                              KCOMIT                183583
      FMGX320L0IF  E           K        DISK                           UC                      CSW208
+     FDLFRSCL3IF  E           K        DISK                                                 MD049018
      FMG0320P1O   E                    PRINTER                        UC
      FMG0320AUO   E                    PRINTER                        UC
      F/COPY WNCPYSRC,MGH00096
@@ -708,6 +712,7 @@
       *                                                                                      255986B
      I              'PopBTBConf          'C         APOPB                                    255986B
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I              'Omit30F38JforZFreq  'C         IREGFR                                  MD049018
       *
      C/EJECT
       *****************************************************************
@@ -798,6 +803,12 @@
      C                     KFLD           MGMODI                                              190127
      C                     KFLD           HSTRAN                                              190127
      C                     KFLD           HSMTPY                                              190127
+      *                                                                                     MD049018
+      ** Interest Rate Change Schedule key                                                  MD049018
+     C           IRCKEY    KLIST                                                            MD049018
+     C                     KFLD           HHDLNO                                            MD049018
+     C                     KFLD           HHRCIP                                            MD049018
+     C                     KFLD           HHPRDT                                            MD049018
       *
       ** Initial process
       *
@@ -1307,6 +1318,67 @@
      C                     ENDIF                                                              CSW213
       *                                                                                       CSW213
      C                     ENDSR                                                              CSW213
+     C/EJECT                                                                                MD049018
+      *****************************************************************                     MD049018
+      *   FMT38J - Format Field 38J                                   *                     MD049018
+      *   Called by - Format Message Detail - Sequence B.             *                     MD049018
+      *****************************************************************                     MD049018
+      *                                                                                     MD049018
+     C           FMT38J    BEGSR                                                            MD049018
+      *                                                                                     MD049018
+     C                     MOVELMGTNUM    ADLNO   6                                         MD049018
+     C                     MOVE ADLNO     NDLNO   60                                        MD049018
+     C                     Z-ADDNDLNO     HHDLNO                                            MD049018
+     C                     MOVEL'P'       HHRCIP                                            MD049018
+     C                     Z-ADDMGNIDT    HHPRDT                                            MD049018
+     C                     Z-ADD0         ZZEND                                             MD049018
+      *                                                                                     MD049018
+     C           IRCKEY    SETLLDLFRSCL3                                                    MD049018
+     C                     READ DLFRSCL3                 99                                 MD049018
+      *                                                                                     MD049018
+      ** If no record found, use maturity date as end date                                  MD049018
+      *                                                                                     MD049018
+     C           *IN99     IFEQ '1'                                                         MD049018
+     C                     Z-ADDMGMDAT    ZZEND                                             MD049018
+      *                                                                                     MD049018
+     C                     ELSE                                                             MD049018
+      *                                                                                     MD049018
+      ** If with interest freq schedule, get the next date after                            MD049018
+      ** Next Interest Date as end date                                                     MD049018
+      *                                                                                     MD049018
+     C           *IN99     DOWEQ'0'                                                         MD049018
+     C           HHDLNO    ANDEQNDLNO                                                       MD049018
+     C           MGNIDT    IFEQ HHPRDT                                                      MD049018
+     C                     READ DLFRSCL3                 99                                 MD049018
+     C                     ELSE                                                             MD049018
+     C                     Z-ADDHHPRDT    ZZEND                                             MD049018
+     C                     MOVE '1'       *IN99                                             MD049018
+     C                     ENDIF                                                            MD049018
+     C                     ENDDO                                                            MD049018
+      *                                                                                     MD049018
+     C           ZZEND     IFEQ 0                                                           MD049018
+     C                     Z-ADDMGMDAT    ZZEND                                             MD049018
+     C                     ENDIF                                                            MD049018
+     C                     ENDIF                                                            MD049018
+      *                                                                                     MD049018
+     C                     Z-ADDMGNIDT    ZZBEG                                             MD049018
+     C                     MOVE MGICBS    ZZCALC                                            MD049018
+     C                     EXSR ZINTDY                                                      MD049018
+      *                                                                                     MD049018
+      ** Use only the 3 last digits.                                                        MD049018
+      *                                                                                     MD049018
+     C           ZZCALC    IFEQ '6'                                                         MD049018
+     C           ZZCALC    OREQ '9'                                                         MD049018
+     C           #29FEB    ANDEQ'Y'                                                         MD049018
+     C           INT6DY    DIV  1         WK3D                                              MD049018
+     C                     MOVE WK3D      WK3                                               MD049018
+     C                     ELSE                                                             MD049018
+     C                     MOVE ZZINDY    WK3                                               MD049018
+     C                     ENDIF                                                            MD049018
+      *                                                                                     MD049018
+     C           'D'       CAT  WK3       MFLD                                              MD049018
+      *                                                                                     MD049018
+     C                     ENDSR                                                            MD049018
      C/EJECT
       *****************************************************************
       *   INTF - Initalise non-constant fields                        *
@@ -5257,6 +5329,16 @@
      C                     MOVELWFLD13    MFLD                            CDL093
       *                                                                   CDL093
      C                     ENDSL                                          CSW200
+      *                                                                                     MD049018
+      ** If Interest Frequency is not Z, output :30F: and :38J:                             MD049018
+      *                                                                                     MD049018
+     C           MGIPFR    IFNE 'Z'                                                         MD049018
+      *                                                                                     MD049018
+      ** If Interest Frequency is Z, only output :30F: and :38J:                            MD049018
+      **    if 'Omit30F38JforZFreq' is N                                                    MD049018
+      *                                                                                     MD049018
+     C           MGIPFR    OREQ 'Z'                                                         MD049018
+     C           PIRGFR    ANDEQ'N'                                                         MD049018
       *                                                                   CSW200
       ** FIELD :30F: - Last day of the first interest period              CSW200
       **       :38J: - Number of days                                     CSW200
@@ -5318,9 +5400,14 @@
       *                                                                                       247842
      C           'D'       CAT  WK3       MFLD                            CSW200
       *                                                                   CSW200
+     C           MGIPFR    WHEQ 'Z'                                                         MD049018
+     C                     EXSR FMT38J                                                      MD049018
+      *                                                                                     MD049018
      C                     ENDSL                                          CSW200
      C                     ENDIF                                          CSW200
      C                     ENDIF                                          CSW200
+      *                                                                                     MD049018
+     C                     ENDIF                                                            MD049018
       *                                                                   CSW200
      C                     ENDSR                                          CSW200
      C/EJECT                                                              CSW200
@@ -8779,6 +8866,36 @@
      C           @RTCD     IFEQ *BLANK                                                       255986B
      C                     MOVELP@VL01    PAPOPB                                             255986B
      C                     ENDIF                                                             255986B
+      *                                                                                     MD049018
+      ** Access system value for Omit30F38JforZFreq                                         MD049018
+      *                                                                                     MD049018
+     C                     CALL 'AOSVALR0'                                                  MD049018
+     C                     PARM *BLANKS   @RTCD                                             MD049018
+     C                     PARM IREGFR    P@OP01 20                                         MD049018
+     C                     PARM *BLANKS   P@VL01200                                         MD049018
+     C                     PARM *BLANKS   P@OP02 20                                         MD049018
+     C                     PARM *BLANKS   P@VL02200                                         MD049018
+     C                     PARM *BLANKS   P@OP03 20                                         MD049018
+     C                     PARM *BLANKS   P@VL03200                                         MD049018
+     C                     PARM *BLANKS   P@OP04 20                                         MD049018
+     C                     PARM *BLANKS   P@VL04200                                         MD049018
+     C                     PARM *BLANKS   P@OP05 20                                         MD049018
+     C                     PARM *BLANKS   P@VL05200                                         MD049018
+     C                     PARM *BLANKS   P@OP06 20                                         MD049018
+     C                     PARM *BLANKS   P@VL06200                                         MD049018
+     C                     PARM *BLANKS   P@OP07 20                                         MD049018
+     C                     PARM *BLANKS   P@VL07200                                         MD049018
+     C                     PARM *BLANKS   P@OP08 20                                         MD049018
+     C                     PARM *BLANKS   P@VL08200                                         MD049018
+     C                     PARM *BLANKS   P@OP09 20                                         MD049018
+     C                     PARM *BLANKS   P@VL09200                                         MD049018
+     C                     PARM *BLANKS   P@OP10 20                                         MD049018
+     C                     PARM *BLANKS   P@VL10200                                         MD049018
+      *                                                                                     MD049018
+     C                     MOVE 'Y'       PIRGFR  1                                         MD049018
+     C           @RTCD     IFEQ *BLANK                                                      MD049018
+     C                     MOVELP@VL01    PIRGFR                                            MD049018
+     C                     ENDIF                                                            MD049018
       *                                                                                       CSW208
       ** Check if switchable feature CSW205 is switched on                                    CSW205
      C                     CALL 'SWIF2005'                                                    CSW205

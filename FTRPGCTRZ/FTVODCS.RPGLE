@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *  Last Amend No. MD061704           Date 21Aug23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD050405           Date 03Jun20               *
       *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061704 - Error in the XML from IPAY API.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
@@ -2657,6 +2659,8 @@ E2   C                   EndIf                                                  
      C                   Eval      OKORC4 = 'N'                                               CSW207
      C                   Eval      OKORC5 = 'N'                                               CSW207
      C                   Eval      FldNamXAr(Idx) = 'SORC1'                                   CSW207
+     C                   EVAL      BLen = %Len(%Trim(SORC1))                                MD061704
+     C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(SORC1)                    MD061704
                                                                                               CSW207
      C                   If        %SUBST(#SORC1:1:1) <> '/'                                BUG15045
      C**********         If        #SORC5 <> *Blank                                BUG15045 BUG25092

@@ -86,7 +86,7 @@
 
       ** SD Control Update Logical File
      F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
-     F**********                           COMMIT
+     F**********                           COMMIT                                           MD061008
 
       ** Bank Details Update Logical File
      FSDBANKL0  UF   E           K DISK    INFSR(*PSSR)

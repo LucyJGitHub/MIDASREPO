@@ -237,7 +237,7 @@
       * UPD : Midas SD Branch codes update                                                  BUG19910
       *                                                                                     BUG19910
      F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                           BUG19910 MD061008
-     F                                     COMMIT                                           BUG19910
+     F**********                           COMMIT                                  BUG19910 MD061008
       *                                                                                     BUG19910
       ** Time Zone Maintenance Display File
      FSD001005DFCF   E             WORKSTN

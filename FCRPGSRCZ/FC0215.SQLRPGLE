@@ -64,7 +64,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPAt *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*

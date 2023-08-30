@@ -53,7 +53,7 @@
       ** Midas SD Alternate Names & Addresses Shadow file retrieve
 
      F*SDFCTLL0* UF A E           K DISK    INFSR(*PSSR)                                    MD061008
-     F                                     COMMIT
+     F**********                           COMMIT                                           MD061008
       ** Midas SD Standing Data Controls
 
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)

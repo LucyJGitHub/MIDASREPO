@@ -147,7 +147,7 @@
       *
       ** SD Standing Data Controls by filename for file update.
      F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
-     F                                     COMMIT
+     F**********                           COMMIT                                           MD061008
       *
       ** Securities Clients details for retrieval.
      FSDSECSL0  IF   E           K DISK    INFSR(*PsSR)

@@ -264,7 +264,7 @@
       ** Midas SD Loan Types/Sub-Types Retrieval Index
 
      F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
-     F                                     COMMIT
+     F**********                           COMMIT                                           MD061008
       ** Control File Update Index
 
       *****************************************************************

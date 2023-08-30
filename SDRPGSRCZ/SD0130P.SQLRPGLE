@@ -14,7 +14,8 @@
      F*      1990,1993                                                *
      F*                                                               *
       *  Last Amend No. MD061008           Date 31Dec21               *
-      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CSW101             Date 03Feb23               *
       *                 MD058755           Date 01Sep21               *
       *                 CGL177             Date 25May17               *
       *                 MD046248           Date 27Oct17               *
@@ -39,6 +40,7 @@
      F*****************************************************************
      F*                                                               *
       *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  CSW101 - PAYplus Interface.                                  *
       *           Recompiled                                          *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
@@ -80,6 +82,10 @@
      F*                                                               *
      F*****************************************************************
      F/COPY WNCPYSRC,SD0130PFPG
+      *
+     FA6RETRL1  IF   E           K DISK                                                       BA6026
+      ** Retail Transaction Types Extension File - Retrieval index                            BA6026
+      *                                                                                       BA6026
      F*SDRETRL1* IF   E           K DISK                                                    MD058755
       * RTV: Retail Transaction Types  Retrieval index
       *
@@ -298,6 +304,23 @@
      C                   MOVEL     A1CPTC        XRCPTC                         Ch. Port. Cap. 08144
      C                   MOVEL     A1PFMC        XRPFMC                         Perf. Category 08144
      C                   MOVEL     A1ATRA        XRAPRA                         Apply to R A/c 08144
+      *                                                                                       BA6026
+      ** Move Transaction Type Identification Code to detail line.                            BA6026
+      *                                                                                       BA6026
+     C     BA6026        IFEQ      'Y'                                                        BA6026
+     C                   MOVE      *ON           *IN80                                        BA6026
+      *                                                                                       BA6026
+     C     A1RTTY        CHAIN     A6RETRL1                           89                      BA6026
+     C     *IN89         IFEQ      *OFF                                                       BA6026
+     C                   MOVEL     G1SIDC        XSIDC                                        BA6026
+     C                   ELSE                                                                 BA6026
+     C                   MOVE      *BLANKS       XSIDC                                        BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+     C                   ELSE                                                                 BA6026
+     C                   MOVE      *OFF          *IN80                                        BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
       * USER: Process detail record
      C                   MOVEL     P1ARSI        WUARSI                         Audit/Request S
       * Process Detail Rec PRTFIL
@@ -984,6 +1007,22 @@
      C                   ELSE                                                                  CGL17
      C                   MOVE      '0'           *IN55                                         CGL17
      C                   ENDIF                                                                 CGL17
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   CALL      'AOSARDR0'                                                 BA6026
+     C                   PARM      *BLANKS       WRTCD             7                          BA6026
+     C                   PARM      '*VERIFY'     WOPTN             7                          BA6026
+     C                   PARM      'BA6026'      WSARD             6                          BA6026
+     C                   PARM                    RCD3                                         BA6026
+      *                                                                                       BA6026
+     C                   SELECT                                                               BA6026
+     C     WRTCD         WHENEQ    *BLANKS                                                    BA6026
+     C                   MOVE      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C     WRTCD         WHENEQ    '*NRF'                                                     BA6026
+     C                   MOVE      'N'           BA6026                                       BA6026
+     C                   ENDSL                                                                BA6026
       *
       ** CALCULATE END OF TEXT POINT
      C                   Z-ADD     1             U                 2 0

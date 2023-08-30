@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD061238           Date 22Aug23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -31,6 +32,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD061238 - Locked HATS screen issue.                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
 /*       CBF002 - BF Infrastructure: Backup and Recovery            */
@@ -83,6 +85,11 @@
                                                                       /*CTI001*/
              CHGVAR     VAR(&##PGM) VALUE('SCMENUF')                  /*CTI001*/
 RDSPLY:      SNDRCVF    RCDFMT(SCMENUF)
+                                                                                        /*MD061238*/
+/** If the user presses F3 = Exit */                                                    /*MD061238*/
+                                                                                        /*MD061238*/
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDPGM))                   /*MD061238*/
+                                                                                        /*MD061238*/
              RMVMSG     PGMQ(*SAME (&##PGM)) MSGQ(*PGMQ) CLEAR(*ALL)  /*CTI001*/
              SNDF       RCDFMT(MSGCTL)                                /*CTI001*/
 /*  ALLOW HELP                                                     */ /*S01199*/
@@ -163,7 +170,7 @@ RDSPLY:      SNDRCVF    RCDFMT(SCMENUF)
 /**********               CMDLBL(TIERR))                           */ /*CTI001*/ /*BG18886*/
              IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
                           CMDLBL(TIERR))                              /*CTI001*/ /*BG18886*/
- 
+
              GOTO       CMDLBL(RDSPLY)                                /*CTI001*/
  TIERR:      RCVMSG     MSGQ(MOPERQ) MSGTYPE(*LAST) MSG(&MSG1)        /*CTI001*/
              RCVMSG     MSGQ(MOPERQ) MSGTYPE(*LAST) RMV(*NO) +

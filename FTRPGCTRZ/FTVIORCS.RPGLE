@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051508           Date 12Jul18               *
+      *  Last Amend No. MD061704           Date 21Aug23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD051508           Date 12Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041643           Date 27Sep16               *
       *                 MD036567           Date 26Apr16               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061704 - Error in the XML from IPAY API.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD051508 - Correct field name in order to return proper      *
@@ -1209,6 +1211,8 @@
      C                   Endif                                                              BUG15037
       *                                                                                     BUG15037
      C                   EVAL      FldNamXAR(IDX) = 'DDORC1'                                BUG15037
+     C                   EVAL      BLen = %Len(%Trim(DDORC1))                               MD061704
+     C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(DDORC1)                   MD061704
      C                   EVAL      OKORC1 = 'N'                                             BUG15037
      C                   EVAL      OKORC2 = 'N'                                             BUG15037
      C                   EVAL      OKORC3 = 'N'                                             BUG15037

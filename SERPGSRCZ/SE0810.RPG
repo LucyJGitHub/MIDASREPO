@@ -26,8 +26,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD057247           Date 01Feb21               *
+      *  Last Amend No. MD061785           Date 10Jul23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD057247           Date 01Feb21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -90,6 +91,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061785 - Sorts SE0810P1 report based on Event Date.        *
+      *             Re-designed GEMS 263968 to use new LF/EVSEC1      *
+      *             based on system value 'SecurityByEvtDateRpt’.     *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD057247 - Multiple calls of UTCHOBJEX for several COB com-  *
       *             ponents - Securities module.                      *
@@ -201,6 +205,11 @@
      FINVTP   IF  E           K        DISK                               E20125
      F/COPY WNCPYSRC,SE0810F001
      FEVSEC   IF  E           K        DISK
+     FEVSEC1  IF  E           K        DISK                                                 MD061785
+     F            TREVEDF                           KRENAMETREVEDF1                         MD061785
+     F            DMEVEDF                           KRENAMEDMEVEDF1                         MD061785
+     F            CPEVEDF                           KRENAMECPEVEDF1                         MD061785
+     F            BPEVEDF                           KRENAMEBPEVEDF1                         MD061785
      F/COPY WNCPYSRC,SE0810F002
      FCLINT   IF  E           K        DISK
      F            CLINTCAF                          KIGNORE
@@ -312,6 +321,7 @@
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZNCDZ1                                                 E19482
       /EJECT
+     I              'SecurityByEvtDateRpt'C         SVEVDT                                  MD061785
      I*
      ITREVEDF     01
      I***********   TRBN                            BRCHCD                S01117
@@ -332,6 +342,19 @@
      I***********   CCBA                            BRCHCD          S01117E29170
      I              EBRC                            BRCHCD                E29170
      I              CCSS                            SECSHN                E19482
+     I*                                                                                     MD061785
+     ITREVEDF1    01                                                                        MD061785
+     I              EBRC                            BRCHCD                                  MD061785
+     I              TRSS                            SECSHN                                  MD061785
+     IDMEVEDF1    02                                                                        MD061785
+     I              DMBA                            BRCHCD                                  MD061785
+     I              DMSS                            SECSHN                                  MD061785
+     ICPEVEDF1    03                                                                        MD061785
+     I              EBRC                            BRCHCD                                  MD061785
+     I              CCSS                            SECSHN                                  MD061785
+     IBPEVEDF1    04                                                                        MD061785
+     I              EBRC                            BRCHCD                                  MD061785
+     I              CCSS                            SECSHN                                  MD061785
       *                                                                                       CSE037
      IINVTPDF                                                                                 CSE037
      I              SFLG                            ISFLG                                     CSE037
@@ -470,7 +493,11 @@
      C           ENT       IFNE 'ALL'                                     E29170
      C           ENT       ANDNE*BLANKS                                   E29170
      C/COPY WNCPYSRC,SE0810C004
+     C           BYEVDT    IFEQ 'Y'                                                         MD061785
+     C           ENT       SETLLEVSEC1                                                      MD061785
+     C                     ELSE                                                             MD061785
      C           ENT       SETLLEVSEC                                     E29170
+     C                     ENDIF                                                            MD061785
      C/COPY WNCPYSRC,SE0810C005
      C                     END                                            E29170
      C*
@@ -484,7 +511,11 @@
      C                     END                                            E37601
      C*                                                                   E37601
      C/COPY WNCPYSRC,SE0810C006
+     C           BYEVDT    IFEQ 'Y'                                                         MD061785
+     C                     READ EVSEC1                   31                                 MD061785
+     C                     ELSE                                                             MD061785
      C                     READ EVSEC                    31
+     C                     ENDIF                                                            MD061785
      C/COPY WNCPYSRC,SE0810C007
      C           *IN31     DOWEQ'0'
      C                     SETOF                     65                   E20125
@@ -705,7 +736,11 @@
      C**  READ THE NEXT RECORD FROM LF/EVSEC.
      C*
      C/COPY WNCPYSRC,SE0810C008
+     C           BYEVDT    IFEQ 'Y'                                                         MD061785
+     C                     READ EVSEC1                   31                                 MD061785
+     C                     ELSE                                                             MD061785
      C                     READ EVSEC                    31
+     C                     ENDIF                                                            MD061785
      C/COPY WNCPYSRC,SE0810C009
      C                     END                                            E29170
      C                     END
@@ -926,6 +961,52 @@
      C           URTNCD    IFEQ *BLANKS                                                     MD057247
      C                     MOVE 'Y'       CSE071                                            MD057247
      C                     ENDIF                                                            MD057247
+      *                                                                                     MD061785
+      ** Access System Value to check for report sorted by Event Date                       MD061785
+      *                                                                                     MD061785
+     C                     CALL 'AOSVALR0'                                                  MD061785
+     C                     PARM *BLANKS   PRTCD                                             MD061785
+     C                     PARM SVEVDT    PSV01  20                                         MD061785
+     C                     PARM           PCS01 200                                         MD061785
+     C                     PARM           PSV02  20                                         MD061785
+     C                     PARM           PCS02 200                                         MD061785
+     C                     PARM           PSV03  20                                         MD061785
+     C                     PARM           PCS03 200                                         MD061785
+     C                     PARM           PSV04  20                                         MD061785
+     C                     PARM           PCS04 200                                         MD061785
+     C                     PARM           PSV05  20                                         MD061785
+     C                     PARM           PCS05 200                                         MD061785
+     C                     PARM           PSV06  20                                         MD061785
+     C                     PARM           PCS06 200                                         MD061785
+     C                     PARM           PSV07  20                                         MD061785
+     C                     PARM           PCS07 200                                         MD061785
+     C                     PARM           PSV08  20                                         MD061785
+     C                     PARM           PCS08 200                                         MD061785
+     C                     PARM           PSV09  20                                         MD061785
+     C                     PARM           PCS09 200                                         MD061785
+     C                     PARM           PSV10  20                                         MD061785
+     C                     PARM           PCS10 200                                         MD061785
+      *                                                                                     MD061785
+     C                     MOVE 'N'       BYEVDT  1                                         MD061785
+      *                                                                                     MD061785
+     C           PRTCD     IFEQ *BLANK                                                      MD061785
+     C                     MOVELPCS01     BYEVDT                                            MD061785
+     C                     ELSE                                                             MD061785
+      *                                                                                     MD061785
+      ** Database Error (return code other than *NRF)                                       MD061785
+      *                                                                                     MD061785
+     C           PRTCD     IFNE '*NRF   '                                                   MD061785
+     C           *LOCK     IN   LDA                                                         MD061785
+     C                     MOVEL'SDSVALPD'DBFILE           ************                     MD061785
+     C                     MOVELPSV01     DBKEY            * DBERR 23 *                     MD061785
+     C                     Z-ADD23        DBASE            ************                     MD061785
+     C                     OUT  LDA                                                         MD061785
+     C                     MOVE *ON       *INU7                                             MD061785
+     C                     MOVE *ON       *INU8                                             MD061785
+     C                     MOVE *ON       *INLR                                             MD061785
+     C                     EXSR *PSSR                                                       MD061785
+     C                     ENDIF                                                            MD061785
+     C                     ENDIF                                                            MD061785
      C*
      C                     ENDSR
       *

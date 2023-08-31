@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060271             Date 21Jul22             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061706             Date 01Aug23             *
+      *  Prev Amend No. MD060271             Date 21Jul22             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD060271 - Dashed line appeared trimmed                      *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -49,6 +51,11 @@
      D                                     -----------------------------------              MD060271
      D                                     -----------------------------------              MD060271
      D                                     -----------------------------------')            MD060271
+     D F_A             C                   Const('F3=Exit  F7=Display Summar-               MD061706
+     D                                     y Report F8=Display Detailed Report -            MD061706
+     D                                     F22=Update Driver File')                         MD061706
+     D F_B             C                   Const('F3=Exit  F7=Display Summar-               MD061706
+     D                                     y Report F8=Display Detailed Report')            MD061706
      D/COPY ZACPYSRC,PSDS
       *****************************************************************
 
@@ -57,6 +64,7 @@
      C                   PARM                    REFSYS            2
      C                   PARM                    BRIDGELIB        10
      C                   PARM                    ERROR            10
+     C                   PARM                    OTBU              1                        MD061706
 
      C                   eval      ERROR = *BLANK
      C                   eval      ##JOB = PSJobName
@@ -80,11 +88,19 @@
      C                   DOW       *INKC = *OFF
      C                   TIME                    ##TME
 
+      * If program is called from OTBU, screen needs to be updated manually by pressing F5  MD061706
+     C                   setoff                                       69                    MD061706
+     C                   If        OTBU = 'Y'                                               MD061706
+     C                   eval      V_EXFMT = 'Y'                                            MD061706
+     C                   seton                                        6968                  MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
       * Elapsed Time
       * If 'End Time' available
      C                   if        UPTMED <> *BLANKS
      C                   EVAL      WkTime = %DIFF(##ENDT:##STRT:*SECONDS)
      C                   EVAL      ##LAPS = TIME0 + %SECONDS(WkTime)
+     C                   setoff                                       69                    MD061706
      C                   else
       * If 'End Time' not available
      C                   TIME                    ##CURT
@@ -131,6 +147,21 @@
      C                   PARM                    BRIDGELIB
      C                   Endif
 
+      * If F5 is selected, reload screen if different                                       MD061706
+     C                   If        *INKE = *ON                                              MD061706
+     C/exec SQL                                                                             MD061706
+     C+ select * into :UPZCMP                                                               MD061706
+     C+ from UPZCMPTD where UPPRFX = :PREFIX                                                MD061706
+     C/end-exec                                                                             MD061706
+     C                   If        SQLCode <> SQLOK                                         MD061706
+     C                             and SQLCode <> SQLEOF                                    MD061706
+     C                   eval      ERROR = '*Error'                                         MD061706
+     C                   Return                                                             MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   Exsr      SR_LOAD                                                  MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
      C                   Else
      C                   WRITE     RECFMT
 
@@ -177,6 +208,11 @@
      C                   eval      V_TOTF = 0
      C                   eval      UPZCMP_S = UPZCMP
      C                   eval      ##DOTL = C_DOTL                                          MD060271
+     C                   If        OTBU = 'Y'                                               MD061706
+     C                   eval      ##FCT = F_B                                              MD061706
+     C                   Else                                                               MD061706
+     C                   eval      ##FCT = F_A                                              MD061706
+     C                   Endif                                                              MD061706
 
       * Zone
      C                   eval      ##PRFX = PREFIX

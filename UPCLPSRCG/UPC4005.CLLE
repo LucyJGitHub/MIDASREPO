@@ -9,10 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD061706           Date 01Aug23              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061706 - Various changes for transition to aDBU           */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
 /*********************************************************************/
@@ -36,6 +38,7 @@
              DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(100)                               /*MD061706*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2020')
@@ -195,6 +198,23 @@ LOOP:
              CPYF       FROMFILE(&BRGBRGLIB/&LOGFILE) +
                           TOFILE(&LOGFILEA) MBROPT(*ADD)
 
+/* As *OUTFILE may have been delivered, these need to be removed */                     /*MD061706*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061706*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from UPGLOGPD +
+                          where WFILE in (''DSPFDBA2'', +
+                          ''DSPFDRF2'', ''DSPFDAC2'', ''DSPFDSL2'', +
+                          ''DSPFFD2'')')                                                /*MD061706*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060709*/
+             ENDDO                                                                      /*MD061706*/
+                                                                                        /*MD061706*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD061706*/
+             CHGVAR     VAR(&SQLSTM) VALUE('delete from UPZLOGPD +
+                          where WFILE in (''DSPFDBA2'', +
+                          ''DSPFDRF2'', ''DSPFDAC2'', ''DSPFDSL2'', +
+                          ''DSPFFD2'')')                                                /*MD061706*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD060709*/
+             ENDDO                                                                      /*MD061706*/
+                                                                                        /*MD061706*/
 /* List of dependent files */
              CLRPFM     FILE(UPXREFPD)
 

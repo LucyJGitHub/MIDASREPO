@@ -1,0 +1,65 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP ADBU Update via OTB remove TRG')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC4911 - ADBU Update via OTB remove TRG                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061706 *CRATE    Date 01Aug23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061706 - Various changes for transition to aDBU           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &ERROR)
+
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPZDRVTD) OPNID(ZONE)
+             DCLF       FILE(UPGDRVTD) OPNID(GLOB)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+
+READG:
+             RCVF       OPNID(GLOB)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+
+             IF         COND(%SUBSTRING(&GLOB_DRLIB 4 1) *NE 'V') THEN(DO)
+             RMVPFTRG   FILE(&GLOB_DRLIB/&GLOB_DRFILE)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             GOTO       CMDLBL(READG)
+             ENDDO
+
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+
+READZ:
+             RCVF       OPNID(ZONE)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+
+             IF         COND(%SUBSTRING(&ZONE_DRLIB 4 1) *NE 'V') THEN(DO)
+             RMVPFTRG   FILE(&ZONE_DRLIB/&ZONE_DRFILE)
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             GOTO       CMDLBL(READZ)
+             ENDDO
+
+ERROR:
+            CHGJOB     SWS(XXXXXX11)
+            CHGVAR     VAR(&ERROR) VALUE('*ERROR')
+
+END:
+             ENDPGM

@@ -13,13 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060542           Date 20Sep22               *
-      *  Prev Amend No. MD060514           Date 14Sep22               *
+      *  Last Amend No. MD061706           Date 01Aug23               *
+      *  Prev Amend No. MD060542           Date 20Sep22               *
+      *                 MD060514           Date 14Sep22               *
       *                 MD060351           Date 17Aug22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD060542 - View should only be displayed when available      *
       *  MD060514 - Failed component can be restarted twice.          *
       *  MD060351 - Compilation error with multilanguage              *
@@ -69,6 +71,7 @@
      DTIME0            S               T   INZ(T'00.00.00')
      DN_VAR            S              6  0
      DC_VAR8           S              8
+     DADBU             S              1                                                     MD061706
 
      D UPOTBM        E DS                  EXTNAME(UPOTBMTD)
      D UPOTBM_S      E DS                  EXTNAME(UPOTBMTD)
@@ -97,6 +100,19 @@
      C                   Return
      C                   Endif
 
+      * Check if database upgrade is to be done with aDBU                                   MD061706
+     C                   eval      ADBU = 'N'                                               MD061706
+     C/exec SQL                                                                             MD061706
+     C+ select UCADBU into :ADBU                                                            MD061706
+     C+ from UPCCSITD                                                                       MD061706
+     C/end-exec                                                                             MD061706
+                                                                                            MD061706
+      * If 'Y', display aDBU                                                                MD061706
+     C                   setoff                                       90                    MD061706
+     C                   If        ADBU = 'Y'                                               MD061706
+     C                   seton                                        90                    MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
       * Initialize display file
      C                   Exsr      SR_LOAD
 
@@ -217,8 +233,11 @@
      C     SR_LOAD       BEGSR
 
       * Set off indicators *IN30 to *IN40
-     C                   eval      %Subarr(*IN : 30 : 40) = *OFF
-     C                   eval      %Subarr(*IN : 60) =  *OFF
+      * Correct code for built-in function %SUBARR                                          MD061706
+     C**********         eval      %Subarr(*IN : 30 : 40) = *OFF                            MD061706
+     C                   eval      %Subarr(*IN : 30 : 20) = *OFF                            MD061706
+     C**********         eval      %Subarr(*IN : 60) =  *OFF                                MD061706
+     C                   eval      %Subarr(*IN : 60 : 10) =  *OFF                           MD061706
      C                   eval      V_TOTF = 0
      C                   eval      UPOTBM_S = UPOTBM
      C                   eval      ##STR1 = *blanks
@@ -392,11 +411,14 @@
      C                   EVAL      ##RTM4 = TIME0 + %SECONDS(WkTime)
      C                   endif
       * Status
+     C                   setoff                                       91                    MD061706
      C                   select
      C                   WHEN      DCMPG4 = 'F'
      C                   eval      ##STS4 = 'Failed'
      C                   eval      V_EXFMT = 'Y'
      C                   seton                                        366437
+      ** if aDBU, seton 91 so adbU function key is displayed                                MD061706
+     C   90              seton                                        91                    MD061706
      C                   WHEN      DCMPG4 = 'C'
      C                   eval      ##STS4 = 'Completed'
      C                   seton                                        37

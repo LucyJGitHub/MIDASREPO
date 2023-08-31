@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061632           Date 13Jul23               *
-      *  Prev Amend No. MD061533           Date 27Jun23               *
+      *  Last Amend No. MD061706           Date 01Aug23               *
+      *  Prev Amend No. MD061632           Date 13Jul23               *
+      *                 MD061533           Date 27Jun23               *
       *                 MD061004 *CREATE   Date 02Feb23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD061632 - *U library for client package can be either core  *
-      *             or client                                         *      
+      *             or client                                         *
       *  MD061533 - Amendments to INSP screen and process             *
       *             Also apply MD-61361                               *
       *  MD061361 - Correct package name when calling PGM             *
@@ -103,6 +105,8 @@
      D LIBP            S             10                                                     MD061533
      D RTN             S             10                                                     MD061533
      D LIBU            S             10A                                                    MD061632
+     D aDBU_Flg        S              1A                                                    MD061706
+     D ErrInd2         S              1A                                                    MD061706
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
 
@@ -171,30 +175,35 @@
 
      C                   eval      SysVal = 'BrgMidasGlobalPrefix'
       ** Load global prefix too
-     C                   CALL      'AOSVALR0'
-     C                   PARM      *BLANKS       PRetCode          7
-     C                   PARM      SysVal        P@OP01           20
-     C                   PARM      *BLANKS       P@VL01          200
-     C                   PARM      *BLANKS       P@OP02           20
-     C                   PARM      *BLANKS       P@VL02          200
-     C                   PARM      *BLANKS       P@OP03           20
-     C                   PARM      *BLANKS       P@VL03          200
-     C                   PARM      *BLANKS       P@OP04           20
-     C                   PARM      *BLANKS       P@VL04          200
-     C                   PARM      *BLANKS       P@OP05           20
-     C                   PARM      *BLANKS       P@VL05          200
-     C                   PARM      *BLANKS       P@OP06           20
-     C                   PARM      *BLANKS       P@VL06          200
-     C                   PARM      *BLANKS       P@OP07           20
-     C                   PARM      *BLANKS       P@VL07          200
-     C                   PARM      *BLANKS       P@OP08           20
-     C                   PARM      *BLANKS       P@VL08          200
-     C                   PARM      *BLANKS       P@OP09           20
-     C                   PARM      *BLANKS       P@VL09          200
-     C                   PARM      *BLANKS       P@OP10           20
-     C                   PARM      *BLANKS       P@VL10          200
-
-     C                   eval      GPFX = %subst(P@VL01:1:2)
+      ** as AOSVALR0 is causing lock, use SQL instead                                       MD061706
+     C**********         CALL      'AOSVALR0'                                               MD061706
+     C**********         PARM      *BLANKS       PRetCode          7                        MD061706
+     C**********         PARM      SysVal        P@OP01           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL01          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP02           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL02          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP03           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL03          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP04           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL04          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP05           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL05          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP06           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL06          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP07           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL07          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP08           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL08          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP09           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL09          200                        MD061706
+     C**********         PARM      *BLANKS       P@OP10           20                        MD061706
+     C**********         PARM      *BLANKS       P@VL10          200                        MD061706
+      **********                                                                            MD061706
+     C**********         eval      GPFX = %subst(P@VL01:1:2)                                MD061706
+     C/EXEC SQL                                                                             MD061706
+     C+ select GIVAL into :GPFX from SDSVLXTD where                                         MD061706
+     C+ GISVAL = 'BrgMidasGlobalPrefix'                                                     MD061706
+     C/END-EXEC                                                                             MD061706
 
 
       ** Process first screen.
@@ -333,6 +342,18 @@
      C                   exsr      *pssr
      C                   Endif
 
+      ** If aDBU flag is 'Y', update UPCCSITD                                               MD061706
+     C                   if        XADBU = 'Y'                                              MD061706
+     C/EXEC SQL                                                                             MD061706
+     C+ update UPCCSITD set UCADBU = 'Y'                                                    MD061706
+     C/END-EXEC                                                                             MD061706
+     C                   If        SQLCode <> 0                                             MD061706
+     C                   eval      DBASE = '111'                                            MD061706
+     C                   exsr      *pssr                                                    MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   endif                                                              MD061706
+                                                                                            MD061706
       * Set the system values, always for the global then only for the selected zone(s)
      C                   eval      sprf = GPFX
      C                   exsr      SrSysValg
@@ -536,6 +557,14 @@
 
      C                   eval      XCCSID = @CCSID
 
+      ** Default aDBU flag based on *U library                                              MD061706
+     C                   if        aDBU_Flg = 'Y'                                           MD061706
+     C                   eval      XADBU = 'Y'                                              MD061706
+     C                   seton                                        22                    MD061706
+     C                   else                                                               MD061706
+     C                   eval      XADBU = 'N'                                              MD061706
+     C                   endif                                                              MD061706
+                                                                                            MD061706
      C                   WRITE     UP6010F0
 
      C                   EXFMT     UP6010F1
@@ -634,6 +663,84 @@
      C                   seton                                        51
      C                   ENDIF
 
+      ** Validate aDBU flag                                                                 MD061706
+     C                   If        XADBU <> 'Y' and XADBU <> 'N'                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6009'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        52                    MD061706
+     C                   ENDIF                                                              MD061706
+      ** if *in22 was already on, then validate references                                  MD061706
+     C                   If        *IN22 = '1'                                              MD061706
+     C                             or XADBU = 'Y'                                           MD061706
+      ** Validate Reference prefixes                                                        MD061706
+     C                   If        XREFG = *blanks                                          MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   If        XREFZ = *blanks                                          MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+      ** Validate libraries for global reference                                            MD061706
+     C                   If        XREFG <> *blanks                                         MD061706
+     C                   exsr      Sr_ValRefG                                               MD061706
+     C                   If        ErrInd2 = 'Y'                                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6014'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+      ** Validate libraries for zone reference                                              MD061706
+     C                   If        XREFZ <> *blanks                                         MD061706
+     C                   exsr      Sr_ValRefZ                                               MD061706
+     C                   If        ErrInd2 = 'Y'                                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6015'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   If        XREFG = GPFX                                             MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   eval      Idx = %LOOKUP(XREFZ : ZoneArr)                           MD061706
+     C                   If        Idx <> 0                                                 MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+      ** if aDBU is 'Y', display Reference systems                                          MD061706
+     C                   setoff                                       22                    MD061706
+     C                   If        XADBU = 'Y'                                              MD061706
+     C                   seton                                        22                    MD061706
+                                                                                            MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
      C                   DOW       *INKC = *OFF
      C                             and ErrInd = 'Y'
      C                   WRITE     UP6010F0
@@ -646,6 +753,7 @@
      C                   EVAL      ErrInd = 'N'
      C                   eval      %Subarr(*IN : 30 : 10) = *OFF                            MD060396
      C                   setoff                                       51
+     C                   eval      %Subarr(*IN : 51 : 9)  = *OFF                            MD017066
       * At least on layer has to be selected
      C                   If        XSELG = *blanks and XSELZ1 = *blanks
      C                             and XSELZ2 = *blanks and XSELZ3 = *blanks
@@ -722,6 +830,82 @@
      C                   seton                                        51
      C                   ENDIF
 
+      ** Validate aDBU flag                                                                 MD061706
+     C                   If        XADBU <> 'Y' and XADBU <> 'N'                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6009'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        52                    MD061706
+     C                   else                                                               MD061706
+      ** if aDBU is 'Y', display Reference systems                                          MD061706
+     C                   setoff                                       22                    MD061706
+     C                   If        XADBU = 'Y'                                              MD061706
+     C                   seton                                        22                    MD061706
+      ** Validate Reference prefixes                                                        MD061706
+     C                   If        XREFG = *blanks                                          MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   If        XREFZ = *blanks                                          MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+      ** Validate libraries for global reference                                            MD061706
+     C                   If        XREFG <> *blanks                                         MD061706
+     C                   exsr      Sr_ValRefG                                               MD061706
+     C                   If        ErrInd2 = 'Y'                                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6014'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+      ** Validate libraries for zone reference                                              MD061706
+     C                   If        XREFZ <> *blanks                                         MD061706
+     C                   exsr      Sr_ValRefZ                                               MD061706
+     C                   If        ErrInd2 = 'Y'                                            MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6015'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   If        XREFG = GPFX                                             MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        55                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   eval      Idx = %LOOKUP(XREFZ : ZoneArr)                           MD061706
+     C                   If        Idx <> 0                                                 MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   seton                                        54                    MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   ELSE                                                               MD061706
+     C                   EVAL      XREFG = *BLANKS                                          MD061706
+     C                   EVAL      XREFZ = *BLANKS                                          MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
      C                   ENDDO
      C     EndVal        ENDSR
       *
@@ -986,6 +1170,7 @@
      C                   ENDIF
 
       * *U
+     C                   eval      aDBU_Flg = 'N'                                           MD061706
       * Check first using core package                                                      MD061632
      C                   eval      LibName = XPACK + 'U'
      C                   EVAL      LIBU = LibName                                           MD061632
@@ -1008,16 +1193,39 @@
      C                   PARM      *blanks       CHKMBR           10                        MD061632
                                                                                             MD061632
       * If libary does not exist, send message
+      * Accept if *U libary does not exist as *U is not needed for aDBU                     MD061706
      C     RTNCOD        IFNE      'Exist'
-     C                   seton                                        30
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6004'
-     C                   EVAL      ZAMSDA = LibName
-     C                   EVAL      ErrInd = 'Y'
-     C                   EXSR      ZASNMS
+      * In that case, default adBU flag to 'Y'                                              MD061706
+     C                   eval      aDBU_Flg = 'Y'                                           MD061706
+     C**********         seton                                        30                    MD061706
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C**********         EVAL      ZAMSID = 'UPM6004'                                       MD061706
+     C**********         EVAL      ZAMSDA = LibName                                         MD061706
+     C**********         EVAL      ErrInd = 'Y'                                             MD061706
+     C**********         EXSR      ZASNMS                                                   MD061706
      C                   ENDIF
      C                   ENDIF                                                              MD061632
 
+      * Check content of library *U to correctly default flag                               MD061706
+     C                   If        aDBU_Flg = 'N'                                           MD061706
+     C                   CALL      'UPC000356'                                              MD061706
+     C                   PARM                    LibName                                    MD061706
+     C                   PARM      *blanks       RTN                                        MD061706
+      * If no source found, default adBU flag to 'Y'                                        MD061706
+     C                   If        RTN = *blanks                                            MD061706
+     C                   eval      aDBU_Flg = 'Y'                                           MD061706
+     C                   else                                                               MD061706
+     C                   If        RTN = '*ERROR'                                           MD061706
+     C                   seton                                        30                    MD061706
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C                   EVAL      ZAMSID = 'UPM6012'                                       MD061706
+     C                   EVAL      ZAMSDA = LibName                                         MD061706
+     C                   EVAL      ErrInd = 'Y'                                             MD061706
+     C                   EXSR      ZASNMS                                                   MD061706
+     C                   Endif                                                              MD061706
+     C                   Endif                                                              MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
       * *D
      C                   If        XCUM = 'Y'
      C                   eval      LibName = XPACK2 + 'D'
@@ -1257,6 +1465,28 @@
      C                   exsr      *pssr
      C                   Endif
 
+      ** If aDBU flag is 'Y', update BrgADBUGlobalRefer                                     MD061706
+     C                   if        XADBU = 'Y'                                              MD061706
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +                MD061706
+     C                             '/GPSVLXTD set GIVAL = ' + '''' +                        MD061706
+     C                             XREFG       + '''' + ' where GISVAL = ' +                MD061706
+     C                             '''' + 'BrgADBUGlobalRefer' + ''''                       MD061706
+                                                                                            MD061706
+     C/EXEC SQL                                                                             MD061706
+     C+ prepare DynSQLStmnt                                                                 MD061706
+     C+ from :SQLDynStmt                                                                    MD061706
+     C/END-EXEC                                                                             MD061706
+                                                                                            MD061706
+     C/exec SQL                                                                             MD061706
+     C+ execute DynSQLStmnt                                                                 MD061706
+     C/end-exec                                                                             MD061706
+     C                   If        SQLCode <> 0                                             MD061706
+     C                   eval      DBASE = '212'                                            MD061706
+     C                   exsr      *pssr                                                    MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1354,6 +1584,28 @@
      C                   exsr      *pssr
      C                   Endif
 
+      ** If aDBU flag is 'Y', update BrgADBUSystemRefer                                     MD061706
+     C                   if        XADBU = 'Y'                                              MD061706
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +                MD061706
+     C                             '/SDSVLXTD set GIVAL = ' + '''' +                        MD061706
+     C                             XREFZ       + '''' + ' where GISVAL = ' +                MD061706
+     C                             '''' + 'BrgADBUSystemRefer' + ''''                       MD061706
+                                                                                            MD061706
+     C/EXEC SQL                                                                             MD061706
+     C+ prepare DynSQLStmnt                                                                 MD061706
+     C+ from :SQLDynStmt                                                                    MD061706
+     C/END-EXEC                                                                             MD061706
+                                                                                            MD061706
+     C/exec SQL                                                                             MD061706
+     C+ execute DynSQLStmnt                                                                 MD061706
+     C/end-exec                                                                             MD061706
+     C                   If        SQLCode <> 0                                             MD061706
+     C                   eval      DBASE = '213'                                            MD061706
+     C                   exsr      *pssr                                                    MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
 
      C                   ENDSR
       *****************************************************************
@@ -2176,4 +2428,150 @@
 
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                MD061706
+      *****************************************************************                     MD061706
+      *                                                               *                     MD061706
+      *  Sr_ValRefG - Validate libraries for global reference prefix  *                     MD061706
+      *                                                               *                     MD061706
+      *****************************************************************                     MD061706
+     C     Sr_ValRefG    BEGSR                                                              MD061706
+                                                                                            MD061706
+     C                   eval      ErrInd2 = ' '                                            MD061706
+                                                                                            MD061706
+      * Check that GM library exists                                                        MD061706
+     C                   eval      ValLib = XREFG + 'GMLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that GP library exists                                                        MD061706
+     C                   eval      ValLib = XREFG + 'GPLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that GV library exists                                                        MD061706
+     C                   eval      ValLib = XREFG + 'GVLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that GTA library exists                                                       MD061706
+     C                   eval      ValLib = XREFG + 'GTALIB'                                MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   ENDSR                                                              MD061706
+      *****************************************************************                     MD061706
+      /EJECT                                                                                MD061706
+      *****************************************************************                     MD061706
+      *                                                               *                     MD061706
+      *  Sr_ValRefZ - Validate libraries for zone   reference prefix  *                     MD061706
+      *                                                               *                     MD061706
+      *****************************************************************                     MD061706
+     C     Sr_ValRefZ    BEGSR                                                              MD061706
+                                                                                            MD061706
+     C                   eval      ErrInd2 = ' '                                            MD061706
+                                                                                            MD061706
+      * Check that DM library exists                                                        MD061706
+     C                   eval      ValLib = XREFZ + 'DMLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that DP library exists                                                        MD061706
+     C                   eval      ValLib = XREFZ + 'DPLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that DV library exists                                                        MD061706
+     C                   eval      ValLib = XREFZ + 'DVLIB'                                 MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+      * Check that DTA library exists                                                       MD061706
+     C                   eval      ValLib = XREFZ + 'DTALIB'                                MD061706
+     C                   CALL      'UTCHKOBJ'                                               MD061706
+     C                   PARM      *BLANK        RTNCOD                                     MD061706
+     C                   PARM      ValLib        P2OBNM                                     MD061706
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061706
+     C                   PARM      '*LIB'        P2OBTP                                     MD061706
+     C                   PARM      *blanks       CHKMBR                                     MD061706
+      *                                                                                     MD061706
+      * If libary does not exist in the library list, send message                          MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C                   EVAL      ErrInd2 = 'Y'                                            MD061706
+     C                   else                                                               MD061706
+                                                                                            MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+     C                   ENDIF                                                              MD061706
+                                                                                            MD061706
+     C                   ENDSR                                                              MD061706
+      *****************************************************************                     MD061706
 

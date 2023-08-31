@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061705             Date 01Aug23             *
-      *  Prev Amend No. MD061690             Date 27Jul23             *
+      *  Last Amend No. MD061706             Date 01Aug23             *
+      *  Prev Amend No. MD061705             Date 01Aug23             *
+      *                 MD061690             Date 27Jul23             *
       *                 MD060709             Date 08Nov22             *
       *                 MD060961             Date 23Jan23             *
       *                 MD059751             Date 25Mar22             *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD061705 - Take into account *ACCPTH where attribute APKSIN  *
       *             can be reported as a consequence of a field type  *
       *             change                                            *
@@ -176,7 +178,15 @@
      C+ update upgdrvtd u set u.DRACTN = 'IGNORE'
      C+ where exists (select * from UPGXRIPD i where i.PDEPF = u.DRFILE)
      C/end-exec
-
+                                                                                            MD061706
+      * update DRACTN based on new exception tables                                         MD061706
+     C/exec SQL                                                                             MD061706
+     C+ update upgdrvtd u set u.DRACTN = (select ADACTN from UPEXCJW0 e                     MD061706
+     C+ where e.ADOBJN = u.DRFILE  and e.aDLIB = substr(u.DRLIB,3,8))                       MD061706
+     C+ where exists (select * from UPEXCJW0 e where e.ADOBJN = u.DRFILE                    MD061706
+     C+ and e.ADLIB = substr(u.DRLIB,3,8))                                                  MD061706
+     C/end-exec                                                                             MD061706
+                                                                                            MD061706
      C                   SETON                                            LR
      C                   RETURN
       *****************************************************************

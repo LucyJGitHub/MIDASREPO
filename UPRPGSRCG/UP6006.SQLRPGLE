@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061544           Date 27Jun23               *
-      *  Prev Amend No. MD061351           Date 03May23               *
+      *  Last Amend No. MD061706           Date 01Aug23               *
+      *  Prev Amend No. MD061544           Date 27Jun23               *
+      *                 MD061351           Date 03May23               *
       *                 MD060386           Date 22Aug22               *
       *                 MD060362           Date 19Aug22               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD061544 - Allow CPF messages while restoring as long as     *
       *             all objects have been restored                    *
       *  MD061351 - *U library for client package can be either core  *
@@ -549,12 +551,13 @@
 
       * *U library
       * Validate that library entered is non blank
+      * *U library may not be delivered with aDBU, don't send error message                 MD061706
      C                   If        #LIBSFU = *blanks
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6005'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        54
-     C                   EXSR      ZASNMS
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C**********         EVAL      ZAMSID = 'UPM6005'                                       MD061706
+     C**********         EVAL      ErrInd = 'Y'                                             MD061706
+     C**********         seton                                        54                    MD061706
+     C**********         EXSR      ZASNMS                                                   MD061706
      C                   else
 
       * Check that library exists
@@ -888,12 +891,13 @@
 
       * *U library
       * Validate that library entered is non blank
+      * *U library may not be delivered with aDBU, don't send error message                 MD061706
      C                   If        #LIBCUN = *blanks
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6005'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        56
-     C                   EXSR      ZASNMS
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
+     C**********         EVAL      ZAMSID = 'UPM6005'                                       MD061706
+     C**********         EVAL      ErrInd = 'Y'                                             MD061706
+     C**********         seton                                        56                    MD061706
+     C**********         EXSR      ZASNMS                                                   MD061706
      C                   else
 
       * Check that library exists
@@ -1217,6 +1221,8 @@
      C                   Endif
 
       * *U library
+      * *U library may not be delivered, restore only if delivered                          MD061706
+     C                   If        #LIBSFU <> *blanks                                       MD061706
      C                   eval      PSExcpNo = '    '
      C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
      C                             %trimr(XPACK) + 'U) DEV(*SAVF) SAVF(' +
@@ -1237,6 +1243,7 @@
      C                   seton                                        54
      C                   EXSR      ZASNMS
      C                   Endif
+     C                   Endif                                                              MD061706
 
      C                   ENDDO
 
@@ -1416,6 +1423,8 @@
      C                   Endif
 
       * *U library
+      * *U library may not be delivered, restore only if delivered                          MD061706
+     C                   If        #LIBCUN <> *blanks                                       MD061706
      C                   eval      PSExcpNo = '    '
      C**********         EVAL      Cmd_String = 'RSTLIB SAVLIB(' +                          MD061351
      C**********                   %trimr(XPACK) + 'U) DEV(*SAVF) SAVF(' +                  MD061351
@@ -1449,6 +1458,7 @@
      C                   seton                                        56
      C                   EXSR      ZASNMS
      C                   Endif
+     C                   Endif                                                              MD061706
 
       * *G library
      C                   eval      PSExcpNo = '    '

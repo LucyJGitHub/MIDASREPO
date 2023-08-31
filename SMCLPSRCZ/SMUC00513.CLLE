@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update Logically Deleted Flag in COB XTD')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00513 - Update Logically Deleted Flag in COB XTD        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD060916 *CREATE   Date 04Aug23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*      MD060916 - SCC040402 may delete UDF record for existing held */
+/*                 items. Create driving program that updates the    */
+/*                 logically deleted flag from N to Y for records    */
+/*                 related to deleted component SCC040402 seq 20001  */
+/*                 in CBCMPXTD, CBDPRXTD and CBMEXXTD files.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SCRUNSQL   SQL('UPDATE CBCMPXTD SET DHLOGD = ''Y'' +
+                          WHERE DHCOTT = ''SCC040402'' AND +
+                          DHCSEQ = ''20001''')
+
+             SCRUNSQL   SQL('UPDATE CBDPRXTD SET DILOGD = ''Y'' +
+                          WHERE (DIDSON = ''SCC040402'' AND +
+                          DIDSOS = ''20001'') OR +
+                          (DIDDON = ''SCC040402'' AND +
+                          DIDDOS = ''20001'')')
+
+             SCRUNSQL   SQL('UPDATE CBMEXXTD SET DKLOGD = ''Y'' +
+                          WHERE (DKCOTT = ''SCC040402'' AND +
+                          DKCSEQ = ''20001'') OR +
+                          (DKMECN = ''SCC040402'' AND +
+                          DKMECS = ''20001'')')
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program SMUC00513 ended abnormally - +
+                          job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             ENDPGM

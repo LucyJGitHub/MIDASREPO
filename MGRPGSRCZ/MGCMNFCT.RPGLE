@@ -45,11 +45,11 @@
 
      D StartDate       S               D   DATFMT(*ISO) INZ(D'1971-12-31')
                                                                                               CMG011
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CMG011
+     D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(Sc_)                      CMG011
       ** External DS for SAR Details                                                          CMG011
                                                                                               CMG011
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CMG011
-      ** DS for access objects - short data structure                                         CMG011
+      **  Second DS for access programs, short data structure.                                CMG011
                                                                                               CMG006
       ** Declared variables                                                                   CMG006
       ** ------------------                                                                   CMG006
@@ -58,7 +58,6 @@
      D P@RTCD          S              7A                                        Return Code   CMG011
      D P@OPTN          S              7A                                        Option        CMG011
      D P@SARD          S              6A                                        Feature       CMG011
-     D CMG011          S              1    INZ('N')                                           CMG011
 
       **  MG Common Functions - Declaration
      D/COPY MGCPYSRC,MGCMNFCTDC
@@ -219,6 +218,7 @@
       *                                                                                       CMG011
       ** Check if feature CMG011 is enabled                                                   CMG011
       *                                                                                       CMG011
+     C     CMG011        IFEQ      *BLANKS                                                    CMG011
      C                   CALL      'AOSARDR0'                                                 CMG011
      C                   PARM      *BLANKS       P@RTCD                                       CMG011
      C                   PARM      '*KEY   '     P@OPTN                                       CMG011
@@ -226,7 +226,10 @@
      C     SCSARD        PARM      SCSARD        DSFDY                                        CMG011
       *                                                                                       CMG011
      C     P@RTCD        IFEQ      *BLANKS                                                    CMG011
-     C                   MOVE      'Y'           CMG011                                       CMG011
+     C                   MOVE      'Y'           CMG011            1                          CMG011
+     C                   ELSE                                                                 CMG011
+     C                   MOVE      'N'           CMG011                                       CMG011
+     C                   ENDIF                                                                CMG011
      C                   ENDIF                                                                CMG011
 
      C                   SELECT

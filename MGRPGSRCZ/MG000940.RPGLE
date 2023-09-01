@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG011             Date 27Jul23               *      
+      *  Last Amend No. CMG011             Date 27Jul23               *
       *  Prev Amend No. BA6026             Date 18Jan23               *
       *                 CSW101             Date 03Feb23               *
       *                 MD058830           Date 01Oct21               *
@@ -88,7 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG011 - CGL013 field 25 (exclude IBAN in account ID)        *      
+      *  CMG011 - CGL013 field 25 (exclude IBAN in account ID)        *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
       *           Include GSH026 and GSH046CC1                        *
       *  CSW101 - PayPlus Interface.                                  *
@@ -567,7 +567,7 @@
      D CGL094          S              1    INZ('N')                                           CGL094
      D P@NWRK          S              6A                                        Network Code  CGL094
      D P@SARD          S              6A                                        Feature       CGL094
-     D CMG011          S              1    INZ('N')                                           CMG011
+     D CMG011          S              1A   INZ('N')                                           CMG011
       *                                                                                       CER030
      D                 DS
      D  KNwrk                  1      6
@@ -1181,6 +1181,7 @@
      C     GLACCNT       PARM      GLACCNT       DSSDY                                     BUG23172A
       *                                                                                    BUG23172A
      C                   IF        MGIBAN <> *BLANKS                                       BUG23172A
+     C                             and CMG011 = 'N'                                           CMG011
      C                   EVAL      MFLD  = MGIBAN                                          BUG23172A
      C                   ELSEIF    MGACNO <> *ZEROS                                        BUG23172A
      C                   MOVE      *BLANKS       X_MGFD25                                  BUG23172A

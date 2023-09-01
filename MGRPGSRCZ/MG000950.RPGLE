@@ -323,7 +323,7 @@
      D SavTrno         S             16
      D CER030          S              1A                                                    BUG25800
      D PSard           S              6A                                                    BUG25800
-     D CMG011          S              1    INZ('N')                                           CMG011
+     D CMG011          S              1A   INZ('N')                                           CMG011
      D
      D                 DS
      D  KNwrk                  1      6

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061834           Date 29Aug23               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061834 - Back out BUG5869 as this causes issues with the   *
+      *             STORQM upload on a multi-zone environment.        *
+      *             Re-design AR573677 to use system value.           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  BUG5869 - For archiving from outq, assign entity details as  *
@@ -130,6 +134,8 @@
      D                                     DIM(2) CTDATA PERRCD(1)                               S01
      D  @TOMBR                47     56                                         S01382
      D FCRSFX        E DS                  EXTNAME(FCRSFJW0)                                MD055265
+     D SVARCH          C                   CONST('RptLvlEnttyInArchvPF')                    MD061834
+      *                                                                                     MD061834
      IMAMWRKD0
      I              EDARID                      EFARID
      I              EDRNAM                      EFRNAM
@@ -207,6 +213,52 @@
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   END
+      *                                                                                     MD061834
+      ** Access System Value to check if Report Level and Entity is included                MD061834
+      *                                                                                     MD061834
+     C                   CALL      'AOSVALR0'                                               MD061834
+     C                   PARM      *BLANKS       PRTCD             7                        MD061834
+     C                   PARM      SVARCH        PSV01            20                        MD061834
+     C                   PARM                    PCS01           200                        MD061834
+     C                   PARM                    PSV02            20                        MD061834
+     C                   PARM                    PCS02           200                        MD061834
+     C                   PARM                    PSV03            20                        MD061834
+     C                   PARM                    PCS03           200                        MD061834
+     C                   PARM                    PSV04            20                        MD061834
+     C                   PARM                    PCS04           200                        MD061834
+     C                   PARM                    PSV05            20                        MD061834
+     C                   PARM                    PCS05           200                        MD061834
+     C                   PARM                    PSV06            20                        MD061834
+     C                   PARM                    PCS06           200                        MD061834
+     C                   PARM                    PSV07            20                        MD061834
+     C                   PARM                    PCS07           200                        MD061834
+     C                   PARM                    PSV08            20                        MD061834
+     C                   PARM                    PCS08           200                        MD061834
+     C                   PARM                    PSV09            20                        MD061834
+     C                   PARM                    PCS09           200                        MD061834
+     C                   PARM                    PSV10            20                        MD061834
+     C                   PARM                    PCS10           200                        MD061834
+      *                                                                                     MD061834
+     C                   MOVE      'N'           REMOVE            1                        MD061834
+      *                                                                                     MD061834
+     C     PRTCD         IFEQ      *BLANK                                                   MD061834
+     C                   MOVEL     PCS01         REMOVE                                     MD061834
+     C                   ELSE                                                               MD061834
+      *                                                                                     MD061834
+      ** Database Error (return code other than *NRF)                                       MD061834
+      *                                                                                     MD061834
+     C     PRTCD         IFNE      '*NRF   '                                                MD061834
+     C     *LOCK         IN        LDA                                                      MD061834
+     C                   MOVEL     'SDSVALPD'    DBFILE                         **********  MD061834
+     C                   MOVEL     PSV01         DBKEY                          *DBERR 07*  MD061834
+     C                   Z-ADD     7             DBASE                          **********  MD061834
+     C                   OUT       LDA                                                      MD061834
+     C                   MOVE      *ON           *INU7                                      MD061834
+     C                   MOVE      *ON           *INU8                                      MD061834
+     C                   MOVE      *ON           *INLR                                      MD061834
+     C                   RETURN                                                             MD061834
+     C                   ENDIF                                                              MD061834
+     C                   ENDIF                                                              MD061834
       *
       * Process Microfiche requests
       *
@@ -574,7 +626,11 @@
      C                   MOVE      *BLANKS       IHEAD                                         S0138
      C                   MOVE      'RCFR'        OUTPUT                                        S0138
      C**********           MOVE EFRNAM    REPORT                                      S01382 BUG5869
+     C     REMOVE        IFEQ      'N'                                                      MD061834
      C                   MOVE      EFRSFX        REPORT
+     C                   ELSE                                                               MD061834
+     C                   MOVE      EFRNAM        REPORT                                     MD061834
+     C                   END                                                                MD061834
      C                   MOVE      EFRSFX        PRTFNM                                        S0138
       *                                                                   S01382
      C                   OUT       LDA                                                         S0138

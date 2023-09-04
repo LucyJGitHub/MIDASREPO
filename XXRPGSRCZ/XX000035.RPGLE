@@ -21,8 +21,9 @@
       ***(C)*COPYRIGHT*MKI*LIMITED*1993,*1994**************************                       LUC109
       *  (c) Finastra International Limited 2016                      *                       LUC109
       *                                                               *
-      *  Last Amend No. LUC109CC1          Date 12Sep19               *
-      *  Prev Amend No. LUC109             Date 20Sep16               *
+      *  Last Amend No. MD061856           Date 04Sep23               *
+      *  Prev Amend No. LUC109CC1          Date 12Sep19               *
+      *                 LUC109             Date 20Sep16               *
       *                 205623             Date 10May02               *
       *                 202763             Date 27Feb02               *
       *                 200569             Date 26Nov01               *
@@ -42,6 +43,19 @@
       *                                                               *
       * --------------------------------------------------------------*
       *                                                               *
+      *  MD061856 - LUC109 HOR FEGIB Transfer of F/C I/E changes      *
+      *             New processing:                                   *
+      *             When posting is TFR Non-bccy:                     *
+      *               1 If I/E --> write same non-bccy posting        *
+      *                            write bccy equiv posting with      *
+      *                            reversed sign                      *
+      *               2 If non I/E --> write same non-bccy posting    *
+      *             When posting is TFR Bccy:                         *
+      *               1. If I/E --> Skip                              *
+      *               2. If non I/E --> write same Bccy posting       *
+      *             When posting is not a Transfer --> write same     *
+      *              posting (regardless of I/E, non I/E, Bccy or     *
+      *              non-Bccy)                                        *
       *  LUC109CC1 - New York Amendments                              *
       *         - Add year-end reference date.                        *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
@@ -242,7 +256,8 @@
      D SVALKK          C                   CONST('HOR_NY_Amendments')                      LUC109CC1
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)              Copyright
      D***********         @ERR    1  12 35                                CC0007
-     D @ERR            S             35    DIM(13) CTDATA PERRCD(1)                              CC0
+     D*@ERR*****       S             35    DIM(13) CTDATA PERRCD(1)                    CC0 MD061856
+     D @ERR            S             35    DIM(15) CTDATA PERRCD(1)                        MD061856
      D ZYDY            S              4  0 DIM(4) CTDATA PERRCD(4)              ZDATE1/2 SR.ARRAY
      D ZMDY            S              3  0 DIM(13) CTDATA PERRCD(13)            ZDATE1/2 SR.ARRAY
      D ZMNM            S              3    DIM(12) CTDATA PERRCD(12)            ZDATE2 SR. ARRAY
@@ -885,8 +900,8 @@
      C     1             DO        2             @@CYCL                         Two cycles
      C                   EXSR      S210                                         Record 1
      C                   EXSR      S220                                         Record 2
-     C                   EXSR      S225                                         Record 1 xfr
-     C                   EXSR      S226                                         Record 2 xfr
+     C**********         EXSR      S225                                Record 1 xfr MD061856
+     C**********         EXSR      S226                                Record 2 xfr MD061856
      C                   ENDDO     1                                            Increment cycle
       *
      C                   ELSE
@@ -1054,7 +1069,8 @@
       * Cycle 2
       * -------
      C     @@CYCL        WHENEQ    2                                            Second cycle
-     C     GETP          ANDNE     'X'
+     C*****GETP          ANDNE     'X'                                          MD061856
+     C     GETP          ANDEQ     'X'                                          MD061856
      C     EOCCY         ANDNE     BJCYCD
      C     @@FUTR        ANDNE     'Y'                                          Not Future VDAT
       *
@@ -1062,7 +1078,9 @@
      C                   MOVE      @@OAMT        FOAMT1                         Original amount
      C                   MOVE      BJCYCD        FCCYC1                         Currency code
       *
-     C     DRCR          IFEQ      *ZERO
+      ** Reverse sign for Bccy Equivalent of I/E TFR NBccy                      MD061856
+     C*****DRCR          IFEQ      *ZERO                                        MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   Z-SUB     @@BCYA        @@RAWA                         Debit postings
      C                   ELSE
      C                   Z-ADD     @@BCYA        @@RAWA                         Credit postings
@@ -1095,7 +1113,9 @@
      C                   Z-ADD     @@BCDP        ZCDP7             1 0                         CHG00
      C                   Z-ADD     @@BCYA        ZAMTI7           15 0                         CHG00
      C                   EXSR      COM907
-     C     DRCR          IFEQ      *ZERO                                        Debit
+      ** Reverse sign for Bccy Equivalent of I/E TFR NBccy                      MD061856
+     C*****DRCR          IFEQ      *ZERO                                  Debit MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   ADD       ZAMTO7        @@DBIT                         Debit postings
      C                   ELSE
      C                   ADD       ZAMTO7        @@CRDT                         Credit postings
@@ -1184,7 +1204,8 @@
       * Cycle 2
       * -------
      C     @@CYCL        IFEQ      2                                            2ND cycle
-     C     GETP          ANDNE     'X'
+     C*****GETP*         ANDNE     'X'                                          MD061856
+     C     GETP          ANDEQ     'X'                                          MD061856
      C     EOCCY         ANDNE     BJCYCD
      C     @@FUTR        ANDNE     'Y'                                          Not Future VDAT
       *
@@ -1689,13 +1710,17 @@
       *
      C     @@SRCP        IFEQ      'GE-XF'                                      Source
      C     @@FUTR        ANDNE     'Y'                                          Future VDAT
+     C     CCY           IFEQ      BJCYCD                                       MD061856
      C                   MOVE      'Y'           @@SKIP                         Ignore posting
+     C                   ENDIF                                                  MD061856
      C                   EXSR      COM911
      C                   ENDIF
      C     @@SRCP        IFEQ      'GE-PC'                                      Source
      C     GETP          ANDEQ     'X'                                          TRANSFER IND
      C     @@FUTR        ANDNE     'Y'                                          Future VDAT
+     C     CCY           IFEQ      BJCYCD                                       MD061856
      C                   MOVE      'Y'           @@SKIP                         Ignore posting
+     C                   ENDIF                                                  MD061856
      C                   EXSR      COM911
      C                   ENDIF
       *
@@ -1789,6 +1814,7 @@
      C                   ENDIF
       * output extra posting if not base currency.
      C     FPLIN1        IFEQ      'Y'
+     C     FPLIN1        ANDEQ     'N'                                          MD061856
      C     CCY           ANDNE     BJCYCD
      C     @@FUTR        ANDNE     'Y'                                          Future VDAT
      C     DRCR          IFEQ      *ZERO
@@ -1843,6 +1869,7 @@
       * update for extra posting
       *
      C     FPLIN1        IFEQ      'Y'
+     C     FPLIN1        ANDEQ     'N'                                          MD061856
      C     CCY           ANDNE     BJCYCD
      C     @@FUTR        ANDNE     'Y'                                          Future VDAT
      C     @@KBAL        CHAIN     ACCNTPO                            50        Get bal rec
@@ -2698,9 +2725,18 @@
      C                   MOVE      ABRCH         POBRCA                         Branch
      C                   Z-ADD     PSTD          POPSTD                         Posting date
      C                   Z-ADD     @@BCYA        POPSTA                         Posting amt
-     C                   Z-ADD     DRCR          PODRCR                         DR/CR Ind
+     C**********         Z-ADD     DRCR          PODRCR               DR/CR Ind MD061856
+      *                                                                         MD061856
+      ** Reverse sign for Bccy equiv I/E Tfr                                    MD061856
+     C     DRCR          Ifeq      *Zero                                        MD061856
+     C                   Z-Add     1             PODRCR                         MD061856
+     C                   else                                                   MD061856
+     C                   Z-Add     0             PODRCR                         MD061856
+     C                   Endif                                                  MD061856
       *
-     C     DRCR          IFEQ      *ZERO
+      ** Reverse sign for Bccy equiv I/E Tfr                                    MD061856
+     C*****DRCR          IFEQ      *ZERO                                        MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   Z-ADD     @@BCYA        PODBIT                         Debit
      C                   Z-ADD     *ZEROS        POCRDT                         Credit
      C                   ELSE
@@ -2721,7 +2757,9 @@
       *
      C     *IN50         IFEQ      *OFF                                         Found
       *
-     C     DRCR          IFEQ      *ZERO                                        Debit
+      ** Reverse sign for Bccy equiv I/E Tfr                                    MD061856
+     C*****DRCR          IFEQ      *ZERO                                  Debit MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   ADD       @@BCYA        PODBIT                         Accumulate
      C                   ELSE
      C                   ADD       @@BCYA        POCRDT                         Credit
@@ -2731,7 +2769,9 @@
       *
      C                   ELSE
       *
-     C     DRCR          IFEQ      *ZERO                                        Debit
+      ** Reverse sign for Bccy equiv I/E Tfr                                    MD061856
+     C*****DRCR          IFEQ      *ZERO                                  Debit MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   Z-ADD     @@BCYA        PODBIT                         Accumulate
      C                   Z-ADD     *ZEROS        POCRDT                         Credit
      C                   ELSE
@@ -2799,7 +2839,7 @@
       * equivalent for the GE-XF record and the total for the detail      CHG001
       * records for the account                                           CHG001
      C*          @@@BTT    SUB  @@@TTL    @@@DIF 150                      CHG001
-     C                   Z-SUB     @@@TTL        @@@TTL                         Reverse sign
+     C**********         Z-SUB     @@@TTL        @@@TTL                Reverse sign MD061856
      C     @@@TTL        SUB       @@@BTT        @@@DIF           15 0                         CHG00
       * Print error if rounding too big, and dont do rounding.
      C***********@@@DIF    IFLT -10                                       170598
@@ -2979,7 +3019,9 @@
       *                                                                   CHG001
      C                   EXSR      COM904                                       Base ccy equiv CHG00
       *                                                                   CHG001
-     C     DRCR          IFEQ      *ZERO                                                       CHG00
+      ** Reverse sign for Bccy equiv I/E tfr                                    MD061856
+     C*****DRCR          IFEQ      *ZERO                                        MD061856
+     C     DRCR          IFEQ      1                                            MD061856
      C                   Z-SUB     ZAMTCO        @@@BCT           15 0                         CHG00
      C                   ELSE                                                                  CHG00
      C                   Z-ADD     ZAMTCO        @@@BCT                                        CHG00

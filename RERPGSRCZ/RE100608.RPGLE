@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD055217           Date 05Sep23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055217 - MCC0310 00001 failed because posting time on the  *
+      *             Generated Entries Cash Mgmt.extract file (GECXPD) *
+      *             is equal to '000000'. Amended the program to      *
+      *             default the posting time to '235959', same with   *
+      *             the other COB generated entries.                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -863,6 +869,10 @@
      C                   BITON     '7'           E_PRIN
      C                   ENDIF
       * Profit centre
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C     O_GCAT        IFEQ      ' '
      C     O_GCAT        OREQ      'S'
@@ -1104,6 +1114,10 @@
      C                   BITON     '7'           E_PRIN
      C                   ENDIF
       * Profit centre
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C     O_GCAT        IFEQ      ' '
      C     O_GCAT        OREQ      'S'
@@ -2320,6 +2334,10 @@
       * Posting indicators                                                      213569
      C                   BITOFF    '01234567'    E_PRIN                         213569
       * Profit centre                                                           213569
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section                                                         213569
      C                   MOVEL     @CrChPRFC     E_PRFC                         213569
      C                   MOVEL     @CrChACSC     E_ACSC                         213569
@@ -2491,6 +2509,10 @@
      C                   BITON     '7'           E_PRIN                         213569
      C                   ENDIF                                                  213569
       * Profit centre                                                           213569
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section                                                         213569
      C     O_GCAT        IFEQ      ' '                                          213569
      C     O_GCAT        OREQ      'S'                                          213569

@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *      
-      *  Prev Amend No. MD060344           Date 08Oct22               *
+      *  Last Amend No. CMG011             Date 27Jul23               *
+      *  Prev Amend No. MD058830           Date 01Oct21               *      
+      *                 MD060344           Date 08Oct22               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG011 - CGL013 field 25 (exclude IBAN in account ID)        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *      
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
       *           - Pattern the fix after MG000942.                   *
@@ -310,6 +312,7 @@
      D PAcctCde        S             10A                                                    MD060344
      D PAcctSeq        S              2A                                                    MD060344
      D PRetl           S             10A                                                    MD060344
+     D CMG011          S              1A   INZ('N')                                           CMG011
                                                                                             MD060344
      D/COPY MGCPYSRC,MGCMNFCTDC
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
@@ -888,6 +891,7 @@
      C     GLACCNT       PARM      GLACCNT       DSSDY                                      MD060344
       *                                                                                     MD060344
      C                   IF        MGIBAN <> *BLANKS                                        MD060344
+     C                             and CMG011 = 'N'                                           CMG011
      C                   EVAL      MFLD  = MGIBAN                                           MD060344
      C                   ELSEIF    MGACNO <> *ZEROS                                         MD060344
      C                   MOVE      *BLANKS       MFLD                                       MD060344
@@ -1765,6 +1769,18 @@
      C                   EXSR      BldConvFil                                                 CMG008
      C                   ENDIF                                                                CMG008
                                                                                               CMG008
+      ** Check if feature CMG011 is enabled                                                   CMG011
+      *                                                                                       CMG011
+     C                   CALL      'AOSARDR0'                                                 CMG011
+     C                   PARM      *BLANKS       P@RTCD                                       CMG011
+     C                   PARM      '*KEY   '     P@OPTN                                       CMG011
+     C                   PARM      'CMG011'      P@SARD                                       CMG011
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG011
+      *                                                                                       CMG011
+     C     P@RTCD        IFEQ      *BLANKS                                                    CMG011
+     C                   MOVE      'Y'           CMG011                                       CMG011
+     C                   ENDIF                                                                CMG011
+      *                                                                                       CMG011
       ** Key to access Network Account or Posting details.
 
      C     Key           KLIST

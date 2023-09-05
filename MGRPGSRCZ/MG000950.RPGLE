@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA3107             Date 15Aug23               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. CMG011             Date 27Jul23               *      
+      *  Prev Amend No. BA3107             Date 15Aug23               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD060344           Date 08Oct22               *
       *                 AR898442           Date 24Feb12               *
       *                 CMG008             Date 20Feb20               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG011 - CGL013 field 25 (exclude IBAN in account ID)        *      
       *  BA3107 - Output IBAN in Sender Account Number field for MT950*
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD060344 - Paris MGOMSGPD Tag 25 reconciliation Difference.  *
@@ -321,6 +323,7 @@
      D SavTrno         S             16
      D CER030          S              1A                                                    BUG25800
      D PSard           S              6A                                                    BUG25800
+     D CMG011          S              1A   INZ('N')                                           CMG011
      D
      D                 DS
      D  KNwrk                  1      6
@@ -654,6 +657,7 @@
      C                   WHEN      EDACNF = '*IBAN'                                         BUG23740
      C                   Select
      C                   When      MGIBAN <> *Blank
+     C                             and CMG011 = 'N'                                           CMG011
      C                   Movel     MGIBAN        WAccount
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        WAccount
@@ -1727,6 +1731,18 @@
      C                   MOVEL     SVAL1         WDstn            10            Dstn Destn    CMG006
 
      C                   ENDIF                                                                CMG006
+      *                                                                                       CMG011
+      ** Check if feature CMG011 is enabled                                                   CMG011
+      *                                                                                       CMG011
+     C                   CALL      'AOSARDR0'                                                 CMG011
+     C                   PARM      *BLANKS       P@RTCD                                       CMG011
+     C                   PARM      '*KEY   '     P@OPTN                                       CMG011
+     C                   PARM      'CMG011'      P@SARD                                       CMG011
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG011
+      *                                                                                       CMG011
+     C     P@RTCD        IFEQ      *BLANKS                                                    CMG011
+     C                   MOVE      'Y'           CMG011                                       CMG011
+     C                   ENDIF                                                                CMG011
 
      C                   CALL      'AOSARDR0'                                                 BA3107
      C                   PARM      *BLANKS       P@RTCD                                       BA3107

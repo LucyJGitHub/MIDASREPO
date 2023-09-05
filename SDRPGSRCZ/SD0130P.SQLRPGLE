@@ -13,8 +13,10 @@
       *  (c) Finastra International Limited 2001                      *
      F*      1990,1993                                                *
      F*                                                               *
-      *  Last Amend No. CSW101             Date 03Feb23               *
-      *  Prev Amend No. MD058755           Date 01Sep21               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CSW101             Date 03Feb23               *
+      *                 MD058755           Date 01Sep21               *
       *                 CGL177             Date 25May17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
@@ -37,6 +39,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
+      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  CSW101 - PAYplus Interface.                                  *
       *           Recompiled                                          *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
@@ -78,16 +82,20 @@
      F*                                                               *
      F*****************************************************************
      F/COPY WNCPYSRC,SD0130PFPG
+      *
+     FA6RETRL1  IF   E           K DISK                                                       BA6026
+      ** Retail Transaction Types Extension File - Retrieval index                            BA6026
+      *                                                                                       BA6026
      F*SDRETRL1* IF   E           K DISK                                                    MD058755
       * RTV: Retail Transaction Types  Retrieval index
       *
-     FSDFCTLL1  IF   E           K DISK
+     F*SDFCTLL1* IF   E           K DISK                                                    MD061008
       * RTV: Standing Data Controls    Retrieval index
       *
      FSDBANKL1  IF   E           K DISK
       * RTV: Bank Details              Retrieval index
       *
-     FSDFCTLL0  UF   E           K DISK
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061008
       * UPD: Standing Data Controls    Update index
       *
      FTABTBRE   IF   E             DISK                                         S01413
@@ -167,6 +175,12 @@
       *                                                                                       CER030
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SDRETR        E DS                  EXTNAME(SDRTRJW0)                                MD058755
+     D QSDFC1          DS                                                                   MD061008
+     D  AHFLNM                 1     10                                                     MD061008
+     D  AHNORC                11     13P 0                                                  MD061008
+     D  AHNOIN                14     16P 0                                                  MD061008
+     D  AHNOAM                17     19P 0                                                  MD061008
+     D  AHNODL                20     22P 0                                                  MD061008
       /EJECT
       *****************************************************************
      C     *ENTRY        PLIST                                                  Entry parameter
@@ -290,6 +304,23 @@
      C                   MOVEL     A1CPTC        XRCPTC                         Ch. Port. Cap. 08144
      C                   MOVEL     A1PFMC        XRPFMC                         Perf. Category 08144
      C                   MOVEL     A1ATRA        XRAPRA                         Apply to R A/c 08144
+      *                                                                                       BA6026
+      ** Move Transaction Type Identification Code to detail line.                            BA6026
+      *                                                                                       BA6026
+     C     BA6026        IFEQ      'Y'                                                        BA6026
+     C                   MOVE      *ON           *IN80                                        BA6026
+      *                                                                                       BA6026
+     C     A1RTTY        CHAIN     A6RETRL1                           89                      BA6026
+     C     *IN89         IFEQ      *OFF                                                       BA6026
+     C                   MOVEL     G1SIDC        XSIDC                                        BA6026
+     C                   ELSE                                                                 BA6026
+     C                   MOVE      *BLANKS       XSIDC                                        BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
+     C                   ELSE                                                                 BA6026
+     C                   MOVE      *OFF          *IN80                                        BA6026
+     C                   ENDIF                                                                BA6026
+      *                                                                                       BA6026
       * USER: Process detail record
      C                   MOVEL     P1ARSI        WUARSI                         Audit/Request S
       * Process Detail Rec PRTFIL
@@ -588,7 +619,21 @@
      C                   KFLD                    AHFLNM                         Filename
       * Move fields to key list.
      C                   MOVEL     @CN(05)       AHFLNM                         Filename
-     C     KRSSA         CHAIN     @AHREAV                            90        *
+     C*****KRSSA         CHAIN     @AHREAU                            90        *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM      0             AHNORC                                     MD061008
+     C                   PARM      0             AHNOIN                                     MD061008
+     C                   PARM      0             AHNOAM                                     MD061008
+     C                   PARM      0             AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       90                    MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
      C     *IN90         IFEQ      '1'
       * DBF Record not found.
      C                   MOVEL     'USR0020'     W0RTN             7
@@ -618,7 +663,24 @@
       *
      C     KLCHSB        KLIST
      C                   KFLD                    AHFLNM                         Filename
-     C     KLCHSB        CHAIN     @AHREAU                            9091      *
+     C*****KLCHSB        CHAIN     @AHREAU                            9091      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM      0             AHNORC                                     MD061008
+     C                   PARM      0             AHNOIN                                     MD061008
+     C                   PARM      0             AHNOAM                                     MD061008
+     C                   PARM      0             AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9091                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
      C     *IN90         IFEQ      '1'
       * Record not found.
@@ -647,7 +709,21 @@
      C                   Z-ADD     *ZERO         AHNOAM                         No. of Amends
      C                   Z-ADD     *ZERO         AHNODL                         No. of Deletes
       *
-     C                   UPDATE    @AHREAU                              91      *
+     C**********         UPDATE    @AHREAU                              91      *           MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       91                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C     *IN91         IFEQ      '1'
       * Change error detected.
      C                   MOVEL     'Y2U0004'     W0RTN             7
@@ -931,6 +1007,22 @@
      C                   ELSE                                                                  CGL17
      C                   MOVE      '0'           *IN55                                         CGL17
      C                   ENDIF                                                                 CGL17
+      *                                                                                       BA6026
+      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
+      *                                                                                       BA6026
+     C                   CALL      'AOSARDR0'                                                 BA6026
+     C                   PARM      *BLANKS       WRTCD             7                          BA6026
+     C                   PARM      '*VERIFY'     WOPTN             7                          BA6026
+     C                   PARM      'BA6026'      WSARD             6                          BA6026
+     C                   PARM                    RCD3                                         BA6026
+      *                                                                                       BA6026
+     C                   SELECT                                                               BA6026
+     C     WRTCD         WHENEQ    *BLANKS                                                    BA6026
+     C                   MOVE      'Y'           BA6026            1                          BA6026
+      *                                                                                       BA6026
+     C     WRTCD         WHENEQ    '*NRF'                                                     BA6026
+     C                   MOVE      'N'           BA6026                                       BA6026
+     C                   ENDSL                                                                BA6026
       *
       ** CALCULATE END OF TEXT POINT
      C                   Z-ADD     1             U                 2 0

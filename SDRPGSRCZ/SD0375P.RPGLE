@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR792632           Date 24Jun11               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR792632           Date 24Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR792632 - Dump in SDC0602 00001                             *
       *  CGL031 - Taxation on Savings Income                          *
@@ -67,7 +69,7 @@
      FSDTXBSL1  IF   E           K DISK    INFSR(*PSSR)
       *
       ** Control file retrieval index
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
       *
       ** Tax Basket code Printer file - Details
      FSD0375P1  O    E             PRINTER INFDS(SPOOL1)
@@ -100,10 +102,10 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *
@@ -274,9 +276,9 @@
       *  SRPrnt - Print details                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPrint       BEGSR
- 
+
      C                   IF        WOpen <> 'Y'
      C                   EVAL      WOpen = 'Y'
      C                   OPEN      SD0375P1
@@ -342,9 +344,9 @@
      C                   PARM                    PZField
      C                   PARM                    PZADec
      C                   MOVE      PZField       RTRAB
- 
+
      C                   EVAL      RTYLC = *BLANKS
- 
+
      C                   IF        TBTYLC = 'I'
      C                   EVAL      RTYLC = 'INSERT'
      C                   ELSE
@@ -368,7 +370,7 @@
       ** Write Detail
       *
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -378,7 +380,7 @@
       *  SREnd - Write trailer in report                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SREnd         BEGSR
       *
      C                   IF        WOpen = 'Y'                                              AR792632
@@ -396,7 +398,21 @@
       ** Retrieve control details.
       *
      C                   EVAL      WFName = 'SDTXBSPD'
-     C     WFName        CHAIN     SDFCTLL1                           03
+     C*****WFName        CHAIN     SDFCTLL1                           03                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFName        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       03                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        03                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       ** Database error.
       *
@@ -424,7 +440,7 @@
       ** Write audit report.
       *
      C                   EXSR      SRAudit
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -434,7 +450,7 @@
       *  SRAudit - Write audit report                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
       *
      C                   OPEN      SD0375PM
@@ -481,7 +497,7 @@
       *
      C                   EVAL      *INLR ='1'
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -495,7 +511,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
@@ -567,7 +583,7 @@
      C                   ELSE
      C                   EVAL      *IN20 = *Off
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -584,9 +600,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blank
      C                   EVAL      WRun = 'Y'
      C                   EVAL      *INU7 = *On

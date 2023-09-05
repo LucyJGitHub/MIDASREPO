@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
@@ -158,8 +160,8 @@
      F                                     RENAME(SDINTCD0:@INTCL5)
       *
       ** Standing data controls by filename - update
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       *
       ** Intermediary client details - retrieve
      FSDINTCLL1 IF   E           K DISK    INFSR(*PSSR)
@@ -581,7 +583,21 @@
       ** If a record was inserted update standing data control file
      C                   IF        WCountIns <> *ZERO
 
-     C     MainFilNam    CHAIN     SDFCTLL0                           09
+     C*****MainFilNam    CHAIN     SDFCTLL0                           09                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      MainFilNam    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       09                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        09                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
 
      C                   IF        *IN09 = *ON
      C     *LOCK         IN        LDA
@@ -593,7 +609,16 @@
      C                   ELSE
      C                   EVAL      AHNOIN = AHNOIN + WCountIns
      C                   EVAL      AHNORC = AHNORC + WCountIns
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   COMMIT
      C                   ENDIF
 
@@ -1626,7 +1651,21 @@
       *
      C                   IF        ErrIdx = *ZEROS
 
-     C     MainFilNam    CHAIN     SDFCTLL0                           09
+     C*****MainFilNam    CHAIN     SDFCTLL0                           09                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      MainFilNam    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       09                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        09                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
 
      C                   IF        *IN09 = *ON
 
@@ -1650,7 +1689,16 @@
      C                   EVAL        AHNODL = AHNODL + 1
      C                   ENDSL
 
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
 
      C                   ENDIF
 
@@ -1713,7 +1761,21 @@
       ** inserted.
      C                   IF        WCountDel <> *ZERO AND WCountIns <> *ZERO
 
-     C     MainFilNam    CHAIN     SDFCTLL0                           09
+     C*****MainFilNam    CHAIN     SDFCTLL0                           09                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      MainFilNam    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       09                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        09                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
 
      C                   IF        *IN09 = *ON
      C     *LOCK         IN        LDA
@@ -1726,7 +1788,16 @@
      C                   EVAL      AHNODL = AHNODL + WCountDel
      C                   EVAL      AHNOIN = AHNOIN + WCountIns
      C                   EVAL      AHNORC = (AHNORC + WCountIns) - WCountDel
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   COMMIT
      C                   ENDIF
 

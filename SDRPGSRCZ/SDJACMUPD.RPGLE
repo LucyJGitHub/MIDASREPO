@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036377           Date 30Oct15               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -74,8 +76,8 @@
      FSDJACCL9  UF A E           K DISK    INFSR(*PSSR)
       ** Midas SD Joint A/c Member Details by Joint A/c No./Customer No./Non-a/c Holder
 
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(@AHREAU:SDFCTLD0)
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           RENAME(@AHREAU:SDFCTLD0)                         MD061008
       ** Midas SD Standing Data Controls
       *                                                                                     BUG23732
       ** Midas SD Interest  Payment History File                                            BUG23732
@@ -653,9 +655,18 @@
      C     SRFCTL        BEGSR
 
      C                   EVAL      KFLNM = 'SDJACCPD'
-     C     KFLNM         CHAIN     SDFCTLL0
+     C*****KFLNM         CHAIN     SDFCTLL0                                                 MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KFLNM         AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
 
-     C                   IF        %FOUND
+     C**********         IF        %FOUND                                                   MD061008
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061008
 
      C                   SELECT
 
@@ -672,7 +683,16 @@
 
      C                   ENDSL
 
-     C                   UPDATE    SDFCTLD0
+     C**********         UPDATE    SDFCTLD0                                                 MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   ELSE
 
      C     *LOCK         IN        LDA

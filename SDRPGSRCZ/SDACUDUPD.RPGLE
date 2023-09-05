@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -113,7 +115,7 @@
      FSDACUSL0  UF A E           K DISK    COMMIT
 
       * Midas SD Standing Data Controls index
-     FSDFCTLL0  UF A E           K DISK    COMMIT
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
      FSDFTCSL0  UF   E           K DISK    COMMIT                                             CGL132
@@ -1386,7 +1388,21 @@ rgc  C                   PARM                    PSDACUDENQ
 
      C     KLCHSN        KLIST
      C                   KFLD                    AHFLNM
-     C     KLCHSN        CHAIN     @AHREAU                            90
+     C*****KLCHSN        CHAIN     @AHREAU                            90                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       90                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
 
       ** Database Error
 
@@ -1413,7 +1429,16 @@ rgc  C                   PARM                    PSDACUDENQ
 
       ** Update record
 
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
 
      C                   ENDSR
       *****************************************************************

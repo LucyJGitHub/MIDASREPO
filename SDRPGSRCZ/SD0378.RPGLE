@@ -18,11 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 BUG3644            Date 12Jul04               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -133,8 +135,8 @@
      F                                     RENAME(SDBNFOD0:@BNFOL0)
       *
       ** Standing data controls by filename - update
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       *
       ** Tax basket - retrieve
      FSDTXBSL1  IF   E           K DISK    INFSR(*PSSR)
@@ -144,7 +146,7 @@
       *
       ** Recipient code - retrieve
      FSDRPCDL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -167,17 +169,17 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
      D DIGITS          C                   '0123456789'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -238,12 +240,12 @@
       *
       ** DS for access objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRun            S              1
       *
       ** Work variables
@@ -293,7 +295,7 @@
      D KTXBS           S              2A
      D KRPCD           S              2A
      D KFLNM           S             10A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -304,7 +306,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -333,7 +335,7 @@
      C                   EVAL      *INLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -404,9 +406,9 @@
      C                   EVAL      WRbldSf = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -450,7 +452,7 @@
       *
      C                   MOVEA     '0000'        *IN(19)
      C                   MOVEA     '000000000'   *IN(27)
- 
+
      C                   SELECT
       *
       ** F3 - Check if total percentage is less than 100
@@ -523,9 +525,9 @@
      C                   EVAL      WRbldSf = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -620,7 +622,7 @@
       *
      C                   CALL      'ZA0250'
      C                   EVAL      WError = 'N'
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -692,7 +694,7 @@
       *
      C                   ENDSL
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -748,7 +750,7 @@
      C                   EVAL      WRDSfl = 'N'
      C                   EVAL      WBDSfl = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -807,7 +809,7 @@
       ** Read next beneficial owner
       *
      C                   EXSR      SRRdBenOw
- 
+
      C                   ENDDO
       *
       ** Set the record pointer to the previous record retrieved, using
@@ -940,7 +942,7 @@
      C                   Z-ADD     4             ZADec
      C                   EXSR      SRFmtPct
      C                   MOVE      ZFIELD        SPAHD
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1139,7 +1141,21 @@
       *
      C                   EVAL      KFLNM = 'SDBNFOPD'
       *
-     C     KYFLNM        CHAIN     @AHREAU                            03
+     C*****KYFLNM        CHAIN     @AHREAU                            03                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KFLNM         AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       03                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        03                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
      C                   IF        NOT *IN03
       *
      C                   SELECT
@@ -1156,7 +1172,16 @@
       *
      C                   ENDSL
       *
-     C                   Update    @AHREAU
+     C**********         Update    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   ENDIF
      C                   EVAL      WChange = 'Y'
      C                   COMMIT
@@ -1319,7 +1344,7 @@
      C                   ENDIF
      C                   ENDIF
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1407,7 +1432,7 @@
       ** Validate Beneficial Owner for rounding indicator
       *
      C                   EXSR      SRVDFRD
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1807,15 +1832,15 @@
       *  SRFmtPct - Format amount for display using ZEDIT             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtPct      BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZField
      C                   PARM                    ZADec
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1824,11 +1849,11 @@
       *                                                               *
       *****************************************************************
      C     SRSndM        BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    P_MsgFile
      C                   PARM                    P_MsgID
- 
+
      C                   EVAL      WError = 'Y'
      C                   ENDSR
       *
@@ -1843,9 +1868,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        Plist
      C                   PARM                    PMODE             1
       *
@@ -1928,9 +1953,9 @@
      C                   EVAL      SCNUM = *BLANKS
      C                   EVAL      SCTTX = *BLANKS
      C                   EVAL      SDPTN = *BLANKS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1945,23 +1970,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

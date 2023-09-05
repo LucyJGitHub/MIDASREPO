@@ -12,28 +12,30 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
      FSDYLDCL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       * Midas SD Yield Curves Details Master File
- 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
+     F**********                           INFSR(*PSSR)                                     MD061008
       * Midas SD Standing Data Controls index
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -45,12 +47,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -61,48 +63,48 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D ChkYlcuFmt    E DS                  EXTNAME(SDYLDCPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D SDVYlcu       E DS                  EXTNAME(SDVYLCUPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid transactions Detail
- 
+
      D OKYlcDets     E DS                  EXTNAME(SDEYLCUPD)
       * Error indicators
- 
+
      D B_YlcuF       E DS                  EXTNAME(SDYLDCPD)
      D                                     PREFIX(B_)
       **  Externally described DS for 'BEFORE UPDATE' Yield Curves
- 
+
       **  Transaction Details File
      D YlcuF         E DS                  EXTNAME(SDYLDCPD)
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** 24X7 status data area
@@ -115,7 +117,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -151,7 +153,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -165,44 +167,44 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
       ** Fields defined for Enhancement CSC011
- 
+
      D TRANSDTL        S           5800A
      D PTimestamp      S             26A
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
- 
+
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the transaction
      C     A_YCCHTP      CASEQ     'I'           INSERT
      C     A_YCCHTP      CASEQ     'A'           AMEND
      C     A_YCCHTP      CASEQ     'D'           DELETE
      C                   ENDCS
- 
+
       * Exit From Program
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -212,13 +214,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    @@RTCD            7
- 
+
       ** Externally described DS for valid Yield Curves Detail
      C                   PARM                    SDVYlcu
       *
@@ -235,14 +237,14 @@
      C                   EVAL      DBASE  = 909                                 * DBERR 909 *
      C                   EXSR      *PSSR                                        *************
      C                   ENDIF
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -252,7 +254,7 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
      C                   MOVE      A_YCYLDC      MidasTrNum        5
      C                   CALLB     'SDYLCURTV'
       * Inputs
@@ -287,7 +289,7 @@
       *
       * OK - Transaction Number
      C                   PARM                    DDYLDCOK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -298,28 +300,28 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        CHFSTMST <> A_YCTMST
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
      C                             DDYLDCOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C                 2 0
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError         132
@@ -331,11 +333,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -345,7 +347,7 @@
       *                                                              *
       ****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access Yield Curves Details
      C     A_YCYLDC      CHAIN     SDYLDCL0                           99
       ** Database error
@@ -356,13 +358,13 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C
- 
+
       ** Initialise Yield Curves Detail
      C                   CLEAR                   YlcuF
- 
+
       ** Store Old fields for comparisons
      C                   MOVEL(P)  YlcuF         B_YlcuF
- 
+
       ** SET YIELD CURVES FIELDS ON INSERT
      C                   EVAL      FSRECI=A_YCRECI
      C                   EVAL      FSYLDC=A_YCYLDC
@@ -374,17 +376,17 @@
      C                   EVAL      FSYLDCA=A_YCYLDA
       ** Front Office ID
      C                   EVAL      FSFRNT=A_YCFRNT
- 
+
       *
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      FSTMST  = TimeStamp
       *
       ** Write new Transaction Detail
      C                   WRITE     SDYLDCD0
- 
+
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
      C                   ENDSR
@@ -396,7 +398,7 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Yield Curves Details
      C     A_YCYLDC      CHAIN     SDYLDCL0                           99
       ** Database error
@@ -406,10 +408,10 @@
      C                   EVAL      DBASE  = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
      C                   MOVEL(P)  YlcuF         B_YlcuF
- 
+
       ** SET YIELD CURVES FIELDS ON AMEND
      C                   EVAL      FSYLDC = A_YCYLDC
      C                   EVAL      FSLCDT = BJRDNB
@@ -420,23 +422,23 @@
      C                   EVAL      FSYLDCA = A_YCYLDA
       ** Front Office ID
      C                   EVAL      FSFRNT = A_YCFRNT
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      FSTMST  = TimeStamp
- 
+
       ** Front Office ID
      C                   EVAL      FSFRNT=A_YCFRNT
- 
- 
+
+
       *
       ** Update Yield Curves Record
      C                   UPDATE    SDYLDCD0
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -446,7 +448,7 @@
       *                                                              *
       ****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access Yield Curves Details
      C     A_YCYLDC      CHAIN     SDYLDCL0                           9998
       ** Database error
@@ -464,15 +466,15 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
      C                   MOVEL(P)  YlcuF         B_YlcuF
- 
+
       ** Delete record
      C                   DELETE    SDYLDCD0
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -485,7 +487,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDYLDCPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WKFLNM        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9899                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        98                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -518,7 +537,16 @@
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
      C                   ENDSR
       *****************************************************************
@@ -535,7 +563,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************

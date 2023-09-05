@@ -12,30 +12,32 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD083             Date 27May10               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD083 - Watch List Compliance Upgrade                       *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
      FSDALTNL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       * Midas SD Alternative Name & Address Detail Master File
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)
       * Midas SD Compliance Watch Hit List(Ftyp/Iden/Brch)
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
+     F**********                           INFSR(*PSSR)                                     MD061008
       * UPD : Midas SD Standing data controls update
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -47,12 +49,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -63,34 +65,34 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D ChkAlnaFmt    E DS                  EXTNAME(SDALTNPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D SDVAlna       E DS                  EXTNAME(SDVALNAPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid Alt Names & Addresses Detail
- 
+
      D OKAlnDets     E DS                  EXTNAME(SDEALNAPD)
       ** Error indicators
- 
+
      D B_ALNAF       E DS                  EXTNAME(SDALTNPD)
      D                                     PREFIX(B_)
       ** Externally described DS for 'BEFORE UPDATE' name & address
- 
+
       **  Alternative Names & Addresses Details File
      D ALNAF         E DS                  EXTNAME(SDALTNPD)
       ** Data Structure for Watch List Configuration Data file
@@ -115,18 +117,18 @@
      D PDSXML          DS          9999
      D OPNTAG          S             35    Dim(3)  CTDATA
      D CLSTAG          S             35    Dim(3)  CTDATA
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
- 
+
+
       ** Dummy message ID and message file fields for use on the calls
       ** to ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -162,7 +164,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -176,84 +178,84 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
- 
+
      D WKACSN          S              2P 0
       ** Account sequence field (packed) for call to CLINTSE
- 
+
      D @@RTCD          S              7A
- 
+
      D*@RTCD           S              7A
      D*@OPTN           S              7A
       ** Parameters for AOBANKR0
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
       ** Parameters for AOSARDR0
- 
+
      D PFNCCD          S              8A
       ** Parameters for AOWLCCR0
- 
+
      D PCUST           S             10A
      D PSTKEY          S              7A
       ** Parameters for AOCUSTR0
- 
+
      D @Return         S              6A
      D @Type           S              1A
       ** Parameters for ZARTVJOBA
- 
+
      D CSD015          S              1A
      D CSC011          S              1A
      D CCF001          S              1A
- 
+
      D @@MODE          S              6A
      D @@RSMD          S              1A
      D ACTN            S              1A
      D FOTRID          S             20A
      D Ix              S              3P 0
- 
+
      D C               S              2P 0
      D DBError         S            132A
      D MsgSndRtn       S             10A
- 
+
      D KFUNT           S              8A
      D KIDEN           S             40A
      D KBRCH           S              3A
- 
+
      D WUNCF1          S              1A
      D WKFLNM          S             10A
      D WADDAL          S            100A
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program
- 
+
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the transaction
- 
+
      C     A_NATYLC      CASEQ     'I'           INSERT
      C     A_NATYLC      CASEQ     'A'           AMEND
      C     A_NATYLC      CASEQ     'D'           DELETE
      C                   ENDCS
- 
+
       ** Exit From Program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -263,49 +265,49 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
- 
+
      C                   PARM                    @@RTCD
- 
+
       ** Externally described DS for valid Alt Name & Address Detail
- 
+
      C                   PARM                    SdVALNA
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANK
      C                   EVAL      DBKEY  = @OPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  =  909
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Key Lists
- 
+
      C     KALTN         KLIST
      C                   KFLD                    A_NACUST
      C                   KFLD                    A_NAADCD
- 
+
       ** Access SAR Details to see if Compliance Watch is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSD015'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CSD015'      DBKEY
@@ -313,20 +315,20 @@
      C                   MOVEL     '900'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If enhancement CSD015 is installed, access SDWLCCPD to
       ** see if 'SDCUSD' function code is available
- 
+
      C     PRTCD         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           CSD015
- 
+
      C                   CALL      'AOWLCCR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      'CUSTALTA'    PFNCCD
      C     SDWLCC        PARM      SDWLCC        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*NRF'
      C                   MOVEL     'CUSTALTA'    DBKEY
@@ -334,33 +336,33 @@
      C                   MOVEL     '901'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDCWCDPD to get the 5 'Private Customer Industry
       ** Code'
- 
+
      C                   CALL      'AOCWCDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDCWCD        PARM      SDCWCD        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   MOVEL     POPTN         DBKEY
      C                   MOVEL     'SDCWCDPD'    DBFILE
      C                   MOVEL     '902'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Determine if enhancement CSC011 is installed
- 
+
      C                   MOVE      'N'           CSC011
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CSC011'      DBKEY
@@ -368,7 +370,7 @@
      C                   MOVEL     '903'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CSC011
      C     *DTAARA       DEFINE                  SC24X7
@@ -376,17 +378,17 @@
      C                   ENDIF
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT
- 
+
       ** Access SAR Details to see if Concord Interface Development
       ** is installed
- 
+
      C                   MOVE      'N'           CCF001
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY '    POPTN
      C                   PARM      'CCF001'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C     PRTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CCF001'      DBKEY
@@ -394,11 +396,11 @@
      C                   MOVEL     '904'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CCF001
      C                   ENDIF
- 
+
       ** Check if Watch List Element (CSD083) is on                                           CSD083
                                                                                               CSD083
      C                   CALL      'AOSARDR0'                                                 CSD083
@@ -421,11 +423,11 @@
                                                                                               CSD083
       ** Determine whether program is running interactively or in batch
       ** ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return
      C                   PARM                    @Type
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -435,92 +437,92 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current Customer details
- 
+
      C                   CALLB     'SDALNARTV'
- 
+
       ** Inputs
- 
+
       ** Return code
- 
+
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    @@MODE
- 
+
       ** Response mode
- 
+
      C                   PARM      ' '           @@RSMD
- 
+
       ** Action Code
- 
+
      C                   PARM      A_NATYLC      ACTN
- 
+
       ** Front Office Transaction ID
- 
+
      C                   PARM      A_NAFRNT      FOTRID
- 
+
       ** Midas Customer Number & Address Code
- 
+
      C                   PARM                    A_NACUST
      C                   PARM                    A_NAADCD
- 
+
       ** Outputs
- 
+
       ** Alternative Names & Addresses Details in File Format
      C                   PARM                    ChkAlnaFmt
- 
+
       ** OK - Action code
- 
+
      C                   PARM      *BLANK        DDACTNOK
- 
+
       ** OK - Customer Number
- 
+
      C                   PARM                    DDCUSTOK
       ** OK - Address Code
- 
+
      C                   PARM                    DDADCDOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
      C                   PARM      *BLANK        MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM      *ZERO         Ix
- 
+
       ** Error if Timestamp is not the same (record has been changed
       ** by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        CHBCTMST <> A_NATMST
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
- 
+
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
      C                             DDCUSTOK = 'N' OR
      C                             DDADCDOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError
@@ -532,11 +534,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -546,30 +548,30 @@
       *                                                               *
       *****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access Alternative Names & Addresses Details
- 
+
      C     KALTN         CHAIN     SDALTNL0                           99
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *OFF
      C                   EVAL      DBKEY  = A_NACUST
      C                   EVAL      DBFILE = 'SDALTNPD'
      C                   EVAL      DBASE  =  905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise Alternative Names & Addresses Detail
- 
+
      C                   CLEAR                   ALNAF
- 
+
       ** Store Old fields for comparisons
- 
+
      C                   MOVEL(P)  ALNAF         B_ALNAF
- 
+
       ** SET Alternative Names & Addresses FIELDS ON INSERT
- 
+
      C                   MOVEL     A_NACUST      BCCUST
      C                   MOVEL     A_NAADCD      BCADCD
      C                   MOVEL     A_NACNA1      BCCNA1
@@ -583,45 +585,45 @@
      C                   MOVEL     A_NALCD       BCLCD
      C                   MOVEL     A_NATYLC      BCTYLC
      C                   MOVEL     A_NAFRNT      BCFRNT
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      BCTMST  = TimeStamp
- 
+
       ** If watch list checking is applied
- 
+
      C     CSD015        IFEQ      'Y'
      C     W1EWLC        ANDEQ     'Y'
- 
+
       ** If user is in the main system
- 
+
      C     CSC011        IFEQ      'N'
      C     CSC011        OREQ      'Y'
      C     S1MAIN        ANDEQ     LIBR
- 
+
       ** If any of the watch list fields have been entered
- 
+
      C     A_NACNA1      IFNE      *BLANKS
      C     A_NACNA2      ORNE      *BLANKS
      C     A_NACNA3      ORNE      *BLANKS
      C     A_NACNA4      ORNE      *BLANKS
      C     A_NACNCD      ORNE      *BLANKS
- 
+
      C                   EXSR      SRWTCH
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Write new Alternative Names & Addresses Detail
- 
+
      C                   WRITE     @BCREDD
- 
+
       ** UPDATE SD STANDING DATA CONTROL FILE
- 
+
      C                   EXSR      UPDCTRL
      C                   ENDSR
       *****************************************************************
@@ -632,35 +634,35 @@
       *                                                               *
       *****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Alternative Names & Addresses Details
- 
+
      C     KALTN         CHAIN     SDALTNL0                           9998
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DBKEY  = A_NACUST
      C                   EVAL      DBFILE = 'SDALTNPD'
      C                   EVAL      DBASE  =  906
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record Locked
- 
+
      C                   IF        *IN98 = *ON
      C                   EVAL      DBKEY  = A_NACUST
      C                   EVAL      DBFILE = 'SDALTNPD'
      C                   EVAL      DBASE  =  907
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   MOVEL(P)  ALNAF         B_ALNAF
- 
+
       ** SET Alternative Names & Addresses FIELDS ON AMEND
- 
+
      C                   MOVEL     A_NACUST      BCCUST
      C                   MOVEL     A_NAADCD      BCADCD
      C                   MOVEL     A_NACNA1      BCCNA1
@@ -674,55 +676,55 @@
      C                   MOVEL     A_NALCD       BCLCD
      C                   MOVEL     A_NATYLC      BCTYLC
      C                   MOVEL     A_NAFRNT      BCFRNT
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      BCTMST  = TimeStamp
- 
- 
- 
+
+
+
       ** If watch list checking is applied
- 
+
      C     CSD015        IFEQ      'Y'
      C     W1EWLC        ANDEQ     'Y'
- 
+
       ** If user is in the main system
- 
+
      C     CSC011        IFEQ      'N'
      C     CSC011        OREQ      'Y'
      C     S1MAIN        ANDEQ     LIBR
- 
+
       ** Access customer details file for Branch Code
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM      BCCUST        PCUST
      C                   PARM      *BLANKS       PSTKEY
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   MOVEL     BCCUST        DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     '908'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDCWHTPD to determine Hit Unconfirmed Flag
- 
+
      C     KCWHTL        KLIST
      C                   KFLD                    KFUNT
      C                   KFLD                    KIDEN
      C                   KFLD                    KBRCH
- 
+
      C                   MOVEL     'SDALTNPD'    KFUNT
      C                   MOVE      *BLANKS       KIDEN
      C                   CAT       BCCUST:0      KIDEN
      C                   CAT       BCADCD:0      KIDEN
      C                   MOVEL     BBBRCD        KBRCH
- 
+
      C     KCWHTL        CHAIN     SDCWHTL1                           06
      C     *IN06         IFEQ      '1'
      C                   MOVE      *BLANKS       WUNCF1
@@ -731,30 +733,30 @@
      C                   MOVE      'Y'           WUNCF1
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If any of the watch list fields has been entered or W3UNCF = '
- 
+
      C     B_BCCNA1      IFNE      BCCNA1
      C     B_BCCNA2      ORNE      BCCNA2
      C     B_BCCNA3      ORNE      BCCNA3
      C     B_BCCNA4      ORNE      BCCNA4
      C     B_BCCNCD      ORNE      BCCNCD
      C     WUNCF1        OREQ      'Y'
- 
+
      C                   EXSR      SRWTCH
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Update Alternative Names & Addresses Record
- 
+
      C                   UPDATE    @BCREDD
- 
+
       ** UPDATE SD STANDING DATA CONTROL FILE
- 
+
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -764,41 +766,41 @@
       *                                                               *
       *****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access Alternative Names & Addresses Details
- 
+
      C     KALTN         CHAIN     SDALTNL0                           9998
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DBKEY  = A_NACUST
      C                   EVAL      DBFILE = 'SDALTNPD'
      C                   EVAL      DBASE  =  909
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record Locked
- 
+
      C                   IF        *IN98 = *ON
      C                   EVAL      DBKEY  = A_NACUST
      C                   EVAL      DBFILE = 'SDALTNPD'
      C                   EVAL      DBASE  =  910
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   MOVEL(P)  ALNAF         B_ALNAF
- 
+
       ** Delete record
- 
+
      C                   DELETE    @BCREDD
- 
+
       ** UPDATE SD STANDING DATA CONTROL FILE
- 
+
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -808,50 +810,76 @@
      C*                                                               *
      C*****************************************************************
      C     UPDCTRL       BEGSR
- 
+
      C                   MOVE      *BLANKS       WKFLNM
      C                   MOVEL     'SDALTNPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
- 
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WKFLNM        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9899                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        98                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
       ** Record not found
- 
+
      C     *IN98         IFEQ      '1'
      C                   MOVEL     'SDALTNPD'    DBKEY
      C                   MOVEL     'SDFCTLL0'    DBFILE
      C                   MOVEL     '911'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Record locked
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     'SDALTNPD'    DBKEY
      C                   MOVEL     'SDFCTLL0'    DBFILE
      C                   MOVEL     '912'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   SELECT
- 
+
       ** Input
- 
+
      C     A_NATYLC      WHENEQ    'I'
      C                   EVAL      AHNORC = (AHNORC + 1)
      C                   EVAL      AHNOIN = (AHNOIN + 1)
- 
+
       ** Amend
- 
+
      C     A_NATYLC      WHENEQ    'A'
      C                   EVAL      AHNOAM = (AHNOAM + 1)
- 
+
       ** Delete
- 
+
      C     A_NATYLC      WHENEQ    'D'
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
-     C                   UPDATE    @AHREAU
- 
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+
      C                   ENDSR
      C*****************************************************************
       /EJECT
@@ -862,9 +890,9 @@
      C*****************************************************************
      C     SRWTCH        BEGSR
      C                   MOVE      *BLANKS       PDSWLT
- 
+
       ** Move zeros to date and amount fields since they will not be us
- 
+
      C                   Z-ADD     0             W4DDAT
      C                   Z-ADD     0             W4VDAT
      C                   Z-ADD     0             W4MDAT
@@ -874,51 +902,51 @@
      C                   CAT       BCCUST:0      W4IDEN
      C                   CAT       BCADCD:0      W4IDEN
      C                   MOVEL     'SDALTNPD'    W4FUNT
- 
+
       ** Get System Prefix from SC24X7 if CSC011 is installed
- 
+
      C     CSC011        IFEQ      'Y'
      C                   MOVE      S1MAIN        W4SYSM
      C                   ELSE
- 
+
       ** Else, get it from SDSTAT
- 
+
      C                   MOVE      LIBR          W4SYSM
      C                   ENDIF
- 
+
       ** Access customer details file for Counter Party
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM      BCCUST        PCUST
      C                   PARM      *BLANKS       PSTKEY
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   MOVEL     BCCUST        DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     '911'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     BBCRNM        W4CUST
      C                   MOVE      BBCRTN        W4CUST
      C                   MOVE      BBCUST        W4CNUM
      C                   MOVE      BBBRCD        W4BRCH
- 
+
       ** Get counterparty type depending on CCF001
- 
+
      C     CCF001        IFEQ      'Y'
- 
+
      C     BBCRPC        IFEQ      'Y'
      C                   MOVE      'C'           W4CTYP
      C                   ELSE
      C                   MOVE      'I'           W4CTYP
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C     BBLICD        IFNE      *BLANKS
      C     BBLICD        ANDNE     W1IND1
      C     BBLICD        ANDNE     W1IND2
@@ -929,11 +957,11 @@
      C                   ELSE
      C                   MOVE      'I'           W4CTYP
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Set-up second parameter (Customer Alternative Name)
- 
+
      C                   MOVE      *BLANKS       PDSXML
      C     B_BCCNA1      IFNE      A_NACNA1
      C     WUNCF1        OREQ      'Y'
@@ -943,9 +971,9 @@
      C                   CAT       CLSTAG(1):0   PDSXML
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set-up second parameter (Customer Alternative Address)
- 
+
      C     B_BCCNA2      IFNE      A_NACNA2
      C     B_BCCNA3      ORNE      A_NACNA3
      C     B_BCCNA3      ORNE      A_NACNA4
@@ -960,9 +988,9 @@
      C                   CAT       CLSTAG(2):0   PDSXML
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Set-up second parameter (Country of Domicile)
- 
+
      C     B_BCCNCD      IFNE      A_NACNCD
      C     WUNCF1        OREQ      'Y'
      C     BCCNCD        IFNE      *BLANKS
@@ -971,15 +999,15 @@
      C                   CAT       CLSTAG(3):0   PDSXML
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Call Watch List Engine Program
- 
+
      C     PDSXML        IFNE      *BLANKS
      C                   CALL      'SDWLCLOP'
      C                   PARM                    PDSWLT
      C                   PARM                    PDSXML
      C                   ENDIF
- 
+
      C                   ENDSR
      C*****************************************************************
       /EJECT
@@ -995,7 +1023,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ** Note: if non-standard processing required, use the PSSR_ILENE
       ** subroutine
       *****************************************************************

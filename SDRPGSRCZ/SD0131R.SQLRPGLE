@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056963           Date 07Jun23               *
-      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *  Last Amend No. MD061823           Date 24Aug23               *
+      *  Prev Amend No. MD056963           Date 07Jun23               *
+      *                 BA6026             Date 18Jan23               *
       *                 CSW101             Date 03Feb23               *
       *                 MD058755           Date 01Sep21               *
       *                 CGL177             Date 11Jan16               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061823 - Non-displayed field can still be selected.        *
+      *             Field must be protected when not displayed        *
+      *             (Recompile)                                       *
       *  MD056963 - Remove *IN91, as this is for the ommitted code    *
       *           - Replace *IN81 with *IN82, *IN81 is already used   *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *

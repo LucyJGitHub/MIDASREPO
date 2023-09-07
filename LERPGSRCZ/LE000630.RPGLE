@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD013615A          Date 01Sep23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055657           Date 14May20               *
       *                 MD027418           Date 18Jul18               *
@@ -36,6 +37,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD013615A - Facility Activity Enquiry loan repayment freq.   *
+      *              display. Add VDAT/MDAT/IACD/PDDI/RDYN in record  *
+      *              'CLOANCL5' to display all repayment frequency    *
+      *              of loan. Add PDDI in 'CLOANCL3' for correct      *
+      *              calculation of repayment frequency on            *
+      *              maturity. (Recompile)                            *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

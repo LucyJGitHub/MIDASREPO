@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD013615A          Date 01Sep23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 AR953522           Date 25May12               *
       *                 MD055733           Date 03Jul20               *
@@ -99,6 +100,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD013615A - Only one repayment event is display for loan with*
+      *              repayment freq. and events are repeatedly display*
+      *              after pressing ENTER. Write all the repayment    *
+      *              freq. events for the loan. Setup the clear file  *
+      *              command with new set directory by fix AR922292.  *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
@@ -321,6 +327,7 @@
       *           facility being enquired is a participant facility   *
       *  SRLOAM - Subroutine to Process Records in LOAMSDK            *
       *  SRFRMT - Subroutine to Format Fields in LEFCENPD             *
+      *  SRWRFQ - Write repayment details in LEFCENPD                 *                    MD013615A
       *  *PSSR  - Program Error Processing Subroutine                 *
       *                                                               *
       *****************************************************************
@@ -523,6 +530,9 @@
       *
       ** Data Area giving Installation Control Details
       *
+     ISDSTAT    E DSSDSTAT                                                                 MD013615A
+      * SD Data Area                                                                       MD013615A
+      *                                                                                    MD013615A
      ISCSARD    E DSSCSARDPD                                              CLE014
       ** SAR file details accessed via access program AOSARDR0            CLE014
       *                                                                   CLE014
@@ -548,6 +558,7 @@
      I                                     *PROGRAM PGM
      I                                      244 253 WSID
      I                                      254 263 USER
+     I                                      264 2690JOBN                                   MD013615A
      IFSDS        DS
       ** File Status Data Structure
       *
@@ -881,6 +892,15 @@
      C                     KFLD           WFTYP   30                      147488
      C                     KFLD           WFSEQ   20                      147488
       *                                                                   147488
+      ** Start date and End date for repayment freq.                                       MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDPVLDT     WRSDT   50                                       MD013615A
+     C                     Z-ADD99999     WREDT   50                                       MD013615A
+      *                                                                                    MD013615A
+     C           PCODE     IFEQ 'B'                                                        MD013615A
+     C           AGRDNB    SUB  1         WREDT                                            MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     OPEN LEFCENPD
       *
      C                     OPEN LEFATRPD                                                      189343
@@ -1167,12 +1187,12 @@
      C           ORED      ANDEQAGRDNB
      C           FREC      ANDEQ'CLOANCL1'
      C           RECI      ANDNE'R'                                       190124
-     C           CLE014    OREQ 'Y'                                       CLE014
-     C           PCODE     ANDEQ'B'                                       CLE014
-     C           NRPD      ANDLTAGRDNB                                    CLE014
+     C********** CLE014    OREQ 'Y'                                                 CLE014 MD013615A
+     C********** PCODE     ANDEQ'B'                                                 CLE014 MD013615A
+     C********** NRPD      ANDLTAGRDNB                                              CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
-     C           FREC      ANDEQ'CLOANCL5'                                CLE014
-     C           RECI      ANDNE'R'                                                           204441
+     C********** FREC      ANDEQ'CLOANCL5'                                          CLE014 MD013615A
+     C********** RECI      ANDNE'R'                                                 204441 MD013615A
      C***********PCODE     OREQ 'B'                                       154591
      C***********STDT      ANDLTAGRDNB                                    154591
      C***********ORED      ANDEQAGRDNB                                    154591
@@ -1207,9 +1227,11 @@
      C           RECI      ANDNE'R'                                                           204441
       *                                                                   CLE014
      C           CLE014    OREQ 'Y'                                       CLE014
-     C           PCODE     ANDEQ'F'                                       CLE014
-     C           NRPD      ANDGEAGRDNB                                    CLE014
+     C********** PCODE     ANDEQ'F'                                                 CLE014 MD013615A
+     C********** NRPD      ANDGEAGRDNB                                              CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
+     C           PCODE     ANDNE'H'                                                        MD013615A
+     C           PCODE     ANDNE'P'                                                        MD013615A
      C           FREC      ANDEQ'CLOANCL5'                                CLE014
      C           RECI      ANDNE'R'                                                           204441
      C***********PCODE     OREQ 'F'                                       154591
@@ -1328,7 +1350,7 @@
      C           FREC      ANDEQ'CLOANCL4'                                CLE014
       *                                                                   CLE014
      C           CLE014    OREQ 'Y'                                       CLE014
-     C           NRPD      ANDGEPVLDT                                     CLE014
+     C********** NRPD      ANDGEPVLDT                                               CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
      C           FREC      ANDEQ'CLOANCL5'                                CLE014
      C           WRAMT     ANDGT*ZERO                                     CLE014
@@ -1784,6 +1806,16 @@
       *                                                                   CLE014
      C           FREC      WHEQ 'CLOANCL3'                                CLE014
      C           FREC      OREQ 'CLOANCL4'                                CLE014
+     C           FREC      OREQ 'CLOANCL5'                                                 MD013615A
+      *                                                                                    MD013615A
+      * Save existing frequency based repayments                                           MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C                     ADD  1         C                                                MD013615A
+     C           C         OCUR LEFRBS                                                     MD013615A
+     C                     MOVE LNRF      WRLNRF                                           MD013615A
+     C                     Z-ADDWRAMT     WRRAMT                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                   CLE014
      C                     Z-ADD*ZEROS    WCALC                           CLE014
      C                     Z-ADD*ZEROS    WIPAID                          CLE014
@@ -1804,13 +1836,25 @@
       ** principal for repayment types 1 and 2                            CLE014
       *                                                                   CLE014
      C                     MOVE '0'       *IN05                           CLE014
+     C                     MOVE 'N'       WEXTLP  1                                        MD013615A
+     C                     Z-ADD0         ZNRDYS                                           MD013615A
+     C                     Z-ADD0         WRNXTR  50                                       MD013615A
       *                                                                   CLE014
      C           NRPD      IFNE 0                                                             207963
      C                     Z-ADDNRPD      ZDAYNO                                              207963
+     C                     Z-ADDNRPD      WRNXTR                                           MD013615A
      C                     Z-ADDRDYN      ZMDAY                                               207963
      C                     MOVELCCY       ZCCY                                                207963
      C                     MOVELRFRQ      ZFREQ                                               207963
+     C                     ELSE                                                            MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate no repayment freq. details to                        MD013615A
+      * write in LEFCENPD file                                                             MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+     C                     Z-ADD*ZEROS    WRZDYN  50                                       MD013615A
       *                                                                   CLE014
      C           REPT      IFLE 2                                         CLE014
       *                                                                   CLE014
@@ -1844,30 +1888,83 @@
      C                     READ LEFCAMLA                 05               CLE014
       *                                                                                       207963
      C                     ELSE                                                               207963
-     C           MAMNT     IFGT 0                                                             207963
+     C********** MAMNT     IFGT 0                                                   207963 MD013615A
+     C           MAMNT     IFLT RAMT                                                       MD013615A
+     C                     Z-ADDMAMNT     WPRAM                                            MD013615A
+     C                     SUB  MAMNT     MAMNT                                            MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     Z-ADDRAMT      WPRAM                                            MD013615A
      C                     SUB  RAMT      MAMNT                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C           MAMNT     IFLT 0                                                             207963
      C                     Z-ADD0         MAMNT                                               207963
      C                     ENDIF                                                              207963
-     C                     ENDIF                                                              207963
+     C**********           ENDIF                                                    207963 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********           EXSR ZFREQB                                              207963 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                    MD013615A
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      ** Write repayment details in LEFCENPD                                               MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRWRFQ                                                     MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to write in LEFCENPD file                                                  MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     ENDIF                                                              207963
      C                     ENDDO                                          CLE014
       *                                                                                       207963
       ** Continue the computation of principal at maturity.                                   207963
       *                                                                                       207963
      C                     MOVE ZDAYNO    TDAYNO  50                                        AR830785
-     C           ZDAYNO    DOWLTMDAT                                                          207963
+     C********** ZDAYNO    DOWLTMDAT                                                207963 MD013615A
+     C           ZDAYNO    DOWLEMDAT                                                       MD013615A
      C           ZDAYNO    ANDGETDAYNO                                                      AR830785
      C           MAMNT     ANDGT0                                                             207963
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
       *                                                                                       207963
+     C           MAMNT     IFLT RAMT                                                       MD013615A
+     C                     Z-ADDMAMNT     WPRAM                                            MD013615A
+     C                     SUB  MAMNT     MAMNT                                            MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     Z-ADDRAMT      WPRAM                                            MD013615A
      C                     SUB  RAMT      MAMNT                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********           EXSR ZFREQB                                             207963  MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                    MD013615A
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
@@ -1875,6 +1972,18 @@
      C           MAMNT     IFLT 0                                                             207963
      C                     Z-ADD0         MAMNT                                               207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      ** Write repayment details in LEFCENPD                                               MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRWRFQ                                                     MD013615A
+      *                                                                                    MD013615A
+      ** Updated the field to indicate that no more repayment freq.                        MD013615A
+      ** details to write in LEFCENPD file                                                 MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     ENDDO                                                              207963
       *                                                                   CLE014
      C                     ELSE                                           CLE014
@@ -1918,7 +2027,7 @@
       *                                                                                       207963
      C           WLASD     IFNE VDATHL                                    CLE014
      C           WLASD     ANDNE*ZEROS                                    CLE014
-     C           WSTAC     ANDEQ*BLANK                                    CLE014
+     C********** WSTAC     ANDEQ*BLANK                                              CLE014 MD013615A
      C                     Z-ADDVDATHL    ZIEND                           CLE014
      C                     EXSR SRINCL                                    CLE014
      C                     ADD  ZINTR     WCALC  152                      CLE014
@@ -2035,6 +2144,7 @@
      C           AMTPHL    WHEQ 'SA'                                      CLE014
      C           STAIHL    IFEQ *BLANK                                    CLE014
      C                     Z-ADDVDATHL    WLICD                           CLE014
+     C                     MOVE *BLANK    WSTAC                                            MD013615A
      C                     ELSE                                           CLE014
      C                     MOVE 'Y'       WSTAC                           CLE014
      C                     ENDIF                                          CLE014
@@ -2048,18 +2158,32 @@
       *                                                                                       207963
      C           WLASD     IFNE ZDAYNO                                                        207963
      C           WLASD     ANDNE*ZEROS                                                        207963
-     C           WSTAC     ANDEQ*BLANK                                                        207963
+     C*********  WSTAC     ANDEQ*BLANK                                              207963 MD013615A
      C           ZDAYNO    ANDLTMDAT                                                          207963
      C                     Z-ADDZDAYNO    ZIEND                                               207963
      C                     EXSR SRINCL                                                        207963
      C                     ADD  ZINTR     WCALC                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     Z-ADDZDAYNO    WLASD                                               207963
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********           EXSR ZFREQB                                              207963 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                    MD013615A
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
-     C                     ENDIF                                                              207963
+     C**********           ENDIF                                                    207963 MD013615A
       *                                                                                       207963
      C           WCALC     SUB  WIPAID    WOUTIN                                              207963
       *                                                                                       207963
@@ -2088,6 +2212,17 @@
      C                     Z-ADD0         WCUPR                                               207963
      C                     ENDIF                                                              207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      * Write repayment details in LEFCENPD                                                MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRWRFQ                                                     MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to store in LEFCENPD file                                                  MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                       207963
      C                     ENDIF                                                              207963
      C                     ENDDO                                                              207963
@@ -2102,20 +2237,36 @@
       ** Continue the computation of principal at maturity.                                   207963
       *                                                                                       207963
      C                     MOVE ZDAYNO    TDAYNO                                            AR830785
-     C           ZDAYNO    DOWLTMDAT                                                          207963
+     C********** ZDAYNO    DOWLTMDAT                                                207963 MD013615A
+     C           ZDAYNO    DOWLEMDAT                                                       MD013615A
      C           ZDAYNO    ANDGETDAYNO                                                      AR830785
      C           MAMNT     ANDGT0                                                             207963
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
       *                                                                                       207963
      C           WLASD     IFNE ZDAYNO                                                        207963
      C           WLASD     ANDNE*ZEROS                                                        207963
-     C           WSTAC     ANDEQ*BLANK                                                        207963
+     C********** WSTAC     ANDEQ*BLANK                                              207963 MD013615A
      C                     Z-ADDZDAYNO    ZIEND                                               207963
      C                     EXSR SRINCL                                                        207963
      C                     ADD  ZINTR     WCALC                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     Z-ADDZDAYNO    WLASD                                               207963
-     C                     ENDIF                                                              215966
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+     C**********           ENDIF                                                    215966 MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********           EXSR ZFREQB                                              207963 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                    MD013615A
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
@@ -2148,6 +2299,17 @@
      C                     Z-ADD0         WCUPR                                               207963
      C                     ENDIF                                                              207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      * Write repayment details in LEFCENPD                                                MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRWRFQ                                                     MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to write in LEFCENPD file                                                  MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                       207963
      C                     ENDDO                                                              207963
       *                                                                                       207963
@@ -2211,25 +2373,25 @@
      C                     ENDIF                                          CLE014
      C                     ENDIF                                          CLE014
       *                                                                   CLE014
-     C           CLE014    WHEQ 'Y'                                       CLE014
-     C           FREC      ANDEQ'CLOANCL5'                                CLE014
-     C                     ADD  1         C                               CLE014
-     C           C         OCUR LEFRBS                                    CLE014
+     C********** CLE014    WHEQ 'Y'                                                 CLE014 MD013615A
+     C********** FREC      ANDEQ'CLOANCL5'                                          CLE014 MD013615A
+     C**********           ADD  1         C                                         CLE014 MD013615A
+     C********** C         OCUR LEFRBS                                              CLE014 MD013615A
      C**********           Z-ADDLNRF      WRLNRF                                       CLE014 CLE148
-     C                     MOVELLNRF      WRLNRF                                              CLE148
-     C                     Z-ADDWRAMT     WRRAMT                          CLE014
-     C                     Z-ADDNRPD      ADAT                            CLE014
-     C                     Z-ADDWRAMT     AMNT                            CLE014
-     C                     MOVEL'RE'      ATYP                            CLE014
-     C           PCODE     IFEQ *BLANK                                    CLE014
-     C           PCODE     OREQ 'A'                                       CLE014
-     C           NRPD      IFLT AGRDNB                                    CLE014
-     C                     MOVE 'B'       CODE                            CLE014
-     C                     ELSE                                           CLE014
-     C                     MOVE 'F'       CODE                            CLE014
-     C                     ENDIF                                          CLE014
-     C                     MOVE RFRQ      FREQ                            CLE014
-     C                     ENDIF                                          CLE014
+     C**********           MOVELLNRF      WRLNRF                                    CLE148 MD013615A
+     C**********           Z-ADDWRAMT     WRRAMT                                    CLE014 MD013615A
+     C**********           Z-ADDNRPD      ADAT                                      CLE014 MD013615A
+     C**********           Z-ADDWRAMT     AMNT                                      CLE014 MD013615A
+     C**********           MOVEL'RE'      ATYP                                      CLE014 MD013615A
+     C********** PCODE     IFEQ *BLANK                                              CLE014 MD013615A
+     C********** PCODE     OREQ 'A'                                                 CLE014 MD013615A
+     C********** NRPD      IFLT AGRDNB                                              CLE014 MD013615A
+     C**********           MOVE 'B'       CODE                                      CLE014 MD013615A
+     C**********           ELSE                                                     CLE014 MD013615A
+     C**********           MOVE 'F'       CODE                                      CLE014 MD013615A
+     C**********           ENDIF                                                    CLE014 MD013615A
+     C**********           MOVE RFRQ      FREQ                                      CLE014 MD013615A
+     C**********           ENDIF                                                    CLE014 MD013615A
       *
      C           FREC      WHEQ 'LEMNFUPF'
      C**********           Z-ADD0         LNRF                                                CLE148
@@ -2276,6 +2438,7 @@
      C                     ENDSL
       *
      C           WREC      IFEQ *BLANKS                                   147488
+     C           FREC      ANDNE'CLOANCL5'                                                 MD013615A
      C           FREC      IFNE 'LEMNFUPF'                                                    189343
      C           FREC      ANDNE'LEMNFUPE'                                                    189343
      C                     Z-ADD*ZEROS    EDAT                                                189343
@@ -2378,7 +2541,9 @@
       *                                                                   CLE014
      C           WCURT     IFLE *ZEROS                                    CLE014
      C           CPAM      OREQ *ZEROS                                    CLE014
+     C           WSTAC     OREQ 'Y'                                                        MD013615A
      C                     Z-ADD*ZEROS    ZINTR                           CLE014
+     C                     Z-ADDZIEND     WLICD                                            MD013615A
      C                     ELSE                                           CLE014
       *                                                                   CLE014
      C                     Z-ADDWLICD     ZIBEG                           CLE014
@@ -2646,15 +2811,112 @@
       *                                                                                       246233
       *****************************************************************                       246233
       /EJECT                                                                                  246233
+      *****************************************************************                    MD013615A
+      *                                                               *                    MD013615A
+      *  SRWRFQ - Write repayment details in LEFCENPD                 *                    MD013615A
+      *                                                               *                    MD013615A
+      *  Called by: SRFRMT                                            *                    MD013615A
+      *                                                               *                    MD013615A
+      *****************************************************************                    MD013615A
+     C           SRWRFQ    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+      * Write the details if the repayment date is within set start                        MD013615A
+      * date and end date of repayment frequency enquiry for facility                      MD013615A
+      * or up  loan's maturity date.                                                       MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRZDYN    ANDLEMDAT                                                       MD013615A
+     C           WRZDYN    ANDGEWRSDT                                                      MD013615A
+     C           WRZDYN    ANDLEWREDT                                                      MD013615A
+     C           WPRAM     ANDGT0                                                          MD013615A
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
+      *                                                                                    MD013615A
+      * Repayment details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRZDYN    ADAT                                             MD013615A
+     C                     Z-ADDWPRAM     AMNT                                             MD013615A
+     C                     MOVEL'RE'      ATYP                                             MD013615A
+     C                     MOVE RFRQ      FREQ                                             MD013615A
+     C                     Z-ADD0         EDAT                                             MD013615A
+      *                                                                                    MD013615A
+      * Repayment Code                                                                     MD013615A
+      *                                                                                    MD013615A
+     C           WRZDYN    IFLT AGRDNB                                                     MD013615A
+     C                     MOVE 'B'       CODE                                             MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVE 'F'       CODE                                             MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     WRITELEFCEND0                                                   MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      *****************************************************************                    MD013615A
+      /EJECT                                                                               MD013615A
+      *****************************************************************                    MD013615A
+      *                                                               *                    MD013615A
+      *  SRCNRF - Calculate next repayment date according to the PDDI *                    MD013615A
+      *           of the loan                                         *                    MD013615A
+      *                                                               *                    MD013615A
+      *  Called By: SRFRMT                                            *                    MD013615A
+      *  Calls: ZBKDT, ZFWDT, ZDATE2                                  *                    MD013615A
+      *                                                               *                    MD013615A
+      *****************************************************************                    MD013615A
+     C           SRCNRF    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     SELEC                                                           MD013615A
+     C           PDDI      WHEQ 'A'                                                        MD013615A
+     C                     Z-ADDZDAYNO    ZDYNBR                                           MD013615A
+     C           PDDI      WHEQ 'P'                                                        MD013615A
+     C                     EXSR ZBKDT                                                      MD013615A
+     C           PDDI      WHEQ 'N'                                                        MD013615A
+     C                     EXSR ZFWDT                                                      MD013615A
+     C           PDDI      WHEQ 'M'                                                        MD013615A
+     C           PDDI      OREQ ' '                                                        MD013615A
+     C                     EXSR ZDATE2                                                     MD013615A
+      *                                                                                    MD013615A
+     C           *IN98     IFEQ '0'                                                        MD013615A
+     C                     MOVE ZDATE     MMYY    40P                                      MD013615A
+     C                     MOVELMMYY      MMNLCD  20P                                      MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVELZDATE     MMNLCD    P                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    @DAYNO  50                                       MD013615A
+     C                     EXSR ZFWDT                                                      MD013615A
+     C                     Z-ADDZDYNBR    ZDAYNO                                           MD013615A
+     C                     EXSR ZDATE2                                                     MD013615A
+      *                                                                                    MD013615A
+     C           *IN98     IFEQ '0'                                                        MD013615A
+     C                     MOVE ZDATE     MMYY      P                                      MD013615A
+     C                     MOVELMMYY      MMNWKD  20P                                      MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVELZDATE     MMNWKD    P                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           MMNLCD    IFNE MMNWKD                                                     MD013615A
+     C                     Z-ADD@DAYNO    ZDAYNO                                           MD013615A
+     C                     EXSR ZBKDT                                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSL                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDYNBR    ZDAYNO                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      *****************************************************************                    MD013615A
      C/COPY ZSRSRC,ZDATE1Z2                                                                   207963
      C/COPY ZSRSRC,ZDATE2Z2                                                                   207963
      C/COPY ZSRSRC,GLINTCZ1                                               CLE014
      C/COPY ZSRSRC,ZINTDYZ2                                               CLE014
      C/COPY ZSRSRC,ZDATE9Z3                                               CLE014
      C/COPY ZSRSRC,ZDAT10Z2                                               CLE014
+     C/COPY ZSRSRC,ZFRQB3                                                                  MD013615A
      C/COPY ZSRSRC,ZFREQBZ2                                                                   207963
      C/COPY ZSRSRC,ZACCH                                                                      207963
      C/COPY ZSRSRC,ZCHKH                                                                      207963
+     C/COPY ZSRSRC,ZBKDT                                                                   MD013615A
+     C/COPY ZSRSRC,ZFWDT                                                                   MD013615A
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

@@ -9,32 +9,57 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD022045 *CREATE   Date 27Aug13              */
+/*       Last Amend No. MD060916           Date 04Aug23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD022045 *CREATE   Date 27Aug13              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD060916 - SCC040402 may delete UDF record for existing held*/
+/*                  items. Prevent deletion of T_GZxxxxEX records to */
+/*                  items being created during run of component.     */
+/*                  Process tables in parallel, single table per     */
+/*                  component.                                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD022045 - SCC0404 performance degradation                  */
 /*                                                                   */
 /*********************************************************************/
-             PGM
- 
+/**********  PGM                                                                     */ /*MD060916*/
+             PGM PARM(&RCRDID)                                                          /*MD060916*/
+                                                                                        /*MD060916*/
+/* &RCRDID parameter is used to pass SCSQLCTD.SQLSTMID value */                         /*MD060916*/
+                                                                                        /*MD060916*/
+             DCL VAR(&RCRDID) TYPE(*CHAR) LEN(5)                                        /*MD060916*/
+                                                                                        /*MD060916*/
+             DCL VAR(&RCRDNO) TYPE(*DEC)  LEN(5 0)                                      /*MD060916*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /*  Check end of year processing                                   */
- 
-             CALL       PGM(SC002501)
+
+/**********  CALL       PGM(SC002501)                                                */ /*MD060916*/
+             CALL       PGM(SC002501A) PARM(&RCRDID &RCRDNO)                            /*MD060916*/
              IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+                                                                                        /*MD060916*/
+             IF         COND(&RCRDNO = 0) THEN(DO)                                      /*MD060916*/
+                                                                                        /*MD060916*/
+/* Fail if no SCSQLCTD record with such SQLSTMID value found */                         /*MD060916*/
+                                                                                        /*MD060916*/
+                SNDPGMMSG  MSG('No SCSQLCTD record with SQLSTMID=''' *BCAT +
+                                &RCRDID *BCAT ''' found') TOMSGQ(MOPERQ)                /*MD060916*/
+                MONMSG     MSGID(CPF0000 MCH0000)                                       /*MD060916*/
+                                                                                        /*MD060916*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD060916*/
+             ENDDO                                                                      /*MD060916*/
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 GOTO       CMDLBL(ENDCLPGM)
              ENDDO
@@ -43,6 +68,6 @@ ABNOR:
                           cancelled') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 ENDCLPGM:
              ENDPGM

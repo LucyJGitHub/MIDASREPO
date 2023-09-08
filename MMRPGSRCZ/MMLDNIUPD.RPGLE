@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR872050           Date 05Jun23               *
-      *  Prev Amend No. MD036339           Date 06Mar23               *
+      *  Last Amend No. MD061501           Date 08Sep23               *
+      *  Prev Amend No. AR872050           Date 05Jun23               *
+      *                 MD036339           Date 06Mar23               *
       *                 MD029131           Date 21Feb23               *
       *                 255899A            Date 21Jun22               *
       *                 263173             Date 20Jun22               *
@@ -112,6 +113,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061501 - Reversal of AR790465 fix.                         *
       *  AR872050 - Fix package request for Funds Transfer and        *
       *             Securities module. Incorporated fix AR790465.     *
       *             (Child:AR872051)                                  *
@@ -301,8 +303,8 @@
      F                                     USROPN                                             CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
-     FSEDPMVL3  UF A E           K DISK                                                     AR790465
-     F                                     COMMIT                                           AR790465
+     F***SEDPMVL3  UF A E           K DISK                                         AR790465 MD061501
+     F***                                   COMMIT                                 AR790465 MD061501
      F/COPY WNCPYSRC,MMLDNIDF01
 
       *****************************************************************
@@ -1873,19 +1875,19 @@
      C                   ENDIF                                                                CDL102
       *
      C                   UPDATE    DEALSDCF
-      *                                                                                     AR790465
-      ** If there is no Error Update the DPDO field on the SE Depo                          AR790465
-      ** Movement file                                                                      AR790465
-      *                                                                                     AR790465
-     C                   MOVE      IKDN38        KDPAD             6 0                      AR790465
-     C     KDPAD         SETLL     DPTMVDF                                                  AR790465
-     C     KDPAD         READE     DPTMVDF                                99                AR790465
-      *                                                                                     AR790465
-     C     *IN99         DOWEQ     '0'                                                      AR790465
-     C                   Z-ADD     MDAT          DPDO                                       AR790465
-     C                   UPDATE    DPTMVDF                                                  AR790465
-     C     KDPAD         READE     DPTMVDF                                99                AR790465
-     C                   ENDDO                                                              AR790465
+      ************************************************************                 AR790465 MD061501
+      ***If*there*is*no*Error*Update*the*DPDO*field*on*the*SE*Depo                 AR790465 MD061501
+      ***Movement*file********************************************                 AR790465 MD061501
+      **********                                                                   AR790465 MD061501
+     C**********         MOVE      IKDN38        KDPAD             6 0             AR790465 MD061501
+     C*****KDPAD         SETLL     DPTMVDF                                         AR790465 MD061501
+     C*****KDPAD         READE     DPTMVDF                                99       AR790465 MD061501
+      **********                                                                   AR790465 MD061501
+     C******IN99         DOWEQ     '0'                                             AR790465 MD061501
+     C**********         Z-ADD     MDAT          DPDO                              AR790465 MD061501
+     C**********         UPDATE    DPTMVDF                                         AR790465 MD061501
+     C*****KDPAD         READE     DPTMVDF                                99       AR790465 MD061501
+     C**********         ENDDO                                                     AR790465 MD061501
                                                                                               CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
                                                                                               CRE020

@@ -16,7 +16,6 @@
       *                                                               *
       *  Last Amend No. MD061008           Date 31Dec21               *
       *  Prev Amend No. MD056963           Date 07Jun23               *
-      *                 BA6026             Date 18Jan23               *
       *                 CSW101             Date 03Feb23               *
       *                 MD058755           Date 01Sep21               *
       *                 CGL177             Date 11Jan16               *
@@ -50,7 +49,6 @@
       *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD056963 - Remove *IN91, as this is for the ommitted code    *
       *           - Replace *IN81 with *IN82, *IN81 is already used   *
-      *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  CSW101 - PAYplus Interface.                                  *
       *  MD058755 - Deliverable Data Split for SDRETRPD and TABLETZ   *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -98,17 +96,6 @@
      F*
      F/COPY WNCPYSRC,SD0131RFPG
       *
-     FA6RETRL0  UF A E           K DISK    USROPN                                             BA6026
-     F                                     COMMIT                                             BA6026
-     F                                     RENAME(A6RETRD0:A6RETRDA)                          BA6026
-     F                                     INFSR(*PSSR)                                       BA6026
-      ** Midas SD Retail Transaction Types - Extension Update                                 BA6026
-      *                                                                                       BA6026
-     FA6RETRL1  IF   E           K DISK    USROPN                                             BA6026
-     F                                     RENAME(A6RETRD0:A6RETRDB)                          BA6026
-     F                                     INFSR(*PSSR)                                       BA6026
-      ** Midas SD Retail Transaction Types - Extension Retrieve                               BA6026
-      *                                                                                       BA6026
      F*
      FSD0131R#  CF   E             WORKSTN USROPN
      F                                     INFDS(INFDS#)
@@ -157,22 +144,6 @@
      D*
      D/COPY WNCPYSRC,SD0131RIPG
      D*
-      *                                                                                       BA6026
-     D@1DBSW         E DS                  EXTNAME(A6RETRL0)                                  BA6026
-      ** Midas SD Retail Transaction Types - Extension Update                                 BA6026
-      *                                                                                       BA6026
-     D#1DBSW           DS          9999                                                       BA6026
-      ** Stored master file format fields                                                     BA6026
-      *                                                                                       BA6026
-     D#1SIDC           DS                                                                     BA6026
-     D  WCHAR1                 1      1                                                       BA6026
-     D  WCHAR2                 2      2                                                       BA6026
-     D  WCHAR3                 3      3                                                       BA6026
-     D  WCHAR4                 4      4                                                       BA6026
-      *                                                                                       BA6026
-     DYCRDSW           DS          9999                                                       BA6026
-      *                                                                                       BA6026
-     D ALPHA           C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ')                BA6026
 
       /EJECT
       * Data structures:
@@ -924,15 +895,6 @@
      C                   END
      C                   WRITE     #MSGCTL
      C                   WRITE     #CMDTXT2
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C**********         MOVE      *ON           *IN81                               BA6026 MD056963
-     C                   MOVE      *ON           *IN82                                      MD056963
-     C                   ELSE                                                                 BA6026
-     C**********         MOVE      *OFF          *IN81                               BA6026 MD056963
-     C                   MOVE      *OFF          *IN82                                      MD056963
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
      C                   EXFMT     #RCDDTL1
       * Test cursor
      C                   EXSR      Y8TST
@@ -1574,53 +1536,6 @@
      C                   END                                                                  CSW101
      C                   ENDIF                                                                CSW101
      C                   ENDIF                                                                CSW101
-      *                                                                                       BA6026
-      ** Validate Transaction Type Identification Code.                                       BA6026
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C     #1SIDC        ANDNE     *BLANKS                                                    BA6026
-      *                                                                                       BA6026
-     C                   SETOFF                                       46                      BA6026
-      *                                                                                       BA6026
-      ** Send warning message if entry does not begin w/ 'N'.                                 BA6026
-      *                                                                                       BA6026
-     C     1             SUBST     #1SIDC:1      NTEST             1                          BA6026
-     C     NTEST         IFNE      'N'                                                        BA6026
-     C     #1SIDC        IFNE      W1SIDC                                                     BA6026
-     C                   SETON                                        99                      BA6026
-     C                   MOVE      *BLANKS       W1SIDC            4                          BA6026
-     C                   MOVE      #1SIDC        W1SIDC                                       BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
-     C                   MOVEL     'XXX0001'     ZAMSID                                       BA6026
-     C     'GBXX'        CAT       'USRMSG'      ZAMSGF                                       BA6026
-     C                   EXSR      ZASNMS                                                     BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
-      ** Send error message entry must be 4 alphabetic characters                             BA6026
-      *                                                                                       BA6026
-     C     ' '           SCAN      #1SIDC                                 46                  BA6026
-     C     *IN46         IFEQ      *ON                                                        BA6026
-     C                   SETON                                        9948                    BA6026
-     C                   MOVEL     'XXX0002'     ZAMSID                                       BA6026
-     C     'GBXX'        CAT       'USRMSG'      ZAMSGF                                       BA6026
-     C                   EXSR      ZASNMS                                                     BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
-      ** Send error message must not contain numeric or symbols                               BA6026
-      *                                                                                       BA6026
-     C     WCHAR1        SCAN      ALPHA                                  47                  BA6026
-     C   47WCHAR2        SCAN      ALPHA                                  47                  BA6026
-     C   47WCHAR3        SCAN      ALPHA                                  47                  BA6026
-     C   47WCHAR4        SCAN      ALPHA                                  47                  BA6026
-     C     *IN47         IFEQ      *OFF                                                       BA6026
-     C                   SETON                                        9948                    BA6026
-     C                   MOVEL     'XXX0003'     ZAMSID                                       BA6026
-     C     'GBXX'        CAT       'USRMSG'      ZAMSGF                                       BA6026
-     C                   EXSR      ZASNMS                                                     BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
-     C                   ENDIF                                                                BA6026
       *================================================================
      CSR   DCEXIT        ENDSR
       /EJECT
@@ -1828,12 +1743,6 @@
      C                   MOVEL     *BLANK        #1CLIN                         Clearing Indica
      C                   MOVEL     *BLANK        #1FTPT
      C                   MOVEL     *BLANK        #1IDCD                                       CSW101
-      *                                                                                       BA6026
-      ** Initialize Transaction Type Idenfication Code.                                       BA6026
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   MOVEL     *BLANKS       #1SIDC                                       BA6026
-     C                   ENDIF                                                                BA6026
       *================================================================
      CSR   MAEXIT        ENDSR
       /EJECT
@@ -1862,20 +1771,6 @@
      C                   MOVEL     @1DBRC        #1DBRC
      C                   MOVEL     A1FTPT        #1FTPT
      C                   MOVEL     A1IDCD        #1IDCD                                       CSW101
-      *                                                                                       BA6026
-      ** Move file field Transaction Type Identification Code to screen                       BA6026
-      ** work variables.                                                                      BA6026
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   MOVE      *IN89         WIN89             1                          BA6026
-     C     KRTV          CHAIN     A6RETRDB                           89                      BA6026
-     C     *IN89         IFEQ      *OFF                                                       BA6026
-     C                   MOVEL     G1SIDC        #1SIDC                                       BA6026
-     C                   MOVEL     @1DBSW        #1DBSW                                       BA6026
-     C                   ENDIF                                                                BA6026
-     C                   MOVE      WIN89         *IN89                                        BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
       *================================================================
      CSR   MBEXIT        ENDSR
       /EJECT
@@ -2070,13 +1965,6 @@
      C     CGL177        ANDEQ     'Y'
      C                   MOVEL     'N'           A1FTPT
      C                   ENDIF
-      *                                                                                       BA6026
-      ** Move screen fields to extension file.                                                BA6026
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   MOVEL     #1RTTY        G1RTTY                                       BA6026
-     C                   MOVEL     #1SIDC        G1SIDC                                       BA6026
-     C                   ENDIF                                                                BA6026
       *
       * USER: Processing before Data update
       * CASE: WRK.S01212 is Fix installed
@@ -2274,13 +2162,6 @@
       * Write error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
-      *                                                                                       BA6026
-      ** Populate extension file A6RETRPD.                                                    BA6026
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   WRITE     A6RETRDA                                                   BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
       * USER: Processing after Data update
      C                   Z-ADD     1             WUNORC                         No. of Records
      C                   Z-ADD     *ZERO         WUNOAM                         No. of Amends
@@ -2547,16 +2428,7 @@
      C                   SETON                                        91                    MD058755
      C                   ENDIF                                                              MD058755
                                                                                             MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C     KLDLSG        CHAIN     A6RETRL0                           9293                    BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
      C     *IN90         IFEQ      '1'
-      *                                                                                       BA6026
-     C     *IN92         OREQ      '1'                                                        BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
-      *                                                                                       BA6026
       * Record already deleted
      C                   MOVEL     'Y2U0009'     W0RTN             7
       * Send message '*Record no longer on file'
@@ -2567,10 +2439,6 @@
      C                   END
       *
      C     *IN91         IFEQ      '1'
-      *                                                                                       BA6026
-     C     *IN93         OREQ      '1'                                                        BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
-      *                                                                                       BA6026
       * Record locked
      C                   MOVEL     'Y2U0004'     W0RTN             7
       * Send message '*Database operation error'
@@ -2583,10 +2451,6 @@
       * Check for changed record
      C                   eval      @1DBRC = SDRETR                                          MD058755
      C     #1DBRC        IFNE      @1DBRC                                       IF
-      *                                                                                       BA6026
-     C     #1DBSW        ORNE      @1DBSW                                                     BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
-      *                                                                                       BA6026
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
      C                   MOVEL     'Y2U0007'     ZAMSID
@@ -2594,11 +2458,6 @@
      C                   EXSR      ZASNMS
       * Release record lock
      C*****KLDLSG        SETLL     @A1RECW                            9091      *           MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C     KLDLSG        SETLL     A6RETRL0                           9293                    BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
      C                   GOTO      SGEXIT
      C                   END                                                    FI #1DBRC
       *................................................................
@@ -2620,16 +2479,9 @@
      C+ delete from SDRTRXTD                                                                MD058755
      C+ where A1RTTY = :A1RTTY                                                              MD058755
      C/END-EXEC                                                                             MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   DELETE    A6RETRL0                             93                    BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
 
      C******IN91         IFEQ      '1'                                                      MD058755
      C     SQLCODE       IFNE      0                                                        MD058755
-     C     *IN93         OREQ      '1'                                                        BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
 
       * Delete error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
@@ -2862,15 +2714,9 @@
      C                   SETON                                        91                    MD058755
      C                   ENDIF                                                              MD058755
                                                                                             MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C     KLCHSI        CHAIN     A6RETRDA                           9293                    BA6026
-     C                   ENDIF                                                                BA6026
 
       *
      C     *IN90         IFEQ      '1'
-     C     *IN92         OREQ      '1'                                                        BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
       * Record not found
      C                   MOVEL     'Y2U0009'     W0RTN             7
       * Send message '*Record no longer on file'
@@ -2881,8 +2727,6 @@
      C                   END
       *
      C     *IN91         IFEQ      '1'
-     C     *IN93         OREQ      '1'                                                        BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
       * Record locked
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   GOTO      SIEXIT
@@ -2891,8 +2735,6 @@
       * Check for changed record
      C                   eval      @1DBRC = SDRETR                                          MD058755
      C     #1DBRC        IFNE      @1DBRC                                       IF
-     C     #1DBSW        ORNE      @1DBSW                                                     BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
      C                   MOVEL     'Y2U0007'     W0RTN             7
       * Send message '*Update not accepted'
      C                   MOVEL     'Y2U0007'     ZAMSID
@@ -2900,21 +2742,11 @@
      C                   EXSR      ZASNMS
       * Release record lock
      C**********         UNLOCK    SDRETRL0                             91      *           MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   UNLOCK    A6RETRL0                             93                    BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
      C                   GOTO      SIEXIT
      C                   END                                                    FI #1DBRC
       * Store record data for null update check
      C**********           MOVE @1DBRC    YCRDCS                                              CGL029
      C                   MOVEL     @1DBRC        YCRDCS
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   MOVEL     @1DBSW        YCRDSW                                       BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
       * Move non-key fields to @A1RECW
      C                   Z-ADD     WURDNB        A1LCD                          Last Change Dat
      C                   MOVEL     'A'           A1TYLC                         Type of Last Ch
@@ -2940,15 +2772,9 @@
      C     CGL177        ANDEQ     'Y'
      C                   MOVEL     'N'           A1FTPT
      C                   ENDIF
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   MOVEL     #1SIDC        G1SIDC                                       BA6026
-     C                   ENDIF                                                                BA6026
 
       * Set PGM.*Record Data Changed flag
      C     @1DBRC        IFNE      YCRDCS
-     C     @1DBSW        ORNE      YCRDSW                                                     BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
      C                   MOVE      'Y'           YCRDC
      C                   END
       * USER: Processing before Data update
@@ -3029,8 +2855,6 @@
      C                   END                                                    *FI
       * Set PGM.*Record Data Changed flag
      C     @1DBRC        IFNE      YCRDCS
-     C     @1DBSW        ORNE      YCRDSW                                                     BA6026
-     C     BA6026        ANDEQ     'Y'                                                        BA6026
      C                   MOVE      'Y'           YCRDC
      C                   END
       * If changed update record otherwise release record
@@ -3057,18 +2881,12 @@
      C+  ,A1IDCD = :A1IDCD                                                                    CSW101
      C+ where A1RTTY = :A1RTTY                                                              MD058755
      C/END-EXEC                                                                             MD058755
-      *                                                                                       BA6026
-     C     BA6026        IFEQ      'Y'                                                        BA6026
-     C                   UPDATE    A6RETRDA                             93                    BA6026
-     C                   ENDIF                                                                BA6026
-      *                                                                                       BA6026
      C                   ELSE
       * Release record lock
      C***********        UNLOCK    SDRETRL0                             91      *           MD058755
      C                   END
      C******IN91         IFEQ      '1'                                                      MD056963
      C                   If        SQLCODE <> 0                                             MD056963
-     C                             OR (*IN93 = '1')  AND (BA6026 = 'Y')                       BA6026
       * Change error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
@@ -4154,27 +3972,6 @@
      C     WUCRT2        OREQ      'Y'                                          *OR
      C                   MOVEL     'Y'           WUDCRT                         CRT001 or CRT00
      C                   END                                                    *FI
-      *                                                                                       BA6026
-      ** Access SAR file to determine if BA6026 is installed.                                 BA6026
-      *                                                                                       BA6026
-     C                   CALL      'AOSARDR0'                                                 BA6026
-     C                   PARM      *BLANKS       WRTCD             7                          BA6026
-     C                   PARM      '*VERIFY'     WOPTN             7                          BA6026
-     C                   PARM      'BA6026'      WSARD             6                          BA6026
-     C                   PARM                    WUFDY                                        BA6026
-      *                                                                                       BA6026
-     C                   SELECT                                                               BA6026
-     C     WRTCD         WHENEQ    *BLANKS                                                    BA6026
-     C                   MOVE      'Y'           BA6026            1                          BA6026
-     C                   OPEN      A6RETRL0                                                   BA6026
-     C                   OPEN      A6RETRL1                                                   BA6026
-      *                                                                                       BA6026
-     C     WRTCD         WHENEQ    '*NRF'                                                     BA6026
-     C                   MOVE      'N'           BA6026                                       BA6026
-      *                                                                                       BA6026
-     C                   OTHER                                                                BA6026
-     C                   EXSR      *PSSR                                                      BA6026
-     C                   ENDSL                                                                BA6026
       *
       * CASE:
       *  - c1 AND c2 AND c3 AND c4

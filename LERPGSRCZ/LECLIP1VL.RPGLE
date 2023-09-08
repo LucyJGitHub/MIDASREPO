@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060729           Date 20Dec22               *
-      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *  Last Amend No. AR837844           Date 31Aug23               *
+      *  Prev Amend No. MD060729           Date 20Dec22               *
+      *                 MD057537           Date 13Sep22               *
       *                 MD051827           Date 03Mar22               *
       *                 MD058763           Date 08Nov21               *
       *                 CLE172             Date 01Oct20               *
@@ -177,6 +178,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR837844 - Call loan matures while parts sold attached to it *
+      *             is still live.  Default Maturity Date of the      *
+      *             related loan to call parts sold's MDAT.  If not   *
+      *             blank during insert of call parts sold, perform   *
+      *             more validation. (Child: AR837845)                *
       *  MD060729 - Warning message is still displayed even if        *
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *
@@ -1798,6 +1804,8 @@
       /COPY WNCPYSRC,LECLIP1V17
       *
       ***  Validate the maturity date
+      *                                                                                     AR837844
+     C                   Move      'N'           CPSOLD            1                        AR837844
      C                   EXSR      SRMDAT
       *
       ***  Additional validation for parts sold
@@ -5334,6 +5342,8 @@ E004 C                   ENDIF
      C     DDMDAT        IFNE      *BLANKS
       *
       ** ... must be blank for call or demand loans during insert
+      ** skip this checking if related loan's MDAT of the call                              AR837844
+      ** parts sold has a value (CPSOLD='Y')                                                AR837844
       *
      C     DDACTN        IFEQ      'I'
      C     WLNPT         ANDEQ     61
@@ -5341,6 +5351,7 @@ E004 C                   ENDIF
      C     WLNPT         ANDEQ     68
      C     DDACTN        OREQ      'I'
      C     WLNPT         ANDEQ     69
+     C     CPSOLD        ANDNE     'Y'                                                      AR837844
      C     DDACTN        OREQ      'I'
      C     WLNPT         ANDEQ     72
      C     W72TP         ANDEQ     '69'
@@ -7187,6 +7198,28 @@ B001 C     ZERR          IFNE      *BLANKS
       ***  Maturity date must not be later than maturity date of
       ***  the related loan
       *
+     C     DDMDATOK      IfEq      'N'                                                      AR837844
+     C     DDACTN        AndEq     'I'                                                      AR837844
+     C     WLNPT         AndEq     69                                                       AR837844
+     C     DDMDATOK      OrNe      'N'                                                      AR837844
+      *                                                                                     AR837844
+     C     DDMDATOK      IfEq      'N'                                                      AR837844
+      *                                                                                     AR837844
+      ** Validate Maturity Date again if related loan's Maturity                            AR837844
+      ** Date has a value.                                                                  AR837844
+      *                                                                                     AR837844
+     C                   Move      'Y'           DDMDATOK                                   AR837844
+     C                   Move      *Blanks       FldNamXAr(Idx)                             AR837844
+     C                   Move      *Blanks       MsgIDXAr(Idx)                              AR837844
+     C                   Sub       1             Idx                                        AR837844
+     C     MDATM         IfGt      *ZERO                                                    AR837844
+     C                   Move      'Y'           CPSOLD                                     AR837844
+     C                   Else                                                               AR837844
+     C                   Move      'N'           CPSOLD                                     AR837844
+     C                   Endif                                                              AR837844
+     C                   Exsr      SRMDAT                                                   AR837844
+     C                   Endif                                                              AR837844
+      *                                                                                     AR837844
      C     DDMDATOK      IFNE      'N'
      C     WSVMD         ANDGT     MDATM
      C     NMDTM         ANDEQ     *ZERO                                                      237744
@@ -7198,6 +7231,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     'DDMDAT'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0117'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     AR837844
+     C                   Endif                                                              AR837844
       *                                                                                       237744
       ** ...to ensure that call parts sold will mature earlier or                             237744
       ** at the same day the related loan will mature, call parts                             237744

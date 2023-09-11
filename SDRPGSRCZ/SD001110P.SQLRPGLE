@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060441            Date 01Feb23              *
-      *  Prev Amend No. MD058517           Date 17Oct22               *
+      *  Last Amend No. MD061865           Date 11Sep23               *
+      *  Prev Amend No. MD060441           Date 01Feb23               *
+      *                 MD058517           Date 17Oct22               *
       *                 MD059624           Date 20Jul22               *
       *                 MD059190           Date 08Nov21               *
       *                 MD059137           Date 29Oct21               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061865 - Report Rates Known field from Loans file.         *
       *  MD060441 - CLE172 CC9 - Back-valued Rollover to a            *
       *             backward looking rate                             *
       *  MD058517 - CLE172 LIBOR Lending- Change Control CC3.1        *
@@ -539,7 +541,7 @@
      C                   EVAL      OPSH = NOPSH                                             MD059137
      C                   EVAL      RRDP = NRRDP                                             MD059137
      C                   EVAL      DBAV = NDBAV                                             MD059137
-     C                   EVAL      RTKN = 'N'                                               MD059137
+     C**********         EVAL      RTKN = 'N'                                      MD059137 MD061865
      C                   EVAL      BRTT = NBRA                                              MD059137
      C                   EVAL      RTSP = NRTS                                              MD059190
      C                   EVAL      SPIN = NSIN                                              MD059190

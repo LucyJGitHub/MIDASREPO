@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. MD061823           Date 24Aug23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 MD058830           Date 01Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
@@ -38,6 +39,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061823 - Non-displayed field can still be selected.        *
+      *             Field must be protected when not displayed        *
+      *             (Recompile)                                       *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

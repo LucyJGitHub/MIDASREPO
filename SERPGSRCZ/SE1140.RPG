@@ -24,8 +24,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 248698             Date 01Jun20               *
+      *  Last Amend No. MD061789           Date 01Aug23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 248698             Date 01Jun20               *
       *                 MD050604           Date 21Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
@@ -76,6 +77,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061789 - Add column Cost Basis (which is equal to Face     *
+      *             Value minus Amount To Amortise). Re-design GEMS   *
+      *             263899 to use System Value 'DspCostBasisAmortRpt'.*
+      *           - Remove condition BUDU ANDNE 0, since it prevents  *
+      *             printing of Securities bought at face value.      *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
       *           fix 228682.                                         *
@@ -231,6 +237,7 @@
      E/COPY ZSRSRC,ZPOWER8Z1
      E/COPY WNCPYSRC,SE1140E001
      I/EJECT
+     I              'DspCostBasisAmortRpt'C         SVCOBS                                  MD061789
       *
      I            DS
       ***  Definition of alphanumeric and signed branch fields.
@@ -357,6 +364,7 @@
      C                     CLEARTTDSC
      C                     CLEARTTDPFP
      C                     CLEARTTBUDU
+     C                     CLEARTTCOBS                                                      MD061789
      C/COPY WNCPYSRC,SE1140C011
       *
       ***  Change of Branch.
@@ -601,7 +609,7 @@
      C           *IN82     IFEQ '0'
      C           *IN84     ANDNE'1'                                                           042704
      C           NPSN      ANDNE0                                                             042704
-     C           BUDU      ANDNE0                                                             042704
+     C********** BUDU      ANDNE0                                                    042704 MD061789
      C/COPY WNCPYSRC,SE1140C015
      C                     MOVE 'Y'       RCDDET
      C                     MOVE 'Y'       RPTDET
@@ -620,6 +628,12 @@
      C                     ADD  DPAP      TTDPFP                          091183
       ***  Amount to Amortise.
      C                     ADD  BUDU      TTBUDU
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     ADD  COBS      TTCOBS                                            MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C018
      C                     END
       *
@@ -842,6 +856,8 @@
      C           *LIKE     DEFN LPSD      DAYS
      C           *LIKE     DEFN APNC      RATE
      C           *LIKE     DEFN A6NBDP    CDP
+     C           *LIKE     DEFN APNC      COBS                                              MD061789
+     C           *LIKE     DEFN COBS      TTCOBS                                            MD061789
      C           *LIKE     DEFN BSPL      TTBSPL                          CSE006
      C           *LIKE     DEFN BSAPL     TTBSAP                          CSE006
      C           *LIKE     DEFN BSOPL     TTBSOP                          CSE006
@@ -901,6 +917,57 @@
      C                     MOVEL'N'       CSE006                          CSE006
      C                     ENDIF                                          CSE006
      C/COPY WNCPYSRC,SE1140C039
+      *                                                                                     MD061789
+      ** Access System Value to check for display of Cost Basis                             MD061789
+      *                                                                                     MD061789
+     C                     CALL 'AOSVALR0'                                                  MD061789
+     C                     PARM *BLANKS   @RTCD                                             MD061789
+     C                     PARM SVCOBS    PSV01  20                                         MD061789
+     C                     PARM           PCS01 200                                         MD061789
+     C                     PARM           PSV02  20                                         MD061789
+     C                     PARM           PCS02 200                                         MD061789
+     C                     PARM           PSV03  20                                         MD061789
+     C                     PARM           PCS03 200                                         MD061789
+     C                     PARM           PSV04  20                                         MD061789
+     C                     PARM           PCS04 200                                         MD061789
+     C                     PARM           PSV05  20                                         MD061789
+     C                     PARM           PCS05 200                                         MD061789
+     C                     PARM           PSV06  20                                         MD061789
+     C                     PARM           PCS06 200                                         MD061789
+     C                     PARM           PSV07  20                                         MD061789
+     C                     PARM           PCS07 200                                         MD061789
+     C                     PARM           PSV08  20                                         MD061789
+     C                     PARM           PCS08 200                                         MD061789
+     C                     PARM           PSV09  20                                         MD061789
+     C                     PARM           PCS09 200                                         MD061789
+     C                     PARM           PSV10  20                                         MD061789
+     C                     PARM           PCS10 200                                         MD061789
+      *                                                                                     MD061789
+     C                     MOVE 'N'       DPCOBS  1                                         MD061789
+     C                     MOVE *OFF      *IN70                                             MD061789
+      *                                                                                     MD061789
+     C           @RTCD     IFEQ *BLANK                                                      MD061789
+     C                     MOVELPCS01     DPCOBS                                            MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     MOVE *ON       *IN70                                             MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
+     C                     ELSE                                                             MD061789
+      *                                                                                     MD061789
+      ** Database Error (return code other than *NRF)                                       MD061789
+      *                                                                                     MD061789
+     C           @RTCD     IFNE '*NRF   '                                                   MD061789
+     C           *LOCK     IN   LDA                                                         MD061789
+     C                     MOVEL'SDSVALPD'DBFILE           ************                     MD061789
+     C                     MOVELPSV01     DBKEY            * DBERR 07 *                     MD061789
+     C                     Z-ADD07        DBASE            ************                     MD061789
+     C                     OUT  LDA                                                         MD061789
+     C                     MOVE *ON       *INU7                                             MD061789
+     C                     MOVE *ON       *INU8                                             MD061789
+     C                     MOVE *ON       *INLR                                             MD061789
+     C                     RETRN                                                            MD061789
+     C                     ENDIF                                                            MD061789
+     C                     ENDIF                                                            MD061789
       *
      C                     ENDSR
       *
@@ -1024,6 +1091,16 @@
      C                     Z-ADDBUDU      ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    RBUDU
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+      *                                                                                     MD061789
+     C           NOMAMT    SUB  BUDU      COBS                                              MD061789
+     C                     Z-ADDCOBS      ZFLD15                                            MD061789
+     C                     EXSR ZSEDIT                                                      MD061789
+     C                     MOVE ZOUT21    RCOBS                                             MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C007
       *
       ***  Amortisation Rate.
@@ -1065,6 +1142,17 @@
      C                     MOVE 'N/A'     RRATE                                             BUG12676
      C                     ENDIF                                                            BUG12676
      C/COPY WNCPYSRC,SE1140C025
+      *                                                                                     MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     MOVE RBHBK     CRBHBK                                            MD061789
+     C                     MOVE RBHSC     CRBHSC                                            MD061789
+     C                     MOVE RBHMK     CRBHMK                                            MD061789
+     C                     MOVE RNOM      CRNOM                                             MD061789
+     C                     MOVE RDSC      CRDSC                                             MD061789
+     C                     MOVE RDPFP     CRDPFP                                            MD061789
+     C                     MOVE RRATE     CRRATE                                            MD061789
+     C                     MOVE RBUDU     CRBUDU                                            MD061789
+     C                     ENDIF                                                            MD061789
       *
       ***  Check for overflow.
       *
@@ -1630,6 +1718,20 @@
      C                     Z-ADDTTBUDU    ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    TBUDU
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+      *                                                                                     MD061789
+     C                     Z-ADDTTCOBS    ZFLD15                                            MD061789
+     C                     EXSR ZSEDIT                                                      MD061789
+     C                     MOVE ZOUT21    TCOBS                                             MD061789
+      *                                                                                     MD061789
+     C                     MOVE TNOM      CTNOM                                             MD061789
+     C                     MOVE TDSC      CTDSC                                             MD061789
+     C                     MOVE TDPFP     CTDPFP                                            MD061789
+     C                     MOVE TBUDU     CTBUDU                                            MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C030
       *
       ***  Check for overflow.

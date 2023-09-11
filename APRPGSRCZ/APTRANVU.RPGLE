@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057739           Date 28Apr22               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No  263630             Date 02Mar10               *
+      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -239,6 +240,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263630 -  Error in DEAMS for the new MQ API's processing.    *
+      *            Amended so that system can get the associated      *
+      *            front office ID from JAVA.                         *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
@@ -2326,6 +2330,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       1             Bfp                                         BUG6534
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
+     C                   ADD       20            Bfp                                          263630
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt

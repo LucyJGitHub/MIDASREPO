@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061219           Date 05Apr23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD061774           Date 25Aug23               *
+      *  Prev Amend No. MD061219           Date 05Apr23               *
+      *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
@@ -437,6 +438,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
       *  MD061219 - Spread rate indicator wrongly updated during cob. *
       *             Do not include SC event in retrieving spread      *
       *             indicator                                         *

@@ -304,7 +304,7 @@
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
      F***SEDPMVL3  UF A E           K DISK                                         AR790465 MD061501
-     F***                                   COMMIT                                 AR790465 MD061501
+     F**********                            COMMIT                                 AR790465 MD061501
      F/COPY WNCPYSRC,MMLDNIDF01
 
       *****************************************************************

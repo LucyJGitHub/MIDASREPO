@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060271             Date 21Jul22             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061706             Date 01Aug23             *
+      *  Prev Amend No. MD060271             Date 21Jul22             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD060271 - Dashed line appeared trimmed                      *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -78,6 +80,7 @@
      C                   PARM                    PREFIX            2
      C                   PARM                    REFSYS            2
      C                   PARM                    ERROR            10
+     C                   PARM                    OTBU              1                        MD061706
 
      C                   eval      ERROR = *BLANK
      C                   eval      ##JOB = PSJobName
@@ -173,7 +176,9 @@
      C                   if        UPTMED <> *BLANKS
      C                   setoff                                       09
      C                   EVAL      ##KEY = #_FKEY(1)
+     C                   If        OTBU <> 'Y'                                              MD061706
      C                   EVAL      ##KEYP = #_FKEY(2)
+     C                   Endif                                                              MD061706
      C                   EVAL      WkTime = %DIFF(##ENDT:##STRT:*SECONDS)
      C                   EVAL      ##LAPS = TIME0 + %SECONDS(WkTime)
      C                   eval      ##NARR = 'Update is now complete. Press F7/'+
@@ -193,6 +198,9 @@
      C                   seton                                        42
      C                   EVAL      ##KEY = #_FKEY(3)
      C                   EVAL      ##KEYP = #_FKEY(4)
+     C                   If        OTBU = 'Y'                                               MD061706
+     C                   EVAL      ##KEYP = %subst(##KEYP:1:21)                             MD061706
+     C                   Endif                                                              MD061706
      C                   ENDIF
 
      C                   seton                                        39
@@ -313,6 +321,13 @@
 
      C                   ENDIF
 
+      * If program is called from OTBU, screen needs to be updated manually by pressing F5  MD061706
+     C                   setoff                                       69                    MD061706
+     C                   If        OTBU = 'Y'                                               MD061706
+     C                   eval      V_EXFMT = 'Y'                                            MD061706
+     C                   seton                                        6968                  MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
       * D I S P L A Y  S C R E E N
      C                   If        V_EXFMT = 'Y'
      C                   WRITE     RCDKEYF
@@ -376,6 +391,21 @@
      C                   PARM                    CommandLen
      C                   Endif
 
+      * If F5 is selected, reload screen if different                                       MD061706
+     C                   If        *INKE = *ON                                              MD061706
+     C/exec SQL                                                                             MD061706
+     C+ select * into :UPZUPD                                                               MD061706
+     C+ from UPZUPDTD where UPPRFX = :PREFIX                                                MD061706
+     C/end-exec                                                                             MD061706
+     C                   If        SQLCode <> SQLOK                                         MD061706
+     C                             and SQLCode <> SQLEOF                                    MD061706
+     C                   eval      ERROR = '*Error'                                         MD061706
+     C                   Return                                                             MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   Exsr      SR_LOAD                                                  MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
       * If F23 is selected, restore from back up
      C                   If        *INKX = *ON
 
@@ -472,6 +502,7 @@
      C                   eval      N_VAR = %DEC(UPTMED:6:0)
      C                   eval      ##ENDT = %TIME(N_VAR:*HMS)
      C                   seton                                        37
+     C                   setoff                                       69                    MD061706
       * At this point, DTAQ is about to be deleted, so no more WRITE is needed
      C                   eval      V_EXFMT = 'Y'
      C                   endif

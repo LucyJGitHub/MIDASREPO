@@ -9,10 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. CUT017 *CREATE     Date 17Mar20              */
+/*       Last Amend No. MD061706           Date 01Aug23              */
+/*       Prev Amend No. CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061706 - Various changes for transition to aDBU           */
 /*       CUT017 - Adapptive Database Upgrade                         */
 /*                                                                   */
 /*********************************************************************/
@@ -37,6 +39,7 @@
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JBNO) TYPE(*CHAR) LEN(6)
+             DCLF       FILE(UPCCSITD)                                                  /*MD061706*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2020')
@@ -56,6 +59,10 @@
              ADDRPYLE   SEQNBR(2599) MSGID(CPD32CC) RPY('I')
              CHGJOB     JOBMSGQFL(*PRTWRAP)
 
+/* Retrieve flag */                                                                     /*MD061706*/
+             RCVF                                                                       /*MD061706*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061706*/
+                                                                                        /*MD061706*/
 /* Create Data Queue to communicate with the 4 jobs submitted */
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
               CHGVAR     VAR(&DTQN) VALUE('ADBU_GSVR')
@@ -181,6 +188,15 @@ SCRIPT:
              GOTO ABNOR
               ENDDO
 
+/* If aDBU is running from OTBU, remove trigger */                                      /*MD061706*/
+/* and go straigth to UPGRADEPF */                                                      /*MD061706*/
+                                                                                        /*MD061706*/
+             IF         COND(&UCADBU *EQ 'Y') THEN(DO)                                  /*MD061706*/
+                CALL       PGM(UPC4911) PARM(&LAYER &ERROR)                             /*MD061706*/
+                IF         COND(&ERROR *NE '          ') THEN(GOTO ABNOR)               /*MD061706*/
+                GOTO UPGRADEPF                                                          /*MD061706*/
+             ENDDO                                                                      /*MD061706*/
+                                                                                        /*MD061706*/
 /* Wait for response from the monitor */
 RCVD:
               IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
@@ -664,6 +680,17 @@ RECONCILE:
  ABNOR:      CHGJOB     SWS(XXXXXX11)
 
              DSPJOBLOG  OUTPUT(*PRINT)
+                                                                                        /*MD061706*/
+/* update final status to 'A' */                                                        /*MD061706*/
+             CHGVAR        VAR(&FLDUPD) VALUE('UPUPSS')                                 /*MD061706*/
+             CHGVAR     VAR(&FLDVAL) VALUE('A')                                         /*MD061706*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                             /*MD061706*/
+             CALL UPGUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)          /*MD061706*/
+             ENDDO                                                                      /*MD061706*/
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                               /*MD061706*/
+             CALL UPZUPDWR ('*UPDATE   ' &LIB1 &FLDUPD &FLDVAL &ERROR &RETURN)          /*MD061706*/
+             ENDDO                                                                      /*MD061706*/
+                                                                                        /*MD061706*/
 /* update end time */
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
              CALL UPGUPDWR ('*END    ' &LIB1 ' ' ' ' &ERROR &RETURN)

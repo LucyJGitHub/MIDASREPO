@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061706             Date 01Aug23             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -319,12 +321,31 @@
      C/END-EXEC
      C                   Endif
 
+     C                   If        UPDACT = '*RTV'                                          MD061706
+                                                                                            MD061706
+     C                   eval      UPDVAL = *blanks                                         MD061706
+                                                                                            MD061706
+     C                   SELECT                                                             MD061706
+     C                   WHEN      UPDFLD = 'UPUPSS'                                        MD061706
+      * Retrieve the field passed as parameter                                              MD061706
+     C/EXEC SQL                                                                             MD061706
+     C+ select UPUPSS into :UPDVAL   from UPZUPDTD                                          MD061706
+     C/END-EXEC                                                                             MD061706
+     C                   ENDSL                                                              MD061706
+     C                   If        SQLCode <> SQLOK                                         MD061706
+     C                             and SQLCODE <> SQLEOF                                    MD061706
+     C                   eval      ERROR = '*Error'                                         MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
+     C                   Endif                                                              MD061706
+                                                                                            MD061706
      C                   If        SQLCode <> SQLOK
      C                   eval      ERROR = '*Error'
      C                   Else
       * send DTAQ message to refresh monitor screen if not *WRITE
      C                   If        UPDACT <> '*WRITE'
      C                             and UPDACT <> '*CHECK'
+     C                             and UPDACT <> '*RTV'                                     MD061706
      C                   CALL      'QSNDDTAQ'
      C                   PARM      'UPZADBUDTQ'  DtqNam           10
      C                   PARM      '*LIBL'       DtqLib           10

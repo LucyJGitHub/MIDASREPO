@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD061518             Date 23Jul23             *
-      *  Prev Amend No. MD061576             Date 23Jul23             *
+      *  Last Amend No. MD061706             Date 01Aug23             *
+      *  Prev Amend No. MD061518             Date 23Jul23             *
+      *                 MD061576             Date 23Jul23             *
       *                 MD061503             Date 23Jun23             *
       *                 MD061577             Date 18Jul23             *
       *                 MD061461             Date 01Jun23             *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061706 - Various changes for transition to aDBU            *
       *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
       *  MD061576 - Deliverable Data Split for T_GRMENU*              *
       *  MD061503 - Deliverable Data Split for Replication _R files   *
@@ -1370,6 +1372,7 @@
      C                             or ChkFile = 'RPACIXTD'                                  MD061503
      C                             or ChkFile = 'RPASIXTD'                                  MD061503
      C                             or ChkFile = 'RPMSGXTD'                                  MD061503
+     C                             or ChkFile = 'UPEXCXTD'                                  MD061706
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1554,6 +1557,7 @@
      C                             or Member = 'SMRLSCTD'                                   MD060877
      C                             or Member = 'UPADMCTD'                                   MD061576
      C                             or Member = 'ZZGBLCTD'                                   MD061518
+     C                             or Member = 'UPEXCCTD'                                   MD061706
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264

@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*OVR    OVRDBF FILE(FROMLIB) TOFILE(QADSPOBJ)                       */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Check content of U library')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000356 - Check content of *U library                     */
+/*                                                                   */
+/*       Function: This program checks the content of *U library     */
+/*                 for proper defaulting of aDBU flag.               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061706 *CREATE   Date 01Aug23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061706 - Various changes for transition to aDBU           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TOLIB &RETURN)
+
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ODOSBS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2023')
+
+             DCLF       FILE(QTEMP/FROMLIB)
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Obtain list of files in 'To Library' */
+             DLTF       FILE(QTEMP/FROMLIB)
+             MONMSG     MSGID(CPF2105)
+             DSPOBJD    OBJ(&TOLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/FROMLIB)
+
+ LOOP:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+
+             CHGVAR     VAR(&ODOSBS) VALUE(%SST(&ODOBNM 3 8))
+
+/* If at least one of source file is not listed here below, exit */
+                IF         COND(&ODOBNM *NE 'QWINDSRC' *AND &ODOBNM *NE +
+                             'STDCRTPARM' *AND &ODOBNM *NE 'ZSRSRC' *AND +
+                             &ODOSBS *NE 'CPYSRC' *AND +
+                             &ODOSBS *NE 'CPYSRCZ' *AND +
+                             &ODOSBS *NE 'CPYSRCG' *AND +
+                             &ODOBNM *NE 'QWINDSRCG')  THEN(DO)
+                CHGVAR     VAR(&RETURN) VALUE('*NO')
+                GOTO       CMDLBL(END)
+                ENDDO
+
+             GOTO       CMDLBL(END)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             CHGVAR     VAR(&RETURN) VALUE('*ERROR')
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDPGM

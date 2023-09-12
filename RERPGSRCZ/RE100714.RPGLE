@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 229599             Date 29Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055217           Date 05Sep23               *
+      *  Prev Amend No. 229599             Date 29Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -33,6 +34,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055217 - MCC0310 00001 failed because posting time on the  *
+      *             Generated Entries Cash Mgmt.extract file (GECXPD) *
+      *             is equal to '000000'. Amended the program to      *
+      *             default the posting time to '235959', same with   *
+      *             the other COB generated entries.                  *
       *  229599 - Fallover in REC100820 caused by reversed hierarchy. *
       *         - Applied for MD-58201.                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -642,6 +648,10 @@
      C                   BITOFF    '01234567'    E_PRIN
       * Profit centre
      C                   MOVEL     PRFC          E_PRFC
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID
@@ -713,6 +723,10 @@
      C                   BITOFF    '01234567'    E_PRIN
       * Profit centre
      C                   MOVEL     #PRFC         E_PRFC
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID
@@ -817,6 +831,10 @@
      C                   BITOFF    '01234567'    E_PRIN
       * Profit centre
      C                   MOVEL     #PRFC         E_PRFC
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID
@@ -894,6 +912,10 @@
      C                   BITOFF    '01234567'    E_PRIN
       * Profit centre
      C                   MOVEL     #PRFC         E_PRFC
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID

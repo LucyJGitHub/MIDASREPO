@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD055217           Date 05Sep23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055217 - MCC0310 00001 failed because posting time on the  *
+      *             Generated Entries Cash Mgmt.extract file (GECXPD) *
+      *             is equal to '000000'. Amended the program to      *
+      *             default the posting time to '235959', same with   *
+      *             the other COB generated entries.                  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -483,6 +489,10 @@
       * Profit centre
      C*******************MOVEL     PRFC          E_PRFC                         216668
      C                   MOVEL     #PRFC         E_PRFC                         216668
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID
@@ -554,6 +564,10 @@
      C                   BITOFF    '01234567'    E_PRIN
       * Profit centre
      C                   MOVEL     #PRFC         E_PRFC
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section
      C                   MOVEL     A5ACSC        E_ACSC
       * Ext.Fil Ref.ID
@@ -626,6 +640,10 @@
      C                   BITOFF    '01234567'    E_PRIN                         216668
       * Profit centre                                                           216668
      C                   MOVEL     #IPRFC        E_PRFC                         216668
+      *                                                                                     MD055217
+      ** Posting Time                                                                       MD055217
+      *                                                                                     MD055217
+     C                   Z-ADD     235959        E_PTIM                                     MD055217
       * Account section                                                         216668
      C                   MOVEL     A5ACSC        E_ACSC                         216668
       * Ext.Fil Ref.ID                                                          216668

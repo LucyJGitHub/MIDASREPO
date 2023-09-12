@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054706           Date 11Sep23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE064             Date 06Dec10               *
@@ -42,6 +43,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054706 - TRCA is amendable. Check if NotAllowFctyClassAmd  *
+      *             is on then return error LEF0457 if it is amended. *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -179,6 +182,29 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
+     D PSysVal1        C                   CONST('NotAllowFctyClassAmd')                    MD054706
+     D PRetCode        S              7A                                                    MD054706
+     D P@OP01          S             20A                                                    MD054706
+     D P@VL01          S            200A                                                    MD054706
+     D P@OP02          S             20A                                                    MD054706
+     D P@VL02          S            200A                                                    MD054706
+     D P@OP03          S             20A                                                    MD054706
+     D P@VL03          S            200A                                                    MD054706
+     D P@OP04          S             20A                                                    MD054706
+     D P@VL04          S            200A                                                    MD054706
+     D P@OP05          S             20A                                                    MD054706
+     D P@VL05          S            200A                                                    MD054706
+     D P@OP06          S             20A                                                    MD054706
+     D P@VL06          S            200A                                                    MD054706
+     D P@OP07          S             20A                                                    MD054706
+     D P@VL07          S            200A                                                    MD054706
+     D P@OP08          S             20A                                                    MD054706
+     D P@VL08          S            200A                                                    MD054706
+     D P@OP09          S             20A                                                    MD054706
+     D P@VL09          S            200A                                                    MD054706
+     D P@OP10          S             20A                                                    MD054706
+     D P@VL10          S            200A                                                    MD054706
+
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -423,6 +449,23 @@
      C                   EVAL      MsgIDArr(Idx)   = 'LEF0410'
      C                   EVAL      DDTRCAOK        = 'N'
      C                   ENDIF
+     C*-----------------------------------------------*                                     MD054706
+     C* Tranche/Credit agreement must be protected    *                                     MD054706
+      **  if CLE005 is installed AND system value     *                                     MD054706
+      ***  NotAllowFctyClassAmd = 'Y' AND             *                                     MD054706
+      ***** Facility Status <> 'C'                    *                                     MD054706
+     C*-----------------------------------------------*                                     MD054706
+     C                   ELSEIF    CLE005 = 'Y'                                             MD054706
+     C                   IF        NOTALWTRCA = 'Y' AND V_FPFSTS <> 'C'                     MD054706
+                                                                                            MD054706
+     C     DDTRCA        IFNE      @DDTRCA                                                  MD054706
+     C                   ADD       1             Idx                                        MD054706
+     C                   EVAL      FldNameArr(Idx) = 'DDTRCA'                               MD054706
+     C                   EVAL      MsgIDArr(Idx)   = 'LEF0457'                              MD054706
+     C                   EVAL      DDTRCAOK        = 'N'                                    MD054706
+     C                   ENDIF                                                              MD054706
+                                                                                            MD054706
+     C                   ENDIF                                                              MD054706
 
      C                   ENDIF
 
@@ -990,6 +1033,51 @@
      C                   END
      C*
      C                   ENDSR
+      *****************************************************************                     MD054706
+      *                                                               *                     MD054706
+      * GetSval - Sub-routine for getting the system values           *                     MD054706
+      *                                                               *                     MD054706
+      * Called by: Main processing                                    *                     MD054706
+      *                                                               *                     MD054706
+      * Calls: AOSVALR0                                               *                     MD054706
+      *                                                               *                     MD054706
+      *****************************************************************                     MD054706
+     C     GetSval       BEGSR                                                              MD054706
+      ** Access System values                                                               MD054706
+                                                                                            MD054706
+     C                   CALL      'AOSVALR0'                                               MD054706
+     C                   PARM      *BLANKS       PRetCode                                   MD054706
+     C                   PARM      PSysVal1      P@OP01                                     MD054706
+     C                   PARM      *BLANKS       P@VL01                                     MD054706
+     C                   PARM      *BLANKS       P@OP02                                     MD054706
+     C                   PARM      *BLANKS       P@VL02                                     MD054706
+     C                   PARM      *BLANKS       P@OP03                                     MD054706
+     C                   PARM      *BLANKS       P@VL03                                     MD054706
+     C                   PARM      *BLANKS       P@OP04                                     MD054706
+     C                   PARM      *BLANKS       P@VL04                                     MD054706
+     C                   PARM      *BLANKS       P@OP05                                     MD054706
+     C                   PARM      *BLANKS       P@VL05                                     MD054706
+     C                   PARM      *BLANKS       P@OP06                                     MD054706
+     C                   PARM      *BLANKS       P@VL06                                     MD054706
+     C                   PARM      *BLANKS       P@OP07                                     MD054706
+     C                   PARM      *BLANKS       P@VL07                                     MD054706
+     C                   PARM      *BLANKS       P@OP08                                     MD054706
+     C                   PARM      *BLANKS       P@VL08                                     MD054706
+     C                   PARM      *BLANKS       P@OP09                                     MD054706
+     C                   PARM      *BLANKS       P@VL09                                     MD054706
+     C                   PARM      *BLANKS       P@OP10                                     MD054706
+     C                   PARM      *BLANKS       P@VL10                                     MD054706
+                                                                                            MD054706
+     C                   IF        PRetCode  <> *BLANKS                                     MD054706
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD054706
+     C                   EVAL      DBKEy = '*KEY   '                                        MD054706
+     C                   EVAL      DBase = 2                                                MD054706
+     C                   EXSR      *PSSR                                                    MD054706
+     C                   ENDIF                                                              MD054706
+                                                                                            MD054706
+     C                   MOVEL     P@VL01        NOTALWTRCA        1                        MD054706
+                                                                                            MD054706
+     C                   ENDSR                                                              MD054706
       *****************************************************************
       /EJECT
      C*****************************************************************
@@ -1120,6 +1208,11 @@
      C                   ELSE                                                                 CLE042
      C                   MOVE      'N'           CLE042                                       CLE042
      C                   ENDIF                                                                CLE042
+      *                                                                                     MD054706
+      ** Access system value details                                                        MD054706
+      *                                                                                     MD054706
+     C                   EXSR      GetSval                                                  MD054706
+
 
      C                   ENDSR
       *****************************************************************

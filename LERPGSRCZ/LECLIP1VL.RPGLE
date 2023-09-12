@@ -1805,7 +1805,7 @@
       *
       ***  Validate the maturity date
       *                                                                                     AR837844
-     C                   Move      'N'           CPSOLD            1                        AR837844
+     C                   MOVE      'N'           CPSOLD            1                        AR837844
      C                   EXSR      SRMDAT
       *
       ***  Additional validation for parts sold
@@ -7198,27 +7198,27 @@ B001 C     ZERR          IFNE      *BLANKS
       ***  Maturity date must not be later than maturity date of
       ***  the related loan
       *
-     C     DDMDATOK      IfEq      'N'                                                      AR837844
-     C     DDACTN        AndEq     'I'                                                      AR837844
-     C     WLNPT         AndEq     69                                                       AR837844
-     C     DDMDATOK      OrNe      'N'                                                      AR837844
+     C     DDMDATOK      IFEQ      'N'                                                      AR837844
+     C     DDACTN        ANDEQ     'I'                                                      AR837844
+     C     WLNPT         ANDEQ     69                                                       AR837844
+     C     DDMDATOK      ORNE      'N'                                                      AR837844
       *                                                                                     AR837844
-     C     DDMDATOK      IfEq      'N'                                                      AR837844
+     C     DDMDATOK      IFEQ      'N'                                                      AR837844
       *                                                                                     AR837844
       ** Validate Maturity Date again if related loan's Maturity                            AR837844
       ** Date has a value.                                                                  AR837844
       *                                                                                     AR837844
-     C                   Move      'Y'           DDMDATOK                                   AR837844
-     C                   Move      *Blanks       FldNamXAr(Idx)                             AR837844
-     C                   Move      *Blanks       MsgIDXAr(Idx)                              AR837844
-     C                   Sub       1             Idx                                        AR837844
-     C     MDATM         IfGt      *ZERO                                                    AR837844
-     C                   Move      'Y'           CPSOLD                                     AR837844
-     C                   Else                                                               AR837844
-     C                   Move      'N'           CPSOLD                                     AR837844
-     C                   Endif                                                              AR837844
-     C                   Exsr      SRMDAT                                                   AR837844
-     C                   Endif                                                              AR837844
+     C                   MOVE      'Y'           DDMDATOK                                   AR837844
+     C                   MOVE      *Blanks       FldNamXAr(Idx)                             AR837844
+     C                   MOVE      *Blanks       MsgIDXAr(Idx)                              AR837844
+     C                   SUB       1             Idx                                        AR837844
+     C     MDATM         IFGT      *ZERO                                                    AR837844
+     C                   MOVE      'Y'           CPSOLD                                     AR837844
+     C                   ELSE                                                               AR837844
+     C                   MOVE      'N'           CPSOLD                                     AR837844
+     C                   ENDIF                                                              AR837844
+     C                   EXSR      SRMDAT                                                   AR837844
+     C                   ENDIF                                                              AR837844
       *                                                                                     AR837844
      C     DDMDATOK      IFNE      'N'
      C     WSVMD         ANDGT     MDATM
@@ -7232,7 +7232,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     'LEL0117'     MsgIDXAr(Idx)
      C                   ENDIF
       *                                                                                     AR837844
-     C                   Endif                                                              AR837844
+     C                   ENDIF                                                              AR837844
       *                                                                                       237744
       ** ...to ensure that call parts sold will mature earlier or                             237744
       ** at the same day the related loan will mature, call parts                             237744

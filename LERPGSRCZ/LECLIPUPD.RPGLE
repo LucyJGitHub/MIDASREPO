@@ -8641,16 +8641,16 @@
       ** Default related loan's Maturity Date to that of the Call                           AR837844
       ** Parts Sold, if it has been changed.                                                AR837844
       *                                                                                     AR837844
-     C     MDCHG         IfEq      'Y'                                                      AR837844
-     C     L_CLCHTP      AndEq     'A'                                                      AR837844
-     C     L_CLPTYP      IfEq      61                                                       AR837844
-     C     L_CLPTYP      OrEq      68                                                       AR837844
-     C                   Z-Add     L_CLMDAT      PSMDAT                                     AR837844
+     C     MDCHG         IFEQ      'Y'                                                      AR837844
+     C     L_CLCHTP      ANDEQ     'A'                                                      AR837844
+     C     L_CLPTYP      IFEQ      61                                                       AR837844
+     C     L_CLPTYP      OREQ      68                                                       AR837844
+     C                   Z-ADD     L_CLMDAT      PSMDAT                                     AR837844
      C                   IF        CER020 = 'Y'                                             AR837844
-     C                   Z-Add     L_CLMDAT      PSFMDT                                     AR837844
-     C                   Endif                                                              AR837844
-     C                   Endif                                                              AR837844
-     C                   Endif                                                              AR837844
+     C                   Z-ADD     L_CLMDAT      PSFMDT                                     AR837844
+     C                   ENDIF                                                              AR837844
+     C                   ENDIF                                                              AR837844
+     C                   ENDIF                                                              AR837844
       *                                                                                     AR837844
      C                   UPDATE    PSOLDF2                                                    241196
      C     RLNRF         READE     PSOLD                                  90                  241196

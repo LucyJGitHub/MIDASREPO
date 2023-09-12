@@ -8646,6 +8646,9 @@
      C     L_CLPTYP      IfEq      61                                                       AR837844
      C     L_CLPTYP      OrEq      68                                                       AR837844
      C                   Z-Add     L_CLMDAT      PSMDAT                                     AR837844
+     C                   IF        CER020 = 'Y'                                             AR837844
+     C                   Z-Add     L_CLMDAT      PSFMDT                                     AR837844
+     C                   Endif                                                              AR837844
      C                   Endif                                                              AR837844
      C                   Endif                                                              AR837844
       *                                                                                     AR837844

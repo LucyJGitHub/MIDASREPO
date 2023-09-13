@@ -31,8 +31,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD030402           Date 26Jul23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD035945           Date 11Feb20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -98,6 +99,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030402 - Incorrect exposure for reactivated overdraft      *
+      *             facility. Place CAMD to OAM array for facility    *
+      *             not attached to an account.                       *
       *  CLE138 - Class Codes for Facilities                          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -222,6 +226,7 @@
      FLEFCLTLHUF  E           K        DISK                                                   CLE138
       ** Midas LE Facility amendment extension file                                           CLE138
      FLEFCAQL2IF  E           K        DISK                                                   CLE138
+     FACCNTLA IF  E           K        DISK         KINFSR *PSSR                            MD030402
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -234,6 +239,7 @@
       *   83  - Chain to LEFCAMZZ                                     *
       *   84  - Read to HISACTL2                                      *
       *   85  - Chain to FACHISH                                      *                       CLE023
+      *   86  - Chain to ACCNTLA                                      *                     MD030402
       *   30  - Facility Increase                                     *
       *   31  - Facility Decrease                                     *
       *   32  - Revolving Credit Change                               *
@@ -347,6 +353,28 @@
      I              PRNT                            FNPRNT                                    CLE106
      IEMXT4F1F                                                                                223967
      I              RECI                            MRECI                                     223967
+      *                                                                                     MD030402
+     IACCNTABF                                                                              MD030402
+     I              RECI                            GLRECI                                  MD030402
+     I              CNUM                            GLCNUM                                  MD030402
+     I              CCY                             GLCCY                                   MD030402
+     I              ACOD                            GLACOD                                  MD030402
+     I              ACSQ                            GLACSQ                                  MD030402
+     I              BRCA                            GLBRCA                                  MD030402
+     I              CLBL                            GLCLBL                                  MD030402
+     I              FCCU                            GLFCCU                                  MD030402
+     I              FACT                            GLFACT                                  MD030402
+     I              FCNO                            GLFCNO                                  MD030402
+     I              FRNT                            GLFRNT                                  MD030402
+     I              AFRT                            GLAFRT                                  MD030402
+     I              ORED                            GLORED                                  MD030402
+     I              REPI                            GLREPI                                  MD030402
+     I              PRFC                            GLPRFC                                  MD030402
+     I              LCD                             GLLCD                                   MD030402
+     I              CHTP                            GLCHTP                                  MD030402
+     I              TNLU                            GLTNLU                                  MD030402
+     I              TMST                            GLTMST                                  MD030402
+     I              AUTH                            GLAUTH                                  MD030402
       *
      ILDA       E DSLDA                         256
       ** Local data area for database error details
@@ -1281,6 +1309,22 @@
      C***********          Z-ADD0         OAM8                            159212
      C***********          Z-ADD0         OAM9                            159212
      C***********          Z-ADD0         OA10                            159212
+      *                                                                                     MD030402
+     C                     MOVE '1'       *IN86                                             MD030402
+     C           CLE025    IFEQ 'Y'                                                         MD030402
+      *                                                                                     MD030402
+     C           KEYACC    KLIST                                                            MD030402
+     C                     KFLD           ACNUM                                             MD030402
+     C                     KFLD           AFACT                                             MD030402
+     C                     KFLD           AFCNO                                             MD030402
+      *                                                                                     MD030402
+     C           KEYACC    CHAINACCNTLA              86                                     MD030402
+      *                                                                                     MD030402
+     C                     ENDIF                                                            MD030402
+      *                                                                                     MD030402
+     C           CLE025    IFEQ 'N'                                                         MD030402
+     C           CLE025    OREQ 'Y'                                                         MD030402
+     C           *IN86     ANDEQ'1'                                                         MD030402
      C                     Z-ADDCAMD      OAM1                            172697
      C                     Z-ADDCAMD      OAM2                            172697
      C                     Z-ADDCAMD      OAM3                            172697
@@ -1291,6 +1335,7 @@
      C                     Z-ADDCAMD      OAM8                            172697
      C                     Z-ADDCAMD      OAM9                            172697
      C                     Z-ADDCAMD      OA10                            172697
+     C                     ENDIF                                                            MD030402
      C/COPY WNCPYSRC,LEH00341
      C                     UPDATFCLTYFNF
      C                     ENDIF

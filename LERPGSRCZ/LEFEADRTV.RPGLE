@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE125             Date 02Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD061267           Date 26Jul23               *
+      *  Prev Amend No. CLE125             Date 02Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes.                      *
       *  CLE125 - Amendment to LE Authorization Rules                 *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1148,7 +1150,14 @@
      C     FE_FECALT     IFEQ      '  '
 
      C*****FE_FEPEND     IFLE      BJRDNB                                                     CAP084
-     C     FE_FEPEND     IFLE      WProcDate                                                  CAP084
+     C*****FE_FEPEND     IFLE      WProcDate                                         CAP084 MD061267
+     C     FE_FEPEND     IFLT      WProcDate                                                MD061267
+     C     FE_FEPEND     ANDNE     *ZERO                                                    MD061267
+     C     FE_FEPSTD     ANDNE     *ZERO                                                    MD061267
+     C     WProcDate     ANDGE     FE_FEPSTD                                                MD061267
+     C     FE_FEPEND     OREQ      *ZERO                                                    MD061267
+     C     WProcDate     ANDGE     FE_FEPSTD                                                MD061267
+     C     FE_FEPYON     ANDEQ     *BLANKS                                                  MD061267
      C                   Z-ADD     FE_FEFAMT     W#FEE
      C                   ELSE
 
@@ -1156,19 +1165,30 @@
 
      C*****FE_FEPSTD     IFNE      BJRDNB                                                     CAP084
      C*****BJRDNB        SUB       FE_FEPSTD     FLATDays          5 0                        CAP084
-     C     FE_FEPSTD     IFNE      WProcDate                                                  CAP084
-     C     WProcDate     SUB       FE_FEPSTD     FLATDays          5 0                        CAP084
-     C                   SUB       1             FLATDays
-     C     FLATDays      IFNE      0
-     C     FE_FEADAT     DIV(H)    FLATDays      FLATAmnt         13 0
-     C                   ADD       1             FLATDays
-     C     FLATAmnt      MULT      FLATDays      FLATAmnt
-     C                   Z-ADD     FLATAmnt      W#FEE
-     C                   ENDIF
+     C*****FE_FEPSTD     IFNE      WProcDate                                         CAP084 MD061267
+     C*****WProcDate     SUB       FE_FEPSTD     FLATDays          5 0               CAP084 MD061267
+     C**********         SUB       1             FLATDays                                   MD061267
+     C*****FLATDays      IFNE      0                                                        MD061267
+     C*****FE_FEADAT     DIV(H)    FLATDays      FLATAmnt         13 0                      MD061267
+     C**********         ADD       1             FLATDays                                   MD061267
+     C*****FLATAmnt      MULT      FLATDays      FLATAmnt                                   MD061267
+     C**********         Z-ADD     FLATAmnt      W#FEE                                      MD061267
+     C**********         ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     FE_FEPSTD     IFLT      WProcDate                                                MD061267
+     C     FE_FEPEND     SUB       FE_FEPSTD     FLatDays          5 0                      MD061267
+     C     FE_FEFAMT     DIV(H)    FLATDays      FLATAmnt         13 0                      MD061267
+     C     WProcDate     SUB       FE_FEPSTD     FLATDy            5 0                      MD061267
+     C     FLATAmnt      MULT(H)   FLATDy        W#FEE                                      MD061267
      C                   ELSE
      C                   Z-ADD     FE_FEADAT     W#FEE
      C                   END
      C                   END
+     C     FE_FEAUTO     IFNE      'Y'                                                      MD061267
+     C     FE_FEPEND     ANDEQ     *ZERO                                                    MD061267
+     C     FE_FEPYON     ANDEQ     *BLANK                                                   MD061267
+     C                   Z-ADD     0             W#FEE                                      MD061267
+     C                   ENDIF                                                              MD061267
 
      C                   ELSE
 
@@ -1185,6 +1205,7 @@
 
      C                   EXSR      FECALAV
      C**********         ADD       FE_FEAMTP     W#FEE                                       BUG6944
+     C                   ADD       FE_FELPAM     W#FEE                                      MD061267
 
      C                   ELSE
      C                                                                                        CLE073
@@ -1198,9 +1219,22 @@
       * ------------------
 
      C                   EXSR      FECALAV
-     C                   ADD       FE_FEADAT     W#FEE
-     C                   ADD       FE_FELPAM     W#FEE
+     C**********         ADD       FE_FEADAT     W#FEE                                      MD061267
+     C**********         ADD       FE_FELPAM     W#FEE                                      MD061267
      C**********         ADD       FE_FEAMTP     W#FEE                                       BUG6944
+     C                   IF        FE_FEINDC = 'Y'                                          MD061267
+     C                   ADD       FE_FELPAM     W#FEE                                      MD061267
+     C                   ELSE                                                               MD061267
+     C                   ADD       FE_FEAMTA     W#FEE                                      MD061267
+     C                                                                                      MD061267
+     C                   IF        FE_FECALT <> '99'                                        MD061267
+     C                   ADD       FE_FETADJ     W#FEE                                      MD061267
+     C                   SUB       FE_FEAMTS     W#FEE                                      MD061267
+     C                   SUB       FE_FEAMTP     W#FEE                                      MD061267
+     C                   SUB       FE_FEAMTW     W#FEE                                      MD061267
+     C                   SUB       FE_FEWOFF     W#FEE                                      MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
 
      C                                                                                        CLE073
      C                   Else                                                                 CLE073
@@ -1289,6 +1323,7 @@
      C                   PARM      FE_FEMDIN     FEMDIN            1
      C                   PARM                    @FEAMA
      C                   PARM                    @FRTA
+     C                   PARM      FE_FEINDC     FEINDC            1                        MD061267
       *
       * OUTPUTS
       *

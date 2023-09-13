@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD059808           Date 29Apr22               *
-      *  Prev Amend No. MD059137           Date 29Oct21               *
+      *  Last Amend No. MD061267           Date 26Jul23               *
+      *  Prev Amend No. MD059808           Date 29Apr22               *
+      *                 MD059137           Date 29Oct21               *
       *                 MD058182           Date 25May21               *
       *                 MD058108           Date 18May21               *
       *                 CLE172             Date 01Oct20               *
@@ -167,6 +168,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes.                      *
       *  MD059808 - BR event for forward-looking rate loans appeared  *
       *             on exception report due to empty dates on array.  *
       *             Save AB2 array and restore contents after every   *
@@ -2722,7 +2724,11 @@
 0938 C***U3*****           GOTO SET3                                                          244837
 0939 C*
 0940 C*EVENT TO BE ACTIONED = 55
+     C           AMTP      IFEQ 'RE'                                                        MD061267
+     C           WVDAT     COMP ECD                    5555                                 MD061267
+     C                     ELSE                                                             MD061267
 0941 C           VDAT      COMP ECD                    5555
+     C                     ENDIF                                                            MD061267
 0942 C   55                MOVE Y         ACTI    1
 0943 C*    REPAYMENTS GONE PD.ACTION INDIC IS OFF
 0944 C   75                MOVE 'N'       ACTI
@@ -3660,6 +3666,72 @@
      C                     END                                            127671
      C*                                                                   127671
      C                     ELSE                                           CLE007
+      *                                                                                     MD061267
+      **  Check PTDI and PDDI field for maturity processing.                                MD061267
+      *                                                                                     MD061267
+     C                     Z-ADDVDAT      ZDAYNO                                            MD061267
+     C           MDST      IFEQ 01                                                          MD061267
+     C           MDST      OREQ 02                                                          MD061267
+     C           MDST      OREQ 07                                                          MD061267
+     C           MDST      OREQ 08                                                          MD061267
+     C           MDST      OREQ 12                                                          MD061267
+     C                     MOVE CCY       ZCCY                                              MD061267
+     C                     ELSE                                                             MD061267
+     C                     MOVE LOCY      ZCCY                                              MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+      ** If feature CEU004 is on, set currency field.                                       MD061267
+      ** If Settlement currency from the LOAN is not blank.                                 MD061267
+      *                                                                                     MD061267
+     C           CEU004    IFEQ 'Y'                                                         MD061267
+      *                                                                                     MD061267
+     C           SCCY      IFNE *BLANKS                                                     MD061267
+     C                     MOVE SCCY      ZCCY                                              MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C                     ENDIF                                                            MD061267
+     C                     Z-ADD0         ZNRDYS                                            MD061267
+     C                     MOVE W@STLL    ZLOC                                              MD061267
+      *                                                                                     MD061267
+     C                     SELEC                                                            MD061267
+      *                                                                                     MD061267
+     C           PTDI      WHEQ 'P'                                                         MD061267
+     C                     EXSR ZBKDT                                                       MD061267
+     C                     Z-ADDZDYNBR    WVDAT   50                                        MD061267
+      *                                                                                     MD061267
+     C           PTDI      WHEQ 'N'                                                         MD061267
+     C                     EXSR ZFWDT                                                       MD061267
+     C                     Z-ADDZDYNBR    WVDAT                                             MD061267
+      *                                                                                     MD061267
+     C           PTDI      WHEQ 'M'                                                         MD061267
+     C           PTDI      OREQ ' '                                                         MD061267
+     C                     EXSR ZDATE2                                                      MD061267
+     C           *IN98     IFEQ '0'                                                         MD061267
+     C                     MOVE ZDATE     MMYY      P                                       MD061267
+     C                     MOVELMMYY      MMNLCD    P                                       MD061267
+     C                     ELSE                                                             MD061267
+     C                     MOVELZDATE     MMNLCD  20P                                       MD061267
+     C                     ENDIF                                                            MD061267
+     C                     Z-ADDZDAYNO    @DAYNO  50                                        MD061267
+     C                     EXSR ZFWDT                                                       MD061267
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD061267
+     C                     EXSR ZDATE2                                                      MD061267
+     C           *IN98     IFEQ '0'                                                         MD061267
+     C                     MOVE ZDATE     MMYY    40P                                       MD061267
+     C                     MOVELMMYY      MMNWKD  20P                                       MD061267
+     C                     ELSE                                                             MD061267
+     C                     MOVELZDATE     MMNWKD    P                                       MD061267
+     C                     ENDIF                                                            MD061267
+     C           MMNLCD    IFNE MMNWKD                                                      MD061267
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD061267
+     C                     EXSR ZBKDT                                                       MD061267
+     C                     ENDIF                                                            MD061267
+     C                     Z-ADDZDYNBR    WVDAT                                             MD061267
+      *                                                                                     MD061267
+     C                     OTHER                                                            MD061267
+     C                     Z-ADDVDAT      WVDAT                                             MD061267
+      *                                                                                     MD061267
+     C                     ENDSL                                                            MD061267
       *                                                                   157556
       ** In considering the grace days of principal or interest whichever 157556
       ** is lesser is applicable only for repayment type 1 or 3,          157556
@@ -3668,21 +3740,26 @@
      C           REPT      IFEQ 1                                         157556
      C           REPT      OREQ 3                                         157556
      C           GDPR      IFLE GDIN                                      CLE007
-     C           GDPR      ADD  VDAT      WVDAT   50                      CLE007
+     C********** GDPR      ADD  VDAT      WVDAT   50                                 CLE007 MD061267
+     C           GDPR      ADD  WVDAT     WVDAT                                             MD061267
      C                     ELSE                                           CLE007
-     C           GDIN      ADD  VDAT      WVDAT                           CLE007
+     C********** GDIN      ADD  VDAT      WVDAT                                      CLE007 MD061267
+     C           GDIN      ADD  WVDAT     WVDAT                                             MD061267
      C                     ENDIF                                          CLE007
       *                                                                   157556
      C                     ELSE                                           157556
      C           CLE154    IFEQ 'N'                                                           CLE154
-     C           GDPR      ADD  VDAT      WVDAT                           157556
+     C********** GDPR      ADD  VDAT      WVDAT                                      157556 MD061267
+     C           GDPR      ADD  WVDAT     WVDAT                                             MD061267
      C                     ELSE                                                               CLE154
      C           INTC      IFEQ *BLANKS                                                       CLE154
       ** Repayment schedule for Principal                                                     CLE154
-     C           GDPR      ADD  VDAT      WVDAT                                               CLE154
+     C********** GDPR      ADD  VDAT      WVDAT                                      CLE154 MD061267
+     C           GDPR      ADD  WVDAT     WVDAT                                             MD061267
      C                     ELSE                                                               CLE154
       ** Repayment schedule for Interest                                                      CLE154
-     C           GDIN      ADD  VDAT      WVDAT                                               CLE154
+     C********** GDIN      ADD  VDAT      WVDAT                                      CLE154 MD061267
+     C           GDIN      ADD  WVDAT     WVDAT                                             MD061267
      C                     END                                                                CLE154
      C                     END                                                                CLE154
      C                     ENDIF                                          157556
@@ -5551,6 +5628,7 @@
      C/COPY ZSRSRC,ZDATE2Z4                                               S01392
      C*                                                                   CLE004
      C/COPY ZSRSRC,ZCONVZ1                                                CLE004
+     C/COPY ZSRSRC,ZBKDT                                                                    MD061267
      C*                                                                   CLE004
      C********************************************************************S01392
 1855 C/EJECT

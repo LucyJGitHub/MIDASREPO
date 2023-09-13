@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. 250758             Date 02May22               *
+      *  Last Amend No. MD061267           Date 26Jul23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 250758             Date 02May22               *
       *                 MD058815           Date 28Sep21               *
       *                 AR674226           Date 04Dec19               *
       *                 MD046248           Date 27Oct17               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes.                      *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  250758 - If calc method 6 then INT6DY contains the number    *
       *           of days from ZINTDY.                                *
@@ -62,16 +64,17 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
      FFACHISH   IF   E           K DISK    INFSR(*PSSR)
      FFACHSAL1  IF   E           K DISK    INFSR(*PSSR)
- 
+     FLEFHSTL2  IF   E           K DISK    RENAME(LEFHSTF:LEFHSTOM)                         MD061267
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,50 +86,52 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWER ARRAY
      D TABCAL          S              1  0 DIM(6) CTDATA PERRCD(6)              CALC.BASES
      D TABCBS          S              5  0 DIM(6) ALT(TABCAL)
- 
+
      D FAM             S             13  0 DIM(5) ASCEND                        FEE AMOUNTS
      D FPC             S              6  3 DIM(5) ASCEND                        FEE PERCENTAGE
- 
+     D @WAMT           S             11  0 DIM(5) ASCEND                                    MD061267
+     D @WRT            S              7  5 DIM(5) ASCEND                                    MD061267
+
       * Fee amounts data structure
      D  @FEAMA         DS
      D  FEAMT1                 1     11  0
@@ -136,7 +141,7 @@
      D  FEAMT5                45     55  0
      D  FEAM                   1     55  0
      D                                     DIM(5) ASCEND                        FEE AMOUNTS
- 
+
       * Fee rates data structure
      D  @FRTA          DS
      D  FEFRT1                 1      7  5
@@ -146,114 +151,153 @@
      D  FEFRT5                29     35  5
      D  FRT                    1     35  5
      D                                     DIM(5) ASCEND                        FEE RATES
- 
- 
+
+      * Fee amounts data structure                                                          MD061267
+     D                 DS            30                                                     MD061267
+     D  HIAMT1                 1      6P 0                                                  MD061267
+     D  HIAMT2                 7     12P 0                                                  MD061267
+     D  HIAMT3                13     18P 0                                                  MD061267
+     D  HIAMT4                19     24P 0                                                  MD061267
+     D  HIAMT5                25     30P 0                                                  MD061267
+     D  @HAMT                  1     30P 0                                                  MD061267
+     D                                     DIM(5) ASCEND                                    MD061267
+                                                                                            MD061267
+     D                 DS            20                                                     MD061267
+     D  HIFRT1                 1      4P 5                                                  MD061267
+     D  HIFRT2                 5      8P 5                                                  MD061267
+     D  HIFRT3                 9     12P 5                                                  MD061267
+     D  HIFRT4                13     16P 5                                                  MD061267
+     D  HIFRT5                17     20P 5                                                  MD061267
+     D  @HRT                   1     20P 5                                                  MD061267
+     D                                     DIM(5) ASCEND                                    MD061267
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)                                MD061267
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Key fields
- 
+
      C                   MOVEL     FcbrBranch    K#BRCA
      C                   MOVEL     S#CSSN        K#CNUM
      C                   MOVEL     S#FACT        K#FACT
      C                   MOVEL     S#FCNO        K#FCNO
- 
+
      C                   MOVEL     S#FACT        K#FACL            5 0
      C                   MOVE      S#FCNO        K#FACL
- 
+
      C**********         MOVE      S#FSEQ        STFSEQ            3 0                      AR674226
      C                   MOVE      S#FSEQ        STFSEQ            4 0                      AR674226
- 
+     C                   MOVE      S#FSEQ        FEFSEQ            2 0                      MD061267
+
       * Initialise outputs
- 
+
      C                   Z-ADD     *ZERO         W#FEE
- 
+
       * Determine whether the facility has been entered today
       * (Exit if the facility is not found)
- 
+
      C     KFCLTY        CHAIN     FCLTYFMF                           80
      C     *IN80         IFEQ      *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C     ORED          IFNE      BJRDNB
      C                   SETON                                        43
      C                   ELSE
      C                   SETOFF                                       43
      C                   ENDIF
- 
+
       * If the facility was not entered today
       * get the original facility details from facility history header.
       * (Exit if the facility history header is not found)
- 
+
      C     *IN43         IFEQ      *ON
      C     FACHISHK      CHAIN     FACHISH                            80
      C     *IN80         IFEQ      *ON
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   Z-ADD     0             W#AMT            13 0
      C                   Z-ADD     0             W#PCT             6 3
- 
+
       *  Set up Start and End dates
- 
+
      C                   Z-ADD     FELPDT        STDATE            5 0    46
      C   46              Z-ADD     FEPSTD        STDATE
      C**********         Z-ADD     BJRDNB        ENDATE            5 0                        239961
-      *                                                                                       239961
-      ** If fee has started accruing, use fee's last accrual date, else                       239961
-      ** use fee start date, i.e. no accrued to date yet.                                     239961
-      *                                                                                       239961
-     C     FELADT        Ifgt      *Zeros                                                     239961
-     C                   Z-add     FELADT        ENDATE            5 0                        239961
-     C                   Else                                                                 239961
-     C                   Z-add     FEPSTD        ENDATE                                       239961
-     C                   Endif                                                                239961
-      *                                                                                       239961
+     C                   Z-ADD     BJRDNB        ENDATE            5 0                      MD061267
+      *****************************************************************             239961  MD061267
+      ***If*fee*has*started*accruing,*use*fee's*last*accrual*date,*else             239961  MD061267
+      ***use*fee*start*date,*i.e.*no*accrued*to*date*yet.**************             239961  MD061267
+      *****************************************************************             239961  MD061267
+     C*****FELADT        Ifgt      *Zeros                                           239961  MD061267
+     C**********         Z-add     FELADT        ENDATE            5 0              239961  MD061267
+     C**********         Else                                                       239961  MD061267
+     C**********         Z-add     FEPSTD        ENDATE                             239961  MD061267
+     C**********         Endif                                                      239961  MD061267
+     C**********                                                                    239961  MD061267
      C*****FEPEND        IFLE      BJRDNB                                                     239961
      C**********         Z-ADD     FEPEND        ENDATE                                       239961
      C**********         END                                                                  239961
- 
+      *                                                                                     MD061267
+     C     FEPEND        IFEQ      BJRDNB                                                   MD061267
+     C     FELPDT        ANDEQ     BJRDNB                                                   MD061267
+     C                   ADD       1             ENDATE                                     MD061267
+     C                   ENDIF                                                              MD061267
+                                                                                            MD061267
+     C     FEPEND        IFLE      BJRDNB                                                   MD061267
+     C                   Z-ADD     FEPEND        ENDATE                                     MD061267
+     C                   ENDIF                                                              MD061267
+                                                                                            MD061267
+     C     FEINDC        IFNE      'Y'                                                      MD061267
+     C                   Z-ADD     FEPSTD        STDATE                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     FELADT        STDATE                                     MD061267
+     C     STDATE        IFEQ      0                                                        MD061267
+     C                   Z-ADD     FEPSTD        STDATE                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+
       *  For Actual amount fees, need to accrue for today to add to
       *  accrued to date amount on file.
- 
+
      C     BJRDNB        IFNE      FEPEND
      C     BJRDNB        ANDNE     FELPDT
      C     FECALT        IFEQ      '04'
@@ -263,27 +307,68 @@
      C     FECALT        OREQ      '15'
      C     FECALT        OREQ      '16'
      C     FECALT        OREQ      '22'
+     C     FEINDC        IFNE      'Y'                                                      MD061267
+     C                   Z-ADD     FEPSTD        STDATE                                     MD061267
+     C                   ELSE                                                               MD061267
      C                   Z-ADD     FELADT        STDATE
      C     STDATE        IFEQ      0
      C                   Z-ADD     FEPSTD        STDATE
      C                   END
+     C                   ENDIF                                                              MD061267
      C                   END
      C                   END
- 
+
       * Obtain number of days to use.
- 
+
      C                   Z-ADD     STDATE        ZZBEG
      C                   Z-ADD     ENDATE        ZZEND
      C                   MOVE      FECALC        ZZCALC
      C                   EXSR      ZINTDY
      C     FECALC        IFEQ      6                                                          250758
-     C                   Z-ADD     INT6DY        W#DAYS                                       250758
+     C**********         Z-ADD     INT6DY        W#DAYS                              250758 MD061267
+     C                   Z-ADD(H)  INT6DY        W#DAYS2          15 9                      MD061267
      C                   ELSE                                                                 250758
      C                   Z-ADD     ZZINDY        W#DAYS            5 0
      C                   END                                                                  250758
- 
+      *                                                                                     MD061267
+     C                   Z-ADD     0             W#FEE            13 0                      MD061267
+      *                                                                                     MD061267
+      * Store end date which is equal to rundate.                                           MD061267
+      *                                                                                     MD061267
+     C                   Z-ADD     ENDATE        OMDATE            5 0                      MD061267
+      *                                                                                     MD061267
+      * Move rates and amounts from LEFEED to working arrays.                               MD061267
+      *                                                                                     MD061267
+     C                   Z-ADD     FEAM          @WAMT                                      MD061267
+     C                   Z-ADD     FRT           @WRT                                       MD061267
+      *                                                                                     MD061267
+     C     LEFKEY        KLIST                                                              MD061267
+     C                   KFLD                    K#CNUM                                     MD061267
+     C                   KFLD                    K#FACL                                     MD061267
+     C                   KFLD                    FEFSEQ                                     MD061267
+      *                                                                                     MD061267
+     C     LEFKEY        SETLL     LEFHSTOM                                                 MD061267
+     C     LEFKEY        READE(N)  LEFHSTOM                               27                MD061267
+     C     *IN27         DOUEQ     '1'                                                      MD061267
+      *                                                                                     MD061267
+     C     FEINDC        IFEQ      'Y'                                                      MD061267
+     C                   MOVE      '1'           *IN27                                      MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Move rates and amounts from historical file to FAMT & FRT.                          MD061267
+      *                                                                                     MD061267
+     C     *IN27         IFEQ      '0'                                                      MD061267
+     C                   Z-ADD     @HAMT         FEAM                                       MD061267
+     C                   Z-ADD     @HRT          FRT                                        MD061267
+     C                   Z-ADD     HIHDAT        ENDATE                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     @WAMT         FEAM                                       MD061267
+     C                   Z-ADD     @WRT          FRT                                        MD061267
+     C                   Z-ADD     OMDATE        ENDATE                                     MD061267
+     C                   ENDIF                                                              MD061267
+
       * Get starting amount from facility history file
- 
+
      C**********         Z-ADD     *ZERO         FACNUM                                       CSD027
      C                   EVAL      FACNUM = *BLANKS                                           CSD027
      C                   Z-ADD     *ZERO         FAFCTY
@@ -295,14 +380,14 @@
      C     K#FACL        ANDEQ     FAFCTY
      C*****STDATE        ANDEQ     FADATE                                                    BUG6944
      C*****STFSEQ        ANDEQ     FATSEQ                                                    BUG6944
- 
+
       * Set up current facility amount from file.
- 
+
       * Set up amount for accrual according to calculation type.
       * Calculation types 01 to 06 use available facility amount,
       * types 11 to 16 use outstanding facility amount and
       * types 21 and 22 use the current facility amount.
- 
+
      C     FECALT        IFEQ      '01'
      C     FECALT        OREQ      '02'
      C     FECALT        OREQ      '03'
@@ -335,37 +420,86 @@
      C*                                                                                      BUG6944
      C** Initialise work fee field.                                                          BUG6944
      C*                                                                                      BUG6944
-     C                   Z-ADD     0             W#FEE                                       BUG6944
+     C**********         Z-ADD     0             W#FEE                             BUG6944  MD061267
      C                   Z-ADD     0             W#TOT                                       BUG6944
      C                   MOVE      '0'           *IN19             1                         BUG6944
- 
+
       * Read file until date read is greater than date of end of this
       * accrual period. NDAYS is the number of days in this accrual.
- 
+
      C                   MOVE      '0'           *IN48
+     C     *LOVAL        SETLL     FACHSAL1                                                 MD061267
+     C     FACHSAKP      SETLL     FACHSAL1                                                 MD061267
      C     *IN48         DOWEQ     '0'
      C     FACHSAKP      READE     FACHSAL1                               48
- 
+
      C     *IN48         IFEQ      '1'
      C     FADATE        ORGT      ENDATE
+     C     BKALDI        ANDNE     'Y'                                                      MD061267
+     C     FADATE        ORGE      ENDATE                                                   MD061267
+     C     BKALDI        ANDEQ     'Y'                                                      MD061267
      C                   Z-ADD     ENDATE        FADATE
      C                   MOVE      '1'           *IN48
      C                   END
- 
+
      C                   Z-ADD     STDATE        ZZBEG
      C                   Z-ADD     FADATE        ZZEND
      C                   MOVE      FECALC        ZZCALC
      C                   EXSR      ZINTDY
      C     FECALC        IFEQ      6                                                          250758
-     C                   Z-ADD     INT6DY        NDAYS                                        250758
+     C**********         Z-ADD     INT6DY        NDAYS                               250758 MD061267
+     C                   Z-ADD(H)  INT6DY        NDAYS2           15 9                      MD061267
      C                   ELSE                                                                 250758
      C                   Z-ADD     ZZINDY        NDAYS             5 0
      C                   END                                                                  250758
- 
+      *                                                                                     MD061267
+      ** Make sure that current amount from history file                                    MD061267
+      ** is use based on Calculation type                                                   MD061267
+      *                                                                                     MD061267
+     C     *IN48         IFEQ      '0'                                                      MD061267
+     C     FECALT        IFEQ      '01'                                                     MD061267
+     C     FECALT        OREQ      '02'                                                     MD061267
+     C     FECALT        OREQ      '03'                                                     MD061267
+     C     FECALT        OREQ      '04'                                                     MD061267
+     C     FECALT        OREQ      '05'                                                     MD061267
+     C     FECALT        OREQ      '06'                                                     MD061267
+     C     FAUNDR        IFGE      0                                                        MD061267
+     C                   Z-ADD     FAUNDR        NEWAMT                                     MD061267
+     C     AAMT          IFNE      NEWAMT                                                   MD061267
+     C                   Z-ADD     NEWAMT        AAMT                                       MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     FECALT        IFEQ      '11'                                                     MD061267
+     C     FECALT        OREQ      '12'                                                     MD061267
+     C     FECALT        OREQ      '13'                                                     MD061267
+     C     FECALT        OREQ      '14'                                                     MD061267
+     C     FECALT        OREQ      '15'                                                     MD061267
+     C     FECALT        OREQ      '16'                                                     MD061267
+     C     FADRAM        IFGE      0                                                        MD061267
+     C                   Z-ADD     FADRAM        NEWAMT                                     MD061267
+     C     AAMT          IFNE      NEWAMT                                                   MD061267
+     C                   Z-ADD     NEWAMT        AAMT                                       MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     FAACTN        IFEQ      'FI'                                                     MD061267
+     C     FAACTN        OREQ      'FD'                                                     MD061267
+     C     FECALT        IFEQ      '21'                                                     MD061267
+     C     FECALT        OREQ      '22'                                                     MD061267
+     C                   Z-ADD     FACFAM        NEWAMT           13 0                      MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+
      C     NDAYS         IFGT      0
- 
+     C     NDAYS2        ORGT      0                                                        MD061267
+
       * Average amount used (only does accrual once)
- 
+
       *                                                                                      BUG6944
       ** limit the processing for fees based on average amount                               BUG6944
       *                                                                                      BUG6944
@@ -376,17 +510,24 @@
      C     FECALT        OREQ      '12'                                                      BUG6944
      C     FECALT        OREQ      '13'                                                      BUG6944
      C     FECALT        OREQ      '21'                                                      BUG6944
+      *                                                                                     MD061267
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      NDAYS2        AAMT                                       MD061267
+     C                   DIV(H)    W#DAYS2       AAMT                                       MD061267
+     C                   ADD       AAMT          W#AMT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      NDAYS         AAMT
      C                   DIV(H)    W#DAYS        AAMT
      C                   ADD       AAMT          W#AMT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
      C                   Z-ADD     AAMT          W#AMT                                       BUG6944
      C                   ENDIF                                                               BUG6944
      C                   Z-ADD     FADATE        STDATE
      C                   END
- 
+
       * Reset amount to accrue - comes from next record on amounts file
- 
+
      C     FECALT        IFEQ      '01'
      C     FECALT        OREQ      '02'
      C     FECALT        OREQ      '03'
@@ -409,7 +550,12 @@
      C                   ELSE
      C     FECALT        IFEQ      '21'
      C     FECALT        OREQ      '22'                                                      BUG6944
+     C     FACFAM        IFNE      NEWAMT                                                   MD061267
+     C     NEWAMT        ANDGT     *ZERO                                                    MD061267
+     C                   Z-ADD     NEWAMT        AAMT                                       MD061267
+     C                   ELSE                                                               MD061267
      C                   Z-ADD     FACFAM        AAMT
+     C                   ENDIF                                                              MD061267
      C                   END
      C                   END
      C                   END
@@ -426,7 +572,148 @@
      C                   ENDIF                                                               BUG6944
       *                                                                                      BUG6944
      C                   END
- 
+     C                   Z-ADD     ENDATE        STDATE                                     MD061267
+     C     LEFKEY        READE(N)  LEFHSTOM                               27                MD061267
+     C                   ENDDO                                                              MD061267
+      *                                                                                     MD061267
+     C     *IN27         IFEQ      '1'                                                      MD061267
+     C     ENDATE        ANDLT     OMDATE                                                   MD061267
+     C                   Z-ADD     @WAMT         FEAM                                       MD061267
+     C                   Z-ADD     @WRT          FRT                                        MD061267
+     C                   Z-ADD     OMDATE        ENDATE                                     MD061267
+     C                   MOVE      *BLANKS       FACNUM                                     MD061267
+     C                   Z-ADD     *ZERO         FAFCTY                                     MD061267
+     C                   Z-ADD     *ZERO         FADATE                                     MD061267
+     C                   Z-ADD     *ZERO         FAFSEQ                                     MD061267
+     C     HSAKY1        SETGT     FACHSAL1                                                 MD061267
+     C                   READP     FACHSAL1                               20                MD061267
+     C     K#CNUM        IFEQ      FACNUM                                                   MD061267
+     C     K#FACL        ANDEQ     FAFCTY                                                   MD061267
+     C     FECALT        IFEQ      '01'                                                     MD061267
+     C     FECALT        OREQ      '02'                                                     MD061267
+     C     FECALT        OREQ      '03'                                                     MD061267
+     C     FECALT        OREQ      '04'                                                     MD061267
+     C     FECALT        OREQ      '05'                                                     MD061267
+     C     FECALT        OREQ      '06'                                                     MD061267
+     C     FAUNDR        IFGE      0                                                        MD061267
+     C                   Z-ADD     FAUNDR        AAMT             13 0                      MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     0             AAMT                                       MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ELSE                                                               MD061267
+     C     FECALT        IFEQ      '11'                                                     MD061267
+     C     FECALT        OREQ      '12'                                                     MD061267
+     C     FECALT        OREQ      '13'                                                     MD061267
+     C     FECALT        OREQ      '14'                                                     MD061267
+     C     FECALT        OREQ      '15'                                                     MD061267
+     C     FECALT        OREQ      '16'                                                     MD061267
+     C                   Z-ADD     FADRAM        AAMT                                       MD061267
+     C                   ELSE                                                               MD061267
+     C     FECALT        IFEQ      '21'                                                     MD061267
+     C     FECALT        OREQ      '22'                                                     MD061267
+     C                   Z-ADD     FACFAM        AAMT                                       MD061267
+     C                   END                                                                MD061267
+     C                   END                                                                MD061267
+     C                   END                                                                MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     FAMT          AAMT                                       MD061267
+     C                   ENDIF                                                              MD061267
+     C                   Z-ADD     0             W#TOT                                      MD061267
+     C                   MOVE      '0'           *IN19             1                        MD061267
+     C                   MOVE      '0'           *IN48                                      MD061267
+     C     *IN48         DOWEQ     '0'                                                      MD061267
+     C     HSAKY2        READE     FACHSAL1                               48                MD061267
+     C                                                                                      MD061267
+     C     *IN48         IFEQ      '1'                                                      MD061267
+     C     FADATE        ORGT      ENDATE                                                   MD061267
+     C     BKALDI        ANDNE     'Y'                                                      MD061267
+     C     FADATE        ORGE      ENDATE                                                   MD061267
+     C     BKALDI        ANDEQ     'Y'                                                      MD061267
+     C                   Z-ADD     ENDATE        FADATE                                     MD061267
+     C                   MOVE      '1'           *IN48                                      MD061267
+     C                   END                                                                MD061267
+     C                   Z-ADD     STDATE        ZZBEG                                      MD061267
+     C                   Z-ADD     FADATE        ZZEND                                      MD061267
+     C                   MOVE      FECALC        ZZCALC                                     MD061267
+     C                   EXSR      ZINTDY                                                   MD061267
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   Z-ADD     INT6DY        NDAYS2                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     ZZINDY        NDAYS                                      MD061267
+     C                   END                                                                MD061267
+     C                                                                                      MD061267
+     C     NDAYS         IFGT      0                                                        MD061267
+     C     NDAYS2        ORGT      0                                                        MD061267
+      *                                                                                     MD061267
+      * Limit the processing for fees based on average amount                               MD061267
+      *                                                                                     MD061267
+     C     FECALT        IFEQ      '01'                                                     MD061267
+     C     FECALT        OREQ      '02'                                                     MD061267
+     C     FECALT        OREQ      '03'                                                     MD061267
+     C     FECALT        OREQ      '11'                                                     MD061267
+     C     FECALT        OREQ      '12'                                                     MD061267
+     C     FECALT        OREQ      '13'                                                     MD061267
+     C     FECALT        OREQ      '21'                                                     MD061267
+      *                                                                                     MD061267
+      * Average amount used (only does accrual once)                                        MD061267
+      *                                                                                     MD061267
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      NDAYS2        AAMT                                       MD061267
+     C                   DIV(H)    W#DAYS2       AAMT                                       MD061267
+     C                   ADD       AAMT          W#AMT                                      MD061267
+     C                   ELSE                                                               MD061267
+     C                   MULT      NDAYS         AAMT                                       MD061267
+     C                   DIV(H)    W#DAYS        AAMT                                       MD061267
+     C                   ADD       AAMT          W#AMT                                      MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     AAMT          W#AMT                                      MD061267
+     C                   ENDIF                                                              MD061267
+     C                   Z-ADD     FADATE        STDATE                                     MD061267
+     C                   END                                                                MD061267
+      *                                                                                     MD061267
+      * Reset amount to accrue - comes from next record on amounts file.                    MD061267
+      *                                                                                     MD061267
+     C     FECALT        IFEQ      '01'                                                     MD061267
+     C     FECALT        OREQ      '02'                                                     MD061267
+     C     FECALT        OREQ      '03'                                                     MD061267
+     C     FECALT        OREQ      '04'                                                     MD061267
+     C     FECALT        OREQ      '05'                                                     MD061267
+     C     FECALT        OREQ      '06'                                                     MD061267
+     C     FAUNDR        IFGE      0                                                        MD061267
+     C                   Z-ADD     FAUNDR        AAMT                                       MD061267
+     C                   ELSE                                                               MD061267
+     C                   Z-ADD     0             AAMT                                       MD061267
+     C                   END                                                                MD061267
+     C                   ELSE                                                               MD061267
+     C     FECALT        IFEQ      '11'                                                     MD061267
+     C     FECALT        OREQ      '12'                                                     MD061267
+     C     FECALT        OREQ      '13'                                                     MD061267
+     C     FECALT        OREQ      '14'                                                     MD061267
+     C     FECALT        OREQ      '15'                                                     MD061267
+     C     FECALT        OREQ      '16'                                                     MD061267
+     C                   Z-ADD     FADRAM        AAMT                                       MD061267
+     C                   ELSE                                                               MD061267
+     C     FECALT        IFEQ      '21'                                                     MD061267
+     C     FECALT        OREQ      '22'                                                     MD061267
+     C                   Z-ADD     FACFAM        AAMT                                       MD061267
+     C                   END                                                                MD061267
+     C                   END                                                                MD061267
+     C                   END                                                                MD061267
+      *                                                                                     MD061267
+     C     FECALT        IFEQ      '04'                                                     MD061267
+     C     FECALT        OREQ      '05'                                                     MD061267
+     C     FECALT        OREQ      '06'                                                     MD061267
+     C     FECALT        OREQ      '14'                                                     MD061267
+     C     FECALT        OREQ      '15'                                                     MD061267
+     C     FECALT        OREQ      '16'                                                     MD061267
+     C     FECALT        OREQ      '22'                                                     MD061267
+     C                   EXSR      ACCRUE                                                   MD061267
+     C                   ADD       W#TOT         W#FEE                                      MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDDO                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
      C     FECALT        IFEQ      '01'                                                      BUG6944
      C     FECALT        OREQ      '02'                                                      BUG6944
      C     FECALT        OREQ      '03'                                                      BUG6944
@@ -438,29 +725,29 @@
      C                   EXSR      ACCRUE
      C                   Z-ADD     W#TOT         W#FEE
      C                   ENDIF                                                               BUG6944
- 
+
       * Forward valued fees should have zero total accrued amount
- 
+
      C     FEPSTD        IFGT      BJRDNB
      C                   Z-ADD     0             W#FEE
      C                   END
- 
+
       * Return
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       *  CALCULATE ACCRUAL AMOUNT
       *****************************************************************
      C     ACCRUE        BEGSR
- 
+
      C                   Z-ADD     0             W#TOT            13 0
- 
+
       ** Calculate percentage if required.
       ** Use original facility amount for average.
- 
+
      C     FEPIND        IFNE      'A'
      C   43W#AMT         DIV(H)    FHOFAM        WRK155           15 5
      C  N43W#AMT         DIV(H)    FAMT          WRK155
@@ -471,13 +758,13 @@
      C                   Z-ADD     100           W#PCT
      C                   END
      C                   END
- 
+
       * Convert from facility to fee currency if required.
       * If exchange rate field on fees master file is blank
       * obtain cross-currency exchange rate for these
       * two currencies from the standing data files otherwise use
       * exchange rate on fees master file.
- 
+
      C     FHFCCY        IFNE      FEFCCY
      C     *IN43         ANDEQ     *ON
      C     FCCY          ORNE      FEFCCY
@@ -487,33 +774,33 @@
      C   43              MOVE      FHFCCY        INCCY             3
      C  N43              MOVE      FCCY          INCCY
      C                   MOVE      FEFCCY        OUTCCY            3
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      INCCY         @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      A6MDIN        ZMDI1
      C                   Z-ADD     A6SPRT        ZRATE1
      C                   Z-ADD     A6NBDP        ZNBDP1            1 0
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      OUTCCY        @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      A6MDIN        ZMDI2
      C                   Z-ADD     A6SPRT        ZRATE2
      C                   Z-ADD     A6NBDP        ZNBDP2            1 0
- 
+
       * Obtain cross exchange rate & cross multiply/divide indicator.
- 
+
      C                   EXSR      ZXRATE
- 
+
       * Set up input fields for conversion subroutine.
- 
+
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
      C                   Z-ADD     W#CAMT        ZAMTCI
@@ -521,91 +808,91 @@
      C                   MOVE      OUTCCY        ZCCYO
      C                   Z-ADD     ZNBDP1        ZCDPI
      C                   Z-ADD     ZNBDP2        ZCDPO
- 
+
      C                   EXSR      ZCONV
- 
+
      C                   Z-ADD     ZAMTCO        W#CAMT
- 
+
       * Exchange rate not blank
- 
+
      C                   ELSE
- 
+
       * Facility history currency decimal places + 4.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      FHFCCY        @AJCD             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     A6NBDP        ADD       4             FD                1 0
- 
+
       * Fee currency decimal places + 4.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      FEFCCY        @AJCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     A6NBDP        ADD       4             TD                1 0
- 
+
       * Adjust incoming amount for from CCY decimal places.
- 
+
      C     W#CAMT        DIV       POWER(FD)     WRK153           15 3
- 
+
       * Exchange rate conversion.
- 
+
      C     FEMDIN        IFEQ      'M'
      C                   MULT      FEERAT        WRK153
      C                   ELSE
      C                   DIV(H)    FEERAT        WRK153
      C                   END
- 
+
       * Adjust calculated amount for to currency decimal places.
- 
+
      C     WRK153        MULT      POWER(TD)     W#CAMT
- 
+
      C                   END
      C                   Z-ADD     W#CAMT        W#AMT
      C                   END
- 
+
       * Look up factor for division corresponding to calc. basis
- 
+
      C     FECALC        LOOKUP    TABCAL        TABCBS                   54
      C                   MOVE      TABCBS        W#CLBS            5 0
- 
+
       * Fee currency decimal places + 4.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      FEFCCY        @AJCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     A6NBDP        ADD       4             FeeCDP            1 0
- 
+
       * TIERED CALCULATION:
       * ------------------
- 
+
      C     FECALT        IFEQ      '01'
      C     FECALT        OREQ      '04'
      C     FECALT        OREQ      '11'
      C     FECALT        OREQ      '14'
- 
+
       * Amount (not percentage)
- 
+
      C     FEPIND        IFEQ      'A'
- 
+
       * Convert limit amounts for fee decimal places.
- 
+
      C     FEAM          MULT      POWER(FeeCDP) FAM
      C                   Z-ADD     0             W#FAM            13 0
      C                   Z-ADD     W#AMT         W#OAMT           13 0
      C                   Z-ADD     1             X                 3 0
      C     W#AMT         DOWGT     0
      C     X             ANDLT     6
- 
+
      C     W#OAMT        IFLT      FAM(X)
      C     FAM(X)        OREQ      0
      C     W#AMT         MULT      FRT(X)        WRK15
@@ -617,35 +904,43 @@
      C                   SUB       FAM(X)        W#AMT
      C                   ADD       W#FAM         W#AMT
      C                   Z-ADD     FAM(X)        W#FAM
- 
+
      C                   ADD       1             X
- 
+
      C                   END
- 
+
       * Calculate final accrual amount.
- 
+
      C     *IN19         IFEQ      '1'                                                       BUG6944
       *                                                                                      BUG6944
       ** if based on average use WDAYS                                                       BUG6944
       *                                                                                      BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      W#DAYS2       W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      W#DAYS        W#TOT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      NDAYS2        W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      NDAYS         W#TOT                                       BUG6944
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                               BUG6944
      C                   DIV(H)    W#CLBS        W#TOT
- 
+
      C                   ELSE
- 
+
       * - PERCENTAGE:
- 
+
      C     FEAM          DIV       1000          FPC
- 
+
      C                   Z-ADD     0             W#FPC             6 3
      C                   Z-ADD     W#PCT         W#OPCT            6 3
      C                   Z-ADD     1             X
      C     W#PCT         DOWGT     0
      C     X             ANDLT     6
- 
+
      C     W#OPCT        IFLT      FPC(X)
      C     FPC(X)        OREQ      0
      C     W#AMT         MULT      W#PCT         WRK15
@@ -659,121 +954,153 @@
      C                   SUB       FPC(X)        W#PCT
      C                   ADD       W#FPC         W#PCT
      C                   Z-ADD     FPC(X)        W#FPC
- 
+
      C                   ADD       1             X
- 
+
      C                   END
- 
+
       * Calculate final accrual amount.
- 
+
      C     *IN19         IFEQ      '1'                                                       BUG6944
       *                                                                                      BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      W#DAYS2       W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      W#DAYS        W#TOT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      NDAYS2        W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      NDAYS         W#TOT                                       BUG6944
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                               BUG6944
      C                   DIV(H)    W#CLBS        W#TOT
- 
+
      C                   END
- 
+
      C                   END
- 
+
       * THRESHOLD CALCULATION:
       * ---------------------
- 
+
      C     FECALT        IFEQ      '02'
      C     FECALT        OREQ      '05'
      C     FECALT        OREQ      '12'
      C     FECALT        OREQ      '15'
- 
+
       * - AMOUNT:
- 
+
      C     FEPIND        IFEQ      'A'
- 
+
       * Convert limit amounts for fee decimal places.
- 
+
      C     FEAM          MULT      POWER(FeeCDP) FAM
- 
+
       * Search amount array to find value larger or equal.
- 
+
      C                   Z-ADD     1             X
- 
+
      C     W#AMT         LOOKUP    FAM(X)                             54  54
      C     *IN54         IFEQ      '0'
      C                   EXSR      LSTRAT
      C                   END
- 
+
      C     *IN54         IFEQ      '0'
      C     Y             ANDEQ     0
      C                   MULT      0             W#AMT
      C                   ELSE
      C                   MULT      FRT(X)        W#AMT
      C                   END
- 
+
      C     *IN19         IFEQ      '1'                                                       BUG6944
       *                                                                                      BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C     W#AMT         MULT      W#DAYS2       W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C     W#AMT         MULT      W#DAYS        W#TOT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C     W#AMT         MULT      NDAYS2        W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C     W#AMT         MULT      NDAYS         W#TOT                                       BUG6944
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                               BUG6944
      C                   DIV(H)    W#CLBS        W#TOT
- 
+
      C                   ELSE
- 
+
       * - PERCENTAGE:
- 
+
      C     FEAM          DIV       1000          FPC
- 
+
       * Search percentage array to find value larger or equal.
- 
+
      C                   Z-ADD     1             X
      C     W#PCT         LOOKUP    FPC(X)                             54  54
      C     *IN54         IFEQ      '0'
      C                   EXSR      LSTRAT
      C                   END
      C                   MULT      W#PCT         W#AMT
- 
+
      C     *IN54         IFEQ      '0'
      C     Y             ANDEQ     0
      C                   MULT      0             W#AMT
      C                   ELSE
      C                   MULT      FRT(X)        W#AMT
      C                   END
- 
+
      C                   DIV(H)    100           W#AMT
      C     *IN19         IFEQ      '1'                                                       BUG6944
       *                                                                                      BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C     W#AMT         MULT      W#DAYS2       W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C     W#AMT         MULT      W#DAYS        W#TOT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C     W#AMT         MULT      NDAYS2        W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C     W#AMT         MULT      NDAYS         W#TOT                                       BUG6944
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                               BUG6944
      C                   DIV(H)    W#CLBS        W#TOT
- 
+
      C                   END
- 
+
      C                   END
- 
+
       * SINGLE CALCULATION:
       * ------------------
- 
+
      C     FECALT        IFEQ      '03'
      C     FECALT        OREQ      '06'
      C     FECALT        OREQ      '13'
      C     FECALT        OREQ      '16'
      C     FECALT        OREQ      '21'
      C     FECALT        OREQ      '22'
- 
+
      C     W#AMT         MULT      FRT(1)        W#TOT
      C     *IN19         IFEQ      '1'                                                       BUG6944
       *                                                                                      BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      W#DAYS2       W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      W#DAYS        W#TOT
+     C                   ENDIF                                                              MD061267
      C                   ELSE                                                                BUG6944
+     C     FECALC        IFEQ      6                                                        MD061267
+     C                   MULT      NDAYS2        W#TOT                                      MD061267
+     C                   ELSE                                                               MD061267
      C                   MULT      NDAYS         W#TOT                                       BUG6944
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                               BUG6944
      C                   DIV(H)    W#CLBS        W#TOT
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -838,14 +1165,14 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       * Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Branch, customer, facility type, facility number
       * and fee sequence number
      C                   PARM                    FcbrBranch        3
@@ -853,7 +1180,7 @@
      C                   PARM                    S#FACT            3
      C                   PARM                    S#FCNO            2
      C                   PARM                    S#FSEQ            2
- 
+
       * Fee details
       * -----------
       * Last Payment Date
@@ -880,12 +1207,13 @@
      C                   PARM                    FEMDIN            1
      C                   PARM                    @FEAMA
      C                   PARM                    @FRTA
+     C                   PARM                    FEINDC            1                        MD061267
       *
       * OUTPUTS
       *
       * Fee amount
      C                   PARM                    W#FEE            13 0
- 
+
       *
       ** Access Bank Detailes
       *  ~~~~~~~~~~~~~~~~~~~~
@@ -900,15 +1228,29 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+      *                                                                                     MD061267
+      * Access SDGELRPD for accrual profit day                                              MD061267
+      *                                                                                     MD061267
+     C                   CALL      'AOGELRR0'                                               MD061267
+     C                   PARM      '*MSG   '     @RTCD                                      MD061267
+     C                   PARM      '*FIRST '     @OPTN                                      MD061267
+     C     SDGELR        PARM      SDGELR        DSFDY                                      MD061267
+     C     @RTCD         IFNE      *BLANKS                                                  MD061267
+     C     *LOCK         IN        LDA                                                      MD061267
+     C                   MOVEL     'SDGELRPD'    DBFILE                                     MD061267
+     C                   Z-ADD     8             DBASE                                      MD061267
+     C                   OUT       LDA                                                      MD061267
+     C                   EXSR      *PSSR                                                    MD061267
+     C                   ENDIF                                                              MD061267
+
      C     *LIKE         DEFINE    BRCA          K#BRCA
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
      C     *LIKE         DEFINE    FAFCTY        K#FACL
- 
+
       ** Key lists
- 
+
      C     KFCLTY        KLIST
      C                   KFLD                    K#BRCA
      C                   KFLD                    K#CNUM
@@ -923,6 +1265,17 @@
      C                   KFLD                    K#FACL
      C                   KFLD                    STDATE
      C                   KFLD                    STFSEQ
+      *                                                                                     MD061267
+     C     HSAKY1        KLIST                                                              MD061267
+     C                   KFLD                    K#CNUM                                     MD061267
+     C                   KFLD                    K#FACL                                     MD061267
+     C                   KFLD                    STDATE                                     MD061267
+     C                   KFLD                    STFSEQ                                     MD061267
+      *                                                                                     MD061267
+     C     HSAKY2        KLIST                                                              MD061267
+     C                   KFLD                    K#CNUM                                     MD061267
+     C                   KFLD                    K#FACL                                     MD061267
+      *                                                                                     MD061267
      C     FACHSAKP      KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACL
@@ -931,9 +1284,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

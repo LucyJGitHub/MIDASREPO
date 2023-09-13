@@ -11,9 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 230636             Date 17Mar23               *
-      *  Prev Amend No. AR1078902          Date 17Mar23               *
-      *  Prev Amend No. AR854496           Date 10Mar23               *
+      *  Last Amend No. MD061267           Date 26Jul23               *
+      *  Prev Amend No. MD029130           Date 26Jul23               *
+      *                 257235             Date 26Jul23               *
+      *                 256136             Date 26Jul23               *
+      *                 230636             Date 17Mar23               *
+      *                 AR1078902          Date 17Mar23               *
+      *                 AR854496           Date 10Mar23               *
       *                 CLE138             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -163,6 +167,19 @@
      A*                                                               *
      A*---------------------------------------------------------------*
       *                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes.                      *
+      *  MD029130 - Incorrect exposure for posting with value on a    *
+      *             holiday. Bypass update of FCLTYFN if OAM2 is zero *
+      *             and facility is revolving credit.                 *
+      *           - Applied for MD061267                              *
+      *  257235 - Facility availability is incorrect. Update drawn    *
+      *           amounts of a revolving facility only when CAMD and  *
+      *           OAM2 are not the same.                              *
+      *         - Applied for MD061267                                *
+      *  256136 - Facility availability is incorrect. Ensure that     *
+      *           OAMxx fields are updated correctly for non-revolving*
+      *           facility.                                           *
+      *         - Applied for MD061267                                *
       *  230636 - Duplicate sequence number when loan entered on same *
       *           day and with same value date as facility. Set       *
       *           sequence number to 1 to avoid next record of same   *
@@ -590,6 +607,8 @@
       *                                                                                       239910
      FSDCURRPDIF  E                    DISK                           UC                      CSC042
       *                                                                                       CSC042
+     FACCNTLA IF  E           K        DISK         KINFSR *PSSR                            MD061267
+     F            ACCNTABF                          KRENAMEACCNTA1F                         MD061267
      FLER032P1O   E             50     PRINTER      KINFDS SPOOL      UC
       ** Facilities History Reconciliation Exceptions Report
       *
@@ -627,6 +646,7 @@
       * 84    Record not found on history update file                 *
       * 86    Record not found on PEFCLFM                             *
       * 87    Record not found on READE to FACHISA/FACHISH            *
+      * 88    Record not found on CHAIN to ACCNTLA                    *                     MD061267
       * 90    EOF on facilities actioned today file                   *
       *                                                               *
       *  U7+U8 - Database Error                                       *
@@ -870,6 +890,28 @@
      I              FACT                            FACTT                 154529
      I              FCNO                            FCNOT                 154529
      I              RCTP                            RCTPT                 154529
+      *                                                                                     MD061267
+     IACCNTA1F                                                                              MD061267
+     I              RECI                            GLRECI                                  MD061267
+     I              CNUM                            GLCNUM                                  MD061267
+     I              CCY                             GLCCY                                   MD061267
+     I              ACOD                            GLACOD                                  MD061267
+     I              ACSQ                            GLACSQ                                  MD061267
+     I              BRCA                            GLBRCA                                  MD061267
+     I              CLBL                            GLCLBL                                  MD061267
+     I              FCCU                            GLFCCU                                  MD061267
+     I              FACT                            GLFACT                                  MD061267
+     I              FCNO                            GLFCNO                                  MD061267
+     I              FRNT                            GLFRNT                                  MD061267
+     I              AFRT                            GLAFRT                                  MD061267
+     I              ORED                            GLORED                                  MD061267
+     I              REPI                            GLREPI                                  MD061267
+     I              PRFC                            GLPRFC                                  MD061267
+     I              LCD                             GLLCD                                   MD061267
+     I              CHTP                            GLCHTP                                  MD061267
+     I              TNLU                            GLTNLU                                  MD061267
+     I              TMST                            GLTMST                                  MD061267
+     I              AUTH                            GLAUTH                                  MD061267
       *
      I            DS
       ** Breakdown of Facility No.
@@ -1048,6 +1090,13 @@
      C                     ENDIF                                          CLE004
       *
      C           KEY001    CHAINFCLTYF               80
+      *                                                                                     MD061267
+      * Store facility expiry date for reference of PF/FACHISH                              MD061267
+      *                                                                                     MD061267
+     C           CLE005    IFEQ 'Y'                                                         MD061267
+     C                     MOVE DTEX      DTEX1   50                                        MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C           *IN80     IFEQ '1'
      C*                                                                   063200
      C** IF RECORD NOT ON FACILITY FILE THEN CHECK DELETED FACILITIES     063200
@@ -1300,6 +1349,7 @@
      C                     MOVE *BLANKS   RCNUM                                               CSD027
      C                     Z-ADD0         RFCLT                                               204450
      C                     MOVE 'N'       REACTF                                              204450
+     C                     MOVE 'N'       WCLHS   1                                         MD061267
       *
       ** Read all records for this facility GE FACACT date on logical
      C           *IN84     DOUEQ'1'
@@ -1377,6 +1427,9 @@
      C           FHRWKR    ANDEQ'Y'                                                           CLE023
      C           CLE025    OREQ 'Y'                                                           CLE025
      C           FHRWKR    ANDEQ'Y'                                                           CLE025
+     C           CLE025    OREQ 'Y'                                                         MD061267
+     C           FHORED    ANDEQBJRDNB                                                      MD061267
+     C           WCLHS     ANDEQ'Y'                                                         MD061267
       *                                                                                       203890
       ** Obtain the difference between computed FADRAM and CAMD.  Add                         203890
       ** this difference to OAMxx array to adjust the amounts.                                203890
@@ -1407,14 +1460,38 @@
      C           *IN80     IFEQ '0'                                       154584
       *  Calculate WDIFF with correct value of CAMD:                                          206325
      C           FADRAM    SUB  CAMD      WDIFF  130                                          206325
+     C           CAMD      IFNE OAM2                                                          256136
+     C                     MOVE '1'       WRKFLD  1                                           256136
+     C                     ELSE                                                               257235
+     C                     MOVE '0'       WRKFLD                                              257235
+     C                     ENDIF                                                              256136
       *                                                                                       CLE025
-     C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           FAOFFS    SUB  FCXCOF    WOFFSD 130                                          CLE025
-     C                     ENDIF                                                              CLE025
+     C********** CLE025    IFEQ 'Y'                                                  CLE025 MD061267
+     C********** FAOFFS    SUB  FCXCOF    WOFFSD 130                                 CLE025 MD061267
+     C**********           ENDIF                                                     CLE025 MD061267
       *                                                                                       CLE025
+     C           RVCR      IFEQ 'Y'                                                           257235
+     C           WRKFLD    ANDEQ'0'                                                           257235
+     C                     ELSE                                                               257235
      C                     Z-ADDFADRAM    CAMD                            154584
      C**********           Z-ADDFADRAM    PEXP                                       154584 AR854496
+      *                                                                                     MD061267
+     C           CLE025    IFEQ 'Y'                                                         MD061267
+      *                                                                                     MD061267
+     C           KEYACC    KLIST                                                            MD061267
+     C                     KFLD           FCCNUM                                            MD061267
+     C                     KFLD           @FTYP                                             MD061267
+     C                     KFLD           @FSEQ                                             MD061267
+      *                                                                                     MD061267
+     C           KEYACC    CHAINACCNTLA              88                                     MD061267
+     C           *IN88     IFEQ '0'                                                         MD061267
+     C                     Z-ADDFADRAM    PEXP                                              MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C                     Z-ADDFADRAM    OAM1                            154584
+     C                     ENDIF                                                              257235
      C**********           Z-ADDFADRAM    OAM2                                         154584 203890
      C**********           Z-ADDFADRAM    OAM3                                         154584 203890
      C**********           Z-ADDFADRAM    OAM4                                         154584 203890
@@ -1424,6 +1501,16 @@
      C**********           Z-ADDFADRAM    OAM8                                         154584 203890
      C**********           Z-ADDFADRAM    OAM9                                         154584 203890
      C**********           Z-ADDFADRAM    OA10                                         154584 203890
+      *                                                                                       256136
+     C           RVCR      IFEQ 'N'                                                           256136
+     C           WRKFLD    ANDEQ'1'                                                           256136
+     C           RVCR      OREQ 'Y'                                                           257235
+     C           WRKFLD    ANDEQ'0'                                                           257235
+     C           RVCR      OREQ 'Y'                                                         MD029130
+     C           WRKFLD    ANDEQ'1'                                                         MD029130
+     C           OAM2      ANDEQ0                                                           MD029130
+     C                     MOVE '0'       WRKFLD                                              256136
+     C                     ELSE                                                               256136
      C           OAM2      ADD  WDIFF     OAM2                                                203890
      C           OAM3      ADD  WDIFF     OAM3                                                203890
      C           OAM4      ADD  WDIFF     OAM4                                                203890
@@ -1433,10 +1520,12 @@
      C           OAM8      ADD  WDIFF     OAM8                                                203890
      C           OAM9      ADD  WDIFF     OAM9                                                203890
      C           OA10      ADD  WDIFF     OA10                                                203890
+     C                     ENDIF                                                              256136
       *                                                                                       203890
      C                     UPDATFCLTYN                                    154584
       *                                                                                       CLE025
       ** Access the corresponding record in LF/LEFCLTLH                                       CLE025
+      ** apply the same validation for offsets update                                       MD061267
       *                                                                                       CLE025
      C                     MOVE FCCNUM    KFCNUM                                              CLE025
      C                     MOVE @FTYP     KFFTYP                                              CLE025
@@ -1445,8 +1534,31 @@
      C           KFCUPH    CHAINLEFCLTLH             80                                       CLE025
      C           *IN80     IFEQ *OFF                                                          CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+      *                                                                                     MD061267
+     C           FAREVI    IFNE 'R'                                                         MD061267
+     C           FAOFFS    SUB  FCXCOF    WOFFSD 130                                        MD061267
+     C           FCXCOF    IFNE FCXOF2                                                      MD061267
+     C                     MOVE '1'       WRKFL2  1                                         MD061267
+     C                     ELSE                                                             MD061267
+     C                     MOVE '0'       WRKFL2                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           RVCR      IFEQ 'Y'                                                         MD061267
+     C           WRKFL2    ANDEQ'0'                                                         MD061267
+     C                     ELSE                                                             MD061267
      C                     Z-ADDFAOFFS    FCXCOF                                              CLE025
      C                     Z-ADDFAOFFS    FCXOF1                                              CLE025
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           RVCR      IFEQ 'N'                                                         MD061267
+     C           WRKFL2    ANDEQ'1'                                                         MD061267
+     C           RVCR      OREQ 'Y'                                                         MD061267
+     C           WRKFL2    ANDEQ'0'                                                         MD061267
+     C           RVCR      OREQ 'Y'                                                         MD061267
+     C           WRKFL2    ANDEQ'1'                                                         MD061267
+     C           FCXOF2    ANDEQ0                                                           MD061267
+     C                     MOVE '0'       WRKFL2                                            MD061267
+     C                     ELSE                                                             MD061267
      C           FCXOF2    ADD  WOFFSD    FCXOF2                                              CLE025
      C           FCXOF3    ADD  WOFFSD    FCXOF3                                              CLE025
      C           FCXOF4    ADD  WOFFSD    FCXOF4                                              CLE025
@@ -1456,6 +1568,9 @@
      C           FCXOF8    ADD  WOFFSD    FCXOF8                                              CLE025
      C           FCXOF9    ADD  WOFFSD    FCXOF9                                              CLE025
      C           FCXO10    ADD  WOFFSD    FCXO10                                              CLE025
+     C                     ENDIF                                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C                     UPDATLEFCLTD0                                                      CLE025
      C                     ENDIF                                                              CLE025
      C                     ENDIF                                                              CLE025
@@ -1490,8 +1605,14 @@
       *
      C           A6NBDP    COMP 1                    626061
      C   62      A6NBDP    COMP 3                      6263
+      *                                                                                     MD061267
+     C           FAREVI    IFNE 'R'                                                         MD061267
      C                     Z-ADDFACFAM    @DSAMT
      C                     Z-ADDFADRAM    @DTAMT
+     C                     ELSE                                                             MD061267
+     C                     Z-ADDFAMT      @DSAMT                                            MD061267
+     C                     Z-ADDOAM1      @DTAMT                                            MD061267
+     C                     ENDIF                                                            MD061267
      C                     Z-ADDFAMT      @DUAMT
      C***********          Z-ADDCAMD      @DVAMT                          E29762
       *                                                                   E29762
@@ -1500,7 +1621,11 @@
      C                     Z-ADDOAM1      @DVAMT                          E29762
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           FAREVI    IFNE 'R'                                                         MD061267
      C                     Z-ADDFAOFFS    @DWAMT                                              CLE025
+     C                     ELSE                                                             MD061267
+     C                     Z-ADDFCXOF1    @DWAMT                                            MD061267
+     C                     ENDIF                                                            MD061267
      C                     Z-ADDFCXOF1    @DXAMT                                              CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -1517,10 +1642,13 @@
       ** Error if facility or drawn amount are out.                       E29762
       *                                                                   E29762
      C           FACFAM    IFNE FAMT                                      E29762
+     C           FAREVI    ANDNE'R'                                                         MD061267
      C           FADRAM    ORNE OAM1                                      E29762
+     C           FAREVI    ANDNE'R'                                                         MD061267
      C           WTDIF     ANDGT10                                                            213749
      C           CLE025    OREQ 'Y'                                                           CLE025
      C           FAOFFS    ANDNEFCXOF1                                                        CLE025
+     C           FAREVI    ANDNE'R'                                                         MD061267
       *                                                                   E29762
       ** Indicate error on report                                         E29762
       *                                                                   E29762
@@ -1698,6 +1826,7 @@
       *                                                                                       CLE025
      C           CLE005    IFEQ 'Y'                                       127733
      C                     MOVE WRECI     FHRECI                          127733
+     C                     MOVE DTEX1     FHEXDT                                            MD061267
      C                     ENDIF                                          127733
       *                                                                                       CLE023
       ** After facility history "Rework", update FACHISH's new fields                         CLE023
@@ -1785,7 +1914,17 @@
       *
       **  Reset History
      C           *IN87     IFEQ '0'
+      *                                                                                     MD061267
+      * Check for facility reactivation                                                     MD061267
+      *                                                                                     MD061267
+     C           RECI      IFEQ 'E'                                                         MD061267
+     C           RECI      OREQ 'C'                                                         MD061267
+     C           FHEXDT    IFLE BJRDNB                                                      MD061267
+     C                     MOVE RECI      FHRECI                                            MD061267
+     C                     ENDIF                                                            MD061267
+     C                     ELSE                                                             MD061267
      C                     MOVE RECI      FHRECI
+     C                     ENDIF                                                            MD061267
       *                                                                                       CLE023
       ** After facility history "Rework", update FACHISH's new fields                         CLE023
       ** accordingly.                                                                         CLE023
@@ -1812,6 +1951,13 @@
      C           KEY005    READEFACHISAF                 87
       *
      C           *IN87     DOWEQ'0'
+      *                                                                                     MD061267
+      * Do not overwrite RECI if facility was reactivated today                             MD061267
+      *                                                                                     MD061267
+     C           FAACTN    IFEQ 'FR'                                                        MD061267
+     C           FAGNDT    ANDEQBJRDNB                                                      MD061267
+     C                     LEAVE                                                            MD061267
+     C                     ENDIF                                                            MD061267
      C                     MOVE RECI      FARECI
      C                     UPDATFACHISAF
      C           KEY005    READEFACHISAF                 87
@@ -1823,6 +1969,7 @@
       ** If CLE025 is switched on                                                             CLE025
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C           *INU5     ANDEQ'1'                                                         MD061267
      C                     EXSR SRUPDF                                                        CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -2296,6 +2443,7 @@
      C                     ENDIF                                                            AR398038
       *                                                                                     AR398038
      C           WPNAM     IFEQ 'INTCAP'                                                    MD055601
+     C           WPNAM     OREQ 'RETAIL'                                                    MD061267
      C                     MOVEL'Y'       RERUN   1                                         MD055601
      C                     ENDIF                                                            MD055601
       *                                                                                     MD055601
@@ -2821,6 +2969,7 @@
       ** Action type is Reinstatement ('RS')                                                  CLE025
       *                                                                                       CLE025
      C           HAACTN    IFEQ 'RS'                                                          CLE025
+     C                     MOVE 'Y'       WCLHS                                             MD061267
       *                                                                                       CLE025
      C           HADEAL    IFNE *ZEROS                                                        CLE025
      C                     ADD  1         I                                                   CLE025
@@ -3013,6 +3162,7 @@
      C                     ENDIF                                          161412
       *                                                                   161412
      C           CLE025    IFEQ 'Y'                                                           CLE025
+     C                     MOVE 'Y'       WCLHS                                             MD061267
       *                                                                                       CLE025
       ** MM Loan Start (S1), MM Loan Principal Increase (I1), MM Loan                         CLE025
       ** Interest Capitalisation (C1)                                                         CLE025
@@ -3052,30 +3202,62 @@
      C           HAACTN    OREQ 'AS'                                                          CLE025
      C           HAACTN    OREQ 'AC'                                                          CLE025
      C           HAACTN    OREQ 'AR'                                                         BUG3035
-     C           HATTEO    IFGE *ZEROS                                                        CLE025
-     C           HAPTEO    IFGE *ZEROS                                                        CLE025
-     C                     ADD  @AMT      @DADJ                                               CLE025
-     C                     ELSE                                                               CLE025
-     C                     ADD  HAPTEO    @OADJ                                               CLE025
-     C                     ADD  HATTEO    @DADJ                                               CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ELSE                                                               CLE025
-     C           HAPTEO    IFLT *ZEROS                                                        CLE025
-     C                     SUB  @AMT      @OADJ                                               CLE025
-     C                     ELSE                                                               CLE025
-     C                     SUB  HAPTEO    @DADJ                                               CLE025
-     C                     SUB  HATTEO    @OADJ                                               CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** HATTEO    IFGE *ZEROS                                              CLE025  MD061267
+     C********** HAPTEO    IFGE *ZEROS                                              CLE025  MD061267
+     C**********           ADD  @AMT      @DADJ                                     CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C**********           ADD  HAPTEO    @OADJ                                     CLE025  MD061267
+     C**********           ADD  HATTEO    @DADJ                                     CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C********** HAPTEO    IFLT *ZEROS                                              CLE025  MD061267
+     C**********           SUB  @AMT      @OADJ                                     CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C**********           SUB  HAPTEO    @DADJ                                     CLE025  MD061267
+     C**********           SUB  HATTEO    @OADJ                                     CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+      *                                                                                     MD061267
+     C           @RCI      IFEQ 'Y'                                                         MD061267
+     C           @RCI      OREQ 'N'                                                         MD061267
+     C           @AMT      ANDGE*ZEROS                                                      MD061267
      C                     SUB  @AMT      @UADJ                                               CLE025
+     C                     ADD  @AMT      @DADJ                                             MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           @RCI      IFEQ 'N'                                                         MD061267
+     C           @AMT      ANDLT*ZEROS                                                      MD061267
+     C                     ADD  @AMT      @DADJ                                             MD061267
+     C                     ADD  @AMT      @FADJ                                             MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           HAPTEO    IFLT *ZEROS                                                      MD061267
+     C                     ADD  HAPTEO    @OADJ                                             MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           HATTEO    IFLT *ZEROS                                                      MD061267
+     C                     SUB  HATTEO    @OADJ                                             MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C                     GOTO D1EXIT                                                        CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
       ** FX Margin (FM)                                                                       CLE025
       *                                                                                       CLE025
      C           HAACTN    IFEQ 'FM'                                                          CLE025
+      *                                                                                     MD061267
+     C           @RCI      IFEQ 'Y'                                                         MD061267
+     C           @RCI      OREQ 'N'                                                         MD061267
+     C           @AMT      ANDGE*ZEROS                                                      MD061267
      C                     ADD  @AMT      @DADJ                                               CLE025
      C                     SUB  @AMT      @UADJ                                               CLE025
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           @RCI      IFEQ 'N'                                                         MD061267
+     C           @AMT      ANDLT*ZEROS                                                      MD061267
+     C                     ADD  @AMT      @DADJ                                             MD061267
+     C                     ADD  @AMT      @FADJ                                             MD061267
+     C                     ENDIF                                                            MD061267
      C                     GOTO D1EXIT                                                        CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -3186,10 +3368,14 @@
      C           @UA       ADD  @UADJ     FAUNDR                          157050
      C                     ELSE                                           157050
      C           FACFAM    SUB  FADRAM    FAUNDR                          157050
-     C           CLE025    IFEQ 'Y'                                                           CLE025
-     C                     ADD  FAOFFS    FAUNDR                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** CLE025    IFEQ 'Y'                                                 CLE025  MD061267
+     C**********           ADD  FAOFFS    FAUNDR                                    CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
      C                     ENDIF                                          157050
+      *                                                                                     MD061267
+     C           CLE025    IFEQ 'Y'                                                         MD061267
+     C                     ADD  FAOFFS    FAUNDR                                            MD061267
+     C                     ENDIF                                                            MD061267
       *                                                                   158852
      C***********FACFAM    IFLT 0                                   158852159499
      C***********          SUB  FACFAM    FAUNDR                    158852159499
@@ -3255,6 +3441,7 @@
       *                                                                   CLE005
      C           HAACTN    IFEQ 'FE'                                      CLE005
      C           HAACTN    OREQ 'FC'                                      CLE005
+     C           HAACTN    OREQ 'FR'                                                        MD061267
      C***********          Z-ADD*ZEROS    FADRAM                   CLE005 147509
      C***********          Z-ADDFAMT      FADRAM                   147509 153938
      C***********          Z-ADDOAM1      FADRAM                   153938 156993
@@ -4111,30 +4298,64 @@
      C           FAREVI    ANDNE'R'                                                          BUG3035
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
-     C           FATTEO    IFGE *ZEROS                                                        CLE025
-     C           FAPTEO    IFGE *ZEROS                                                        CLE025
-     C                     ADD  @AMT      FADRAM                                              CLE025
-     C                     ELSE                                                               CLE025
-     C                     ADD  FAPTEO    FAOFFS                                              CLE025
-     C                     ADD  FATTEO    FADRAM                                              CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ELSE                                                               CLE025
-     C           FAPTEO    IFLT *ZEROS                                                        CLE025
-     C                     SUB  @AMT      FAOFFS                                              CLE025
-     C                     ELSE                                                               CLE025
-     C                     SUB  FAPTEO    FADRAM                                              CLE025
-     C                     SUB  FATTEO    FAOFFS                                              CLE025
-     C                     ENDIF                                                              CLE025
-     C                     ENDIF                                                              CLE025
+     C********** FATTEO    IFGE *ZEROS                                              CLE025  MD061267
+     C********** FAPTEO    IFGE *ZEROS                                              CLE025  MD061267
+     C**********           ADD  @AMT      FADRAM                                    CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C**********           ADD  FAPTEO    FAOFFS                                    CLE025  MD061267
+     C**********           ADD  FATTEO    FADRAM                                    CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C********** FAPTEO    IFLT *ZEROS                                              CLE025  MD061267
+     C**********           SUB  @AMT      FAOFFS                                    CLE025  MD061267
+     C**********           ELSE                                                     CLE025  MD061267
+     C**********           SUB  FAPTEO    FADRAM                                    CLE025  MD061267
+     C**********           SUB  FATTEO    FAOFFS                                    CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+     C**********           ENDIF                                                    CLE025  MD061267
+      *                                                                                     MD061267
+     C           FARCIN    IFEQ 'Y'                                                         MD061267
+     C           FARCIN    OREQ 'N'                                                         MD061267
+     C           @AMT      ANDGE*ZEROS                                                      MD061267
      C                     SUB  @AMT      FAUNDR                                              CLE025
+     C                     ADD  @AMT      FADRAM                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           FARCIN    IFEQ 'N'                                                         MD061267
+     C           @AMT      ANDLT*ZEROS                                                      MD061267
+     C                     ADD  @AMT      FADRAM                                            MD061267
+     C                     ADD  @AMT      FACFAM                                            MD061267
+     C                     ADD  @AMT      FAAFAM                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           FAPTEO    IFLT *ZEROS                                                      MD061267
+     C                     ADD  FAPTEO    FAOFFS                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           FATTEO    IFLT *ZEROS                                                      MD061267
+     C                     SUB  FATTEO    FAOFFS                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C           FAACTN    WHEQ 'FM'                                                          CLE025
      C           FAREVI    ANDNE'R'                                                           CLE025
       *                                                                                       CLE025
      C           CLE025    IFEQ 'Y'                                                           CLE025
+      *                                                                                     MD061267
+     C           FARCIN    IFEQ 'Y'                                                         MD061267
+     C           FARCIN    OREQ 'N'                                                         MD061267
+     C           @AMT      ANDGE*ZEROS                                                      MD061267
      C                     ADD  @AMT      FADRAM                                              CLE025
      C                     SUB  @AMT      FAUNDR                                              CLE025
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
+     C           FARCIN    IFEQ 'N'                                                         MD061267
+     C           @AMT      ANDLT*ZEROS                                                      MD061267
+     C                     ADD  @AMT      FADRAM                                            MD061267
+     C                     ADD  @AMT      FACFAM                                            MD061267
+     C                     ENDIF                                                            MD061267
+      *                                                                                     MD061267
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
      C                     ENDSL                                          154584
@@ -4228,6 +4449,7 @@
      C                     ENDIF                                          CLE005
      C           FAACTN    IFEQ 'FE'                                      CLE005
      C           FAACTN    OREQ 'FC'                                      CLE005
+     C           FAACTN    OREQ 'FR'                                                        MD061267
      C***********          Z-ADD*ZERO     FADRAM                   CLE005 147509
      C***********          Z-ADDFAMT      FADRAM                   147509 153938
      C***********          Z-ADDOAM1      FADRAM                   153938 156993

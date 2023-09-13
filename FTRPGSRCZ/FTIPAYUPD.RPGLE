@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060066           Date 30Jun22               *
-      *  Prev Amend No. MD059420           Date 28Apr22               *
+      *  Last Amend No. BA5021             Date 15Aug23               *
+      *  Prev Amend No. MD060066           Date 30Jun22               *
+      *                 MD059420           Date 28Apr22               *
       *                 MD058914           Date 06Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
@@ -101,6 +102,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA5021 - Suppress Settlement Shadow Postings Generation      *
+      *           Upgrade GLW021.                                     *
       *  MD060066 - MT202 message not generated for MT103 transactions*
       *             Add reversal of FTM199 for Stop of Incoming Pay-  *
       *             ment transaction.                                 *
@@ -714,6 +717,7 @@
      D KIDEN           S             40                                                       CSC011
      D WRevAst         S              1                                                       CRE020
      D CRE020          S              1                                                       CRE020
+     D BA5021          S              1                                                       BA5021
      D PNAccN          S             10A                                                      CGL029
      D WFRWR           S             24A                                                      CGL029
      D WTOWR           S             24A                                                      CGL029
@@ -2087,6 +2091,13 @@
       *
      C     *LIKE         DEFINE    SMAM          WVSMAM
      C     *LIKE         DEFINE    PYAM          WVPYAM
+      *                                                                                       BA5021
+      *  If BA5021 is present, execute addition of shadow postings for                        BA5021
+      *  settlement and payment instructions only if the                                      BA5021
+      *  settlement currency = payment currency.                                              BA5021
+      *                                                                                       BA5021
+     C                   If        (BA5021 = 'Y' and SMCY = PCCY)                             BA5021
+     C                             or (BA5021 <> 'Y')                                         BA5021
       *
       ** Execute addition of shadow positions for settlement
       ** instruction only if maintenance was called from Level 1.
@@ -2368,6 +2379,7 @@
      C                   ENDIF
       *
      C/COPY WNCPYSRC,FTH00411
+     C                   EndIf                                                                BA5021
      C                   ENDSR
       *
       *****************************************************************
@@ -3529,6 +3541,27 @@ e1   C                   ENDIF                                                  
      C     PRTCD         IFEQ      'CSW2009'                                                  CSW209
      C                   EVAL      CSW209 = 'Y'                                               CSW209
      C                   ENDIF                                                                CSW209
+      *                                                                                       BA5021
+     C                   EVAL      BA5021 = 'N'                                               BA5021
+     C                   CALL      'AOSARDR0'                                                 BA5021
+     C                   PARM      *BLANKS       PRTCD                                        BA5021
+     C                   PARM      '*VERIFY'     POPTN                                        BA5021
+     C                   PARM      'BA5021'      PSARD                                        BA5021
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA5021
+                                                                                              BA5021
+     C                   IF        PRTCD <> *Blanks  and                                      BA5021
+     C                             PRTCD <> '*NRF'                                            BA5021
+     C     *LOCK         IN        LDA                                                        BA5021
+     C                   EVAL      DBKey = 'BA5021'                                           BA5021
+     C                   EVAL      DBFile = 'SCSARDPD'                                        BA5021
+     C                   EVAL      DBase = 39                                                 BA5021
+     C                   EXSR      *PSSR                                                      BA5021
+     C                   ENDIF                                                                BA5021
+                                                                                              BA5021
+     C                   IF        PRTCD = *BLANKS                                            BA5021
+     C                   EVAL      BA5021 = 'Y'                                               BA5021
+     C                   ENDIF                                                                BA5021
+      *                                                                                       BA5021
                                                                                               CAP205
       ** Determine if SAR CAP205 is installed                                                 CAP205
                                                                                               CAP205

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060729           Date 15May23               *
-      *  Prev Amend No. MD057537           Date 15May23               *
+      *  Last Amend No. MD058307           Date 08Sep23               *
+      *  Prev Amend No. MD060729           Date 15May23               *
+      *                 MD057537           Date 15May23               *
       *                 MD057191           Date 02Dec20               *
       *                 MD054876           Date 26Aug20               *
       *                 MD034915           Date 26Aug20               *
@@ -103,6 +104,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
+      *             Amend to use larger workfield for FA_FAMT and     *
+      *             CAF_FAMT.                                         *
+      *             Apply for MD061600                                *
       *  MD060729 - Warning message is still displayed even if        *
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *
@@ -611,6 +616,8 @@
      D NDayFwd         S              2S 0 INZ(0)                                             CLE158
      D @VDAYNO         S              5S 0                                                    CLE158
      D WrkTenB         S             15P 0                                                  MD060729
+     D WK_FAMT         S             14  0                                                  MD058307
+     D WKC_FAMT        S             14  0                                                  MD058307
 
       /COPY WNCPYSRC,LELOAMV002
 
@@ -2858,7 +2865,8 @@
       *                                                                                       CLE158
      C                   ENDIF                                                                CLE158
       *
-     C                   EVAL(H)   FA_FAMT = FA_FAMT * (FA_OVPC + 100) / 100
+     C**********         EVAL(H)   FA_FAMT = FA_FAMT * (FA_OVPC + 100) / 100                MD058307
+     C                   EVAL(H)   WK_FAMT = FA_FAMT * (FA_OVPC + 100) / 100                MD058307
       *
       ** Check if there are facility amendments
      C                   EXSR      FCLTAM
@@ -2878,7 +2886,8 @@
      C     VDAYNO        ANDLT     BJRDNB                                                     CLE158
       *
      C     CLE030        IFNE      'Y'                                                        CLE030
-     C     FA_FAMT       IFLT      WOAM(L)
+     C*****FA_FAMT       IFLT      WOAM(L)                                                  MD058307
+     C     WK_FAMT       IFLT      WOAM(L)                                                  MD058307
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C                   MOVE      'N'           DDAMNTOK
      C                   ADD       1             WIdx
@@ -2893,7 +2902,8 @@
       *                                                                                       CLE030
      C                   ELSE                                                                 CLE030
       *                                                                                       CLE030
-     C     FA_FAMT       IFLT      WOAM(L)                                                    CLE030
+     C*****FA_FAMT       IFLT      WOAM(L)                                           CLE030 MD058307
+     C     WK_FAMT       IFLT      WOAM(L)                                                  MD058307
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C*****WVFACMT       ANDNE     WOAM(L)                                            CLE030 BUG4351
      C**********         MOVE      WOAM(L)       WVFACMT                              CLE030 BUG4351
@@ -3047,7 +3057,8 @@
       *                                                                                       CLE158
      C                   ENDIF                                                                CLE158
       *                                                                                       CLE158
-     C                   EVAL(H)   CAF_FAMT = CAF_FAMT * (CAF_OVPC + 100)/ 100
+     C**********         EVAL(H)   CAF_FAMT = CAF_FAMT * (CAF_OVPC + 100)/ 100              MD058307
+     C                   EVAL(H)   WKC_FAMT = CAF_FAMT * (CAF_OVPC + 100)/ 100              MD058307
       *
       ** Check if there are facility amendments
      C                   EXSR      CAFCYAM
@@ -3069,7 +3080,8 @@
      C     VDAYNO        ANDLT     BJRDNB                                                     CLE158
       *
      C     CLE030        IFNE      'Y'                                                        CLE030
-     C     CAF_FAMT      IFLT      WOAM(L)
+     C*****CAF_FAMT      IFLT      WOAM(L)                                                  MD058307
+     C     WKC_FAMT      IFLT      WOAM(L)                                                  MD058307
      C                   MOVE      'N'           DDAMNTOK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'
@@ -3083,7 +3095,8 @@
       *
      C                   ELSE                                                                 CLE030
       *                                                                                       CLE030
-     C     CAF_FAMT      IFLT      WOAM(L)                                                    CLE030
+     C*****CAF_FAMT      IFLT      WOAM(L)                                           CLE030 MD058307
+     C     WKC_FAMT      IFLT      WOAM(L)                                                  MD058307
      C*****WVCAAMT       ANDNE     WOAM(L)                                            CLE030 BUG4351
      C**********         MOVE      WOAM(L)       WVCAAMT                              CLE030 BUG4351
      C                   MOVE      'N'           DDAMNTOK                                     CLE030

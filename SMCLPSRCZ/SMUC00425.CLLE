@@ -10,17 +10,25 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD047747 *CREATE   Date 11Sep201             */
+/*       Last Amend No. MD058064           Date 08Sep23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD047747 *CREATE   Date 11Sep201             */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD058064 - COB LOAM PI processing failed *JERRLOAMValidator1*/
+/*                  Amend to also change SHARE (*YES) of V_ZLOAN in  */
+/*                  in zzDZLIB.                                      */
+/*                  Apply for MD061614                               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD047747 - Utility to Change V_ZLOAN Share Open Data Path   */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                  /*MD058064*/
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(7) VALUE('  DZLIB')                 /*MD058064*/
+                                                                                        /*MD058064*/
              COPYRIGHT  TEXT('(c) Finastra International Limited +
                           Systems Ltd. 2017')
  
@@ -30,9 +38,20 @@
              CHGJOB     SWS(00000000)
  
              CHGLF  V_ZLOAN  SHARE(*YES)
+                                                                                        /*MD058064*/
+/** Update SHARE(*YES) for V_ZLOAN in xxDZLIB */                                        /*MD058064*/
+                                                                                        /*MD058064*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                             /*MD058064*/
+             CHGVAR     VAR(%SUBSTRING(&DZLIB 1 2)) VALUE(&SYSID)                       /*MD058064*/
+                                                                                        /*MD058064*/
+             CHKOBJ     OBJ(&DZLIB/V_ZLOAN) OBJTYPE(*FILE)                              /*MD058064*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))                           /*MD058064*/
+             CHGLF  &DZLIB/V_ZLOAN  SHARE(*YES)                                         /*MD058064*/
+                                                                                        /*MD058064*/
              GOTO       CMDLBL(END)
  
  ABNOR:
+             CHGJOB     SWS(XXXXXX11)                                                   /*MD058064*/
              SNDPGMMSG  MSG('Program SMUC00425 ended abnormally - +
                           job cancelled') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD061831           Date 13Sep23               *
+      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *                 223783             Date 28May12               *
       *                 MD028250           Date 28Jul14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026965           Date 16May14               *
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061831 - When CGL146 is ON, do not create posting record   *
+      *             if: Batch was submitted via real time post, and   *
+      *                 No MT940 request during I/C                   *
       *  223783 - (Reopen)Applied for AR973615 (Child: AR973617)      *
       *           (Recompile)                                         *
       *  223783 - Use IBAN when formatting field 86.                  *
@@ -55,16 +59,19 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FGLNWACL3  IF   E           K DISK    INFDS(@INFDS1) INFSR(*PSSR)
       ** Midas GL Network Accounts - By Account Number.
- 
+
      FGLEODPL1  IF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL End of Day Postings.
- 
+
      FEODPOPPD  IF   E           K DISK    PREFIX(EX)     INFSR(*PSSR)
       ** Midas GL COB Posting Detail Extension.
- 
+
+     FGLJENHL1  IF   E           K DISK                   INFSR(*PSSR)                      MD061831
+      ** Midas GL Journal entry header LF Rtv                                               MD061831
+                                                                                            MD061831
      FGLJENXL1  IF   E           K DISK                   INFSR(*PSSR)
       ** Midas GL Journal Entry - Add. Inf. - Retrieval Ind.
                                                                                               CRE008
@@ -73,11 +80,11 @@
                                                                                               216937
      FGLAPSGAL0 IF   E           K DISK                      INFSR(*PSSR)                     216937
       ** Midas GL Postings - Group Accounts Exts                                              216937
- 
+
      F/COPY WNCPYSRC,GLH00628
      FGLPOSTPD  O  A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages.
- 
+
      FGLUCTLPD  UF A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Update Control file.
      F/COPY WNCPYSRC,GLH00518
@@ -87,7 +94,7 @@
      FOTPAY     IF   E           K DISK                      INFSR(*PSSR)                   MD028250
      F                                     PREFIX(FT_)                                      MD028250
       ** Midas FT Outgoing Payments Transactions.                                           MD028250
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -113,11 +120,11 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -127,27 +134,27 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ---------------
- 
+
       ** Arrays and Data Structures
       ** --------------------------
      D/COPY WNCPYSRC,GLH00519
- 
+
      D @INFDS1       E DS                  EXTNAME(Y2I1DSP)
       ** File information data structure.
- 
+
      D LastAccnt     E DS                  EXTNAME(GLUCTLPD)
       ** Data structure to keep the last commited account.
                                                                                               CRE008
@@ -163,7 +170,7 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CRE008
       **  Second DS for access programs, short data structure.                                CRE008
      D/COPY WNCPYSRC,GLH00520
- 
+
      D CurrAccnt       DS
       ** Data structure to keep the current account processed.
      D  NwAcBRCH                      3A                                        Branch
@@ -173,7 +180,7 @@
      D**NwAcACOD                      4S 0                                      Account Code  CGL029
      D  NwAcACOD                     10S 0                                                    CGL029
      D  NwAcACSQ                      2S 0                                      Account Sequence
- 
+
      D NwAcDtl         DS                  OCCURS (9999)
       ** Multi-occurence data structure keep Network, Message Type and Destination
       ** detail to process by Midas Account.
@@ -181,13 +188,13 @@
      D  NwAcNATY                      1A                                        Net. Account Type
      D  NwAcDSTN                     11A                                        Destination
      D  NwAcMTPY                      3A                                        Message Type
- 
+
      D                 DS
       ** Data Structure to retrieve the Batch Number and the Item Number
      D SPOS                           7A                                        Source of Posting
      D  WBatchNb               1      3A                                        Batch Number
      D  WItemNb                4      6S 0                                      Item Number
- 
+
      D                 DS
       ** Data Structure to avoid decimal error
      D NITMS                          5P 0                                      Number of items
@@ -201,16 +208,16 @@
      D ORAMT                         13P 0                                      Original Amt - Giro
      D WORAMT                  1      7A
      D/COPY WNCPYSRC,GLH00403
- 
+
       ** Declared variables
       ** ------------------
- 
+
      D KeyBRCH         S                   LIKE(BRCA)                           Branch
      D KeyCNUM         S                   LIKE(CNUM)                           Customer
      D KeyCCY          S                   LIKE(CCY)                            Currency
      D KeyACOD         S                   LIKE(ACOD)                           Account Code
      D KeyACSQ         S                   LIKE(ACSQ)                           Account Sequence
- 
+
      D NbNwAC          S              5U 0 INZ(0)                               Number of Occurance
      D X               S              5U 0 INZ(0)                               Working Field
      D CRE008          S              6                                         CRE008 flag   CRE008
@@ -223,14 +230,17 @@
      D PRtcd           S              7                                                       CER030
      D POptn           S              7                                                       CER030
      D PSard           S              6                                                       CER030
+                                                                                            MD061831
+     D CGL146          S              1                                                     MD061831
+     D GenPost         S              1    INZ('Y')                                         MD061831
      D/COPY WNCPYSRC,GLH00783
       *                                                                                      CGL135A
       /COPY OFCPYSRCZ,CGL135_020                                                             CGL135A
       *                                                                                       CER030
- 
+
       ** Input Specs
       ** -----------
- 
+
      IGLNWACD0
       ** Rename key fields
      I              NABRCH                      NwAcBRCH
@@ -238,7 +248,7 @@
      I              NACCY                       NwAcCCY
      I              NAACOD                      NwAcACOD
      I              NAACSQ                      NwAcACSQ
- 
+
      IGLNW94D0
       ** Rename key fields
      I              N4BRCA                      NwAcBRCH
@@ -246,98 +256,98 @@
      I              N4CCY                       NwAcCCY
      I              N4ACCD                      NwAcACOD
      I              N4ACSQ                      NwAcACSQ
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** Position on account (restart)
- 
+
      C                   EXSR      $PosAccnt
- 
+
       ** Read each Network Account
- 
+
      C                   READ      GLNWACL3                               27
      C                   DOW       NOT *IN27
- 
+
       ** Load key fields
- 
+
      C                   EVAL      KeyBRCH = NwAcBRCH
      C                   EVAL      KeyCNUM = NwAcCNUM
      C                   EVAL      KeyCCY  = NwAcCCY
      C                   EVAL      KeyACOD = NwAcACOD
      C                   EVAL      KeyACSQ = NwAcACSQ
- 
+
       ** Check if a posting exists for the Midas Account corresponding to the Network Account
- 
+
      C     KeyPost       SETLL     GLEODPL1                               71
- 
+
       ** Retrieve all Network Accounts corresponding to the Midas Account
- 
+
      C   71              EXSR      $RtvNwrAcc
- 
+
       ** For each posting corresponding to Midas Account, add a record in GLPOSTPD
       ** for each Network Account / Message Type / Destination.
- 
+
      C   71              EXSR      $LoadPsts
- 
+
       ** Update control file with the last account processed.
- 
+
      C                   EXSR      $LoadCtl
- 
+
      C                   COMMIT
- 
+
       ** Position to the Network Account corresponding to the next Midas Account.
- 
+
      C     KeyPost       SETGT     GLNWACL3
      C                   READ      GLNWACL3                               27
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
       *
- 
+
       *========================================================================*
       * $RtvNwrAcc : Retrieve Network/Message Type/Destination to process by   *
       *              Midas Account                                             *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvNwrAcc    BEGSR
       *    ----------    -----
- 
+
       ** Clear the detail corresponding to previous account.
- 
+
      C                   IF        NbNwAC > 0
      C     1             DO        NbNwAC        X
      C     X             OCCUR     NwAcDtl
      C                   CLEAR                   NwAcDtl
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   EVAL      NbNwAC = 0                                   Number occurence
- 
+
       ** For each Network Account corresponding to the Midas account,
       ** load the Multi-occurence data structure with:
       ** - Network
       ** - Message Type
       ** - Destination
- 
+
      C                   DOU       *IN28
- 
+
      C                   SELECT
- 
+
       ** If the Network Account comes from GLNWACPD => MT950 detail
- 
+
      C                   WHEN      @1FFM = 'GLNWACD0'
- 
+
       ** Generate MT950
- 
+
      C                   IF        NAG950 = 'Y'                                 Generate MT950 flag
      C                   EVAL      NbNwAC = NbNwAC + 1
      C     NbNwAC        OCCUR     NwAcDtl
@@ -346,14 +356,14 @@
      C                   EVAL      NwAcDSTN = *BLANKS                           Destination
      C                   EVAL      NwAcMTPY = '950'                             Message Type
      C                   ENDIF
- 
- 
+
+
       ** If the Network Account comes from GLNW94PD => MT94x detail
- 
+
      C                   WHEN      @1FFM = 'GLNW94D0'
- 
+
       ** Generate MT940
- 
+
      C                   IF        N4G940 = 'Y'                                 Generate MT940 flag
      C                   EVAL      NbNwAC = NbNwAC + 1
      C     NbNwAC        OCCUR     NwAcDtl
@@ -362,9 +372,9 @@
      C                   EVAL      NwAcDSTN = N4DSTN                            Destination
      C                   EVAL      NwAcMTPY = '940'                             Message Type
      C                   ENDIF
- 
+
       ** Generate MT941
- 
+
      C                   IF        N4G941 = 'Y'                                 Generate MT941 flag
      C                   EVAL      NbNwAC = NbNwAC + 1
      C     NbNwAC        OCCUR     NwAcDtl
@@ -373,9 +383,9 @@
      C                   EVAL      NwAcDSTN = N4DSTN                            Destination
      C                   EVAL      NwAcMTPY = '941'                             Message Type
      C                   ENDIF
- 
+
       ** Generate MT942
- 
+
      C                   IF        N4G942 = 'Y'                                 Generate MT942 flag
      C                   EVAL      NbNwAC = NbNwAC + 1
      C     NbNwAC        OCCUR     NwAcDtl
@@ -385,46 +395,52 @@
      C                   EVAL      NwAcMTPY = '942'                             Message Type
      C                   ENDIF
      C                   ENDSL
- 
+
      C     KeyPost       READE     GLNWACL3                               28
      C                   ENDDO
- 
+
       *    ----------    -----
      C     @RtvNwrAcc    ENDSR
- 
+
       *========================================================================*
       * $LoadPsts : Load Postings by Account/Network/Message Type/Destination *
       *------------------------------------------------------------------------*
- 
+
      C     $LoadPsts     BEGSR
       *    ---------     -----
- 
+
       ** Read the first Posting corresponding to the Midas account of
       ** Network Account
- 
+
      C     KeyPost       READE     GLEODPL1                               29
      C                   DOW       NOT *IN29
      C/COPY WNCPYSRC,GLH00784
                                                                                              CGL135A
      C/COPY OFCPYSRCZ,CGL135_019                                                             CGL135A
- 
+
       ** Correct the invalid fields
- 
+
      C                   EXSR      $CorrFld
- 
+                                                                                            MD061831
+      ** Manage the Batch Header Fields                                                     MD061831
+                                                                                            MD061831
+     C                   EXSR      $BchHdr                                                  MD061831
+                                                                                            MD061831
+     C                   IF        GenPost = 'Y'                                            MD061831
+
       ** Manage the Additional Fields
- 
+
      C                   EXSR      $AddInf
- 
+
       *  Load subfield 61 details if posting is zero balancing/sweeping                       CRE008
      C                   If        CRE008 = 'Y'                                               CRE008
      C                   Exsr      SRZSLOAD                                                   CRE008
      C                   Exsr      SRGALOAD                                                   216937
      C                   Endif                                                                CRE008
- 
+
       ** For each Network, Message Type, Destination of the Midas Account,
       ** duplicate the posting in PF/GLPOSTPD.
- 
+
      C     1             DO        NbNwAC        X
      C     X             OCCUR     NwAcDtl
      C                   EVAL      MGNWRK = NwAcNWRK                            Network
@@ -434,47 +450,68 @@
      C                   EVAL      MGPROC = *BLANKS                             Not Processed
      C                   WRITE     GLPOSTD0
      C                   ENDDO
- 
+                                                                                            MD061831
+     C                   ENDIF                                                              MD061831
+
      C/COPY WNCPYSRC,GLH00785
       ** Read the next posting corresponding to Midas account.
- 
+
      C     KeyPost       READE     GLEODPL1                               29
      C                   ENDDO
- 
+
       *    ---------     -----
      C     @LoadPsts     ENDSR
- 
+
       *========================================================================*
       * $CorrFld  : Manage the invalid fields (Invalid decimal error)          *
       *------------------------------------------------------------------------*
- 
+
      C     $CorrFld      BEGSR
       *    --------      -----
- 
+
      C                   MOVE      WNITMS        WNITMS                   99
      C   99              EVAL      NITMS = *ZEROS
      C                   MOVE      WCHGA         WCHGA                    99
      C   99              EVAL      CHGA = *ZEROS
      C                   MOVE      WORAMT        WORAMT                   99
      C   99              EVAL      ORAMT = *ZEROS
- 
+
       *    --------      -----
      C     @CorrFld      ENDSR
- 
+
+      *========================================================================*            MD061831
+      * $BchHdr   : Manage the Batch header fields                             *            MD061831
+      *------------------------------------------------------------------------*            MD061831
+                                                                                            MD061831
+     C     $BchHdr       BEGSR                                                              MD061831
+      *    -------       -----                                                              MD061831
+                                                                                            MD061831
+     C                   EVAL      GenPost = 'Y'                                            MD061831
+     C     WBatchNb      CHAIN     GLJENHL1                           99                    MD061831
+     C                   IF        NOT *IN99                                                MD061831
+     C                   IF        BRBTSF = 'S'                                             MD061831
+     C                             AND CGL146 = 'Y'                                         MD061831
+     C                   EVAL      GenPost = 'N'                                            MD061831
+     C                   ENDIF                                                              MD061831
+     C                   ENDIF                                                              MD061831
+                                                                                            MD061831
+      *    -------       -----                                                              MD061831
+     C     @BchHdr       ENDSR                                                              MD061831
+                                                                                            MD061831
       *========================================================================*
       * $AddInf   : Manage the Additional Information fields                   *
       *------------------------------------------------------------------------*
- 
+
      C     $AddInf       BEGSR
       *    -------       -----
- 
+
       ** Clear COB Posting Detail Extension.
- 
+
      C                   EVAL      OCCY = *BLANKS                               Original Currency
      C                   EVAL      OAMT = *ZEROS                                Original amount
- 
+
       ** Clear Additional fields
- 
+
      C                   EVAL      MGADI1 = *BLANKS                             Additional Inf. 1
      C                   EVAL      MGADI2 = *BLANKS                             Additional Inf. 2
      C                   EVAL      MGADI3 = *BLANKS                             Additional Inf. 3
@@ -482,9 +519,9 @@
      C                   EVAL      MGADI5 = *BLANKS                             Additional Inf. 5
      C                   EVAL      MGADI6 = *BLANKS                             Additional Inf. 6
      C                   EVAL      MGAERI = *BLANKS                             ERI Indicator
- 
+
       ** If Extension File Reference access the COB Posting Detail Extension.
- 
+
      C                   IF        XRFI <> *BLANKS
      C                             AND XRFN <> *ZEROS
      C     KeyCOBExt     CHAIN     EODPOPPD                           99
@@ -514,20 +551,20 @@
      C                   EVAL      MGADI3   = FT_DTP3                                       MD028250
      C                   EVAL      MGADI4   = FT_DTP4                                       MD028250
      C                   ENDIF                                                              MD028250
- 
+
       ** If the Posting is a Batch Input Item, the field SPOS contains the Batch Item
       ** and the Batch Number,
       ** Otherwise, the field contains 5 characters code corresponding to the Midas module.
       ** Thus, if the 6 first characters is numeric, it is a batch item posting.
- 
+
      C/COPY WNCPYSRC,GLH00405
      C     '0123456789'  CHECK     SPOS          X
      C                   IF        X = 7
      C/COPY WNCPYSRC,GLH00406
- 
+
       **  Retrieve the Batch Item Additional Information.
       **  The key are the Posting Date, Batch Number and Item Number.
- 
+
      C     KeyAddInf     CHAIN     GLJENXL1                           99
      C                   IF        NOT *IN99
      C                   EVAL      MGADI1 = BAADI1                              Additional Inf. 1
@@ -558,43 +595,43 @@
       *                                                                                       CER030
      C**********         ENDIF                                                      CER030 BUG22979A
      C/COPY WNCPYSRC,GLH00629
- 
+
       *    -------       -----
      C     @AddInf       ENDSR
- 
+
      C/COPY WNCPYSRC,GLH00407
       *========================================================================*
       * $LoadCtl  : Load Control file.                                         *
       *------------------------------------------------------------------------*
- 
+
      C     $LoadCtl      BEGSR
       *    --------      -----
- 
+
       ** To avoid to restart to process for all accounts in case of problem, the
       ** PF/GLUCTLPD hold the last account processed.
       ** By this way, the processing can restart from the next account following
       ** the saved one.
- 
+
      C     1             CHAIN     GLUCTLD0                           99
      C                   EVAL      LastAccnt = CurrAccnt                         Load Current Accnt
      C   99              WRITE     GLUCTLD0
      C  N99              UPDATE    GLUCTLD0
- 
+
       *    --------      -----
      C     @LoadCtl      ENDSR
- 
+
       *========================================================================*
       * $PosAccnt : Position on account.                                       *
       *------------------------------------------------------------------------*
- 
+
      C     $PosAccnt     BEGSR
       *    ---------     -----
- 
+
       ** To avoid to restart to process for all accounts in case of problem, the
       ** PF/GLUCTLPD hold the last account processed.
       ** By this way, the processing can restart from the next account following
       ** the saved one.
- 
+
      C     1             CHAIN     GLUCTLD0                           99
      C                   IF        *IN99                                        First run.
      C     *LOVAL        SETLL     GLNWACL3
@@ -606,10 +643,10 @@
      C                   EVAL      KeyACSQ = CTACSQ                             Account Sequence
      C     KeyPost       SETGT     GLNWACL3
      C                   ENDIF
- 
+
       *    ---------     -----
      C     @PosAccnt     ENDSR
- 
+
       *========================================================================*
       * SRZSLOAD - Load Zero Blancing/Sweeping fld 61 details                  *              CRE008
       *------------------------------------------------------------------------*              CRE008
@@ -692,13 +729,13 @@
       *========================================================================*              CRE008
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
- 
+
      C     *INZSR        BEGSR
       *    ------        -----
- 
+
       ** Initialise Copyright Array
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Initialise LDA
      C     *LOCK         IN        LDA
      C                   MOVEL     PSProcPgm     DBpgm
@@ -739,57 +776,78 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
+      *                                                                                     MD061831
+      ** Check if feature CGL146 is installed                                               MD061831
+      *                                                                                     MD061831
+     C                   EVAL      CGL146 = 'N'                                             MD061831
+     C                   CALLB     'AOSARDR0'                                               MD061831
+     C                   PARM      *BLANKS       PRtcd                                      MD061831
+     C                   PARM      '*VERIFY'     POptn                                      MD061831
+     C                   PARM      'CGL146 '     PSard                                      MD061831
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD061831
+      *                                                                                     MD061831
+     C                   IF        PRtcd = *BLANKS                                          MD061831
+      *                                                                                     MD061831
+     C                   EVAL      CGL146 = 'Y'                                             MD061831
+     C                   ELSE                                                               MD061831
+      *                                                                                     MD061831
+     C                   IF        PRtcd <> *BLANKS AND                                     MD061831
+     C                             PRtcd <> '*NRF'                                          MD061831
+     C                   EXSR      *PSSR                                                    MD061831
+     C                   ENDIF                                                              MD061831
+      *                                                                                     MD061831
+     C                   ENDIF                                                              MD061831
       *                                                                                      CGL135A
      C/COPY OFCPYSRCZ,CGL135_018                                                             CGL135A
       *                                                                                      CGL135A
      C/COPY WNCPYSRC,GLH00410
- 
+
       ** Key List to access Postings in LF/GLEODPL1
       **          or to access Network Account in LF/GLNWACL3.
- 
+
      C     KeyPost       KLIST
      C                   KFLD                    KeyBRCH
      C                   KFLD                    KeyCNUM
      C                   KFLD                    KeyCCY
      C                   KFLD                    KeyACOD
      C                   KFLD                    KeyACSQ
- 
+
       ** Key List to access COB Posting Detail Extension.        .
- 
+
      C     KeyCOBExt     KLIST
      C                   KFLD                    XRFI
      C                   KFLD                    XRFN
- 
+
       ** Key List to access the Batch Item Additional Information.
- 
+
      C     KeyAddInf     KLIST
      C                   KFLD                    PSTD
      C                   KFLD                    WBatchNb
      C                   KFLD                    WItemNb
- 
+
      C/COPY WNCPYSRC,GLH00411
       *    ------        -----
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
- 
+
      C     *PSSR         BEGSR
       *    ----------    ------
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

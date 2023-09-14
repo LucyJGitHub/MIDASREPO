@@ -803,8 +803,8 @@
      C                   ELSE                                                                 CLE169
      C                   IF        *INU5 = *ON                                              MD061267
      C                   EXSR      SRACCTUPD
-     C                   ENDIF                                                                CLE169
      C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                                CLE169
                                                                                             MD055685
       ** Do not process RSACMTPD if ANWD run                                                MD055685
       ** Note: U4 is set to ON in LEC000030 if ANWD run                                     MD055685
@@ -2531,7 +2531,7 @@
      C                   ENDIF
 
      C**********         ENDIF                                                     AR788404 MD061267
-                                                                                   AR788404 MD061267
+      **********                                                                   AR788404 MD061267
      C                   ENDIF
 
      C                   EVAL      WCUST = ACFCCU                                           MD061267

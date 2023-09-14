@@ -7,11 +7,11 @@
       *                                                               *
       *  Midas - Lending Module                                       *
       *                                                               *
-      *  LE000470 - Merge Generated Entries of Trailer                *
+      *  LE000470A - Merge Generated Entries of Trailer               *
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061267  *CREATE  Date 26Jun23               *
+      *  Last Amend No. MD061267  *CREATE  Date 26Jul23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -138,7 +138,7 @@
 
       ** Initialize Work fields
 
-     C                   EVAL      DBPGM = 'LE000470'
+     C                   EVAL      DBPGM = 'LE000470A'
      C                   EVAL      WNORE1 = *ZEROS
      C                   EVAL      FNORE1 = *ZEROS
 

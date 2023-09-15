@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CGL072 - Allow GL Accounts as Collateral                     *
@@ -659,6 +661,8 @@
      C                   PARM      DDACTN        PACTION           1
      C                   PARM                    DDCREF
      C                   PARM                    DDCCY
+     C                   PARM                    DDENTY                                       BA6045
+     C                   PARM                    DDBRCA                                       BA6045
      C                   PARM                    PPctAllo         11
      C                   PARM                    DDLAMT
      C                   PARM                    POLenVal         16

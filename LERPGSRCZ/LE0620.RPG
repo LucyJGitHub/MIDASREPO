@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *  Last Amend No. BA6048             Date 01Mar23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 06Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,7 @@
 0008 F*                                                                  *
 0008 F*----------------------------------------------------------------  *
 0008 F*                                                                  *
+      *  BA6048 - New Special Instructions for LE Loans               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE148 - Alpha Loan Reference                                *
@@ -89,6 +91,9 @@
      FLE0620P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
 0015 F*E0620P1O   F     132     OF     PRINTER                  S01124    S01117
 0017 FLE0620AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
+      *                                                                                       BA6048
+     FA6CLIPY0IF  E           K        DISK                           UC                      BA6048
+      *                                                                                       BA6048
 0016 F*                                                                  *
 0017 F* ID F  C  H  L    FUNCTION OF INDICATORS
 0018 F* 01            SORTED EVENTS FILE - HEADER
@@ -386,6 +391,33 @@
      C                     ENDIF                            End If        184053
      C                     ENDIF                           End If         184053
       *                                                                   184053
+      ** Access SAR details file to see if BA6048 is installed                                BA6048
+      *                                                                                       BA6048
+     C                     MOVE 'N'       BA6048  1        SET SAR Flag                       BA6048
+     C                     MOVE *OFF      *IN89                                               BA6048
+      *                                                                                       BA6048
+     C                     CALL 'AOSARDR0'                 Rtv SAR Dtls                       BA6048
+      *                                                    Input:                             BA6048
+     C                     PARM *BLANKS   P@RTCD           -Return Code                       BA6048
+     C                     PARM '*VERIFY' P@OPTN           -Option                            BA6048
+     C                     PARM 'BA6048'  P@SARD           -SAR No                            BA6048
+      *                                                    Output:                            BA6048
+     C           SCSARD    PARM SCSARD    DSFDY            -Format                            BA6048
+      *                                                                                       BA6048
+     C           P@RTCD    IFEQ *BLANK                     If Found                           BA6048
+     C                     MOVE 'Y'       BA6048            Set SAR Flag                      BA6048
+     C                     OPEN A6CLIPY0                                                      BA6048
+     C                     MOVE *ON       *IN89                                               BA6048
+      *                                                                                       BA6048
+     C                     ELSE                            Else                               BA6048
+     C           P@RTCD    IFNE '*NRF   '                   If # NoRecFnd                     BA6048
+     C                     MOVEL'SCSARDPD'DBFILE             Set File                         BA6048
+     C                     MOVEL'*VERIFY' DBKEY              Set Key                          BA6048
+     C                     Z-ADD7         DBASE              Set DBase Re                     BA6048
+     C                     SETON                     U7U8LR  Set Ind                          BA6048
+     C                     GOTO ENDLR                        Bypass                           BA6048
+     C                     ENDIF                             End If                           BA6048
+     C                     ENDIF                             End If                           BA6048
      C*
 0161 C*
 0162 C**      KEEP A COUNT OF RECORDS INPUT
@@ -625,6 +657,14 @@
      C           TYPE      LOKUPTABETY    TABENA         23
      C   23                MOVE TABENA    EVNAR  10
      C  N23                MOVE BLNK10    EVNAR
+      *                                                                                       BA6048
+     C           BA6048    IFEQ 'Y'                                                           BA6048
+     C                     MOVE *BLANKS   SPI4   30                                           BA6048
+     C           LNRF      CHAINA6CLIPY0             97                                       BA6048
+     C           *IN97     IFEQ '0'                                                           BA6048
+     C                     MOVE X0SPI4    SPI4                                                BA6048
+     C                     ENDIF                                                              BA6048
+     C                     ENDIF                                                              BA6048
      C*
      C**   CHECK BENIFICIARY BANK DETAILS
      C*
@@ -1080,6 +1120,12 @@
      O       AND      N54 41 37                                           S01117
 0519 O*******AND*     N54 41
 0520 O                         SPI3     117
+      *                                                                                       BA6048
+     O        D  1     02NU7N53                                                               BA6048
+     O       AND      N54 41 37                                                               BA6048
+     O       AND       89                                                                     BA6048
+     O                         SPI4     117                                                   BA6048
+      *                                                                                       BA6048
 0646 O**                                                                  S01117
 0647 O**   HEADINGS IF NO DETAIL RECORDS IN PRIMARY FILE                  S01117
 0648 O**                                                                  S01117

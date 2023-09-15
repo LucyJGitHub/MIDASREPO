@@ -1,0 +1,165 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX IFS Data Export Table(s) Compression')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC0820 - IFS Data Export Table(s) Compression              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. CMX017  *CREATE    Date 04Aug23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CMX017 - IFS File Compression of Data Export Files          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&QSHCMD) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&JARCMD) TYPE(*CHAR) LEN(9)            +
+                          VALUE('jar -cvf ')
+             DCL        VAR(&CDCMD) TYPE(*CHAR) LEN(205)
+             DCL        VAR(&FLNAME) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DATEF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CMX010) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CHAR1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2023')
+             DCL        VAR(&EMIFS) TYPE(*CHAR) LEN(200) +
+                          VALUE('      ')
+             DCL        VAR(&MXDTEF) TYPE(*CHAR) LEN(200) +
+                          VALUE('      ')
+             DCL        VAR(&MXJFN) TYPE(*CHAR) LEN(200) +
+                          VALUE('      ')
+             DCL        VAR(&CPDEF) TYPE(*CHAR) LEN(200) +
+                          VALUE('N')
+             DCL        VAR(&ZONEPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&ZONEPAT) TYPE(*CHAR) LEN(4) VALUE('/xx/')
+             DCL        VAR(&ZONEPRF) TYPE(*CHAR) LEN(4) VALUE('/  /')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYSID2) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0) VALUE(200)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(4)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 LOCAL +
+                          DATA AREA EQUIVALENT')
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB SWS(00000000)
+
+
+/** Access Switchable Features file to see if CMX010 present. */
+
+             CALL (AOSARDR0) PARM(&RTCD '*VERIFY' 'CMX010')
+             IF (&RTCD *EQ ' ') (CHGVAR (&CMX010) VALUE('Y'))
+
+/* Retrieve system values                                                                       */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                       'EMIFSSubdirectory' &EMIFS +
+                       'MXDataExportFmtName' &MXDTEF +
+                       'MXJarFileName' &MXJFN +
+                       'CompressDataExpFile' &CPDEF +
+                        &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK0 &SVAL10)
+
+/* If CMX010 is switched ON and "CompressDataExpFile" is Y, then process                        */
+/* Data Export table(s) in IFS for compression                                                  */
+
+             IF         COND(&CMX010 *EQ 'N') THEN(GOTO CMDLBL(ENDPGM))
+
+                 IF ((&CMX010 *EQ 'Y') *AND (&CPDEF *EQ 'Y')) THEN(DO)
+
+/* First, get date from RUNDAT data area using ZM0080 date converter                            */
+/*        - ZM0080 returns date in YYMMDD format always.                                        */
+             CALL       PGM(ZM0080) PARM(&SDATE &DATEF)
+
+/* Construct filename of the jar for the day                                                    */
+             CHGVAR     VAR(&FLNAME) VALUE(&MXJFN *TCAT +
+                          &SDATE *TCAT '.jar')
+/* Process retrieved System value                                                               */
+                 IF ((&EMIFS *NE '*NRF') *AND (&EMIFS *NE ' ')) THEN(DO)
+/* Scan for /xx/ pattern.  If existing, replace with Zone ID                                    */
+                    CALL       PGM(QCLSCAN) PARM(&EMIFS &STRLEN &STRPOS +
+                          &ZONEPAT &PATLEN '0' '1' ' ' &ZONEPOS)
+                    IF         COND(&ZONEPOS > 0) THEN(DO)
+
+                        RTVDTAARA DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+                        CHGVAR    VAR(%SUBSTRING(&ZONEPRF 2 2)) VALUE(&SYSID)
+                        CHGVAR    VAR(%SUBSTRING(&EMIFS &ZONEPOS 4)) VALUE(&ZONEPRF)
+
+                    ENDDO
+                 ENDDO
+
+ /*  If EMIFS has a valid path, construct the Script and run the script for                       */
+ /*     compression.                                                                              */
+
+             IF ((&EMIFS *NE '*NRF') *AND (&EMIFS *NE ' ')) THEN(DO)
+
+ /*  First, delete jar file if already existing.                                                  */
+
+             CHGVAR     VAR(&QSHCMD) VALUE('rm ' *CAT &EMIFS *TCAT  +
+                          &FLNAME)
+             QSH        CMD(&QSHCMD)
+
+ /*  Construct the actual compression scripts                                                     */
+ /*        - Change current directory                                                             */
+             CHGVAR     VAR(&CDCMD) VALUE('cd ' *CAT &EMIFS *TCAT ';')
+
+ /*        - Change current directory                                                             */
+             CHGVAR     VAR(&QSHCMD) VALUE(&CDCMD *CAT &JARCMD *CAT +
+                          &FLNAME *CAT ' ' *CAT &MXDTEF)
+
+             QSH        CMD(&QSHCMD)
+
+             ENDDO
+
+             DMPCLPGM                              /** Temp code to check contents of vars       */
+
+             SNDPGMMSG  MSG('MXC0820 - Completed successfully.') +
+                          TOMSGQ(MRUNQ)
+
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC0820 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+
+
+ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2023')
+
+             ENDPGM

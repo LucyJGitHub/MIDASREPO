@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055724           Date 29Apr20              */
-/*       Prev Amend No. MD052994           Date 25Nov19              */
+/*       Last Amend No. MD061267           Date 26Jul23              */
+/*       Prev Amend No. MD055724           Date 29Apr20              */
+/*                      MD052994           Date 25Nov19              */
 /*                      MD045032           Date 07Apr18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD033997           Date 11May15              */
@@ -40,6 +41,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061267 - Credit Lines (CLE025) fixes.                     */
 /*       MD055724 - Reversal entries for previous facility posted    */
 /*                  twice on contingent facility account. Clear      */
 /*                  PF/LECLHIPD before every call to LER032.         */
@@ -136,6 +138,11 @@
 
      SNDPGMMSG  MSG('Facility History Update Part 2') +
                                        TOMSGQ(MRUNQ)
+/** If component seq is 00005 or 00006, switch on U5                                 */ /*MD061267*/
+             IF         COND((&CSEQ = 00005) *OR (&CSEQ = 00006)) THEN(DO)              /*MD061267*/
+                CHGJOB     SWS(XXXX1XXX)                                                /*MD061267*/
+             ENDDO                                                                      /*MD061267*/
+
 /* Create data area LDA */                                                                /*CLE147*/
                                                                                           /*CLE147*/
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                            /*CLE147*/
@@ -322,7 +329,9 @@
            ENDDO                                                                          /*CLE134*/
   /* Call Generated Changes Extract Program */
 
-             IF         COND(&RERUN *NE 'INTCAP') THEN(DO)                              /*MD052994*/
+/**********  IF         COND(&RERUN *NE 'INTCAP') THEN(DO)                     /*MD052994 MD061267*/
+             IF         COND((&RERUN *NE 'INTCAP') *AND +
+                             (&RERUN *NE 'RETAIL')) THEN(DO)                            /*MD061267*/
                                                                                         /*MD052994*/
 /**********  CALL LER031 */                                                               /*263413*/
              CALL       PGM(LER031) PARM(&RERUN)                                          /*263413*/
@@ -385,8 +394,11 @@
              CALL       PGM(LER032) PARM(&RERUN)                                        /*AR398038*/
              DLTOVR     FILE(HISUPD1 HISUPD)                                              /*246032*/
 /**********  IF         COND(&RERUN *EQ '      ') THEN(DO)           */      /*CLE134*/ /*MD052994*/
+/**********  IF         COND((&RERUN *EQ '      ') *OR +                                /*MD061267*/
+/**********               (&RERUN *EQ 'INTCAP')) THEN(DO)                      /*MD052994 MD061267*/
              IF         COND((&RERUN *EQ '      ') *OR +
-                          (&RERUN *EQ 'INTCAP')) THEN(DO)                               /*MD052994*/
+                          (&RERUN *EQ 'RETAIL') *OR +
+                          (&RERUN *EQ 'INTCAP')) THEN(DO)                               /*MD061267*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                              /*157759*/
              ENDDO                                                                        /*CLE134*/

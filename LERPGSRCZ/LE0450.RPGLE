@@ -13,7 +13,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD023220           Date 15Aug23               *
-      *  Prev Amend No. AR924081           Date 23Mar23               *
+      *  Prev Amend No. BA6048             Date 01Mar23               *
+      *                 AR924081           Date 23Mar23               *
       *                 AR981899           Date 27Feb23               *
       *                 AR1096206          Date 02Feb23               *
       *                 249385             Date 01Aug22               *
@@ -444,6 +445,7 @@
       *             guarantee receiver of risk loan. Generate subtype *
       *             change account keys for guarantee receiver.       *
       *           - Applied for MD044339.                             *
+      *  BA6048 - New Special Instructions for LE Loans               *
       *  AR924081 - Incorrect COF accrual for loans with ADDI = 'B'.  *
       *             Extend fix 245082 to COF. Add one day to ZIEND    *
       *             if loan is setup with first & last day accrual.   *
@@ -1625,6 +1627,10 @@
      F                                     COMMIT                                           MD049309
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0450FFP1                                           S01408
+      *                                                                                       BA6048
+     FA6CLIPY1  UF   E           K DISK     INFSR(*PSSR)                                      BA6048
+     F                                      USROPN                                            BA6048
+      ** Midas XX LE Spec. Instruction PF - Extension                                         BA6048
      F*                                                                   S01408
 0025 F**
 0026 F* ID F  C  H  L    FUNCTION OF INDICATORS
@@ -4776,6 +4782,14 @@ L118 I                             P   72   77 7RTSPL
 0573 C                   SETOFF                                       09                       BHF65
      C                   MOVE      *BLANKS       WBLN12           12
      C/COPY WNCPYSRC,LE0450C007
+      *                                                                                       BA6048
+     C     BA6048        IFEQ      'Y'                                                        BA6048
+     C     *IN27         ANDEQ     '1'                                                        BA6048
+     C     *IN34         ANDEQ     '1'                                                        BA6048
+     C                   MOVE      '0'           *IN27                                        BA6048
+     C                   MOVE      '0'           *IN34                                        BA6048
+     C                   ENDIF                                                                BA6048
+      *                                                                                       BA6048
 0574 C**
 0575 C**   PROCESS LOAN 'A' RECORD
 0576 C**
@@ -5836,6 +5850,33 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C*                                                                   S01408
      C/COPY WNCPYSRC,LE0450CCP1                                           S01408
+      *                                                                                       BA6048
+      ** Access SAR details to check if BA6048 is installed                                   BA6048
+      *                                                                                       BA6048
+     C                   MOVE      'N'           BA6048            1                          BA6048
+     C                   MOVE      *OFF          *IN27                                        BA6048
+     C                   MOVE      *OFF          *IN34                                        BA6048
+     C                   CALL      'AOSARDR0'                                                 BA6048
+     C                   PARM      *BLANKS       @RTCD                                        BA6048
+     C                   PARM      '*VERIFY'     @OPTN                                        BA6048
+     C                   PARM      'BA6048'      @SARD                                        BA6048
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6048
+      *                                                                                       BA6048
+     C     @RTCD         IFEQ      *BLANK                                                     BA6048
+     C                   MOVE      'Y'           BA6048                                       BA6048
+     C                   OPEN      A6CLIPY1                                                   BA6048
+     C                   ELSE                                                                 BA6048
+     C     @RTCD         IFNE      '*NRF   '                                                  BA6048
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       BA6048
+     C                   MOVEL     'BA6048 '     DBKEY                                        BA6048
+     C                   Z-ADD     35            DBASE                                        BA6048
+     C                   MOVE      *ON           *INU7                                        BA6048
+     C                   MOVE      *ON           *INU8                                        BA6048
+     C                   MOVE      *ON           *INLR                                        BA6048
+     C                   GOTO      ENDDBE                                                     BA6048
+     C                   ENDIF                                                                BA6048
+     C                   ENDIF                                                                BA6048
+      *                                                                                       BA6048
      C*                                                                   S01408
      C** Core hook for externalisation.                                   S01408
      C/COPY WNCPYSRC,LE0450CBUW                                           S01408
@@ -10446,6 +10487,26 @@ L118 I                             P   72   77 7RTSPL
      C** Core hook for externalisation.                                   S01408
      C/COPY WNCPYSRC,LE0450PDR                                            S01408
      C*                                                                   S01408
+     C     BA6048        IFEQ      'Y'                                                        BA6048
+     C     LNRF          CHAIN     A6CLIPY1                           89                      BA6048
+     C     *IN89         IFEQ      '0'                                                        BA6048
+     C     X0SP1B        IFNE      *BLANKS                                                    BA6048
+     C     X0SP2B        ORNE      *BLANKS                                                    BA6048
+     C     X0SP3B        ORNE      *BLANKS                                                    BA6048
+     C     X0SP4B        ORNE      *BLANKS                                                    BA6048
+     C                   MOVE      *ON           *IN34                                        BA6048
+     C                   MOVE      X0SP1B        SPI1N            30                          BA6048
+     C                   MOVE      X0SP2B        SPI2N            30                          BA6048
+     C                   MOVE      X0SP3B        SPI3N            30                          BA6048
+     C                   MOVE      X0SP4B        X0SPI4                                       BA6048
+     C                   MOVE      *BLANKS       X0SP1B                                       BA6048
+     C                   MOVE      *BLANKS       X0SP2B                                       BA6048
+     C                   MOVE      *BLANKS       X0SP3B                                       BA6048
+     C                   MOVE      *BLANKS       X0SP4B                                       BA6048
+     C                   ENDIF                                                                BA6048
+     C                   UPDATE    A6CLIPD1                                                   BA6048
+     C                   ENDIF                                                                BA6048
+     C                   ENDIF                                                                BA6048
       *                                                                                       CLE034
      C     CLE034        IFEQ      'Y'
      C                   MOVE      *BLANK        WRKROL
@@ -17534,6 +17595,11 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C                   MOVE      *BLANKS       WTRANS
      C*                                                                   S01486
+     C     BA6048        IFEQ      'Y'                                                        BA6048
+     C     *IN34         ANDEQ     *ON                                                        BA6048
+     C                   MOVE      *ON           *IN27                                        BA6048
+     C                   ENDIF                                                                BA6048
+      *                                                                                       BA6048
      C                   ENDSR                                                                 S0148
      C/COPY WNCPYSRC,LEH00568
 2312 C**                                                                  S01486
@@ -21815,6 +21881,9 @@ C    C                   ENDIF                                                  
      O               28      WFRCO              242                                         MD028338
 3466 O                       YILN               341P
      O                       RDST               244                             S01392
+     O               27      SPI1N              274                                           BA6048
+     O               27      SPI2N              304                                           BA6048
+     O               27      SPI3N              334                                           BA6048
      O**********               ORVD     354                               S01392              CGL029
      O                       ORVD              1265
      O                       THRN               364                             S01392

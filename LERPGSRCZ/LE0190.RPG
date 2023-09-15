@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. BA6048             Date 01Mar23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
@@ -195,6 +196,7 @@
 0011 F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6048 - New Special Instructions for LE Loans               *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD058815 - Dealing interest Calculation type 6 have different*
@@ -560,6 +562,8 @@
       *                                                                   S01408
      F/COPY WNCPYSRC,LE0190FFP1                                           S01408
       *                                                                   S01408
+     FA6CLIPY0IF  E           K        DISK                           UC                      BA6048
+      *
       /EJECT
      F*****************************************************************
      F*                                                               *
@@ -2329,6 +2333,15 @@
 0650 C** CAUSED THROUGH ACCESSING THE FEES PROGRAM.                    T  S01270
 0651 C**                                                                  S01270
      C/COPY WNCPYSRC,LE0190C024
+      *
+     C           BA6048    IFEQ 'Y'                                                           BA6048
+     C                     MOVE *BLANKS   SPI4   30                                           BA6048
+     C           LNRF      CHAINA6CLIPY0             99                                       BA6048
+     C           *IN99     IFEQ '0'                                                           BA6048
+     C                     MOVE X0SPI4    SPI4                                                BA6048
+     C                     ENDIF                                                              BA6048
+     C                     ENDIF                                                              BA6048
+      *
      C           *IN20     IFEQ '1'                                       S01270
      C                     MOVE '1'       *IN09                           S01270
      C           *IN50     IFEQ '1'                                       S01270
@@ -4691,6 +4704,22 @@
      C                     MOVE 'N'       CER050  1                                           CER050
      C                     ENDIF                                                              CER050
       *                                                                                       CER050
+      ** Access SAR details file to determine if BA6048 is switched on                        BA6048
+      *                                                                                       BA6048
+     C                     CALL 'AOSARDR0'                                                    BA6048
+     C                     PARM *BLANKS   PRTCD                                               BA6048
+     C                     PARM '*VERIFY' POPTN                                               BA6048
+     C                     PARM 'BA6048'  PSARD                                               BA6048
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA6048
+      *                                                                                       BA6048
+     C                     MOVE 'N'       BA6048  1                                           BA6048
+     C                     MOVE *OFF      *IN90                                               BA6048
+     C           PRTCD     IFEQ *BLANKS                                                       BA6048
+     C                     OPEN A6CLIPY0                                                      BA6048
+     C                     MOVE 'Y'       BA6048                                              BA6048
+     C                     MOVE *ON       *IN90                                               BA6048
+     C                     ENDIF                                                              BA6048
+      *
      C                     ENDSR                                          147830
       *                                                                   147830
 1185 C********************************************************************
@@ -7098,25 +7127,39 @@
      O                         SPI1     294                                                   CGL029
      O                         SPI2     324                                                   CGL029
      O                         SPI3     354                                                   CGL029
-     O                         ICCY     357                                                   CGL029
-     O                 56      SLNREF   363                                                   CGL029
+      *                                                                                       BA6048
+     O***********              ICCY     357                                            CGL029 BA6048
+     O***********      56      SLNREF   363                                            CGL029 BA6048
      O****             94      SEFIRT   367                                          CAS009 BUG13357
      O****             94      SACOST   387                                          CAS009 BUG13357
      O****             94      STOFEE   407                                          CAS009 BUG13357
      O****             94      SADJYF   427                                          CAS009 BUG13357
      O****             94      SNETPV   447                                          CAS009 BUG13357
      O****             94      SAMODT   467                                          CAS009 BUG13357
-     O                 94      SEFIRT   379                                                 BUG13357
-     O                 94      SACOST   399                                                 BUG13357
-     O                 94      STOFEE   419                                                 BUG13357
-     O                 94      SADJYF   439                                                 BUG13357
-     O                 94      SNETPV   459                                                 BUG13357
-     O                 94      SAMODT   479                                                 BUG13357
-     O                 60      DDAPRP   480                                                   CER050
-     O                 60      DDPAMT   494                                                   CER050
-     O                 60      DDAPRR   502                                                   CER050
+     O***********      94      SEFIRT   379                                          BUG13357 BA6048
+     O***********      94      SACOST   399                                          BUG13357 BA6048
+     O***********      94      STOFEE   419                                          BUG13357 BA6048
+     O***********      94      SADJYF   439                                          BUG13357 BA6048
+     O***********      94      SNETPV   459                                          BUG13357 BA6048
+     O***********      94      SAMODT   479                                          BUG13357 BA6048
+     O***********      60      DDAPRP   480                                            CER050 BA6048
+     O***********      60      DDPAMT   494                                            CER050 BA6048
+     O***********      60      DDAPRR   502                                            CER050 BA6048
       *                                                                   CEU004
      O/COPY WNCPYSRC,LE0190O002
+      *                                                                                       BA6048
+     O                 90      SPI4     384                                                   BA6048
+     O                         ICCY     387                                                   BA6048
+     O                 56      SLNREF   393                                                   BA6048
+     O                 94      SEFIRT   409                                                   BA6048
+     O                 94      SACOST   429                                                   BA6048
+     O                 94      STOFEE   449                                                   BA6048
+     O                 94      SADJYF   469                                                   BA6048
+     O                 94      SNETPV   489                                                   BA6048
+     O                 94      SAMODT   509                                                   BA6048
+     O                 60      DDAPRP   510                                                   BA6048
+     O                 60      DDPAMT   524                                                   BA6048
+     O                 60      DDAPRR   532                                                   BA6048
       *                                                                                       CLE064
       ** Elements of Array TABF/TABFRQ were amended by removing TBI-MONTHLY and               CLE064
       ** XSIX MONTHLY, and added more elements                                                CLE064

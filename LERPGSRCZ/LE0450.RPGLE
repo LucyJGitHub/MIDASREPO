@@ -8672,7 +8672,7 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   180044
      C     *IN15         IFEQ      '1'                                                         18004
      C     INTA          ANDNE     *ZEROS                                                      18004
-     C*****PDIN*****     SUB       INTA          PDIN                                 18004 MD015646
+     C*****PDIN*         SUB       INTA          PDIN                                 18004 MD015646
      C     PDIN          IFLT      0                                                        AR628773
      C                   Z-ADD     0             PDIN                                       AR628773
      C                   ENDIF                                                              AR628773
@@ -8691,10 +8691,10 @@ L118 I                             P   72   77 7RTSPL
      C     PDNN          SUB       INTN          PDNN
      C                   ENDIF
       *                                                                                       CAS005
-     C*****CPAM*****     IFEQ      *ZEROS                                                   AR947177
-     C*****PDIN*****     ANDEQ     *ZEROS                                                   AR947177
-     C*****MDAT*****     ANDLE     RUND                                                     AR947177
-     C*****AUTOL****     ANDNE     'C'                                              CLE134  AR947177
+     C*****CPAM*         IFEQ      *ZEROS                                                   AR947177
+     C*****PDIN*         ANDEQ     *ZEROS                                                   AR947177
+     C*****MDAT*         ANDLE     RUND                                                     AR947177
+     C*****AUTOL         ANDNE     'C'                                              CLE134  AR947177
      C**********         MOVE      'Y'           AUTOL                                      AR947177
      C**********         ENDIF                                                              AR947177
       *                                                                                       191069
@@ -8940,7 +8940,7 @@ L118 I                             P   72   77 7RTSPL
 1287 C   89MDAT          COMP      RUND                                 89
      C/COPY WNCPYSRC,LE0450C061
      C   89              MOVE      AUTOL         WAUTOL            1                          CLE134
-1287 C***89*******       MOVE      'Y'           AUTOL                                      AR947177
+1287 C***89*****         MOVE      'Y'           AUTOL                                      AR947177
      C   89CLE134        IFEQ      'Y'                                                        CLE134
      C     WAUTOL        ANDEQ     'C'                                                        CLE134
      C                   MOVE      'C'           AUTOL                                        CLE134

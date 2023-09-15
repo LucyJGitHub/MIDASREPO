@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061267           Date 26Jul23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055874           Date 22May20               *
       *                 MD055685           Date 24Apr20               *
       *                 MD052994           Date 25Nov19               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061267 - Credit Lines (CLE025) fixes.                      *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -196,8 +198,13 @@
      FFACHISHL  UF   E           K DISK    INFSR(*PSSR)
      F***APOSTJ0   IF   E           K DISK    INFSR(*PSSR)                                AR1023928A
      FAPOSTJ2   IF   E           K DISK    INFSR(*PSSR)                                   AR1023928A
-     F                                     RENAME(APOSTPDF:APOSTJD0)                      AR1023928A
+     F**********                           RENAME(APOSTPDF:APOSTJD0)             AR1023928A MD061267
+     F                                     RENAME(APOSTJD0:APOSTJF0)                        MD061267
+     F                                     RENAME(APOSTJD1:APOSTJF1)                        MD061267
      FRSACMTL3  IF   E           K DISK    INFSR(*PSSR)
+     FRESEODL0  IF   E           K DISK    INFSR(*PSSR)                                     MD061267
+     FLEFCAML3  IF   E           K DISK    INFSR(*PSSR)                                     MD061267
+     F                                     PREFIX(L3_)                                      MD061267
      FHISACT    O    E             DISK    INFSR(*PSSR)
      FLE000030P1O    E             PRINTER INFDS(SPOOL1)  USROPN
      FLE000030P2O    E             PRINTER INFDS(SPOOL2)  USROPN
@@ -344,6 +351,28 @@
      D  RDASH6                11     11
      D  RFCNO                 12     13
 
+     D DSAPOS_P        DS                                                                   MD061267
+     D  P_CNUM                             LIKE(APCNUM)                                     MD061267
+     D  P_CCY                              LIKE(CCY)                                        MD061267
+     D  P_ACOD                             LIKE(APACOD)                                     MD061267
+     D  P_ACSQ                             LIKE(APACSQ)                                     MD061267
+     D  P_BRCA                             LIKE(BRCA)                                       MD061267
+     D  P_PSTD                             LIKE(PSTD)                                       MD061267
+     D  P_VALD                             LIKE(VALD)                                       MD061267
+     D  P_PSTA                             LIKE(PSTA)                                       MD061267
+     D  P_DRCR                             LIKE(DRCR)                                       MD061267
+                                                                                            MD061267
+     D DSAPOS_C        DS                                                                   MD061267
+     D  CNUM                                                                                MD061267
+     D  CCY                                                                                 MD061267
+     D  APACOD                                                                              MD061267
+     D  APACSQ                                                                              MD061267
+     D  BRCA                                                                                MD061267
+     D  PSTD                                                                                MD061267
+     D  VALD                                                                                MD061267
+     D  PSTA                                                                                MD061267
+     D  DRCR                                                                                MD061267
+                                                                                            MD061267
      D SPOOL1          DS
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
@@ -355,6 +384,7 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
      D LERSTS        E DS                  EXTNAME(LERSTS) DTAARA                            BUG8222
      D***JNSTAT*       E DS                  EXTNAME(JNSTAT) DTAARA                  CLE169 MD052994
+     D JNSTAT        E DS                  EXTNAME(JNSTAT) DTAARA                           MD061267
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
@@ -383,6 +413,10 @@
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long Data Structure
+                                                                                            MD061267
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD061267
+      **Third DS for Access Programs, Long Data Structure                                   MD061267
+                                                                                            MD061267
      D CurrKEY         DS                                                                   MD023117
      D  DLNO                                                                                MD023117
      D  AKEY                                                                                MD023117
@@ -525,6 +559,21 @@
      D WPROC           S              1                                                       CLE169
      D WBTCH           S              3                                                       CLE169
      D WPrcRSAC        S              1                                                     MD055685
+     D WFRecI          S              1                                                     MD061267
+     D WARecI          S              1                                                     MD061267
+     D WAlGn           S              1                                                     MD061267
+     D WCHis           S              1                                                     MD061267
+     D WDtEx           S              5  0                                                  MD061267
+     D WNDtEx          S              5  0                                                  MD061267
+     D WRVDat          S              5  0                                                  MD061267
+     D W_PstA          S             15  0                                                  MD061267
+     D WPstBal         S             15  0                                                  MD061267
+     D WPstAct         S             15  0                                                  MD061267
+     D WPrBal          S             15  0                                                  MD061267
+     D WFPrBal         S             15  0                                                  MD061267
+     D WPrTEOF         S             15  0                                                  MD061267
+     D WPrTEOC         S             15  0                                                  MD061267
+     D WPRUN           S              5  0                                                  MD061267
 
      D GIVEN           S              1
      D WUPDAT          S              1
@@ -683,6 +732,20 @@
      I              CNUM                        APCNUM
      I              ACOD                        APACOD
      I              ACSQ                        APACSQ
+      *                                                                                     MD061267
+     IAPOSTJD1                                                                              MD061267
+     I              CNUM                        APCNUM                                      MD061267
+     I              ACOD                        APACOD                                      MD061267
+     I              ACSQ                        APACSQ                                      MD061267
+      *                                                                                     MD061267
+     IAPOSTJF0                                                                              MD061267
+     I              CNUM                        APCNUM                                      MD061267
+     I              ACOD                        APACOD                                      MD061267
+     I              ACSQ                        APACSQ                                      MD061267
+     IAPOSTJF1                                                                              MD061267
+     I              CNUM                        APCNUM                                      MD061267
+     I              ACOD                        APACOD                                      MD061267
+     I              ACSQ                        APACSQ                                      MD061267
 
       *****************************************************************
       /EJECT
@@ -701,6 +764,7 @@
 
       ** Access DEALSDB/DLDLDBQD
 
+     C                   IF        *INU5 = *OFF                                             MD061267
      C                   EXSR      SRDLDBUPD
                                                                                              BUG3035
       ** Access DKEYSDP                                                                      BUG3035
@@ -726,6 +790,7 @@
       ** Access DLFMRPD
 
      C                   EXSR      SRFXMRUPD
+     C                   ENDIF                                                              MD061267
                                                                                              BUG3035
       ***Access*RSACMTPD***********************************************           BUG3035 AR1023928A
                                                                                              BUG3035
@@ -736,7 +801,9 @@
      C     CLE169        IFEQ      'Y'                                                        CLE169
      C                   EXSR      SRACCTUP2                                                  CLE169
      C                   ELSE                                                                 CLE169
+     C                   IF        *INU5 = *ON                                              MD061267
      C                   EXSR      SRACCTUPD
+     C                   ENDIF                                                              MD061267
      C                   ENDIF                                                                CLE169
                                                                                             MD055685
       ** Do not process RSACMTPD if ANWD run                                                MD055685
@@ -750,6 +817,7 @@
       ** Access RSACMTPD                                                                  AR1023928A
                                                                                           AR1023928A
      C                   IF        WPrcRSAC = 'Y'                                           MD055685
+     C                             AND CLE169 = 'Y'                                         MD061267
      C                   EXSR      SRRSACUPD                                              AR1023928A
      C                   ENDIF                                                              MD055685
 
@@ -759,7 +827,9 @@
 
       ** Access DLDLDBQD/DLDLDCQD/DLDLDGQD
 
+     C                   IF        *INU5 = *OFF                                             MD061267
      C                   EXSR      SRDEALUPD
+     C                   ENDIF                                                              MD061267
 
       ** Close report file
 
@@ -2184,8 +2254,8 @@
 
      C                   IF        *IN15 = *ON
 
-     C     KFCLTY        CHAIN     PEFCLFL3                           16
-
+     C**********                                                                            MD061267
+     C*****KFCLTY        CHAIN     PEFCLFL3                           16                    MD061267
       ***Database*error************************************************                     AR788404
       *****************************************************************                     AR788404
      C**********         IF        *IN16 = *ON                                              AR788404
@@ -2195,15 +2265,19 @@
      C**********         EXSR      *PSSR                                                    AR788404
      C**********         ENDIF                                                              AR788404
 
+     C     KFCLTY        CHAIN     PEFCLFL3                           15                    MD061267
      C                   ENDIF
 
-      ** If record not found in PEFCLFM do not execute further                              AR788404
-                                                                                            AR788404
-     C                   IF        *IN15 = *OFF OR *IN16 = *OFF                             AR788404
-                                                                                            AR788404
+      ***If*record*not*found*in*PEFCLFM*do*not*execute*further*********            AR788404 MD061267
+      *****************************************************************            AR788404 MD061267
+     C**********         IF        *IN15 = *OFF OR *IN16 = *OFF                    AR788404 MD061267
+      *****************************************************************            AR788404 MD061267
       ** If live record
 
-     C                   IF        RECI <> 'R'
+     C**********         IF        RECI <> 'R'                                              MD061267
+     C                   IF        (*IN15 = *OFF and RECI = 'D')                            MD061267
+     C                             or (*IN15 = *OFF and RECI = 'E'                          MD061267
+     C                             and DTEX >= BJRDNB and DTEX < BJDNWD)                    MD061267
 
      C                   EVAL      KFACNUM = PFCU
      C                   MOVEL     PFTP          KFAFCTY
@@ -2456,15 +2530,78 @@
 
      C                   ENDIF
 
-     C                   ENDIF                                                              AR788404
-                                                                                            AR788404
+     C**********         ENDIF                                                     AR788404 MD061267
+      **********                                                                   AR788404 MD061267
      C                   ENDIF
 
+     C                   EVAL      WCUST = ACFCCU                                           MD061267
+     C                   EVAL      WFCLT = ACFACT                                           MD061267
+     C                   EVAL      WFCSQ = ACFCNO                                           MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KFCNUM = ACFCCU                                          MD061267
+     C                   EVAL      KFFACT = ACFACT                                          MD061267
+     C                   EVAL      KFFCNO = ACFCNO                                          MD061267
+     C                   EVAL      WAlGn  = 'N'                                             MD061267
+     C                   EVAL      WCHis  = 'N'                                             MD061267
+     C                   EVAL      WRVDat = *ZEROS                                          MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        CHAIN     FCLTYL3                            15                    MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN15 = *ON                                              MD061267
+     C     KFCLTY        CHAIN     PEFCLFL3                           15                    MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Allow to generate account movement until expiration date                            MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN15 = *OFF and RECI <> 'R'                             MD061267
+     C                   EVAL      WFRecI = RECI                                            MD061267
+      *                                                                                     MD061267
+     C                   IF        RECI = 'D'                                               MD061267
+     C                             or (RECI = 'E' and DTEX >= BJRDNB)                       MD061267
+     C                   EVAL      WAlGn = 'Y'                                              MD061267
+     C                   EVAL      WDtEx = DTEX                                             MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Check if the facility has been re-activated                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        (RECI = 'E' and DTEX < BJRDNB)                           MD061267
+     C                             or (RECI = 'C' and CHTP = 'C')                           MD061267
+     C                   EVAL      WARecI = ' '                                             MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        SETLL     LEFCAML3                                                 MD061267
+     C     KFCLTY        READE     LEFCAML3                                                 MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(LEFCAML3)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        L3_FATP = 'FR'                                           MD061267
+     C                   EVAL      WARecI = L3_RECI                                         MD061267
+     C                   EVAL      WNDtEx = L3_NDEX                                         MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        READE     LEFCAML3                                                 MD061267
+     C                   ENDDO                                                              MD061267
+      *                                                                                     MD061267
+      * Allow to generate account movement if the new expiration date                       MD061267
+      * of re-activated facility is greater than or equal to rundate.                       MD061267
+      *                                                                                     MD061267
+     C                   IF        WARecI = 'D' and WNDtEx >= BJRDNB                        MD061267
+     C                   EVAL      WAlGn = 'Y'                                              MD061267
+     C                   EVAL      WDtEx = WNDtEx                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        WAlGn <> 'N'                                             MD061267
+      *                                                                                     MD061267
      C                   EVAL      WNMVMT = 'Y'                                              BUG3035
      C                   EVAL      WACTBAL = 0
      C                   EVAL      WTEOP = 0
      C                   EVAL      WTEOC = 0
      C                   EVAL      WTEOF = 0
+     C                   EVAL      WPrBaL  = 0                                              MD061267
+     C                   EVAL      WPrTEOF = 0                                              MD061267
+     C                   EVAL      WPrTEOC = 0                                              MD061267
 
      C**********         EVAL      WCUST = FCCU                                             MD045032
      C**********         EVAL      WFCLT = FACT                                             MD045032
@@ -2515,23 +2652,30 @@
      C                   EVAL      WCOMACD = APACSQ
      C                   EVAL      WCOMACE = BRCA
 
-     C                   IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD
+     C**********         IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD                  MD061267
+      *                                                                                     MD061267
+     C                   IF        WCOMPACC1 = WCOMPACC2                                    MD061267
+      *                                                                                     MD061267
+     C                   IF        PSTD > F1FCHD                                            MD061267
+     C                             or PSTD > WDTEX                                          MD061267
 
      C                   IF        DRCR = 0
      C                   EVAL      WACTBAL = WACTBAL - PSTA
      C                   ELSE
      C                   EVAL      WACTBAL = WACTBAL + PSTA
      C                   ENDIF
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
 
      C                   ELSE
 
-      *                                                                                   AR1023928A
-      ** Compare the two details before leaving the loop to make sure no record in        AR1023928A
-      ** APOSTJ2 was left behind in processing.                                           AR1023928A
-      *                                                                                   AR1023928A
-     C                   IF        WCOMPACC1 <> WCOMPACC2                                 AR1023928A
+      *************************************************************************  AR1023928A MD061267
+      ***Compare the two details before leaving the loop to make sure no record  AR1023928A MD061267
+      ***APOSTJ2 was left behind in processing.                                  AR1023928A MD061267
+      *************************************************************************  AR1023928A MD061267
+     C**********         IF        WCOMPACC1 <> WCOMPACC2                        AR1023928A MD061267
      C                   LEAVE
-     C                   ENDIF                                                            AR1023928A
+     C**********         ENDIF                                                   AR1023928A MD061267
 
      C                   ENDIF
 
@@ -2540,6 +2684,32 @@
      C**********         READ      APOSTJ0                                                AR1023928A
      C                   READ      APOSTJ2                                                AR1023928A
      C                   ENDDO
+      *                                                                                     MD061267
+      * Access RESEODPD for posting from running date, then add if                          MD061267
+      * postings is within the facility change date                                         MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KAPSTD = *LOVAL                                          MD061267
+      *                                                                                     MD061267
+     C     KAPOST        SETLL     RESEODL0                                                 MD061267
+     C     KAPOST2       READE     RESEODL0                                                 MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(RESEODL0)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        R1VDAT <= F1FCHD AND F1FCHD < BJDNWD                     MD061267
+     C                             AND R1VDAT <= WDtEx                                      MD061267
+      *                                                                                     MD061267
+     C                   IF        R1DRCR = 0                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL + R1PSTA                               MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL - R1PSTA                               MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     KAPOST2       READE     RESEODL0                                                 MD061267
+     C                   ENDDO                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstBal = WACTBAL                                        MD061267
 
       ** Generate 'AS' entry
 
@@ -2620,6 +2790,12 @@
      C                   UPDATE    GLACNTD0                                               AR1023928A
       *                                                                                   AR1023928A
      C                   ENDIF                                                            AR1023928A
+      *                                                                                     MD061267
+      * Save previous amount of balance and exposure                                        MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal  = WACTBAL                                        MD061267
+     C                   EVAL      WPrTEOF = WTEOF                                          MD061267
+     C                   EVAL      WPrTEOC = WTEOC                                          MD061267
 
       ** Access APOSTPD/GLACPHPD record
 
@@ -2629,39 +2805,102 @@
      C                   EVAL      KAACSQ = ACACSQ
      C                   EVAL      KABRCA = ACBRCA
      C                   EVAL      KAPSTD = *LOVAL
-     C                   EVAL      WCOMAC1 = ACCNUM
-     C                   EVAL      WCOMAC2 = ACCCY
-     C                   EVAL      WCOMAC3 = ACACOD
-     C                   EVAL      WCOMAC4 = ACACSQ
-     C                   EVAL      WCOMAC5 = ACBRCA
+     C**********         EVAL      WCOMAC1 = ACCNUM                                         MD061267
+     C**********         EVAL      WCOMAC2 = ACCCY                                          MD061267
+     C**********         EVAL      WCOMAC3 = ACACOD                                         MD061267
+     C**********         EVAL      WCOMAC4 = ACACSQ                                         MD061267
+     C**********         EVAL      WCOMAC5 = ACBRCA                                         MD061267
      C**********         EVAL      WCOMACA = *ZEROS                                           CSD027
-     C                   EVAL      WCOMACA = *BLANKS                                          CSD027
-     C                   EVAL      WCOMACB = *BLANKS
-     C                   EVAL      WCOMACC = *ZEROS
-     C                   EVAL      WCOMACD = *ZEROS
-     C                   EVAL      WCOMACE = *BLANKS
-
+     C**********         EVAL      WCOMACA = *BLANKS                                CSD027  MD061267
+     C**********         EVAL      WCOMACB = *BLANKS                                        MD061267
+     C**********         EVAL      WCOMACC = *ZEROS                                         MD061267
+     C**********         EVAL      WCOMACD = *ZEROS                                         MD061267
+     C**********         EVAL      WCOMACE = *BLANKS                                        MD061267
+     C**********                                                                            MD061267
      C*****KAPOST        SETLL     APOSTJ0                                                AR1023928A
      C**********         READ      APOSTJ0                                                AR1023928A
-     C     KAPOST        SETLL     APOSTJ2                                                AR1023928A
-     C                   READ      APOSTJ2                                                AR1023928A
-
+     C*****KAPOST        SETLL     APOSTJ2                                       AR1023928A MD061267
+     C**********         READ      APOSTJ2                                       AR1023928A MD061267
+      **********
      C**********         DOW       NOT %EOF(APOSTJ0)                                      AR1023928A
-     C                   DOW       NOT %EOF(APOSTJ2)                                      AR1023928A
+     C**********         DOW       NOT %EOF(APOSTJ2)                             AR1023928A MD061267
 
-     C                   EVAL      WCOMACA = APCNUM
-     C                   EVAL      WCOMACB = CCY
-     C                   EVAL      WCOMACC = APACOD
-     C                   EVAL      WCOMACD = APACSQ
-     C                   EVAL      WCOMACE = BRCA
+     C**********         EVAL      WCOMACA = APCNUM                              AR1023928A MD061267
+     C**********         EVAL      WCOMACB = CCY                                 AR1023928A MD061267
+     C**********         EVAL      WCOMACC = APACOD                              AR1023928A MD061267
+     C**********         EVAL      WCOMACD = APACSQ                              AR1023928A MD061267
+     C**********         EVAL      WCOMACE = BRCA                                AR1023928A MD061267
+     C**********                                                                 AR1023928A MD061267
+     C**********         IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD       AR1023928A MD061267
+     C**********                                                                 AR1023928A MD061267
+     C**********         IF        DRCR = 0                                      AR1023928A MD061267
+     C**********         EVAL      WACTBAL = WACTBAL + PSTA                      AR1023928A MD061267
+     C**********         ELSE                                                    AR1023928A MD061267
+     C**********         EVAL      WACTBAL = WACTBAL - PSTA                      AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+      *                                                                                     MD061267
+      * Initialise indicators for checking End of File                                      MD061267
+      *                                                                                     MD061267
+     C                   EVAL      *IN22 = *OFF                                             MD061267
+     C                   EVAL      *IN23 = *OFF                                             MD061267
+      *                                                                                     MD061267
+      * Clear data structure of previous posting details                                    MD061267
+      *                                                                                     MD061267
+     C                   CLEAR                   DSAPOS_P                                   MD061267
+      *                                                                                     MD061267
+     C     KAPOST        SETLL     APOSTJ2                                                  MD061267
+     C     KAPOST2       READE     APOSTJ2                                                  MD061267
+      *                                                                                     MD061267
+      * Set *ON the end of file indicator                                                   MD061267
+      *                                                                                     MD061267
+     C                   IF        %EOF(APOSTJ2)                                            MD061267
+     C                   EVAL      *IN23 = *ON                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Initialise posting amount and date field                                            MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(APOSTJ2)                                        MD061267
+     C                   EVAL      W_PstA = 0                                               MD061267
+     C                   EVAL      P_PSTD = 0                                               MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Add posting if date is greater than facility change date,                           MD061267
+      * less than next working date and until the expiration date                           MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(APOSTJ2)                                        MD061267
+     C                             or *IN23 = *OFF                                          MD061267
+      *                                                                                     MD061267
+     C                   IF        P_PSTD > F1FCHD                                          MD061267
+     C                             and P_PSTD <= WDtEx                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+      *                                                                                     MD061267
+     C                   IF        P_PSTD = PSTD                                            MD061267
+     C                             or (P_PSTD <> PSTD                                       MD061267
+     C                             and P_PSTD < PSTD)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        P_DRCR = 0                                               MD061267
+     C                   EVAL      W_PstA = W_PstA + P_PSTA                                 MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      W_PstA = W_PstA - P_PSTA                                 MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        (*IN22 = *OFF and P_PSTD <> PSTD                         MD061267
+     C                             and P_PSTD > F1FCHD                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+     C                             and P_PSTD <= WDtEx)                                     MD061267
+     C                             or (*IN22 = *ON and P_PSTD = PSTD                        MD061267
+     C                             and P_PSTD > F1FCHD                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+     C                             and P_PSTD <= WDtEx)                                     MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WACTBAL = WACTBAL + W_PstA                               MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstBal = WACTBAL                                        MD061267
+     C                   EVAL      W_PstA = 0                                               MD061267
 
-     C                   IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD
-
-     C                   IF        DRCR = 0
-     C                   EVAL      WACTBAL = WACTBAL + PSTA
-     C                   ELSE
-     C                   EVAL      WACTBAL = WACTBAL - PSTA
-     C                   ENDIF
 
       ** Generate 'AC' entry
 
@@ -2675,7 +2914,8 @@
      C                   EVAL      WNMVMT = 'N'                                              BUG3035
      C                   EVAL      WACTION = 'AC'
      C                   EVAL      WACTCCY = ACCCY
-     C                   EVAL      WACTDAT = PSTD
+     C**********         EVAL      WACTDAT = PSTD                                           MD061267
+     C                   EVAL      WACTDAT = P_PSTD                                         MD061267
 
       ** Determine Valuation Details
 
@@ -2745,11 +2985,11 @@
      C                   IF        *IN15 = *OFF
 
      C                   EVAL      F1ACBL = WACTBAL
-                                                                                          AR1023928A
-     C                   IF        WTEOF >= 0 OR WINCOFF = 'Y'                            AR1023928A
+      **********                                                                 AR1023928A MD061267
+     C**********         IF        WTEOF >= 0 OR WINCOFF = 'Y'                   AR1023928A MD061267
      C                   EVAL      F1TEXO = WTEOP
      C                   EVAL      F1TEOF = WTEOF
-     C                   ENDIF                                                            AR1023928A
+     C**********         ENDIF                                                   AR1023928A MD061267
 
      C                   IF        TRCA = 'TR'
      C                   EVAL      F1TEOC = WTEOC
@@ -2758,21 +2998,53 @@
      C                   UPDATE    GLACNTD0
 
      C                   ENDIF
-     C                   ELSE                                                             AR1023928A
-      *                                                                                   AR1023928A
-      ** Compare the two details before leaving the loop to make sure no record in        AR1023928A
-      ** APOSTJ2 was left behind in processing.                                           AR1023928A
-      *                                                                                   AR1023928A
-     C                   IF        WCOMPACC1 <> WCOMPACC2                                 AR1023928A
-     C                   LEAVE                                                            AR1023928A
-     C                   ENDIF                                                            AR1023928A
-     C                   ENDIF                                                            AR1023928A
-      *                                                                                   AR1023928A
-      ** Read next record                                                                 AR1023928A
-      *                                                                                   AR1023928A
-     C                   READ      APOSTJ2                                                AR1023928A
-     C                   ENDDO                                                            AR1023928A
-     C                   ENDIF                                                            AR1023928A
+     C***********        ELSE                                                    AR1023928A MD061267
+      ***********                                                                AR1023928A MD061267
+      ***Compare*the*two*details before leaving the loop to make sure no record  AR1023928A MD061267
+      ***APOSTJ2*was*left*behind in processing.                                  AR1023928A MD061267
+      ************************************************************************** AR1023928A MD061267
+     C**********         IF        WCOMPACC1 <> WCOMPACC2                        AR1023928A MD061267
+     C**********         LEAVE                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+      **********                                                                 AR1023928A MD061267
+      ***Read*next*record                                                        AR1023928A MD061267
+      **********                                                                 AR1023928A MD061267
+     C**********         READ      APOSTJ2                                       AR1023928A MD061267
+     C**********         ENDDO                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+      *                                                                                     MD061267
+      * Set previous account balance equals to current balance                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal = WACTBAL                                         MD061267
+      *                                                                                     MD061267
+      * Set previous exposure field with current exposure                                   MD061267
+      * if there is an action amount                                                        MD061267
+      *                                                                                     MD061267
+     C                   IF        WPstAct <> 0                                             MD061267
+     C                   EVAL      WPrTEOF = WTEOF                                          MD061267
+     C                   EVAL      WPrTEOC = WTEOC                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      DSAPOS_P = DSAPOS_C                                      MD061267
+     C     KAPOST2       READE     APOSTJ2                                                  MD061267
+      *                                                                                     MD061267
+      * Set *ON the end of file indicator                                                   MD061267
+      *                                                                                     MD061267
+     C   22              EVAL      *IN23 = *ON                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        %EOF(APOSTJ2)                                            MD061267
+     C                   EVAL      *IN22 = *ON                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDDO                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Access RESEODPD for postings from rundate                                           MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRRESEOD                                                 MD061267
                                                                                              BUG3035
      C**********         IF        WNMVMT = 'Y'                                      BUG3035 BUG3934
      C**********         IF        WNMVMT = 'Y' and WFACILTY <> *ZEROS               BUG3934  CLE041
@@ -2781,6 +3053,7 @@
      C                             WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CSD027
      C                             WCUST <> *ZEROS AND                                      BUG11624
      C                             WFCSQ <> *ZEROS                                            CLE041
+     C                             and BJRDNB <= WDtEx                                      MD061267
                                                                                              BUG3035
      C                   EVAL      WTRANSID = *ZEROS                                         BUG3035
      C                   MOVE      WCUST         KFCNUM                                      BUG3035
@@ -2833,6 +3106,8 @@
      C                   UPDATE    GLACNTD0                                                  BUG3035
                                                                                              BUG3035
      C                   ENDIF                                                               BUG3035
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
 
      C                   ELSE                                                                BUG3035
                                                                                              BUG3035
@@ -2845,9 +3120,324 @@
                                                                                              BUG3035
      C**********         IF        WFACILTY <> *ZEROS                                 BUG3035 CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
+      *                                                                                     MD061267
+     C                   EVAL      WNMVMT = 'Y'                                             MD061267
+     C                   EVAL      WAlGn  = 'N'                                             MD061267
+     C                   EVAL      WCHis  = 'Y'                                             MD061267
+     C                   EVAL      WRVDat = *ZEROS                                          MD061267
+      *                                                                                     MD061267
+      * Check facility details                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KFCNUM = ACFCCU                                          MD061267
+     C                   EVAL      KFFACT = ACFACT                                          MD061267
+     C                   EVAL      KFFCNO = ACFCNO                                          MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        CHAIN     FCLTYL3                            15                    MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN15 = *ON                                              MD061267
+     C     KFCLTY        CHAIN     PEFCLFL3                           15                    MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Process if facility is not reversed                                                 MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN15 = *OFF AND RECI <> 'R'                             MD061267
+     C                   EVAL      WFRecI = RECI                                            MD061267
+      *                                                                                     MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+     C                   EVAL      WTRXRAT = CAXR                                           MD061267
+     C                   EVAL      WTRMDIN = CMDI                                           MD061267
+     C                   EVAL      PFCCY   = FCCY                                           MD061267
+     C                   EVAL      PCACY   = CACY                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Allow to generate if live or expired from today's COB.                              MD061267
+      *                                                                                     MD061267
+     C                   IF        RECI = 'D'                                               MD061267
+     C                             or (RECI = 'E' and DTEX >= BJRDNB)                       MD061267
+     C                   EVAL      WAlGn = 'Y'                                              MD061267
+     C                   EVAL      WDtEx = DTEX                                             MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Check if the expired or closed facility has been re-activated                       MD061267
+      *                                                                                     MD061267
+     C                   IF        (RECI = 'E' and DTEX < BJRDNB)                           MD061267
+     C                             or (RECI = 'C' and CHTP = 'C')                           MD061267
+     C                   EVAL      WARecI = ' '                                             MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        SETLL     LEFCAML3                                                 MD061267
+     C     KFCLTY        READE     LEFCAML3                                                 MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(LEFCAML3)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        L3_FATP = 'FR'                                           MD061267
+     C                   EVAL      WARecI = L3_RECI                                         MD061267
+     C                   EVAL      WNDtEx = L3_NDEX                                         MD061267
+     C                   EVAL      WRVDat = L3_VLDT                                         MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        READE     LEFCAML3                                                 MD061267
+     C                   ENDDO                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        WARecI = 'D'                                             MD061267
+     C                   EVAL      WAlGn = 'R'                                              MD061267
+     C                   EVAL      WDtEx = WNDtEx                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Access APOSTPD/GLACPHPD for re-activated facility                                   MD061267
+      * with re-activation date less than rundate                                           MD061267
+      *                                                                                     MD061267
+     C                   IF        WAlGn = 'R' and WRVDat < BJRDNB                          MD061267
+     C                   EVAL      WCHis = 'N'                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KACCNUM = ACCNUM                                         MD061267
+     C                   EVAL      KACCCY  = ACCCY                                          MD061267
+     C                   EVAL      KACACOD = ACACOD                                         MD061267
+     C                   EVAL      KACACSQ = ACACSQ                                         MD061267
+     C                   EVAL      KACBRCA = ACBRCA                                         MD061267
+      *                                                                                     MD061267
+     C     KACCNT        CHAIN     GLACNTL3                                                 MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(GLACNTL3)                                         MD061267
+     C                   EVAL      WACTBAL = F1ACBL                                         MD061267
+     C                   EVAL      WTEOP   = F1TEXO                                         MD061267
+     C                   EVAL      WTEOF   = F1TEOF                                         MD061267
+     C                   EVAL      WTEOC   = F1TEOC                                         MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal  = F1ACBL                                         MD061267
+     C                   EVAL      WPrTEOF = F1TEOF                                         MD061267
+     C                   EVAL      WPrTEOC = F1TEOC                                         MD061267
+      *                                                                                     MD061267
+      * Retrieve the Today's Total Exposure/Offset from last                                MD061267
+      * account movement history                                                            MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KFACNUM = ACFCCU                                         MD061267
+     C                   MOVEL     ACFACT        KFAFCTY                                    MD061267
+     C                   MOVE      ACFCNO        KFAFCTY                                    MD061267
+     C                   EVAL      KFAACBR = ACBRCA                                         MD061267
+     C                   EVAL      KFAACCU = ACCNUM                                         MD061267
+     C                   EVAL      KFAACCY = ACCCY                                          MD061267
+     C                   EVAL      KFAACCD = ACACOD                                         MD061267
+     C                   EVAL      KFAACSQ = ACACSQ                                         MD061267
+     C                   EVAL      KFADATE = *HIVAL                                         MD061267
+     C                   EVAL      WCOMFC1 = KFACNUM                                        MD061267
+     C                   EVAL      WCOMFC2 = KFAFCTY                                        MD061267
+     C                   EVAL      WCOMFC3 = KFAACCU                                        MD061267
+     C                   EVAL      WCOMFC4 = KFAACCY                                        MD061267
+     C                   EVAL      WCOMFC5 = KFAACCD                                        MD061267
+     C                   EVAL      WCOMFC6 = KFAACSQ                                        MD061267
+     C                   EVAL      WCOMFC7 = KFAACBR                                        MD061267
+     C                   EVAL      WCOMFCA = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCB = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCC = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCD = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCE = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCF = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCG = *BLANKS                                        MD061267
+      *                                                                                     MD061267
+     C     KFACHIS2      SETGT     FACHSAL5                                                 MD061267
+     C                   READP     FACHSAL5                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WCOMFCA = FACNUM                                         MD061267
+     C                   EVAL      WCOMFCB = FAFCTY                                         MD061267
+     C                   EVAL      WCOMFCC = FAACCU                                         MD061267
+     C                   EVAL      WCOMFCD = FAACCY                                         MD061267
+     C                   EVAL      WCOMFCE = FAACCD                                         MD061267
+     C                   EVAL      WCOMFCF = FAACSQ                                         MD061267
+     C                   EVAL      WCOMFCG = FAACBR                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(FACHSAL5) and WCOMPFAC1 = WCOMPFAC2             MD061267
+     C                   EVAL      WPrTEOF = FATTEO                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        PCACY = PFCCY                                            MD061267
+     C                   EVAL      WPrTEOC = FATTEO                                         MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WCCY1 = PFCCY                                            MD061267
+     C                   EVAL      WCCY2 = PCACY                                            MD061267
+     C                   EVAL      WINAMT = FATTEO                                          MD061267
+     C                   EVAL      WRATE = WTRXRAT                                          MD061267
+     C                   EVAL      WMDIN = WTRMDIN                                          MD061267
+     C                   EVAL      GIVEN = 'Y'                                              MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WPrTEOC = WOUTAMT                                        MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WPrTEOC = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WPrTEOF = 0                                              MD061267
+     C                   EVAL      WPrTEOC = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KACNUM = ACCNUM                                          MD061267
+     C                   EVAL      KACCY  = ACCCY                                           MD061267
+     C                   EVAL      KAACOD = ACACOD                                          MD061267
+     C                   EVAL      KAACSQ = ACACSQ                                          MD061267
+     C                   EVAL      KABRCA = ACBRCA                                          MD061267
+     C                   EVAL      KAPSTD = WRVDAT                                          MD061267
+     C                   EVAL      *IN22  = *OFF                                            MD061267
+     C                   EVAL      *IN23  = *OFF                                            MD061267
+     C                   CLEAR                   DSAPOS_P                                   MD061267
+      *                                                                                     MD061267
+     C     KAPOST        SETGT     APOSTJ2                                                  MD061267
+     C     KAPOST2       READE     APOSTJ2                                                  MD061267
+      *                                                                                     MD061267
+     C                   IF        %EOF(APOSTJ2)                                            MD061267
+     C                   EVAL      *IN23 = *ON                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(APOSTJ2)                                        MD061267
+     C                   EVAL      W_PstA = 0                                               MD061267
+     C                   EVAL      P_PSTD = 0                                               MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(APOSTJ2)                                        MD061267
+     C                             or *IN23 = *OFF                                          MD061267
+      *                                                                                     MD061267
+     C                   IF        P_PSTD > F1FCHD                                          MD061267
+     C                             and P_PSTD <= WDtEx                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+      *                                                                                     MD061267
+     C                   IF        P_PSTD = PSTD                                            MD061267
+     C                             or (P_PSTD <> PSTD                                       MD061267
+     C                             and P_PSTD < PSTD)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        P_DRCR = 0                                               MD061267
+     C                   EVAL      W_PstA = W_PstA + P_PSTA                                 MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      W_PstA = W_PstA - P_PSTA                                 MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        (*IN22 = *OFF and P_PSTD <> PSTD                         MD061267
+     C                             and P_PSTD > F1FCHD                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+     C                             and P_PSTD <= WDTEX)                                     MD061267
+     C                             or (*IN22 = *ON  and P_PSTD = PSTD                       MD061267
+     C                             and P_PSTD > F1FCHD                                      MD061267
+     C                             and P_PSTD < BJRDNB                                      MD061267
+     C                             and P_PSTD <= WDTEX)                                     MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WACTBAL = WACTBAL + W_PSTA                               MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstBal = WACTBAL                                        MD061267
+     C                   EVAL      W_PstA  = 0                                              MD061267
+      *                                                                                     MD061267
+      * Generate 'AC' entry                                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WTRANSID = *ZEROS                                        MD061267
+     C                   EVAL      KFCNUM  = ACFCCU                                         MD061267
+     C                   EVAL      KFFACT  = ACFACT                                         MD061267
+     C                   EVAL      KFFCNO  = ACFCNO                                         MD061267
+     C                   EVAL      WNMVMT  = 'N'                                            MD061267
+     C                   EVAL      WACTION = 'AC'                                           MD061267
+     C                   EVAL      WACTCCY = ACCCY                                          MD061267
+     C                   EVAL      WACTDAT = P_PSTD                                         MD061267
+      *                                                                                     MD061267
+      * Determine Valuation Details                                                         MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRVALDET                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WREVAMT = WEXPOFF                                        MD061267
+      *                                                                                     MD061267
+      * Process Action                                                                      MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRPROCACT                                                MD061267
+                                                                                            MD061267
+     C                   EVAL      WTEOP = WEXPOFF                                          MD061267
+      *                                                                                     MD061267
+      * Convert amount                                                                      MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WCCY1 = ACCCY                                            MD061267
+     C                   EVAL      WCCY2 = ORFCCY                                           MD061267
+     C                   EVAL      WINAMT = WEXPOFF                                         MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOF = WOUTAMT                                          MD061267
+      *                                                                                     MD061267
+     C                   MOVE      WCUST         KFCNUM                                     MD061267
+     C                   MOVE      WFCLT         KFFACT                                     MD061267
+     C                   MOVE      WFCSQ         KFFCNO                                     MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        CHAIN     FCLTYL3                            17                    MD061267
+      *                                                                                     MD061267
+      * If facility is tranche                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN17 = *OFF and TRCA = 'TR'                             MD061267
+     C                   EVAL      WCCY1 = ORFCCY                                           MD061267
+     C                   EVAL      WCCY2 = CACY                                             MD061267
+     C                   EVAL      WINAMT = WTEOF                                           MD061267
+     C                   EVAL      WRATE = WTRXRAT                                          MD061267
+     C                   EVAL      WMDIN = WTRMDIN                                          MD061267
+     C                   EVAL      GIVEN = 'Y'                                              MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOC = WOUTAMT                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Update GLACNTQD                                                                     MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KACCNUM = ACCNUM                                         MD061267
+     C                   EVAL      KACCCY  = ACCCY                                          MD061267
+     C                   EVAL      KACACOD = ACACOD                                         MD061267
+     C                   EVAL      KACACSQ = ACACSQ                                         MD061267
+     C                   EVAL      KACBRCA = ACBRCA                                         MD061267
+      *                                                                                     MD061267
+     C     KACCNT        CHAIN     GLACNTL3                           15                    MD061267
+      *                                                                                     MD061267
+     C                   IF        *IN15 = *OFF                                             MD061267
+      *                                                                                     MD061267
+     C                   EVAL      F1ACBL = WACTBAL                                         MD061267
+     C                   EVAL      F1TEXO = WTEOP                                           MD061267
+     C                   EVAL      F1TEOF = WTEOF                                           MD061267
+      *                                                                                     MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+     C                   EVAL      F1TEOC = WTEOC                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   UPDATE    GLACNTD0                                                 MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal = WACTBAL                                         MD061267
+      *                                                                                     MD061267
+     C                   If        WPstAct <> 0                                             MD061267
+     C                   EVAL      WPrTEOF = WTEOF                                          MD061267
+     C                   EVAL      WPrTEOC = WTEOC                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      DSAPOS_P = DSAPOS_C                                      MD061267
+     C     KAPOST2       READE     APOSTJ2                                                  MD061267
+      *                                                                                     MD061267
+     C   22              EVAL      *IN23 = *ON                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        %EOF(APOSTJ2)                                            MD061267
+     C                   EVAL      *IN22 = *ON                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDDO                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        WAlGn <> 'N'                                             MD061267
+      *                                                                                     MD061267
+      * Access RESEODPD for posting from rundate                                            MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRRESEOD                                                 MD061267
+      *                                                                                     MD061267
      C                   IF        WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CSD027
      C                             WCUST <> *ZEROS AND                                      BUG11624
      C                             WFCSQ <> *ZEROS                                            CLE041
+     C                             and WNMVMT = 'Y' and BJRDNB <= WDtEx                     MD061267
                                                                                              BUG3035
      C                   EVAL      KACCNUM = ACCNUM                                          BUG3035
      C                   EVAL      KACCCY = ACCCY                                            BUG3035
@@ -2916,6 +3506,7 @@
                                                                                              BUG3035
      C                   ENDIF                                                               BUG3035
                                                                                              BUG3035
+     C                   ENDIF                                                              MD061267
      C                   ENDIF
 
       ** Read next record
@@ -2927,6 +3518,347 @@
 
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD061267
+      *                                                               *                     MD061267
+      * SRRESEOD - Access Records in RESEODPD                         *                     MD061267
+      *                                                               *                     MD061267
+      *****************************************************************                     MD061267
+      *                                                                                     MD061267
+     C     SRRESEOD      BEGSR                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WCUST = ACFCCU                                           MD061267
+     C                   EVAL      WFCLT = ACFACT                                           MD061267
+     C                   EVAL      WFCSQ = ACFCNO                                           MD061267
+      *                                                                                     MD061267
+     C                   IF        WCUST <> *BLANKS and WFCLT <> *ZEROS and                 MD061267
+     C                             WCUST <> *ZEROS and                                      MD061267
+     C                             WFCSQ <> *ZEROS                                          MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KACCNUM = ACCNUM                                         MD061267
+     C                   EVAL      KACCCY  = ACCCY                                          MD061267
+     C                   EVAL      KACACOD = ACACOD                                         MD061267
+     C                   EVAL      KACACSQ = ACACSQ                                         MD061267
+     C                   EVAL      KACBRCA = ACBRCA                                         MD061267
+      *                                                                                     MD061267
+     C     KACCNT        CHAIN     GLACNTL3                                                 MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(GLACNTL3)                                         MD061267
+     C                   EVAL      WACTBAL = F1ACBL                                         MD061267
+     C                   EVAL      WTEOP   = F1TEXO                                         MD061267
+     C                   EVAL      WTEOF   = F1TEOF                                         MD061267
+     C                   EVAL      WTEOC   = F1TEOC                                         MD061267
+      *                                                                                     MD061267
+      * Set previous balance equals to account balance                                      MD061267
+      * from GL account extension file                                                      MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal  = F1ACBL                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        F1FCHD = 0                                               MD061267
+     C                   EVAL      WPrTEOF = F1TEOF                                         MD061267
+     C                   EVAL      WPrTEOC = F1TEOC                                         MD061267
+      *                                                                                     MD061267
+      * If no change in Facility Change Date, use the                                       MD061267
+      * current cleared balance for start account balance                                   MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WACTBAL = CLBL                                           MD061267
+      *                                                                                     MD061267
+     C                   IF        WALGN = 'Y'                                              MD061267
+     C                             or (WALGN = 'R' and WCHIS = 'Y')                         MD061267
+      *                                                                                     MD061267
+      * Retrieve the Today's Total Exposure/Offset from last                                MD061267
+      * account movement history                                                            MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KFACNUM = ACFCCU                                         MD061267
+     C                   MOVEL     ACFACT        KFAFCTY                                    MD061267
+     C                   MOVE      ACFCNO        KFAFCTY                                    MD061267
+     C                   EVAL      KFAACBR = ACBRCA                                         MD061267
+     C                   EVAL      KFAACCU = ACCNUM                                         MD061267
+     C                   EVAL      KFAACCY = ACCCY                                          MD061267
+     C                   EVAL      KFAACCD = ACACOD                                         MD061267
+     C                   EVAL      KFAACSQ = ACACSQ                                         MD061267
+     C                   EVAL      KFADATE = *HIVAL                                         MD061267
+     C                   EVAL      WCOMFC1 = KFACNUM                                        MD061267
+     C                   EVAL      WCOMFC2 = KFAFCTY                                        MD061267
+     C                   EVAL      WCOMFC3 = KFAACCU                                        MD061267
+     C                   EVAL      WCOMFC4 = KFAACCY                                        MD061267
+     C                   EVAL      WCOMFC5 = KFAACCD                                        MD061267
+     C                   EVAL      WCOMFC6 = KFAACSQ                                        MD061267
+     C                   EVAL      WCOMFC7 = KFAACBR                                        MD061267
+     C                   EVAL      WCOMFCA = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCB = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCC = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCD = *BLANKS                                        MD061267
+     C                   EVAL      WCOMFCE = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCF = *ZEROS                                         MD061267
+     C                   EVAL      WCOMFCG = *BLANKS                                        MD061267
+      *                                                                                     MD061267
+     C     KFACHIS2      SETGT     FACHSAL5                                                 MD061267
+     C                   READP     FACHSAL5                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WCOMFCA = FACNUM                                         MD061267
+     C                   EVAL      WCOMFCB = FAFCTY                                         MD061267
+     C                   EVAL      WCOMFCC = FAACCU                                         MD061267
+     C                   EVAL      WCOMFCD = FAACCY                                         MD061267
+     C                   EVAL      WCOMFCE = FAACCD                                         MD061267
+     C                   EVAL      WCOMFCF = FAACSQ                                         MD061267
+     C                   EVAL      WCOMFCG = FAACBR                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(FACHSAL5) and WCOMPFAC1 = WCOMPFAC2             MD061267
+     C                   EVAL      WPrTEOF = FATTEO                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        PCACY = PFCCY                                            MD061267
+     C                   EVAL      WPrTEOC = FATTEO                                         MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WCCY1 = PFCCY                                            MD061267
+     C                   EVAL      WCCY2 = PCACY                                            MD061267
+     C                   EVAL      WINAMT = FATTEO                                          MD061267
+     C                   EVAL      WRATE = WTRXRAT                                          MD061267
+     C                   EVAL      WMDIN = WTRMDIN                                          MD061267
+     C                   EVAL      GIVEN = 'Y'                                              MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WPrTEOC = WOUTAMT                                        MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WPrTEOC = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WPrTEOF = 0                                              MD061267
+     C                   EVAL      WPrTEOC = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      KACNUM = ACCNUM                                          MD061267
+     C                   EVAL      KACCY  = ACCCY                                           MD061267
+     C                   EVAL      KAACOD = ACACOD                                          MD061267
+     C                   EVAL      KAACSQ = ACACSQ                                          MD061267
+     C                   EVAL      KABRCA = ACBRCA                                          MD061267
+     C                   EVAL      KAPSTD = *LOVAL                                          MD061267
+      *                                                                                     MD061267
+     C     KAPOST        SETLL     RESEODL0                                                 MD061267
+     C     KAPOST2       READE     RESEODL0                                                 MD061267
+      *                                                                                     MD061267
+      * Process the rundate postings for expired facilities                                 MD061267
+      * or re-activated closed facility                                                     MD061267
+      *                                                                                     MD061267
+     C                   IF        (WFRecI = 'E' and WDtEx >= BJRDNB)                       MD061267
+     C                             or (WFRecI = 'C' and WAlGn = 'R'                         MD061267
+     C                             and WRVDat = BJRDNB                                      MD061267
+     C                             and WDtEx >= BJRDNB)                                     MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(RESEODL0)                                       MD061267
+     C                             and R1VDAT <= BJRDNB                                     MD061267
+      *                                                                                     MD061267
+      * Process posting if date is less than next working date and                          MD061267
+      * start (from rundate/after facility change date)                                     MD061267
+      *                                                                                     MD061267
+     C                   IF        (F1FCHD <> 0 and R1VDAT > F1FCHD)                        MD061267
+     C                             or F1FCHD = 0                                            MD061267
+      *                                                                                     MD061267
+     C                   IF        R1DRCR = 0                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL + R1PSTA                               MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL - R1PSTA                               MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstBal = WACTBAL                                        MD061267
+      *                                                                                     MD061267
+     C                   IF        WPrBal <> WPstBal                                        MD061267
+      *                                                                                     MD061267
+      * Generate 'AC' entry                                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WTRANSID = *ZEROS                                        MD061267
+     C                   EVAL      KFCNUM  = ACFCCU                                         MD061267
+     C                   EVAL      KFFACT  = ACFACT                                         MD061267
+     C                   EVAL      KFFCNO  = ACFCNO                                         MD061267
+     C                   EVAL      WNMVMT  = 'N'                                            MD061267
+     C                   EVAL      WACTION = 'AC'                                           MD061267
+     C                   EVAL      WACTCCY = ACCCY                                          MD061267
+     C                   EVAL      WACTDAT = BJRDNB                                         MD061267
+      *                                                                                     MD061267
+      * Determine Valuation Details                                                         MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRVALDET                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WREVAMT = WEXPOFF                                        MD061267
+      *                                                                                     MD061267
+      * Process Action                                                                      MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRPROCACT                                                MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WTEOP = WEXPOFF                                          MD061267
+      * Convert amount                                                                      MD061267
+                                                                                            MD061267
+     C                   EVAL      WCCY1 = ACCCY                                            MD061267
+     C                   EVAL      WCCY2 = ORFCCY                                           MD061267
+     C                   EVAL      WINAMT = WEXPOFF                                         MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOF = WOUTAMT                                          MD061267
+      *                                                                                     MD061267
+     C                   MOVE      WCUST         KFCNUM                                     MD061267
+     C                   MOVE      WFCLT         KFFACT                                     MD061267
+     C                   MOVE      WFCSQ         KFFCNO                                     MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        CHAIN     FCLTYL3                                                  MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(FCLTYL3) and TRCA = 'TR'                          MD061267
+     C                   EVAL      WCCY1 = ORFCCY                                           MD061267
+     C                   EVAL      WCCY2 = CACY                                             MD061267
+     C                   EVAL      WINAMT = WTEOF                                           MD061267
+     C                   EVAL      WRATE = WTRXRAT                                          MD061267
+     C                   EVAL      WMDIN = WTRMDIN                                          MD061267
+     C                   EVAL      GIVEN = 'Y'                                              MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOC = WOUTAMT                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Update GLACNTQD                                                                     MD061267
+      *                                                                                     MD061267
+     C     KACCNT        CHAIN     GLACNTL3                                                 MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(GLACNTL3)                                         MD061267
+     C                   EVAL      F1ACBL = WACTBAL                                         MD061267
+     C                   EVAL      F1TEXO = WTEOP                                           MD061267
+     C                   EVAL      F1TEOF = WTEOF                                           MD061267
+                                                                                            MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+     C                   EVAL      F1TEOC = WTEOC                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   UPDATE    GLACNTD0                                                 MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal = WACTBAL                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        WPstAct <> 0                                             MD061267
+     C                   EVAL      WPrTEOF = WTEOF                                          MD061267
+     C                   EVAL      WPrTEOC = WTEOC                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        NOT %EOF(RESEODL0)                                       MD061267
+     C     KAPOST2       READE     RESEODL0                                                 MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Process until the facilities expiration date                                        MD061267
+      *                                                                                     MD061267
+     C                   DOW       NOT %EOF(RESEODL0)                                       MD061267
+      *                                                                                     MD061267
+     C                   IF        R1VDAT <= WDtEx                                          MD061267
+      *                                                                                     MD061267
+      * Process posting if date is less than next working date and                          MD061267
+      * start (from rundate/after facility change date)                                     MD061267
+      * or if date is after previous and prior current rundate                              MD061267
+      *                                                                                     MD061267
+     C                   IF        (F1FCHD <> 0 and R1VDAT > F1FCHD                         MD061267
+     C                             and R1VDAT < BJDNWD)                                     MD061267
+     C                             or (F1FCHD = 0 and R1VDAT >= BJRDNB                      MD061267
+     C                             and R1VDAT < BJDNWD)                                     MD061267
+     C                             or (F1FCHD = 0 and R1VDAT > WPRUN                        MD061267
+     C                             and R1VDAT < BJRDNB)                                     MD061267
+      *                                                                                     MD061267
+     C                   IF        R1DRCR = 0                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL + R1PSTA                               MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WACTBAL = WACTBAL - R1PSTA                               MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstBal = WACTBAL                                        MD061267
+      *                                                                                     MD061267
+      * Generate 'AC' entry                                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WTRANSID = *ZEROS                                        MD061267
+     C                   EVAL      KFCNUM = ACFCCU                                          MD061267
+     C                   EVAL      KFFACT = ACFACT                                          MD061267
+     C                   EVAL      KFFCNO = ACFCNO                                          MD061267
+     C                   EVAL      WNMVMT = 'N'                                             MD061267
+     C                   EVAL      WACTION = 'AC'                                           MD061267
+     C                   EVAL      WACTCCY = ACCCY                                          MD061267
+     C                   EVAL      WACTDAT = R1VDAT                                         MD061267
+      *                                                                                     MD061267
+      * Determine Valuation Details                                                         MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRVALDET                                                 MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WREVAMT = WEXPOFF                                        MD061267
+      *                                                                                     MD061267
+      * Process Action                                                                      MD061267
+      *                                                                                     MD061267
+     C                   EXSR      SRPROCACT                                                MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WTEOP = WEXPOFF                                          MD061267
+      * Convert amount                                                                      MD061267
+                                                                                            MD061267
+     C                   EVAL      WCCY1 = ACCCY                                            MD061267
+     C                   EVAL      WCCY2 = ORFCCY                                           MD061267
+     C                   EVAL      WINAMT = WEXPOFF                                         MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOF = WOUTAMT                                          MD061267
+      *                                                                                     MD061267
+     C                   MOVE      WCUST         KFCNUM                                     MD061267
+     C                   MOVE      WFCLT         KFFACT                                     MD061267
+     C                   MOVE      WFCSQ         KFFCNO                                     MD061267
+      *                                                                                     MD061267
+     C     KFCLTY        CHAIN     FCLTYL3                                                  MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(FCLTYL3) and TRCA = 'TR'                          MD061267
+     C                   EVAL      WCCY1  = ORFCCY                                          MD061267
+     C                   EVAL      WCCY2  = CACY                                            MD061267
+     C                   EVAL      WINAMT = WTEOF                                           MD061267
+     C                   EVAL      WRATE  = WTRXRAT                                         MD061267
+     C                   EVAL      WMDIN  = WTRMDIN                                         MD061267
+     C                   EVAL      GIVEN  = 'Y'                                             MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WTEOC  = WOUTAMT                                         MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+      * Update GLACNTQD                                                                     MD061267
+      *                                                                                     MD061267
+     C     KACCNT        CHAIN     GLACNTL3                                                 MD061267
+      *                                                                                     MD061267
+     C                   IF        %FOUND(GLACNTL3)                                         MD061267
+     C                   EVAL      F1ACBL = WACTBAL                                         MD061267
+     C                   EVAL      F1TEXO = WTEOP                                           MD061267
+     C                   EVAL      F1TEOF = WTEOF                                           MD061267
+                                                                                            MD061267
+     C                   IF        TRCA = 'TR'                                              MD061267
+     C                   EVAL      F1TEOC = WTEOC                                           MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   UPDATE    GLACNTD0                                                 MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPrBal = WACTBAL                                         MD061267
+      *                                                                                     MD061267
+     C                   IF        WPstAct <> 0                                             MD061267
+     C                   EVAL      WPrTEOF = WTEOF                                          MD061267
+     C                   EVAL      WPrTEOC = WTEOC                                          MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C     KAPOST2       READE     RESEODL0                                                 MD061267
+     C                   ENDDO                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDSR                                                              MD061267
+      *****************************************************************                     MD061267
+      /EJECT                                                                                MD061267
       *****************************************************************
       *                                                               *
       * SRRSACUPD - Access Records in RSACMTPD                        *
@@ -4386,6 +5318,55 @@
      C                   EVAL      WACTAMT = 0
      C                   ELSE
 
+     C                   IF        WACTION = 'AS' or WACTION = 'AC'                         MD061267
+      *                                                                                     MD061267
+     C                   IF        FCCY = WACTCCY                                           MD061267
+     C                   EVAL      WPstBal = WPstBal                                        MD061267
+     C                   EVAL      WFPrBal = WPrBal                                         MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WCCY1  = WACTCCY                                         MD061267
+     C                   EVAL      WCCY2  = FCCY                                            MD061267
+     C                   EVAL      WINAMT = WPstBal                                         MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WPstBal = WOUTAMT                                        MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WINAMT   = WPrBal                                        MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WFPrBal = WOUTAMT                                        MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   EVAL      WPstAct = WPstBal - WFPrBal                              MD061267
+      *                                                                                     MD061267
+     C                   IF        WACTION = 'AS' and WPstAct < 0                           MD061267
+     C                   EVAL      WPstAct = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        WACTION = 'AC'                                           MD061267
+      *                                                                                     MD061267
+     C                   SELECT                                                             MD061267
+     C                   WHEN      WFPrBal <= 0 and WPstAct <= 0                            MD061267
+     C                   EVAL      WPstAct = 0                                              MD061267
+      *                                                                                     MD061267
+     C                   WHEN      WFPrBal > 0 and WPstAct < 0                              MD061267
+      *                                                                                     MD061267
+     C                   IF        (WFPrBal + WPstAct) < 0                                  MD061267
+     C                   EVAL      WPstAct = 0 - WFPrBal                                    MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   WHEN      WFPrBal < 0 and WPstAct > 0                              MD061267
+      *                                                                                     MD061267
+     C                   IF        (WFPrBal + WPstAct) > 0                                  MD061267
+     C                   EVAL      WPstAct = WFPrBal + WPstAct                              MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WPstAct = 0                                              MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDSL                                                              MD061267
+      *                                                                                     MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
+      *                                                                                     MD061267
      C                   IF        FCCY = WACTCCY
      C                   EVAL      WACTAMT = WREVAMT
      C                   ELSE
@@ -4395,13 +5376,15 @@
      C                   EXSR      SRCONVERT
      C                   EVAL      WACTAMT = WOUTAMT
      C                   ENDIF
+     C                   ENDIF                                                              MD061267
 
      C                   IF        WACTION = 'FX' or WACTION = 'F0' or
      C                             WACTION = 'FW' or WACTION = 'FV' or
      C                             WACTION = 'IR' or WACTION = 'IS' or
      C**********                   WACTION = 'AS' or WACTION = 'AC'                       AR1023928A
-     C                             WACTION = 'AC'                                         AR1023928A
-     C                             or WACTION = 'MR' or WACTION = 'AR'                       BUG3035
+     C**********                   WACTION = 'AC'                                AR1023928A MD061267
+     C**********                   or WACTION = 'MR' or WACTION = 'AR'              BUG3035 MD061267
+     C                             WACTION = 'MR' or WACTION = 'AR'                         MD061267
      C**********         IF        WACTAMT <> 0                                    253231 AR1023928A
      C                   EVAL      WACTAMT = WACTAMT - F1TEOF
      C**********         ENDIF                                                     253231 AR1023928A
@@ -4493,6 +5476,22 @@
      C                   EVAL      WACTAMT = 0
      C                   ELSE
 
+     C                   IF        WACTION = 'AS' OR WACTION = 'AC'                         MD061267
+      *                                                                                     MD061267
+     C                   IF        PCACY = PFCCY                                            MD061267
+     C                   EVAL      WPstAct = WPstAct                                        MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      WCCY1 = PFCCY                                            MD061267
+     C                   EVAL      WCCY2 = PCACY                                            MD061267
+     C                   EVAL      WINAMT = WPstAct                                         MD061267
+     C                   EVAL      WRATE = WTRXRAT                                          MD061267
+     C                   EVAL      WMDIN = WTRMDIN                                          MD061267
+     C                   EVAL      GIVEN = 'Y'                                              MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      WPstAct = WOUTAMT                                        MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
      C                   IF        PCACY = PFCCY
      C                   EVAL      WACTAMT = WACTAMT
      C                   ELSE
@@ -4505,6 +5504,7 @@
      C                   EXSR      SRCONVERT
      C                   EVAL      WACTAMT = WOUTAMT
      C                   ENDIF
+     C                   ENDIF                                                              MD061267
 
      C                   ENDIF
 
@@ -4561,8 +5561,12 @@
      C     SRHISACT      BEGSR
 
      C**********         IF        WACTAMT <> 0                                   BUG8262 AR1023928A
-     C                   IF        WACTAMT <> 0 or                                        AR1023928A
-     C                             WACTION = 'AS'                                         AR1023928A
+     C**********         IF        WACTAMT <> 0 or                               AR1023928A MD061267
+     C**********                   WACTION = 'AS'                                AR1023928A MD061267
+     C                   IF        WACTAMT <> 0                                             MD061267
+     C                             and WACTION <> 'AC'                                      MD061267
+     C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267
+     C                             or WACTION = 'AS'                                        MD061267
       *                                                                                      BUG8262
      C                   EVAL      BRCA = WSBRCA
      C                   EVAL      HACNUM = KFCNUM
@@ -4578,7 +5582,13 @@
      C**********         EVAL      HALOAN = *ZEROS                                            CLE148
      C                   EVAL      HALOAN = *BLANKS                                           CLE148
      C                   EVAL      HAACTN = WACTION
+      *                                                                                     MD061267
+     C                   IF        WACTION <> 'AS' and WACTION <> 'AC'                      MD061267
      C                   EVAL      HAAAMT = WACTAMT
+     C                   ELSE                                                               MD061267
+     C                   EVAL      HAAAMT = WPstAct                                         MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
      C                   EVAL      HAPART = *BLANKS
      C                   EVAL      HALCRF = *BLANKS
      C                   EVAL      GEDT = 0
@@ -4642,7 +5652,8 @@
      C                   ELSE
 
      C                   IF        WACTION = 'AS' or WACTION = 'AC'
-     C                   EVAL      HALUAM = WREVAMT - WTEOP
+     C**********         EVAL      HALUAM = WREVAMT - WTEOP                                 MD061267
+     C                   EVAL      HALUAM = WPstACT                                         MD061267
      C                   ELSE
      C                   EVAL      HALUAM = WREVAMT
      C                   ENDIF
@@ -4719,7 +5730,7 @@
      C                             WACTION = 'FV' or WACTION = 'FW' or
      C                             WACTION = 'IS' or WACTION = 'IR'
      C                             or WACTION = 'MR' or WACTION = 'M1'                       BUG3035
-     C                             or WACTION = 'AR'                                         BUG3035
+     C**********                   or WACTION = 'AR'                                BUG3035 MD061267
 
      C                   EVAL      HAWEIG = PWEICDE
      C                   EVAL      HAWCPC = PWCDPCT
@@ -4755,9 +5766,11 @@
      C                   EVAL      HATVAL = WACTBAL
 
      C                   IF        WUPDAT = '1'
-     C                   EVAL      HAPTEO = WTEOF
+     C**********         EVAL      HAPTEO = WTEOF                                           MD061267
+     C                   EVAL      HAPTEO = WPrTEOF                                         MD061267
      C                   ELSE
-     C                   EVAL      HAPTEO = WTEOC
+     C**********         EVAL      HAPTEO = WTEOC                                           MD061267
+     C                   EVAL      HAPTEO = WPrTEOC                                         MD061267
      C                   ENDIF
 
      C                   ELSE
@@ -4782,6 +5795,20 @@
      C                             or WACTION = 'MR' or WACTION = 'M1'                       BUG3035
      C                             or WACTION = 'AR'                                         BUG3035
 
+     C                   IF        WACTION = 'AS' or WACTION = 'AC'                         MD061267
+     C                             or WACTION = 'AR'                                        MD061267
+      *                                                                                     MD061267
+     C                   IF        WUPDAT = '1'                                             MD061267
+     C                   EVAL      WCCY1 = WACTCCY                                          MD061267
+     C                   EVAL      WCCY2 = FCCY                                             MD061267
+     C                   EVAL      WINAMT = WREVAMT                                         MD061267
+     C                   EXSR      SRCONVERT                                                MD061267
+     C                   EVAL      HATTEO = WOUTAMT                                         MD061267
+     C                   ELSE                                                               MD061267
+     C                   EVAL      HATTEO = HAPTEO + WPstAct                                MD061267
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   ELSE                                                               MD061267
      C                   IF        WUPDAT = '1'
      C                   EVAL      WCCY1 = WACTCCY
      C                   EVAL      WCCY2 = FCCY
@@ -4791,6 +5818,7 @@
      C                   ELSE
      C                   EVAL      HATTEO = HAPTEO + WACTAMT
      C                   ENDIF
+     C                   ENDIF                                                              MD061267
 
      C                   ELSE
 
@@ -4817,8 +5845,12 @@
      C     SRFACACT      BEGSR
 
      C**********         IF        WACTAMT <> 0                                     BUG8262 MD026331
-     C                   IF        WACTAMT <> 0 or                                          MD026331
-     C                             WACTION = 'AS'                                           MD026331
+     C**********         IF        WACTAMT <> 0 or                                 MD026331 MD061267
+     C**********                   WACTION = 'AS'                                  MD026331 MD061267
+     C                   IF        WACTAMT <> 0                                             MD061267
+     C                             and WACTION <> 'AC'                                      MD061267
+     C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267
+     C                             or WACTION = 'AS'                                        MD061267
                                                                                              BUG8262
       ** Check if facility exists in file
 
@@ -4858,10 +5890,14 @@
      C     SRFACHISH     BEGSR
 
      C**********         IF        WACTAMT <> 0                                     BUG8262 MD026331
-     C                   IF        WACTAMT <> 0 or                                          MD026331
-     C                             WACTION = 'AS'                                           MD026331
+     C**********         IF        WACTAMT <> 0 or                                 MD026331 MD061267
+     C**********                   WACTION = 'AS'                                  MD026331 MD061267
+     C                   IF        WACTAMT <> 0                                             MD061267
+     C                             and WACTION <> 'AC'                                      MD061267
+     C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267
+     C                             or WACTION = 'AS'                                        MD061267
                                                                                              BUG8262
-     C                   IF        CLE023 = 'Y' and HADATE < BJRDNB
+     C**********         IF        CLE023 = 'Y' and HADATE < BJRDNB                         MD061267
 
       ** Check if facility exists in file
 
@@ -4870,7 +5906,14 @@
      C                   IF        *IN15 = *OFF
 
      C                   EVAL      FHRWKR = 'Y'
+      *                                                                                     MD061267
+     C                   IF        CLE023 = 'Y' and HADATE < BJRDNB                         MD061267
      C                   EVAL      FHRWTP = 'B'
+     C                   ENDIF                                                              MD061267
+      *                                                                                     MD061267
+     C                   IF        HADATE >= BJRDNB AND FHRWTP = ' '                        MD061267
+     C                   EVAL      FHRWTP = 'M'                                             MD061267
+     C                   ENDIF                                                              MD061267
 
      C                   IF        FHRWDT = 0 or FHRWDT > HADATE
      C                   EVAL      FHRWDT = HADATE
@@ -4880,7 +5923,7 @@
 
      C                   ENDIF
 
-     C                   ENDIF
+     C**********         ENDIF                                                              MD061267
                                                                                              BUG8262
      C                   ENDIF                                                               BUG8262
 
@@ -4988,8 +6031,12 @@
 
      C                   ENDIF
 
+     C                   ELSE                                                               MD061267
+     C                   EXSR      SRCVALDET                                                MD061267
      C                   ENDIF
 
+     C                   ELSE                                                               MD061267
+     C                   EXSR      SRCVALDET                                                MD061267
      C                   ENDIF
 
      C                   ENDSR
@@ -5038,7 +6085,8 @@
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      WWEICDE = *ZEROS
      C                   EVAL      WWCDPCT = 100
-     C                   EVAL      WINCOFF = 'Y'
+     C**********         EVAL      WINCOFF = 'Y'                                            MD061267
+     C                   EVAL      WINCOFF = 'N'                                            MD061267
      C                   ELSE
 
      C                   EVAL      WINCOFF = PLPDINOF
@@ -5048,17 +6096,20 @@
      C                   IF        CLE169 = 'Y'                                               CLE169
      C                   MOVEL     A2CNUM        PCNUM                                        CLE169
      C                   ELSE                                                                 CLE169
-     C                   MOVEL     ACCNUM        PCNUM
+     C**********         MOVEL     ACCNUM        PCNUM                                      MD061267
+     C                   MOVEL(P)  ACCNUM        PCNUM                                      MD061267
      C                   ENDIF                                                                CLE169
 
       ** Access Customer details
 
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               MD061267
+     C                   CALLB     'AOCUSTR1'                                               MD061267
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PCNUM
      C                   PARM                    PCNST
-     C     SDCUST        PARM      SDCUST        DSSDY
+     C*****SDCUST        PARM      SDCUST        DSSDY                                      MD061267
+     C     SDCUST        PARM      SDCUST        DSLDY                                      MD061267
 
       ** Database error
 
@@ -5494,6 +6545,13 @@
      C                   KFLD                    KAACSQ
      C                   KFLD                    KABRCA
      C                   KFLD                    KAPSTD
+      *                                                                                     MD061267
+     C     KAPOST2       KLIST                                                              MD061267
+     C                   KFLD                    KACNUM                                     MD061267
+     C                   KFLD                    KACCY                                      MD061267
+     C                   KFLD                    KAACOD                                     MD061267
+     C                   KFLD                    KAACSQ                                     MD061267
+     C                   KFLD                    KABRCA                                     MD061267
       **********                                                                     CLE169 MD052994
      C*****KJOENT        KLIST                                                       CLE169 MD052994
      C**********         KFLD                    KBEDT                               CLE169 MD052994
@@ -5609,6 +6667,13 @@
       *****************************************************************              CLE169 MD052994
      C**********         IN        JNSTAT                                            CLE169 MD052994
      C**********         EVAL      WPRUN = PRUN                                      CLE169 MD052994
+      *                                                                                     MD061267
+      ** Retrieve previous rundate                                                          MD061267
+      *                                                                                     MD061267
+     C                   IF        *INU5 = *ON                                              MD061267
+     C                   IN        JNSTAT                                                   MD061267
+     C                   EVAL      WPRUN = PRUN                                             MD061267
+     C                   ENDIF                                                              MD061267
 
      C                   ENDSR
 

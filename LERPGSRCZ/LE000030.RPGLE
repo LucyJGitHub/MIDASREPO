@@ -198,7 +198,7 @@
      FFACHISHL  UF   E           K DISK    INFSR(*PSSR)
      F***APOSTJ0   IF   E           K DISK    INFSR(*PSSR)                                AR1023928A
      FAPOSTJ2   IF   E           K DISK    INFSR(*PSSR)                                   AR1023928A
-     F**********                           RENAME(APOSTPDF:APOSTJD0)            AR1023928A  MD061267
+     F**********                           RENAME(APOSTPDF:APOSTJD0)             AR1023928A MD061267
      F                                     RENAME(APOSTJD0:APOSTJF0)                        MD061267
      F                                     RENAME(APOSTJD1:APOSTJF1)                        MD061267
      FRSACMTL3  IF   E           K DISK    INFSR(*PSSR)
@@ -2819,25 +2819,25 @@
      C**********                                                                            MD061267
      C*****KAPOST        SETLL     APOSTJ0                                                AR1023928A
      C**********         READ      APOSTJ0                                                AR1023928A
-     C*****KAPOST        SETLL     APOSTJ2                                      AR1023928A  MD061267
-     C**********         READ      APOSTJ2                                      AR1023928A  MD061267
+     C*****KAPOST        SETLL     APOSTJ2                                       AR1023928A MD061267
+     C**********         READ      APOSTJ2                                       AR1023928A MD061267
       **********
      C**********         DOW       NOT %EOF(APOSTJ0)                                      AR1023928A
-     C**********         DOW       NOT %EOF(APOSTJ2)                            AR1023928A  MD061267
+     C**********         DOW       NOT %EOF(APOSTJ2)                             AR1023928A MD061267
 
-     C**********         EVAL      WCOMACA = APCNUM                             AR1023928A  MD061267
-     C**********         EVAL      WCOMACB = CCY                                AR1023928A  MD061267
-     C**********         EVAL      WCOMACC = APACOD                             AR1023928A  MD061267
-     C**********         EVAL      WCOMACD = APACSQ                             AR1023928A  MD061267
-     C**********         EVAL      WCOMACE = BRCA                               AR1023928A  MD061267
-     C**********                                                                AR1023928A  MD061267
-     C**********         IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD      AR1023928A  MD061267
-     C**********                                                                AR1023928A  MD061267
-     C**********         IF        DRCR = 0                                     AR1023928A  MD061267
-     C**********         EVAL      WACTBAL = WACTBAL + PSTA                     AR1023928A  MD061267
-     C**********         ELSE                                                   AR1023928A  MD061267
-     C**********         EVAL      WACTBAL = WACTBAL - PSTA                     AR1023928A  MD061267
-     C**********         ENDIF                                                  AR1023928A  MD061267
+     C**********         EVAL      WCOMACA = APCNUM                              AR1023928A MD061267
+     C**********         EVAL      WCOMACB = CCY                                 AR1023928A MD061267
+     C**********         EVAL      WCOMACC = APACOD                              AR1023928A MD061267
+     C**********         EVAL      WCOMACD = APACSQ                              AR1023928A MD061267
+     C**********         EVAL      WCOMACE = BRCA                                AR1023928A MD061267
+     C**********                                                                 AR1023928A MD061267
+     C**********         IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD       AR1023928A MD061267
+     C**********                                                                 AR1023928A MD061267
+     C**********         IF        DRCR = 0                                      AR1023928A MD061267
+     C**********         EVAL      WACTBAL = WACTBAL + PSTA                      AR1023928A MD061267
+     C**********         ELSE                                                    AR1023928A MD061267
+     C**********         EVAL      WACTBAL = WACTBAL - PSTA                      AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
       *                                                                                     MD061267
       * Initialise indicators for checking End of File                                      MD061267
       *                                                                                     MD061267
@@ -2985,11 +2985,11 @@
      C                   IF        *IN15 = *OFF
 
      C                   EVAL      F1ACBL = WACTBAL
-      **********                                                                AR1023928A  MD061267
-     C**********         IF        WTEOF >= 0 OR WINCOFF = 'Y'                  AR1023928A  MD061267
+      **********                                                                 AR1023928A MD061267
+     C**********         IF        WTEOF >= 0 OR WINCOFF = 'Y'                   AR1023928A MD061267
      C                   EVAL      F1TEXO = WTEOP
      C                   EVAL      F1TEOF = WTEOF
-     C**********         ENDIF                                                  AR1023928A  MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
 
      C                   IF        TRCA = 'TR'
      C                   EVAL      F1TEOC = WTEOC
@@ -2998,21 +2998,21 @@
      C                   UPDATE    GLACNTD0
 
      C                   ENDIF
-     C***********        ELSE                                                   AR1023928A  MD061267
-      ***********                                                               AR1023928A  MD061267
-      ***Compare*the*two*details before leaving the loop to make sure no record AR1023928A  MD061267
-      ***APOSTJ2*was*left*behind in processing.                                 AR1023928A  MD061267
-      **************************************************************************AR1023928A  MD061267
-     C**********         IF        WCOMPACC1 <> WCOMPACC2                       AR1023928A  MD061267
-     C**********         LEAVE                                                  AR1023928A  MD061267
-     C**********         ENDIF                                                  AR1023928A  MD061267
-     C**********         ENDIF                                                  AR1023928A  MD061267
-      **********                                                                AR1023928A  MD061267
-      ***Read*next*record                                                       AR1023928A  MD061267
-      **********                                                                AR1023928A  MD061267
-     C**********         READ      APOSTJ2                                      AR1023928A  MD061267
-     C**********         ENDDO                                                  AR1023928A  MD061267
-     C**********         ENDIF                                                  AR1023928A  MD061267
+     C***********        ELSE                                                    AR1023928A MD061267
+      ***********                                                                AR1023928A MD061267
+      ***Compare*the*two*details before leaving the loop to make sure no record  AR1023928A MD061267
+      ***APOSTJ2*was*left*behind in processing.                                  AR1023928A MD061267
+      ************************************************************************** AR1023928A MD061267
+     C**********         IF        WCOMPACC1 <> WCOMPACC2                        AR1023928A MD061267
+     C**********         LEAVE                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
+      **********                                                                 AR1023928A MD061267
+      ***Read*next*record                                                        AR1023928A MD061267
+      **********                                                                 AR1023928A MD061267
+     C**********         READ      APOSTJ2                                       AR1023928A MD061267
+     C**********         ENDDO                                                   AR1023928A MD061267
+     C**********         ENDIF                                                   AR1023928A MD061267
       *                                                                                     MD061267
       * Set previous account balance equals to current balance                              MD061267
       *                                                                                     MD061267
@@ -5382,8 +5382,8 @@
      C                             WACTION = 'FW' or WACTION = 'FV' or
      C                             WACTION = 'IR' or WACTION = 'IS' or
      C**********                   WACTION = 'AS' or WACTION = 'AC'                       AR1023928A
-     C**********                   WACTION = 'AC'                               AR1023928A  MD061267
-     C**********                   or WACTION = 'MR' or WACTION = 'AR'             BUG3035  MD061267
+     C**********                   WACTION = 'AC'                                AR1023928A MD061267
+     C**********                   or WACTION = 'MR' or WACTION = 'AR'              BUG3035 MD061267
      C                             WACTION = 'MR' or WACTION = 'AR'                         MD061267
      C**********         IF        WACTAMT <> 0                                    253231 AR1023928A
      C                   EVAL      WACTAMT = WACTAMT - F1TEOF
@@ -5561,8 +5561,8 @@
      C     SRHISACT      BEGSR
 
      C**********         IF        WACTAMT <> 0                                   BUG8262 AR1023928A
-     C**********         IF        WACTAMT <> 0 or                              AR1023928A  MD061267
-     C**********                   WACTION = 'AS'                               AR1023928A  MD061267
+     C**********         IF        WACTAMT <> 0 or                               AR1023928A MD061267
+     C**********                   WACTION = 'AS'                                AR1023928A MD061267
      C                   IF        WACTAMT <> 0                                             MD061267
      C                             and WACTION <> 'AC'                                      MD061267
      C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267
@@ -5730,7 +5730,7 @@
      C                             WACTION = 'FV' or WACTION = 'FW' or
      C                             WACTION = 'IS' or WACTION = 'IR'
      C                             or WACTION = 'MR' or WACTION = 'M1'                       BUG3035
-     C**********                   or WACTION = 'AR'                               BUG3035  MD061267
+     C**********                   or WACTION = 'AR'                                BUG3035 MD061267
 
      C                   EVAL      HAWEIG = PWEICDE
      C                   EVAL      HAWCPC = PWCDPCT
@@ -5845,8 +5845,8 @@
      C     SRFACACT      BEGSR
 
      C**********         IF        WACTAMT <> 0                                     BUG8262 MD026331
-     C**********         IF        WACTAMT <> 0 or                                MD026331  MD061267
-     C**********                   WACTION = 'AS'                                 MD026331  MD061267
+     C**********         IF        WACTAMT <> 0 or                                 MD026331 MD061267
+     C**********                   WACTION = 'AS'                                  MD026331 MD061267
      C                   IF        WACTAMT <> 0                                             MD061267
      C                             and WACTION <> 'AC'                                      MD061267
      C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267
@@ -5890,8 +5890,8 @@
      C     SRFACHISH     BEGSR
 
      C**********         IF        WACTAMT <> 0                                     BUG8262 MD026331
-     C**********         IF        WACTAMT <> 0 or                                MD026331  MD061267
-     C**********                   WACTION = 'AS'                                 MD026331  MD061267
+     C**********         IF        WACTAMT <> 0 or                                 MD026331 MD061267
+     C**********                   WACTION = 'AS'                                  MD026331 MD061267
      C                   IF        WACTAMT <> 0                                             MD061267
      C                             and WACTION <> 'AC'                                      MD061267
      C                             or (WPstAct <> 0 and WACTION = 'AC')                     MD061267

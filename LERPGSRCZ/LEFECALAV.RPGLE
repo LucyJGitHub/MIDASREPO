@@ -263,16 +263,16 @@
      C   46              Z-ADD     FEPSTD        STDATE
      C**********         Z-ADD     BJRDNB        ENDATE            5 0                        239961
      C                   Z-ADD     BJRDNB        ENDATE            5 0                      MD061267
-      *****************************************************************             239961  MD061267
-      ***If*fee*has*started*accruing,*use*fee's*last*accrual*date,*else             239961  MD061267
-      ***use*fee*start*date,*i.e.*no*accrued*to*date*yet.**************             239961  MD061267
-      *****************************************************************             239961  MD061267
-     C*****FELADT        Ifgt      *Zeros                                           239961  MD061267
-     C**********         Z-add     FELADT        ENDATE            5 0              239961  MD061267
-     C**********         Else                                                       239961  MD061267
-     C**********         Z-add     FEPSTD        ENDATE                             239961  MD061267
-     C**********         Endif                                                      239961  MD061267
-     C**********                                                                    239961  MD061267
+      *****************************************************************              239961 MD061267
+      ***If*fee*has*started*accruing,*use*fee's*last*accrual*date,*else              239961 MD061267
+      ***use*fee*start*date,*i.e.*no*accrued*to*date*yet.**************              239961 MD061267
+      *****************************************************************              239961 MD061267
+     C*****FELADT        Ifgt      *Zeros                                            239961 MD061267
+     C**********         Z-add     FELADT        ENDATE            5 0               239961 MD061267
+     C**********         Else                                                        239961 MD061267
+     C**********         Z-add     FEPSTD        ENDATE                              239961 MD061267
+     C**********         Endif                                                       239961 MD061267
+     C**********                                                                     239961 MD061267
      C*****FEPEND        IFLE      BJRDNB                                                     239961
      C**********         Z-ADD     FEPEND        ENDATE                                       239961
      C**********         END                                                                  239961
@@ -420,7 +420,7 @@
      C*                                                                                      BUG6944
      C** Initialise work fee field.                                                          BUG6944
      C*                                                                                      BUG6944
-     C**********         Z-ADD     0             W#FEE                             BUG6944  MD061267
+     C**********         Z-ADD     0             W#FEE                              BUG6944 MD061267
      C                   Z-ADD     0             W#TOT                                       BUG6944
      C                   MOVE      '0'           *IN19             1                         BUG6944
 

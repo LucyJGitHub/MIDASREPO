@@ -2335,10 +2335,10 @@
       *                                                                                     MD015646
       ** Amend PDIN in CLOANCL when reversal of a PD                                        MD015646
       *                                                                                     MD015646
-     C     LACHTP        Ifeq      'R'                                                      MD015646
-     C     LAAMTP        andeq     'PD'                                                     MD015646
-     C     LO_PDIN       sub       LAINTA        LO_PDIN                                    MD015646
-     C                   Endif                                                              MD015646
+     C     LACHTP        IFEQ      'R'                                                      MD015646
+     C     LAAMTP        ANDEQ     'PD'                                                     MD015646
+     C     LO_PDIN       SUB       LAINTA        LO_PDIN                                    MD015646
+     C                   ENDIF                                                              MD015646
       *                                                                                     AR547813
      C                   UPDATE    CLOANCLF
      C                   ENDIF

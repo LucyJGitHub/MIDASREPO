@@ -9,21 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CUP002  *CREATE    Date 12Aug10              */
+/*       Last Amend No. CUP047             Date 27Aug23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CUP002  *CREATE    Date 12Aug10              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CUP047 - Alternative OWNER and AUTL for Bridge upgrade      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP002 - New utility.                                       */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ZONEPFX &NZONEDTA)
- 
+
              DCL        VAR(&ZONEPFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&NZONEDTA) TYPE(*CHAR) LEN(66)
- 
+
              DCL        VAR(&NZONE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NZONECODE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&NZONEDESC) TYPE(*CHAR) LEN(50)
@@ -48,22 +50,27 @@
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
              DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CUP047*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CUP047*/
+/*/COPY SDCPYSRC,SDSVALDCL                                                                /*CUP047*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -74,7 +81,7 @@
                           file for RNMZON')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Retrieve IASP data. */
              CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')
              CHGVAR     VAR(&SYSVAL2) VALUE('IASPgroup')
@@ -87,12 +94,12 @@
              ENDDO
              CHGVAR     VAR(&IASP_YN) VALUE(&SYSVALVAL1)
              CHGVAR     VAR(&ASPGRP) VALUE(&SYSVALVAL2)
- 
+
 /* Break down of new zone parameter. */
              CHGVAR     VAR(&NZONE) VALUE(%SST(&NZONEDTA 3 10))
              CHGVAR     VAR(&NZONECODE) VALUE(%SST(&NZONEDTA 13 4))
              CHGVAR     VAR(&NZONEDESC) VALUE(%SST(&NZONEDTA 17 50))
- 
+
 /* Retrieve current information about zone. */
              CALL       PGM(GPAOZONER1) PARM(&RTNCODE '*KEY' +
                           &ZONEPFX &OZONEDTA)
@@ -102,13 +109,13 @@
              CALL       PGM(GPAOZONER1) PARM(&RTNCODE '*FREE' ' ' ' ')
              CHGVAR     VAR(&OZONE) VALUE(%SST(&OZONEDTA 1 10))
              CHGVAR     VAR(&OZONECODE) VALUE(%SST(&OZONEDTA 11 14))
- 
+
 /* Delete data queues. */
              CHGVAR     VAR(&GEN) VALUE('GPUTU' *TCAT &OZONECODE +
                           *TCAT '*')
              DLTDTAQ    DTAQ(&GEN)
              MONMSG     MSGID(CPF2125)
- 
+
 /* Create new data queues. */
              RTVOBJD    OBJ(GPUTUXXXXN) OBJTYPE(*DTAQ) RTNLIB(&RTNLIB)
  CRTDTAQ:
@@ -125,9 +132,33 @@
              CHGVAR     VAR(&GPFX) VALUE(%SST(&RTNLIB 1 2))
              CHGVAR     VAR(&OWNER) VALUE(&GPFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&GPFX *TCAT 'DATABASE')
+                                                                                          /*CUP047*/
+/*  Check if feature CUP047 is on */                                                      /*CUP047*/
+                                                                                          /*CUP047*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CUP047*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CUP047*/
+             CHGVAR     VAR(&SARD) VALUE('CUP047')                                        /*CUP047*/
+             CALL       PGM(GPAOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                    /*CUP047*/
+                                                                                          /*CUP047*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CUP047*/
+                                                                                          /*CUP047*/
+/*  Check System Values for CUP047 */                                                     /*CUP047*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC  +
+                          'AlternativeBrgOWNER' &SVAL1  +
+                          'AlternativeBrgAUTLDB' &SVAL2  +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CUP047*/
+             IF         COND(&SVAL1 *NE '          ') THEN(CHGVAR +
+                          VAR(&OWNER) VALUE(&SVAL1))                                      /*CUP047*/
+             IF         COND(&SVAL2 *NE '          ') THEN(CHGVAR +
+                          VAR(&AUTL) VALUE(&SVAL2))                                       /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+                                                                                          /*CUP047*/
              CHGVAR     VAR(&GEN) VALUE('GPUTU' *TCAT &NZONECODE +
                           *TCAT '*')
- 
+
              IF         COND(&IASP_YN *EQ 'N') THEN(DO)
                 CHGOWNAUT  OBJ(&RTNLIB/&DTAQ) OBJTYPE(*DTAQ) +
                              NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
@@ -138,7 +169,7 @@
                              NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
                              CHGLIB(N) ASP(*ASPDEV) ASPDEV(&ASPGRP)
              ENDDO
- 
+
 /* Update GPZONEPD. */
              CHGVAR     VAR(&STM_STR) VALUE(' ')
              CHGVAR     VAR(&STM_STR) VALUE('update GPZONEPD set +
@@ -159,15 +190,15 @@
              RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                           COMMIT(*NONE)
              MONMSG     MSGID(SQL9010)
- 
+
 /* Update system value. */
              CHGVAR     VAR(&SYSVAL) VALUE(&NZONE)
              CALL       PGM(SD009510) PARM('ZoneSystemName' &SYSVAL +
                           ' ')
- 
+
 /* Call program to rename zone records in global layer. */
              CALL       PGM(UPC000014) PARM(&OZONE &NZONE)
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)

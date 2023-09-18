@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060066           Date 30Jun22               *
-      *  Prev Amend No. MD058914           Date 06Oct21               *
+      *  Last Amend No. BA5021             Date 15Aug23               *
+      *  Prev Amend No. MD060066           Date 30Jun22               *
+      *               . MD058914           Date 06Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 MD023298A          Date 03Jun20               *
@@ -129,6 +130,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA5021 - Suppress Settlement Shadow Postings Generation      *
+      *           Upgrade GLW021.                                     *
       *  MD060066 - MT202 message not generated for MT103 transactions*
       *             Add reversal of FTM199 for Stop of Outgoing Pay-  *
       *             ment transaction.                                 *
@@ -707,6 +710,7 @@
      D POPTN           S              7                                                       CRE020
      D PSARD           S              6                                                       CRE020
                                                                                               CRE020
+     D BA5021          S              1                                                       BA5021
      D UM#CCY          S              3A                                                      CFT120
       *                                                                                       CFT120
       * Factors table
@@ -2586,6 +2590,13 @@
       *  Define settle and pay amounts
      C     *LIKE         DEFINE    SMAM          ##SMAM
      C     *LIKE         DEFINE    PYAM          ##PYAM
+      *                                                                                       BA5021
+      *  If BA5021 is present, execute addition of shadow postings for                        BA5021
+      *  settlement and payment instructions only if the                                      BA5021
+      *  settlement currency = payment currency.                                              BA5021
+      *                                                                                       BA5021
+     C                   If        (BA5021 = 'Y' and OTSMCY = OTPCCY)                         BA5021
+     C                             or (BA5021 <> 'Y')                                         BA5021
       *
       *  Move fields to C#DTA structure and call AOSPOSU0
       *
@@ -2749,6 +2760,8 @@
      C                   MOVEL     '*CALL   '    DBFILE
      C                   EXSR      *PSSR
      C                   END
+     C                   EndIf                                                                BA5021
+      *                                                                                       BA5021
      C/COPY WNCPYSRC,FTOPAYDC05
 
      CSR                 ENDSR
@@ -2763,6 +2776,13 @@
       *  Define settle and pay amounts                                                        213004
      C     *LIKE         DEFINE    SMAM          ##SMAM                                       213004
      C     *LIKE         DEFINE    PYAM          ##PYAM                                       213004
+      *                                                                                       BA5021
+      *  If BA5021 is present, execute addition of shadow postings for                        BA5021
+      *  settlement and payment instructions only if the                                      BA5021
+      *  settlement currency = payment currency.                                              BA5021
+      *                                                                                       BA5021
+     C                   If        (BA5021 = 'Y' and SMCY = PCCY)                             BA5021
+     C                             or (BA5021 <> 'Y')                                         BA5021
       *                                                                                       213004
       *  Move fields to C#DTA structure and call AOSPOSU0                                     213004
       *                                                                                       213004
@@ -2927,6 +2947,8 @@
      C                   END                                                                  213004
      C/COPY WNCPYSRC,FTH00489
                                                                                               213004
+     C                   EndIf                                                                BA5021
+      *                                                                                       BA5021
      CSR                 ENDSR                                                                213004
                                                                                               213004
       *                                                                                       213004
@@ -5031,6 +5053,27 @@
      C                   IF        PRTCD = *BLANKS                                            CRE020
      C                   EVAL      CRE020 = 'Y'                                               CRE020
      C                   ENDIF                                                                CRE020
+      *                                                                                       BA5021
+     C                   EVAL      BA5021 = 'N'                                               BA5021
+     C                   CALL      'AOSARDR0'                                                 BA5021
+     C                   PARM      *BLANKS       PRTCD                                        BA5021
+     C                   PARM      '*VERIFY'     POPTN                                        BA5021
+     C                   PARM      'BA5021'      PSARD                                        BA5021
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA5021
+                                                                                              BA5021
+     C                   IF        PRTCD <> *Blanks  and                                      BA5021
+     C                             PRTCD <> '*NRF'                                            BA5021
+     C     *LOCK         IN        LDA                                                        BA5021
+     C                   EVAL      DBKey = 'BA5021'                                           BA5021
+     C                   EVAL      DBFile = 'SCSARDPD'                                        BA5021
+     C                   EVAL      DBase = 47                                                 BA5021
+     C                   EXSR      *PSSR                                                      BA5021
+     C                   ENDIF                                                                BA5021
+                                                                                              BA5021
+     C                   IF        PRTCD = *BLANKS                                            BA5021
+     C                   EVAL      BA5021 = 'Y'                                               BA5021
+     C                   ENDIF                                                                BA5021
+      *                                                                                       BA5021
                                                                                               CRE020
                                                                                               CAP205
      C/COPY WNCPYSRC,FTH00109

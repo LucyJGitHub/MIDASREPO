@@ -2079,8 +2079,10 @@
      C                   Z-ADD     @@FACT        K8FACT                                       CLE123
      C                   Z-ADD     @@FCNO        K8FCNO                                       CLE123
       *                                                                                       CLE123
-     C     K#KY08        SETLL     LEREF                                                      CLE123
-     C     K#KY08        READE     LEREF                                  80     (*ON = EOF)  CLE123
+     C*****K#KY08        SETLL     LEREF                                             CLE123 AR567221
+     C*****K#KY08        READE     LEREF                                  80         CLE123 AR567221
+     C     K#KY08        SETLL     CLOANF                                                   AR567221
+     C     K#KY08        READE     CLOANF                                 80                AR567221
       *                                                                                       CLE123
      C                   IF        *IN80 = '0'                                       found    CLE123
      C                   MOVE      'N'           DDACOFOK                                     CLE123
@@ -3206,7 +3208,7 @@ E4   C                   ENDIF
      C**********         Z-ADD     RFLNNO        K5LNRF                                       CLE148
      C**********         MOVEL     RFLNNO        K5LNRF                              CLE148 AR567221
      C     CFRECI        IFEQ      'D'                                                      AR567221
-     C                   Z-ADD     CFLNRF        K5LNRF                                     AR567221
+     C                   MOVEL     CFLNRF        K5LNRF                                     AR567221
      C                   MOVE      'A'           K5RCTP
      C     K#KY05        CHAIN     CLOAN                              80
       *

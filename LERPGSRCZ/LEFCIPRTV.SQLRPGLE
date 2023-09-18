@@ -1326,7 +1326,7 @@
      C**********         Z-ADD     LE_LNNO       K5LNRF            6 0                        CLE148
      C**********         MOVEL     LE_LNNO       K5LNRF            6                 CLE148 AR567221
      C     CF_RECI       IFEQ      'D'                                                      AR567221
-     C                   Z-ADD     CF_LNRF       K5LNRF            6 0                      AR567221
+     C                   MOVEL     CF_LNRF       K5LNRF            6                        AR567221
      C                   MOVE      'A'           K5RCTP            1
      C     K#KY05        CHAIN     CLOAN                              80
       *
@@ -1419,7 +1419,7 @@
      C**********         Z-ADD     LE_LNNO       K5LNRF                                       CLE148
      C**********         MOVEL     LE_LNNO       K5LNRF                              CLE148 AR567221
      C     CF_RECI       IFEQ      'D'                                                      AR567221
-     C                   Z-ADD     CF_LNRF       K5LNRF                                     AR567221
+     C                   MOVEL     CF_LNRF       K5LNRF                                     AR567221
      C                   MOVE      'A'           K5RCTP
      C     K#KY05        CHAIN     CLOAN                              80
       *

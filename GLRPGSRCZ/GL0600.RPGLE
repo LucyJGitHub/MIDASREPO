@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059740           Date 10May22               *
-      *  Prev Amend No. MD055785           Date 20May20               *
+      *  Last Amend No. MD059740A          Date 04Sep23               *
+      *  Prev Amend No. MD059740           Date 10May22               *
+      *                 MD055785           Date 20May20               *
       *                 MD055784           Date 19May20               *
       *                 MD055690           Date 06May20               *
       *                 247630             Date 05May20               *
@@ -193,6 +194,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059740A- Fix to address corruption of LDBL when balance    *
+      *             changes and goes above and below 10 trillion.     *
       *  MD059740 - LDBL field in ACCNTAB is not capable of handling  *
       *             10T plus amount due to its size limitation (15,0).*
       *             Save the first 9,999,999,999,999.99 balance of    *
@@ -700,6 +703,7 @@
 
       ** Outward Clearing Transaction Types
      FRETTYPL0  IF   E           K DISK    EXTIND(*INU4)
+     FZACCNT    UF   E           K DISK    COMMIT                                          MD059740A
 
      D/COPY WNCPYSRC,GL0600EEP1
 
@@ -1650,8 +1654,10 @@
      C     T1POST        TAG
 
      C                   SETOFF                                       767778
-     C                   Z-ADD     0             WLDBL            18 0                      MD059740
-     C                   Z-ADD     0             WCLBL            18 0                      MD059740
+     C**********         Z-ADD     0             WLDBL            18 0            MD059740 MD059740A
+     C**********         Z-ADD     0             WCLBL            18 0            MD059740 MD059740A
+     C                   Z-ADD     LDBL          WLDBL            18 0                     MD059740A
+     C                   Z-ADD     CLBL          WCLBL            18 0                     MD059740A
 
      C     DSCOMK        SETLL     SACPO
      C     DSCOMK        READE     SACPO                                  32
@@ -2053,25 +2059,25 @@
      C     PSTD          COMP      LMVD                               62
      C   62
      CAN 60              Z-ADD     PSTD          LMVD
-      *                                                                                     MD059740
-      ** If this a Spot Trade Account Equivalent posting                                    MD059740
-      ** check first if account balance will exceed 10 trillion                             MD059740
-      *                                                                                     MD059740
-     C     WLDBL         IFLT      MXDBL                                                    MD059740
-     C     WLDBL         ANDGE     *ZEROS                                                   MD059740
-     C     WLDBL         ORGT      MXCBL                                                    MD059740
-     C     WLDBL         ANDLE     *ZEROS                                                   MD059740
-     C                   Z-ADD     LDBL          WLDBL                                      MD059740
-     C                   Z-ADD     CLBL          WCLBL                                      MD059740
-     C                   ENDIF                                                              MD059740
-      *                                                                                     MD059740
-     C                   EXSR      CHKPST                                                   MD059740
-      *                                                                                     MD059740
-     C     WLDBL         IFLT      MXDBL                                                    MD059740
-     C     WLDBL         ANDGE     *ZEROS                                                   MD059740
-     C     WLDBL         ORGT      MXCBL                                                    MD059740
-     C     WLDBL         ANDLE     *ZEROS                                                   MD059740
-      *                                                                                     MD059740
+      **********                                                                  MD059740 MD059740A
+      ***If*this*a*Spot*Trade*Account*Equivalent*posting********                  MD059740 MD059740A
+      ***check*first*if*account*balance*will*exceed*10*trillion*                  MD059740 MD059740A
+      **********                                                                  MD059740 MD059740A
+     C*****WLDBL         IFLT      MXDBL                                          MD059740 MD059740A
+     C*****WLDBL         ANDGE     *ZEROS                                         MD059740 MD059740A
+     C*****WLDBL         ORGT      MXCBL                                          MD059740 MD059740A
+     C*****WLDBL         ANDLE     *ZEROS                                         MD059740 MD059740A
+     C**********         Z-ADD     LDBL          WLDBL                            MD059740 MD059740A
+     C**********         Z-ADD     CLBL          WCLBL                            MD059740 MD059740A
+     C**********         ENDIF                                                    MD059740 MD059740A
+      **********                                                                  MD059740 MD059740A
+     C**********         EXSR      CHKPST                                         MD059740 MD059740A
+      **********                                                                  MD059740 MD059740A
+     C*****WLDBL         IFLT      MXDBL                                          MD059740 MD059740A
+     C*****WLDBL         ANDGE     *ZEROS                                         MD059740 MD059740A
+     C*****WLDBL         ORGT      MXCBL                                          MD059740 MD059740A
+     C*****WLDBL         ANDLE     *ZEROS                                         MD059740 MD059740A
+      **********                                                                  MD059740 MD059740A
      C   35              GOTO      T20
 
       ** Process debit
@@ -2079,6 +2085,11 @@
      C   60
      CAN 05
      CANN27LDBL          ADD       PSTA          LDBL
+      *                                                                                    MD059740A
+     C   60                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CANN27              ADD       PSTA          WLDBL                                     MD059740A
+      *                                                                                    MD059740A
      C   61
      CAN 05
      C***ANN27CLBL          ADD       PSTA          CLBL                                    MD045515
@@ -2086,6 +2097,14 @@
      COR 61                                                                                 MD045515
      CAN 05                                                                                 MD045515
      CAN 22              ADD       PSTA          CLBL                                       MD045515
+      *                                                                                    MD059740A
+     C   61                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CANN27                                                                                MD059740A
+     COR 61                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CAN 22              ADD       PSTA          WCLBL                                     MD059740A
+      *                                                                                    MD059740A
      C/COPY WNCPYSRC,GL0600C010
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
@@ -2113,6 +2132,11 @@
      C   60
      CAN 05
      CANN27LDBL          SUB       PSTA          LDBL
+      *                                                                                    MD059740A
+     C   60                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CANN27              SUB       PSTA          WLDBL                                     MD059740A
+      *                                                                                    MD059740A
      C   61
      CAN 05
      C***ANN27CLBL          SUB       PSTA          CLBL                                    MD045515
@@ -2120,6 +2144,14 @@
      COR 61                                                                                 MD045515
      CAN 05                                                                                 MD045515
      CAN 22              SUB       PSTA          CLBL                                       MD045515
+      *                                                                                    MD059740A
+     C   61                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CANN27                                                                                MD059740A
+     COR 61                                                                                MD059740A
+     CAN 05                                                                                MD059740A
+     CAN 22              SUB       PSTA          WCLBL                                     MD059740A
+      *                                                                                    MD059740A
      C/COPY WNCPYSRC,GL0600C011
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
@@ -2166,9 +2198,9 @@
      C  N35              SETON                                        35
 
      C     T21           TAG
-      *                                                                                     MD059740
-     C                   ENDIF                                                              MD059740
-      *                                                                                     MD059740
+      **********                                                                  MD059740 MD059740A
+     C**********         ENDIF                                                    MD059740 MD059740A
+      **********                                                                  MD059740 MD059740A
      C   05PSTA          DIV       1000          ZZAMT
      C   60
      CAN 05              EXSR      HASH
@@ -2301,6 +2333,45 @@
      C   39LNORE         ADD       1             LNORE
      C   39              EXSR      LHASH
      C                   ENDIF
+      *                                                                                    MD059740A
+     C                   Z-ADD     WLDBL         LDBL                                      MD059740A
+     C                   Z-ADD     WCLBL         CLBL                                      MD059740A
+     C                   SETOFF                                       59                   MD059740A
+      *                                                                                    MD059740A
+      ** Excess balance will go to holding a/c.                                            MD059740A
+      ** NOTE: Hotfix is just checking for excess in LDBL, and not CLBL.                   MD059740A
+      *                                                                                    MD059740A
+     C     WLDBL         IFGT      MXDBL                                                   MD059740A
+     C     WLDBL         ORLT      MXCBL                                                   MD059740A
+      *                                                                                    MD059740A
+     C                   Z-ADD     1             RC                3 0                     MD059740A
+     C     ACOD          LOOKUP    SPA(RC)                                59               MD059740A
+      *                                                                                    MD059740A
+     C     *IN59         IFEQ      *ON                                                     MD059740A
+     C     CCY           ANDEQ     BJCYCD                                                  MD059740A
+     C     ACSQ          ANDEQ     01                                                      MD059740A
+      *                                                                                    MD059740A
+     C     WLDBL         IFGT      MXDBL                                                   MD059740A
+     C     WLDBL         SUB       MXDBL         LDBL01           15 0                     MD059740A
+     C                   Z-ADD     LDBL01        OP_LDBL          15 0                     MD059740A
+     C                   Z-ADD     MXDBL         LDBL                                      MD059740A
+     C     WCLBL         SUB       MXDBL         CLBL01           15 0                     MD059740A
+     C                   Z-ADD     CLBL01        OP_CLBL          15 0                     MD059740A
+     C                   Z-ADD     MXDBL         CLBL                                      MD059740A
+     C                   ENDIF                                                             MD059740A
+      *                                                                                    MD059740A
+     C     WLDBL         IFLT      MXCBL                                                   MD059740A
+     C     WLDBL         SUB       MXCBL         LDBL01                                    MD059740A
+     C                   Z-ADD     LDBL01        OP_LDBL                                   MD059740A
+     C                   Z-ADD     MXCBL         LDBL                                      MD059740A
+     C     WCLBL         SUB       MXCBL         CLBL01                                    MD059740A
+     C                   Z-ADD     CLBL01        OP_CLBL                                   MD059740A
+     C                   Z-ADD     MXCBL         CLBL                                      MD059740A
+     C                   ENDIF                                                             MD059740A
+      *                                                                                    MD059740A
+     C                   ENDIF                                                             MD059740A
+     C                   ENDIF                                                             MD059740A
+      *                                                                                    MD059740A
 
      C  NU1              GOTO      END
 
@@ -3280,11 +3351,19 @@
       *                                                                                     MD059740
      C                   ELSE                                                               MD059740
       *                                                                                     MD059740
-     C                   Z-ADD     OP_LDBL       H1_LDBL                                    MD059740
-     C                   Z-ADD     OP_CLBL       H1_CLBL                                    MD059740
+     C**********         Z-ADD     OP_LDBL       H1_LDBL                          MD059740 MD059740A
+     C**********         Z-ADD     OP_CLBL       H1_CLBL                          MD059740 MD059740A
+     C   U1              Z-ADD     OP_LDBL       H1_LDBL                                   MD059740A
+     C   U1              Z-ADD     OP_CLBL       H1_CLBL                                   MD059740A
+     C  NU1              ADD       OP_LDBL       H1_LDBL                                   MD059740A
+     C  NU1              ADD       OP_CLBL       H1_CLBL                                   MD059740A
      C                   Z-ADD     RUND          H1_LACD                                    MD059740
      C                   Z-ADD     RUND          H1_LMVD                                    MD059740
      C                   UPDATE    ACCNTABF2                                                MD059740
+     C     KEY02         CHAIN     ZACCNT                             51                   MD059740A
+     C     *IN51         IFEQ      '0'                                                     MD059740A
+     C                   DELETE    ZACCNT                                                  MD059740A
+     C                   ENDIF                                                             MD059740A
      C                   ENDIF                                                              MD059740
       *                                                                                     MD059740
      C                   ENDSR                                                              MD059740

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD057950           Date 29Jun22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD061728           Date 14Aug23               *
+      *  Prev Amend No. MD057950           Date 29Jun22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061728 - All-in interest rate is displayed as blanks       *
+      *             Convert negative All in interest rate to a        *
+      *             proper format before returning the value to Java  *
       *  MD057950 - Amending a loan gets error 45021352 due to rate/  *
       *             spread cannot be amended. Reverse fix MD034449.   *
       *             Use %TRIM and %EDITW instead of %CHAR when        *
@@ -222,6 +226,7 @@
      D WWFlor          S             11P 7                                                    CLE172
                                                                                               CLE035
      D RTSPCharFmt     C                   CONST('  0 .       -')                           MD057950
+     D INTRCharFmt     C                   CONST('  0 .       -')                           MD061728
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -342,12 +347,17 @@
       ***  Interest rate                                                                    MD025521
       *                                                                                     MD025521
      C     INTR          IFNE      *ZEROS                                                   MD025521
+     C     INTR          IFGT      *ZEROS                                                   MD061728
      C                   MOVEL     *BLANKS       ZFIELD           16                        MD025521
      C                   MOVE      INTR          ZFIELD           16                        MD025521
      C                   Z-ADD     7             ZDEC              1 0                      MD025521
      C                   CALL      'ZEDIT'                                                  MD025521
      C                   PARM                    ZFIELD                                     MD025521
      C                   PARM                    ZDEC                                       MD025521
+     C                   ELSE                                                               MD061728
+     C                   MOVEL     *BLANKS       ZFIELD                                     MD061728
+     C                   EVALR     ZFIELD = %TRIM(%EDITW(INTR:INTRCharFmt))                 MD061728
+     C                   ENDIF                                                              MD061728
      C                   MOVE      ZFIELD        DDINTR                                     MD025521
      C                   ENDIF                                                              MD025521
       *

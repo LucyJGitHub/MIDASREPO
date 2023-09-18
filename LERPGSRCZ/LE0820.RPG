@@ -11,8 +11,11 @@
 0007 F*                                                                  *LE0820
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR576890           Date 26Jul23               *
-      *  Prev Amend No. MD041929           Date 08Feb23               *
+      *  Last Amend No. MD056936           Date 25Aug23               *
+      *  Prev Amend No. MD056766           Date 25Aug23               *
+      *                 MD034457           Date 25Aug23               *
+      *                 AR576890           Date 26Jul23               *
+      *                 MD041929           Date 08Feb23               *
       *                 249385             Date 01Aug22               *
       *                 CSD103             Date 10Aug20               *
       *                 AR375891A          Date 26Aug20               *
@@ -106,6 +109,13 @@
 0010 F*                 E13500             DATE 09/06/88              *LE0820
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD056936 - Holiday repayment not visible in PAMV. Generate   *
+      *             projection of loan amendment with LASN not equal  *
+      *             to zero if event date is less than rundate.       *
+      *  MD056766 - Loan fee not visible in PAMV on booking day.      *
+      *             Included code changes of MD035660 and MD021114A.  *
+      *             Extend fix MD021114A for other fee event types.   *
+      *  MD034457 - Output loan start event valued on holiday.        *
       *  AR576890 - Incorrect transaction type for fees. Write event  *
       *             type F1/F3 to WZZ09 char field to avoid value to  *
       *             be corrupted in WPREF. Apply part of fix 251794.  *
@@ -1708,7 +1718,8 @@
      C           KLNRF     CHAINCLOAN                14                                       237466
       *                                                                                       237466
      C           *IN14     IFEQ '0'                                                           237466
-     C           LASN      ANDEQ0                                                             237466
+     C********** LASN      ANDEQ0                                                    237466 MD056936
+     C           LASN      IFEQ 0                                                           MD056936
       *                                                                                       237466
       ** Check if repayment event date was obtaind from base date.                            237466
       *                                                                                       237466
@@ -1832,7 +1843,32 @@
      C                     ENDIF                                                              237466
      C                     MOVE '1'       *IN11                                               237466
      C                     ENDIF                                                              237466
+      *                                                                                     MD034457
+      ** Event type is V1                                                                   MD034457
+      *                                                                                     MD034457
+     C           ETP       IFEQ 'V1'                                                        MD034457
+     C                     Z-ADDVDATX     EDAT                                              MD034457
+     C           EDAT      IFGT RUND                                                        MD034457
+     C                     MOVE '1'       *IN40                                             MD034457
+     C                     ELSE                                                             MD034457
+     C                     MOVE '0'       *IN40                                             MD034457
+     C                     ENDIF                                                            MD034457
+     C                     MOVE '1'       *IN11                                             MD034457
+     C                     ENDIF                                                            MD034457
       *                                                                                       237466
+     C                     ELSE                                                             MD056936
+      *                                                                                     MD056936
+     C           ETP       IFNE 'F1'                                                        MD056936
+     C           ETP       ANDNE'FX'                                                        MD056936
+     C           EDAT      IFLT RUND                                               I        MD056936
+     C           EDAT      ANDNE0                                                           MD056936
+     C                     Z-ADDEDAT      OEDAT                                             MD056936
+     C                     MOVE '0'       *IN40                                             MD056936
+     C                     MOVE '1'       *IN11                                             MD056936
+     C                     ENDIF                                                            MD056936
+     C                     ENDIF                                                            MD056936
+      *                                                                                     MD056936
+     C                     ENDIF                                                            MD056936
      C                     ENDIF                                                              237466
       *                                                                                     MD052216
       ** Get fee payment base date to reflect actual event date                             MD052216
@@ -1861,6 +1897,26 @@
      C           EDAT      ANDLEWDATE                                     CRE009
      C                     MOVE *OFF      *IN40                           CRE009
      C                     ENDIF                                          CRE009
+      *                                                                                     MD056766
+      ** If the event is for Calculated Facility Fee (71F2) and                             MD056766
+      ** Event Date is less than Rundate and AUTO is Y, set the                             MD056766
+      ** posting date equal to next working date                                            MD056766
+      ** Do the same for other fee event types.                                             MD056766
+      *                                                                                     MD056766
+     C                     MOVE *OFF      *IN56                                             MD056766
+     C           ETYP      IFEQ '71F1'                                                      MD056766
+     C           ETYP      OREQ '71F2'                                                      MD056766
+     C           ETYP      OREQ '71FX'                                                      MD056766
+     C           ETYP      OREQ '71FY'                                                      MD056766
+     C           EDAT      IFLT RUND                                                        MD056766
+     C           EDAT      ANDNE0                                                           MD056766
+     C           AUTO      ANDEQ'Y'                                                         MD056766
+     C                     MOVE *ON       *IN56                                             MD056766
+     C                     Z-ADDRUND      WPOST                                             MD056766
+     C                     MOVE *OFF      *IN40                                             MD035660
+     C                     ENDIF                                                            MD056766
+     C                     ENDIF                                                            MD056766
+      *                                                                                     MD056766
      C                     ELSE                                           CRE009
 0452 C********** EDAT      COMP RUND                 4040                              LE0820 237466
      C                     MOVE '0'       *IN40                                              BUG8552
@@ -1877,6 +1933,20 @@
      C           EDAT      ANDNE0                                                            BUG8552
      C                     MOVE '1'       *IN56                                              BUG8552
      C                     MOVE RUND      WPOST   50                                         BUG8552
+      *                                                                                     MD056766
+      ** Allow write to RPOSTPD if the event is for Calculated                              MD056766
+      ** Facility Fee (71F2) and EDAT is less than RUND and Auto is Y                       MD056766
+      ** Do the same for other fee event types.                                             MD056766
+      *                                                                                     MD056766
+     C           ETYP      IFEQ '71F2'                                                      MD056766
+     C           ETYP      OREQ '71F1'                                                      MD056766
+     C           ETYP      OREQ '71FX'                                                      MD056766
+     C           ETYP      OREQ '71FY'                                                      MD056766
+     C           AUTO      IFEQ 'Y'                                                         MD056766
+     C                     MOVE *OFF      *IN40                                             MD056766
+     C                     ENDIF                                                            MD056766
+     C                     ENDIF                                                            MD056766
+      *                                                                                     MD056766
      C                     ENDIF                                                             BUG8552
      C                     ENDIF                                          CRE009
 0453 C**                                                                  LE0820

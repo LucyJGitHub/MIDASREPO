@@ -8,15 +8,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR676337           Date 15Jun23               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC025  *CREATE    Date 03May05               *
+      *                 CSC025  *CREATE    Date 03May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR676337 - Added journal receiver field due to changes from  *
+      *             BUG16177A.                                        *
+      *             This is the formal delivery of case 260057.       *      
       *  MD046248 - Finastra Rebranding                               *
       *  CSC025 - Exit program for high availability switchover.      *
       *                                                               *
@@ -51,6 +55,7 @@
       *  update the file with the journal receiver and sequence number received.
       *
      C                   MOVE      JRNSEQ        I#LASTSEQ
+     C                   MOVE      JRNRCV        I#LASTRCV                                    260057
      C                   UPDATE    GOOSJSD0
       *
       *  Set first record flag to 'N'

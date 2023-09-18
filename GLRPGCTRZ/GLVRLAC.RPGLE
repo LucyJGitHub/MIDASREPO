@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR939238           Date 23Apr12               *
+      *  Last Amend No. MD051690           Date 27Jun23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 AR939238           Date 23Apr12               *
       *                 AR1001991          Date 06Aug12               *
       *                 CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051690 - Account can be closed even attached to Collateral *
+      *             Check GLCOLLPD for accounts used.                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR939238 - Array Index Error whenever during retail account  *
@@ -225,6 +228,10 @@
       ** LF to allow a chain on prime linked account                                          226550
       *                                                                                       226550
      FRELINKJ2  IF   E           K DISK    INFSR(*PSSR)                                       226550
+      *                                                                                     MD051690
+     FGLCOLLLH  IF   E           K DISK    INFSR(*PSSR)                                     MD051690
+     FGLCOLLLI  IF   E           K DISK    INFSR(*PSSR)                                     MD051690
+     F                                     RENAME(GLCOLLD0:GLCOLL1)                         MD051690
      FREACCML1  IF   E           K DISK    INFSR(*PSSR)                                    AR1001991
      FSWACB     IF   E           K DISK    INFSR(*PSSR)                                       263834
      F                                     IGNORE(SWACSSAF)                                   263834
@@ -1143,6 +1150,43 @@
      C                   EndIf
      C                   EndIf
       *
+      ** Account cannot be secured by Collateral                                            MD051690
+      *                                                                                     MD051690
+     C     KCOLL1        KLIST                                                              MD051690
+     C                   KFLD                    WWBRCA                                     MD051690
+     C                   KFLD                    WWCNUM                                     MD051690
+     C                   KFLD                    WWCCY                                      MD051690
+     C                   KFLD                    WWACOD                                     MD051690
+     C                   KFLD                    WWASEQ                                     MD051690
+      *                                                                                     MD051690
+     C                   MOVE      DDBrca        WWBRCA                                     MD051690
+     C                   MOVE      DDCUSN        WWCNUM                                     MD051690
+     C                   MOVEL     DDCCy         WWCCY                                      MD051690
+     C                   MOVE      DDACod        WWACOD                                     MD051690
+     C                   MOVE      DDASeq        WWASEQ                                     MD051690
+      *                                                                                     MD051690
+     C     KCOLL1        CHAIN     GLCOLLLH                           81                    MD051690
+      *                                                                                     MD051690
+     C     *IN81         IFEQ      '0'                                                      MD051690
+     C                   Move      'N'           DDAcNoOk                                   MD051690
+     C                   Add       1             Idx                                        MD051690
+     C                   Movel     'DDAcNo'      FldNamXAr(Idx)                             MD051690
+     C                   Movel     'RET1555'     MsgIDXAr(Idx)                              MD051690
+     C                   EVAL      BLen = %Len(%Trim(CDCREF))                               MD051690
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(CDCREF)                   MD051690
+     C                   ELSE                                                               MD051690
+      *                                                                                     MD051690
+     C     KCOLL1        CHAIN     GLCOLLLI                           81                    MD051690
+      *                                                                                     MD051690
+     C     *IN81         IFEQ      '0'                                                      MD051690
+     C                   Move      'N'           DDAcNoOk                                   MD051690
+     C                   Add       1             Idx                                        MD051690
+     C                   Movel     'DDAcNo'      FldNamXAr(Idx)                             MD051690
+     C                   Movel     'RET1556'     MsgIDXAr(Idx)                              MD051690
+     C                   EVAL      BLen = %Len(%Trim(CDCREF))                               MD051690
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(CDCREF)                   MD051690
+     C                   ENDIF                                                              MD051690
+     C                   ENDIF                                                              MD051690
      C                   EndIf
       *                                                                                       CRE114
       ** If CRE114 is on and Action Code is 'I' and Retail Numbers are used                   CRE114

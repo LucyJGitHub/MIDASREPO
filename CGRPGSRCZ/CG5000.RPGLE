@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056543           Date 15Sep20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. MD042127           Date 07Jul23               *
+      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042127 - 'More ...' is displayed at the bottom of the      *
+      *             screen eventhough no more record is to be         *
+      *             displayed. Ensure next record is read when        *
+      *             subfile page is full.                             *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
       *             to readable unicode equivalent.                   *
@@ -393,13 +398,19 @@
       * Load next SFL page until SFL page full, or
       * Scan limit reached
      C     *IN82         DOWEQ     '0'                                          DO
-     C     ##RROK        ANDLT     ##SFLN
-     C     ##RRRD        ANDLT     W0SLM
+     C*****##RROK        ANDLT     ##SFLN                                                   MD042127
+     C     ##RROK        ANDLE     ##SFLN                                                   MD042127
+     C*****##RRRD        ANDLT     W0SLM                                                    MD042127
       * Check selection fields - if fail, read next record
      C                   EXSR      SRGETR
      C     ##RFND        IFEQ      'N'
      C                   GOTO      BB020
      C                   ENDIF
+      * If found and end of subfile page, just exit                                         MD042127
+     C     ##RFND        IFEQ      'Y'                                                      MD042127
+     C     ##RROK        ANDEQ     ##SFLN                                                   MD042127
+     C                   GOTO      BB900                                                    MD042127
+     C                   ENDIF                                                              MD042127
       * Load SFL fields
      C                   EXSR      MBFL#1
       * Allow for possible *Set Cursor processing

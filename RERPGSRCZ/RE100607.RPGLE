@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR980046           Date 25Feb13               *
+      *  Last Amend No. AR1005503          Date 05Sep23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR980046           Date 25Feb13               *
       *                 AR679670           Date 26Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 08Mar10               *
@@ -32,6 +33,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1005503 - LDBL is updated with postings with forward post  *
+      *              dates (MM transactions). Need to condition MEMOS *
+      *              update for this type of transactions.            *
+      *              (Child: AR1005504)                               *
+      *            - Applied for MD-55524.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR980046 - MEMOS and RSACMTPD is not updated. Reversed       *
       *             255387 because MEMOS and RSACMTPD should be       *
@@ -349,12 +355,16 @@
      C                   ENDIF
  
      C     OR_DORC       IFEQ      0
+     C     R_PTDT        IFLT      BJDNWD                                                  AR1005503
      C                   ADD       OR_MVAM       S_LDBLN
+     C                   ENDIF                                                             AR1005503
      C     R_VUDT        IFLT      BJDNWD                                       216478
      C                   ADD       OR_MVAM       S_CLBLN
      C                   ENDIF                                                  216478
      C                   ELSE
+     C     R_PTDT        IFLT      BJDNWD                                                  AR1005503
      C                   SUB       OR_MVAM       S_LDBLN
+     C                   ENDIF                                                             AR1005503
      C     R_VUDT        IFLT      BJDNWD                                       216478
      C                   SUB       OR_MVAM       S_CLBLN
      C                   ENDIF                                                  216478

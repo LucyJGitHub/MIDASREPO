@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056611           Date 20Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD031970           Date 19Jun23               *
+      *  Prev Amend No. MD056611           Date 20Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031970 - GOC0304 00001 componenet fails. Increase constant *
+      *             NoofFiles to 200.                                 *
       *  MD056611 - Deliverable Data Split for Audit Reporting        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP004 - Audit Reporting                                     *
@@ -33,7 +36,8 @@
 
 
       * Number of files whose details are stored
-     D NoofFiles       C                   CONST(100)
+     D*NoofFiles       C                   CONST(100)                                       MD031970
+     D NoofFiles       C                   CONST(200)                                       MD031970
       * Files
      D #_FIL           S             10    DIM(NoofFiles)
       * 1st Occurence of File

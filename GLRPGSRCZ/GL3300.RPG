@@ -20,10 +20,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER073C            Date 09Oct17               *
+      *  Last Amend No. AR661500           Date 11Jul23               *
+      *  Prev Amend No. AR876462           Date 06Jul23               *
+      *                 241674             Date 26Jun23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER073C            Date 09Oct17               *
       *                 CER073A            Date 05Sep17               *
-      *                 CER073             Date 10Jul17               * 
+      *                 CER073             Date 10Jul17               *
       *                 AR1008615          Date 25Nov12               *
       *                 AR995788           Date 25Nov12               *
       *                 CLE148             Date 23Jul12               *
@@ -51,10 +54,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR661500 - GLC3300 in MSGW due to printer overflow. Check if *
+      *             lines are still sufficient in the page before     *
+      *             printing. (Applied for MD-25955)                  *
+      *  AR876462 - COB fails at component GLC3300. Amended pgm in    *
+      *             such a way that when a closed customer is being   *
+      *             used in a matured collateral, component GLC3300   *
+      *             will not fail. (Child: AR876463).                 *
+      *             Applied for MD029229.                             *
+      *  241674 - Cannot view collateral types report thru RCF.       *
+      *         - Applied for MD043390.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073C - CER073 Change Control 3 (Recompile)                *
       *  CER073A - CER073 Change Control 1                            *
-      *  CER073 - AnaCredit Reporting                                 *      
+      *  CER073 - AnaCredit Reporting                                 *
       *  AR1008615 - Input 'no. of units' is missing (Child:AR1008618)*
       *  AR995788 - Unit Amount in Collateral Details Report is not   *
       *             displayed (Child:AR995974)                        *
@@ -1194,6 +1207,7 @@
      C           SDCUST    PARM SDCUST    DSLDY
       *
      C           WRTCD     IFNE *BLANKS
+     C           BBCLST    IFNE 'Y'                                                         AR876462
       *                                                                                     BUG12196
      C           WBASE     IFNE 5                                                           BUG12196
      C           WBASE     ANDNE9                                                           BUG12196
@@ -1203,6 +1217,7 @@
      C                     Z-ADDWBASE     DBASE            *DB ERROR 000 *
      C                     OUT  LDA                        ***************
      C                     EXSR *PSSR
+     C                     ENDIF                                                            AR876462
      C                     ENDIF
       *                                                                                     BUG12196
      C           WBASE     IFEQ 5                                                           BUG12196
@@ -1272,6 +1287,15 @@
      C           *IN61     IFEQ '1'
      C                     GOTO ENARR
      C                     ELSE
+      *                                                                                     AR661500
+      ** Check that sufficient lines remain for the format. If not,                         AR661500
+      ** write out the main headings on a new page.                                         AR661500
+      *                                                                                     AR661500
+     C                     Z-ADD8         RQDLN1                                            AR661500
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                            AR661500
+     C           DIFLN1    IFLE RQDLN1                                                      AR661500
+     C                     WRITEHEADP1                                                      AR661500
+     C                     ENDIF                                                            AR661500
      C                     MOVE '1'       *IN21
      C                     WRITEHEADP2
       *
@@ -1310,6 +1334,15 @@
      C           *IN62     IFEQ '1'
      C                     GOTO EALOC
      C                     ELSE
+      *                                                                                     AR661500
+      ** Check that sufficient lines remain for the format. If not,                         AR661500
+      ** write out the main headings on a new page.                                         AR661500
+      *                                                                                     AR661500
+     C                     Z-ADD13        RQDLN1                                            AR661500
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                            AR661500
+     C           DIFLN1    IFLE RQDLN1                                                      AR661500
+     C                     WRITEHEADP1                                                      AR661500
+     C                     ENDIF                                                            AR661500
      C                     MOVE '1'       *IN22
      C                     WRITEHEADP2
       *
@@ -1614,10 +1647,13 @@
      C                     Z-ADDSFNUM1    ZSNUM   60
       *
      C                     CALL 'ZSFILE'
-     C                     PARM *BLANKS   SEQ     5
+     C**********           PARM *BLANKS   SEQ     5                                           241674
+     C                     PARM PRSEQ     SEQ     5                                           241674
      C                     PARM           SENTY   3
-     C                     PARM           SFILE1
-     C                     PARM           ZSNUM
+     C**********           PARM           SFILE1                                              241674
+     C**********           PARM           ZSNUM                                               241674
+     C                     PARM SFILE1    SFILE1                                              241674
+     C                     PARM SFNUM1    ZSNUM                                               241674
      C                     PARM           ZSERR   1
       *
       ** If Error occurs during ZSFILE processing, then return to the

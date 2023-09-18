@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. 255764A            Date 10Jul23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,13 +24,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255764A - GOC0100 failed due to deleted currency. Do not call*
+      *            /copy after deletion in GZOLPOSOA.                 *
+      *            Applied for MD-52179.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZOLPOSL1 UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZOLPOSOA O  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -38,9 +42,9 @@ O    F                                     USROPN
 O
 O    D Z_OLPOSOA     E DS                  EXTNAME(GZOLPOSOA )
 O    D G_OLPOSOA     E DS                  EXTNAME(GZOLPOSOA ) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -83,11 +87,12 @@ O    C                   UPDATE    OLPOSOAF
 O    C                   ELSE
 O    C                   WRITE     W_OLPOSOAF
 O    C                   ENDIF
+     C/COPY GPCPYSRCG,Z1OLPOSOA                                                              255764A
 O    C                   ENDIF
-     C/COPY GPCPYSRCG,Z1OLPOSOA                                                             BUG10215
- 
+     C***/COPY*GPCPYSRCG,Z1OLPOSOA                                                  BUG10215 255764A
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -107,7 +112,7 @@ O    C     K_GZOLPOSL1   KLIST
 O    C                   KFLD                    BRCA
 O    C                   KFLD                    CCY
 O    C                   KFLD                    RECN
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -115,15 +120,15 @@ O    C                   KFLD                    RECN
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -138,10 +143,10 @@ O    C                   KFLD                    RECN
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

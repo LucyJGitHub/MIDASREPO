@@ -22,8 +22,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD059620           Date 18Mar22               *
+      *  Last Amend No. MD048593           Date 12Sep23               *
+      *  Prev Amend No. MD060205           Date 23Aug23               *
+      *                 260143             Date 10Aug23               *
+      *                 AR1051346          Date 27Jul23               *
+      *                 MD061684           Date 25Jul23               *
+      *                 MD021509           Date 19Jul23               *
+      *                 249385             Date 01Aug22               *
+      *                 MD059620           Date 18Mar22               *
       *                 MD058815           Date 28Sep21               *
       *                 MD058222           Date 08Jul21               *
       *                 MD058102           Date 09Jun21               *
@@ -302,6 +308,29 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048593 - Incorrect 'In date' in LOAC. Complete the monthend*
+      *             checking for Modified PTDI in SR/SRINDT. Add PTDI *
+      *             checking in SR/SRDETL if FCALR = 'Y'; patterned   *
+      *             after fix AR808647.                               *
+      *           - added AR808647 similar changes in SRDETL for int. *
+      *  MD060205 - Interest payment missing on Loan Activity Enquiry *
+      *             after Loan Amendment. Amend to include WINTR in   *
+      *             addition to the condition if CPAM is zero to      *
+      *             display repayment schedule                        *
+      *  260143   - Future manual repayment not displayed when freq.  *
+      *             based repayment on same date                      *
+      *           - Applied for MD-52241                              *
+      *  AR1051346 - LOAC does not show all information when using    *
+      *             the search criteria fields "Loan no" and "Date    *
+      *             activity from" as it will show using the "Page    *
+      *             down botton" at the end of the loan.              *
+      *             Count records processed if they were displayed.   *
+      *             (Child: AR1051348)                                *
+      *  MD061684 - Resolve conflict between MD021509 and MD052734.   *
+      *  MD021509 - Wrong 'In Date' shown in Loan Activity Enquiry.   *
+      *             Adjust SINDT based on NIDT/NRPD/MDAT and used     *
+      *             PTDI of loan. Update SDUDT/SINDT with WIDUDT and  *
+      *             WIINDT when NIDT/NRPD is not equal to ONIDT/ONRPD.*
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD059620 - Curly bracket instead of minus sign in LOAC. Show *
@@ -1490,6 +1519,10 @@
       *  SRSTLN  -  Process record read from customer loans file      *                      BUG9052
       *  SROUTS  -  Format start record for display                   *                      BUG9052
       *  SRDISS  -  Displays Start record                             *                      BUG9052
+      *  SRSCUR  -  Set correct currency depending on the settlement  *                     MD021509
+      *             type                                              *                     MD021509
+      *  SRINDT  -  Set correct In Date depending on the PTDI of the  *                     MD021509
+      *             loan                                              *                     MD021509
       *                                                               *
       *  ZALIGN  -  Validate/right align numeric fields               *
       *  ZDATE1  -  Validate and convert date to day number           *
@@ -1606,6 +1639,7 @@
      C                     MOVE *BLANK    SEMSG
      C                     MOVE *BLANK    SCMSG
      C                     Z-ADD11        VSLN
+     C                     MOVE 'N'       LUPFG   1                                        AR1051346
      C           *IN08     IFEQ '1'
      C                     MOVE '0'       *IN30
      C                     MOVE *BLANK    WFULL
@@ -1971,6 +2005,7 @@
      C                     Z-ADDWCUPR     WSVBL                           184903
      C                     MOVE '1'       *IN68
      C                     ADD  1         VSLN
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2
      C                     MOVE '0'       *IN68
      C***********          MOVE '1'       *IN31                           133915
@@ -2010,6 +2045,7 @@
      C                     Z-ADDWCUPR     WSVBL                                               193701
      C                     MOVE '1'       *IN68                                               193701
      C                     ADD  1         VSLN                                                193701
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                                      193701
      C                     MOVE '0'       *IN68                                               193701
       *                                                                                       209383
@@ -2078,6 +2114,7 @@
      C                     Z-ADDWCUPR     WSVBL                                               193701
      C                     MOVE '1'       *IN68                                               193701
      C                     ADD  1         VSLN                                                193701
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                                      193701
      C                     MOVE '0'       *IN68                                               193701
       *                                                                                       209383
@@ -2169,7 +2206,9 @@
      C                     ENDIF
      C           VDATH     IFEQ 99999                                                       BUG13074
      C           VDATL     ANDEQ99999                                                       BUG13074
+     C           LUPFG     IFEQ 'Y'                                                        AR1051346
      C                     ADD  1         WLOOP                                             BUG13074
+     C                     ENDIF                                                           AR1051346
      C           WLOOP     IFEQ 99                                                          BUG13074
      C                     MOVE 'Y'       WFULL                                             BUG13074
      C                     ENDIF                                                            BUG13074
@@ -5472,9 +5511,13 @@
      C           WFRPR     IFEQ 'Y'
      C           WFRIN     OREQ 'Y'
      C                     Z-ADDVDATL     WCODT
+     C                     MOVE WDTL1     XWDTL1  1                                           260143
+     C                     MOVE WDTL2     XWDTL2  1                                           260143
      C           WREPT     DOUEQ*BLANK                                    132287
      C                     EXSR SRRPAY
      C                     ENDDO                                          132287
+     C                     MOVE XWDTL1    WDTL1                                               260143
+     C                     MOVE XWDTL2    WDTL2                                               260143
      C                     ENDIF
       *
       ** Accumulate interest on change of date
@@ -6919,6 +6962,7 @@
       ** when payment is to be taken if due date, falls on a holiday
       *
      C           SCAPI     IFEQ ' NO'
+     C           PDDI      ANDNE'A'                                                         MD048593
      C                     Z-ADDZDYNBR    ZDAYNO
      C           CLE141    IFEQ 'Y'                                                           CLE141
      C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
@@ -7176,6 +7220,7 @@
       ** when payment is to be taken if due date, falls on a holiday      154221
       *                                                                   154221
      C           SCAPI     IFEQ ' NO'                                     154221
+     C           PDDI      ANDNE'A'                                                         MD048593
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
      C           CLE141    IFEQ 'Y'                                                           CLE141
      C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
@@ -7502,6 +7547,7 @@
      C********** WINTR     IFLE *ZEROS                                                 132287 225344
      C********** CPAM      OREQ *ZEROS                                                 146311 225344
      C           CPAM      IFEQ *ZEROS                                                        225344
+     C           WINTR     ANDEQ*ZEROS                                                      MD060205
      C                     MOVE *BLANKS   WFRIN                           132287
      C                     MOVE *BLANKS   WRPIN                           132287
      C                     Z-ADD99999     NIDT                            132287
@@ -8048,17 +8094,21 @@
       *
       ** Determine date of input
       *
-     C           NIDT      IFEQ LCD
-     C                     MOVE *BLANKS   SINDT
-     C                     ELSE
-     C                     Z-ADDLCD       ZDAYNO
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    SINDT
-     C                     ENDIF
-      *                                                                   154221
-     C           PDDI      IFNE 'A'                                       154221
-     C                     MOVE *BLANKS   SINDT                           154221
-     C                     ENDIF                                          154221
+     C********** NIDT      IFEQ LCD                                                         MD021509
+     C**********           MOVE *BLANKS   SINDT                                             MD021509
+     C**********           ELSE                                                             MD021509
+     C**********           Z-ADDLCD       ZDAYNO                                            MD021509
+     C**********           EXSR ZDATE2                                                      MD021509
+     C**********           MOVE ZADATE    SINDT                                             MD021509
+     C**********           ENDIF                                                            MD021509
+      **********                                                                     154221 MD021509
+     C********** PDDI      IFNE 'A'                                                  154221 MD021509
+     C**********           MOVE *BLANKS   SINDT                                      154221 MD021509
+     C**********           ENDIF                                                     154221 MD021509
+      *                                                                                     MD021509
+     C                     EXSR SRSCUR                                                      MD021509
+     C                     Z-ADDNIDT      ZDAYNO                                            MD021509
+     C                     EXSR SRINDT                                                      MD021509
       *
       ** Determine narrative and amount
       *
@@ -8118,17 +8168,21 @@
       *
       ** Determine date of input
       *
-     C           NRPD      IFEQ LCD
-     C                     MOVE *BLANKS   SINDT
-     C                     ELSE
-     C                     Z-ADDLCD       ZDAYNO
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    SINDT
-     C                     ENDIF
-      *                                                                   154221
-     C           PDDI      IFNE 'A'                                       154221
-     C                     MOVE *BLANKS   SINDT                           154221
-     C                     ENDIF                                          154221
+     C********** NRPD      IFEQ LCD                                                         MD021509
+     C**********           MOVE *BLANKS   SINDT                                             MD021509
+     C**********           ELSE                                                             MD021509
+     C**********           Z-ADDLCD       ZDAYNO                                            MD021509
+     C**********           EXSR ZDATE2                                                      MD021509
+     C**********           MOVE ZADATE    SINDT                                             MD021509
+     C**********           ENDIF                                                            MD021509
+      **********                                                                     154221 MD021509
+     C********** PDDI      IFNE 'A'                                                  154221 MD021509
+     C**********           MOVE *BLANKS   SINDT                                      154221 MD021509
+     C**********           ENDIF                                                     154221 MD021509
+      *                                                                                     MD021509
+     C                     EXSR SRSCUR                                                      MD021509
+     C                     Z-ADDNRPD      ZDAYNO                                            MD021509
+     C                     EXSR SRINDT                                                      MD021509
       *
       ** Determine code
       *
@@ -8185,6 +8239,7 @@
      C                     MOVE ZOUT21    SCUBL
      C                     MOVE '1'       *IN68
      C                     ADD  1         VSLN
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2
      C                     MOVE '0'       *IN68
      C                     Z-ADDWCUPR     WSVBL
@@ -8229,6 +8284,7 @@
       *                                                                   186995
      C           WOVFL     IFEQ *BLANK
      C                     ADD  1         VSLN
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
       *                                                                   154221
      C                     SELEC                                          154221
      C           ZAMSID    WHEQ 'LEE0028'                                 154221
@@ -8252,7 +8308,46 @@
      C                     ENDIF                                          189089
      C                     EXSR ZDATE2                                    154221
      C                     MOVE ZADATE    SDUDT                           154221
-     C                     MOVE WINDTR    SINDT                           154221
+      *                                                                                     MD048593
+     C                     Z-ADDNRPD      ZDAYNO                                            MD048593
+     C                     MOVE CCYCL     ZCCY                                              MD048593
+     C                     MOVE WNLOC     ZLOC                                              MD048593
+     C                     Z-ADD*ZEROS    ZNRDYS                                            MD048593
+      *                                                                                     MD048593
+     C                     SELEC                                                            MD048593
+     C           PTDI      WHEQ 'P'                                                         MD048593
+     C                     EXSR ZBKDT                                                       MD048593
+     C           PTDI      WHEQ 'N'                                                         MD048593
+     C                     EXSR ZFWDT                                                       MD048593
+     C           PTDI      WHEQ 'M'                                                         MD048593
+     C           PTDI      OREQ ' '                                                         MD048593
+     C                     EXSR ZDATE2                                                      MD048593
+     C           *IN98     IFEQ *OFF                                                        MD048593
+     C                     MOVE ZDATE     MMYY    40P                                       MD048593
+     C                     MOVELMMYY      MMNLCD  20P                                       MD048593
+     C                     ELSE                                                             MD048593
+     C                     MOVELZDATE     MMNLCD    P                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C                     Z-ADDZDAYNO    @DAYNO  50                                        MD048593
+     C                     EXSR ZFWDT                                                       MD048593
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD048593
+     C                     EXSR ZDATE2                                                      MD048593
+     C           *IN98     IFEQ *OFF                                                        MD048593
+     C                     MOVE ZDATE     MMYY      P                                       MD048593
+     C                     MOVELMMYY      MMNWKD  20P                                       MD048593
+     C                     ELSE                                                             MD048593
+     C                     MOVELZDATE     MMNWKD    P                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C           MMNLCD    IFNE MMNWKD                                                      MD048593
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD048593
+     C                     EXSR ZBKDT                                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C                     ENDSL                                                            MD048593
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD048593
+     C                     EXSR ZDATE2                                                      MD048593
+     C**********           MOVE WINDTR    SINDT                                      154221 MD048593
+     C                     MOVE ZADATE    SINDT                                             MD048593
+      *                                                                                     MD048593
      C                     CLEARFCALR                                     154221
       *                                                                   154221
       ** Forward repayment - principal (next from header)                 154221
@@ -8353,6 +8448,40 @@
       *                                                                   154221
      C********** NIDT      IFNE 99999                                              BUG12851 BUG13074
      C                     Z-ADDNIDT      ZDAYNO                          154221
+     C                     MOVE CCYCL     ZCCY                                              MD048593
+     C                     MOVE WNLOC     ZLOC                                              MD048593
+     C                     Z-ADD*ZEROS    ZNRDYS                                            MD048593
+      *                                                                                     MD048593
+     C                     SELEC                                                            MD048593
+     C           PTDI      WHEQ 'P'                                                         MD048593
+     C                     EXSR ZBKDT                                                       MD048593
+     C           PTDI      WHEQ 'N'                                                         MD048593
+     C                     EXSR ZFWDT                                                       MD048593
+     C           PTDI      WHEQ 'M'                                                         MD048593
+     C           PTDI      OREQ ' '                                                         MD048593
+     C                     EXSR ZDATE2                                                      MD048593
+     C           *IN98     IFEQ *OFF                                                        MD048593
+     C                     MOVE ZDATE     MMYY    40P                                       MD048593
+     C                     MOVELMMYY      MMNLCD  20P                                       MD048593
+     C                     ELSE                                                             MD048593
+     C                     MOVELZDATE     MMNLCD    P                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C                     Z-ADDZDAYNO    @DAYNO  50                                        MD048593
+     C                     EXSR ZFWDT                                                       MD048593
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD048593
+     C                     EXSR ZDATE2                                                      MD048593
+     C           *IN98     IFEQ *OFF                                                        MD048593
+     C                     MOVE ZDATE     MMYY      P                                       MD048593
+     C                     MOVELMMYY      MMNWKD  20P                                       MD048593
+     C                     ELSE                                                             MD048593
+     C                     MOVELZDATE     MMNWKD    P                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C           MMNLCD    IFNE MMNWKD                                                      MD048593
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD048593
+     C                     EXSR ZBKDT                                                       MD048593
+     C                     ENDIF                                                            MD048593
+     C                     ENDSL                                                            MD048593
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD048593
      C                     EXSR ZDATE2                                    154221
      C                     MOVE ZADATE    SINDT                           154221
      C**********           ENDIF                                                   BUG12851 BUG13074
@@ -8495,6 +8624,7 @@
       *                                                                   154221
      C           PDDI      IFEQ 'A'                                       154221
      C           FCALR     ANDEQ'Y'                                       154221
+     C           NRPD      ANDNEONRPD                                                       MD021509
      C           WRDUDT    IFNE *BLANKS                                   154221
      C                     MOVE WRDUDT    SDUDT                           154221
      C                     ENDIF                                          154221
@@ -8510,6 +8640,7 @@
       *                                                                   154221
      C           PDDI      IFEQ 'A'                                       154221
      C           FCALI     ANDEQ'Y'                                       154221
+     C           NIDT      ANDNEONIDT                                                       MD021509
      C           WIDUDT    IFNE *BLANKS                                   154221
      C                     MOVE WIDUDT    SDUDT                           154221
      C                     ENDIF                                          154221
@@ -9199,6 +9330,7 @@
      C                     ENDIF                                                              CLE031
       *                                                                                       CLE031
      C                     MOVELOMDA      @KEYE
+     C                     MOVE @KEYB     WCCYT   3                                         MD021509
      C                     CALL 'AONOSTR0'
      C                     PARM '*BLANKS' @RTCD
      C                     PARM '*KEY   ' @OPTN
@@ -10168,6 +10300,7 @@
       *                                                                                       253042
      C                     EXSR SRSCUR                                                        253042
      C**********           MOVE WNLOC     ZLOC                                         253042 241243
+     C                     Z-ADDZDAYNO    WSINDT                                            MD061684
      C                     Z-ADD0         ZNRDYS                                              253042
       *                                                                                       253042
      C           CLE141    IFEQ 'Y'                                                         MD052734
@@ -10221,11 +10354,26 @@
      C                     ENDSL                                                              253042
      C                     ENDIF                                                            MD052734
       *                                                                                       253042
-     C           MDAT      IFNE WMDAT                                                         253042
-     C           CLE141    ANDEQ'N'                                                         MD052734
-     C                     Z-ADDWMDAT     ZDAYNO                                              253042
-     C                     EXSR ZDATE2                                                        253042
-     C                     MOVE ZADATE    SINDT                                               253042
+     C********** MDAT      IFNE WMDAT                                                253042 MD061684
+     C********** CLE141    ANDEQ'N'                                                MD052734 MD061684
+     C**********           Z-ADDWMDAT     ZDAYNO                                     253042 MD061684
+     C**********           EXSR ZDATE2                                               253042 MD061684
+     C**********           MOVE ZADATE    SINDT                                      253042 MD061684
+     C           CLE141    IFEQ 'N'                                                         MD061684
+     C                     SELEC                                                            MD061684
+     C           ORED      WHLE RUND                                                        MD061684
+     C           WSINDT    ANDLTRUND                                                        MD061684
+     C           WMDAT     ANDLERUND                                                        MD061684
+     C                     Z-ADDRUND      ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
+     C                     MOVE ZADATE    SINDT                                             MD061684
+     C           WSINDT    WHNE WMDAT                                                       MD061684
+     C                     Z-ADDWMDAT     ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
+     C                     MOVE ZADATE    SINDT                                             MD061684
+     C                     OTHER                                                            MD061684
+     C                     MOVE *BLANKS   SINDT                                             MD061684
+     C                     ENDSL                                                            MD061684
      C                     ENDIF                                                              253042
       *                                                                                     MD052734
      C           CLE141    IFEQ 'Y'                                                         MD052734
@@ -10234,6 +10382,7 @@
      C                     EXSR ZDATE2                                                      MD052734
      C                     MOVE ZADATE    SINDT                                             MD052734
      C                     ENDIF                                                            MD052734
+     C                     Z-ADDZDAYNO    WMDAT2  50                                        MD061684
       *                                                                   133915
       ** Maturity                                                         133915
       *                                                                   133915
@@ -10243,6 +10392,7 @@
      C                     EXSR SRTEXT                                    133915
      C                     MOVELZAMSTX    SNARR                           133915
      C                     ADD  1         VSLN                            133915
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                  133915
      C                     MOVE '1'       *IN22                           133915
      C                     ENDIF                                          133915
@@ -10325,6 +10475,7 @@
      C                     EXSR SRTEXT                                    133915
      C                     MOVELZAMSTX    SNARR                           133915
      C                     ADD  1         VSLN                            133915
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                  133915
      C                     MOVE '1'       *IN23                           133915
      C                     ENDIF                                          133915
@@ -10358,6 +10509,7 @@
      C                     EXSR SRTEXT                                    133915
      C                     MOVELZAMSTX    SNARR                           133915
      C                     ADD  1         VSLN                            133915
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                  133915
      C                     MOVE '1'       *IN24                           133915
      C                     ENDIF                                          133915
@@ -10370,6 +10522,8 @@
      C           VSLN      IFGE 20                                        188806
      C                     MOVE 'Y'       WFINL                           133915
      C                     ELSE                                           133915
+     C                     Z-ADDWMDAT2    ZDAYNO                                            MD061684
+     C                     EXSR ZDATE2                                                      MD061684
      C                     MOVE ZADATE    SBLDT                           133915
      C                     Z-ADD0         ZFLD15                          133915
      C                     EXSR ZSEDIT                                    133915
@@ -10377,6 +10531,7 @@
       *                                                                   133915
      C                     SETON                     68                   133915
      C                     ADD  1         VSLN                            133915
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                  133915
      C                     MOVE '1'       *IN31                           133915
      C                     ENDIF                                          133915
@@ -11378,7 +11533,8 @@
      C           MDST      OREQ 07                                                            253042
      C           MDST      OREQ 08                                                            253042
      C           MDST      OREQ 12                                                            253042
-     C                     MOVE CCYCL     ZCCY                                                253042
+     C**********           MOVE CCYCL     ZCCY                                       253042 MD021509
+     C                     MOVE WCCYT     ZCCY                                              MD021509
      C                     MOVE WNLOC     ZLOC                                                253042
      C                     ELSE                                                               253042
      C                     MOVE BJLCCY    ZCCY                                                253042
@@ -11889,6 +12045,76 @@
      C                     ENDIF                                                              239062
       *                                                                                       239062
      C                     ENDSR                                                              239062
+      /EJECT                                                                                MD021509
+      *****************************************************************                     MD021509
+      * SRINDT  -  Subroutine to set correct In Date depending on the *                     MD021509
+      *            PTDI of the loan.                                  *                     MD021509
+      *                                                               *                     MD021509
+      * Called by: SRDISI, SRDISR, SRMDAT                             *                     MD021509
+      *                                                               *                     MD021509
+      *****************************************************************                     MD021509
+     C           SRINDT    BEGSR                                                            MD021509
+      *                                                                                     MD021509
+     C                     Z-ADDZDAYNO    WSINDT  50                                        MD021509
+     C                     Z-ADD0         ZNRDYS                                            MD021509
+      *                                                                                     MD021509
+     C                     SELEC                                                            MD021509
+     C           PTDI      WHEQ 'P'                                                         MD021509
+     C                     EXSR ZBKDT                                                       MD021509
+     C           PTDI      WHEQ 'N'                                                         MD021509
+     C                     EXSR ZFWDT                                                       MD021509
+     C           PTDI      WHEQ 'M'                                                         MD021509
+     C           PTDI      OREQ ' '                                                         MD021509
+     C                     EXSR ZDATE2                                                      MD021509
+      *                                                                                     MD021509
+     C           *IN98     IFEQ '0'                                                         MD021509
+     C                     MOVE ZDATE     MMYY      P                                       MD021509
+     C                     MOVELMMYY      MMNLCD    P                                       MD021509
+     C                     ELSE                                                             MD021509
+     C                     MOVELZDATE     MMNLCD                                            MD021509
+     C                     ENDIF                                                            MD021509
+      *                                                                                     MD021509
+     C                     Z-ADDZDAYNO    @DAYNO                                            MD021509
+     C                     EXSR ZFWDT                                                       MD021509
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD021509
+     C                     EXSR ZDATE2                                                      MD021509
+      *                                                                                     MD021509
+     C           *IN98     IFEQ '0'                                                         MD021509
+     C                     MOVE ZDATE     MMYY      P                                       MD021509
+     C                     MOVELMMYY      MMNWKD    P                                       MD021509
+     C                     ELSE                                                             MD021509
+     C                     MOVELZDATE     MMNWKD    P                                       MD021509
+     C                     ENDIF                                                            MD021509
+      *                                                                                     MD021509
+     C           MMNLCD    IFNE MMNWKD                                                      MD061684
+     C                     Z-ADD@DAYNO    ZDAYNO                                            MD061684
+     C                     EXSR ZBKDT                                                       MD061684
+     C                     ENDIF                                                            MD061684
+      *                                                                                     MD061684
+     C                     ENDSL                                                            MD021509
+      *                                                                                     MD021509
+      * If back-valued date, use rundate as In Date. If date is not                         MD021509
+      * equal to calculated date, use calculated date as In Date.                           MD021509
+      * Else, blank the value of SINDT.                                                     MD021509
+      *                                                                                     MD021509
+     C                     SELEC                                                            MD021509
+     C           ORED      WHLE RUND                                                        MD021509
+     C           WSINDT    ANDLTRUND                                                        MD021509
+     C           ZDYNBR    ANDLERUND                                                        MD021509
+     C                     Z-ADDRUND      ZDAYNO                                            MD021509
+     C                     EXSR ZDATE2                                                      MD021509
+     C                     MOVE ZADATE    SINDT                                             MD021509
+     C           WSINDT    WHNE ZDYNBR                                                      MD021509
+     C                     Z-ADDZDYNBR    ZDAYNO                                            MD021509
+     C                     EXSR ZDATE2                                                      MD021509
+     C                     MOVE ZADATE    SINDT                                             MD021509
+     C                     OTHER                                                            MD021509
+     C                     MOVE *BLANKS   SINDT                                             MD021509
+     C                     ENDSL                                                            MD021509
+      *                                                                                     MD021509
+     C                     ENDSR                                                            MD021509
+      *****************************************************************                     MD021509
+      /EJECT                                                                                MD021509
      C/COPY WNCPYSRC,LEH00869
       /EJECT                                                                                  239062
      C/COPY ZSRSRC,ZALIGNZ2

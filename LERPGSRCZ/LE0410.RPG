@@ -10,8 +10,11 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR933453           Date 13Mar23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD041713           Date 20Jul23               *
+      *  Prev Amend No. MD023455A          Date 17Jul23               *
+      *                 MD023455           Date 17Jul23               *
+      *                 AR933453           Date 13Mar23               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 MD054044           Date 09Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -89,6 +92,14 @@
 0008 F*                                                                  *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD041713 - MPCA Prod: Issues on Report LE0410P1              *
+      *  MD023455A - Open/Close operation error for no details branch *
+      *              after last record. Output 'END OF REPORT FOR     *
+      *              BRANCH' as EXCPT for the last record. Use *IN29  *
+      *              to output no details spool file.                 *
+      *  MD023455 - No details report of LE0410P1 printed only once.  *
+      *             Print the no details report of LE0410P1 per       *
+      *             branch.                                           *
       *  AR933453 - Blank lines are being printed in LE0410P1 report. *
       *             Also set off *IN01 when past due has been repaid. *
       *             (Child: AR933456)                                 *
@@ -226,6 +237,7 @@
      FLELOAML7IF  E           K        DISK                                                   237732
 0015 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
      FSDCURRPDIF  E                    DISK                               S01194
+     FSDBRCHL1IF  E           K        DISK                                                 MD023455
 0016 F*CLINT***IF  F     256  7AI     2 DISK                              S01194
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0410FPG                                            S01408
@@ -290,6 +302,7 @@
 0056 F*        U8     FILE CONTROLS OUT OF BALANCE
 0057 E                    ACY       150  3               CURRENCY CODES
 0058 E                    ADP       150  1 0             CCY DEC.PLACES
+     E                    ABRC      999  3               Branch Array                       MD023455
      E/COPY WNCPYSRC,LE0410E001
 0059 E*
      E/COPY ZSRSRC,ZDATE2Z1                                               S01392
@@ -646,6 +659,7 @@
      I*
 0242 C**         FIRST CYCLE
 0243 C*
+     C  N40                MOVEL'Y'       FIRST   1                                         MD041713
 0244 C   40                GOTO ENDLP
 0245 C                     SETON                     40
      C*
@@ -917,13 +931,14 @@
 0281 C                     SETOF                     42                   S01194
 0282 C**********           READ TABLE                    42               S01194
      C                     READ SDCURRPD                 42               S01194
-0283 C   42                GOTO ENDLP
+0283 C***42*****           GOTO ENDLP                                                       MD023455
 0284 C********** RECI      COMP 'D'                      42               S01194
 0285 C**N42*****           GOTO LOOP                                      S01194
 0286 C********** RECT      COMP 20                       42               S01194
 0287 C**N42*****           GOTO ENDLP                                     S01194
 0288 C********** SREC      COMP 1                        42               S01194
 0289 C**N42*****           GOTO LOOP                                      S01194
+     C   42                GOTO LBRC                                                        MD023455
 0290 C           X         ADD  1         X
 0291 C**********           MOVE CCY       ACY,X
 0291 C                     MOVE A6CYCD    ACY,X
@@ -931,6 +946,22 @@
 0292 C                     Z-ADDA6NBDP    ADP,X
 0293 C           X         COMP 150                      42
 0294 C  N42                GOTO LOOP
+      *                                                                                     MD023455
+      * Setup array for branch                                                              MD023455
+      *                                                                                     MD023455
+     C           LBRC      TAG                                                              MD023455
+     C                     Z-ADD1         C       40                                        MD023455
+     C           *LOVAL    SETLLSDBRCHL1                                                    MD023455
+     C                     READ SDBRCHL1                 42                                 MD023455
+      *                                                                                     MD023455
+     C           *IN42     DOWEQ'0'                                                         MD023455
+     C           C         ANDLE999                                                         MD023455
+     C                     MOVE A8BRCD    ABRC,C                                            MD023455
+     C                     ADD  1         C                                                 MD023455
+      *                                                                                     MD023455
+     C                     READ SDBRCHL1                 42                                 MD023455
+     C                     ENDDO                                                            MD023455
+      *                                                                                     MD023455
 0295 C           ENDLP     TAG                             ** ENDLP TAG **
 0296 C********************************************************************
 0297 C*
@@ -1021,8 +1052,14 @@
      C*                                                                   S01117
      C           MBIN      IFEQ 'Y'                                       S01117
      C*                                                                   S01117
+     C  NL3                MOVELBRCA      CURBR   3                                         MD041713
      C           *INL3     IFEQ '1'                                       S01117
-     C                     CLOSELE0410P1                                  S01117
+     C**********           CLOSELE0410P1                                             S01117 MD041713
+      *                                                                                     MD023455
+      * Check for branch to be reported with no details                                     MD023455
+      *                                                                                     MD023455
+     C                     EXSR RNDTL                                                       MD023455
+      *                                                                                     MD023455
      C**                                                                  S01117
      C*       IF MBIN=YES, AND A LEVEL BREAK,                             S01117
      C*       OPEN LE0410P1                                               S01117
@@ -1565,6 +1602,8 @@
      C**                                                                  S01117
      CLR         *IN12     IFEQ '0'                                       S01117
      CLR                   EXSR #ZZ                                       S01117
+     CLR                   ELSE                                                             MD023455
+     CLR                   EXSR RNDTL                                                       MD023455
      CLR                   END                                            S01117
      CLR    U7 U8          EXSR *PSSR                                     S01117
 0581 C********************************************************************S01117
@@ -1578,6 +1617,12 @@
      C**                                                                  S01117
 0454 C           #ZZ       BEGSR                           *** NODETL *** S01117
      C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                                         MD023455
+      *                                                                                     MD023455
+      * Generate No Details report of LE0410P1 per branch                                   MD023455
+      *                                                                                     MD023455
+     C                     EXSR RNDTL                                                       MD023455
+     C                     ELSE                                                             MD023455
      C                     MOVE 'Y'       P1OP                            S01117
      C                     OPEN LE0410P1                                  S01117
      C                     MOVE *BLANKS   BRNM                            S01117
@@ -1606,11 +1651,115 @@
      C           #ZZ9      TAG                                            S01117
      C**                                                                  S01117
       ** OUTPUT 'NO DETAILS TO REPORT' IN P1                              S01117
+     C                     MOVE '1'       *IN29                                            MD023455A
      C                     EXCPT                                          S01117
+     C                     ENDIF                                                            MD023455
      C**                                                                  S01117
      C*                                                                   S01117
 0466 C                     ENDSR                                          S01117
      C/COPY WNCPYSRC,LE0410C011
+      *****************************************************************                     MD023455
+      *                                                               *                     MD023455
+      * RNDTL - Report the branch with no details.                    *                     MD023455
+      *                                                               *                     MD023455
+      *****************************************************************                     MD023455
+     C           RNDTL     BEGSR                                                            MD023455
+      *                                                                                     MD023455
+     C           MBIN      IFEQ 'Y'                                                         MD023455
+      *                                                                                     MD023455
+      * One time setup of array counting field                                              MD023455
+      *                                                                                     MD023455
+     C           WRPTS     IFNE 'Y'                                                         MD023455
+     C                     Z-ADD1         C                                                 MD023455
+     C                     MOVE 'Y'       WRPTS   1                                         MD023455
+     C                     ENDIF                                                            MD023455
+      *                                                                                     MD023455
+      * Report end processing field for error                                               MD023455
+      *                                                                                     MD023455
+     C                     MOVE 'N'       WENRP   1                                         MD023455
+      *                                                                                    MD023455A
+      * Exception indicator for no details to report                                       MD023455A
+      *                                                                                    MD023455A
+     C                     MOVE '0'       *IN29   1                                        MD023455A
+      *                                                                                    MD023455A
+      *  If last record details, output 'END OF REPORT FOR BRANCH'                         MD023455A
+      *  for the current spool file then close.                                            MD023455A
+      *                                                                                    MD023455A
+     C           *INL3     IFEQ '1'                                                        MD023455A
+     C********** *INLR     ANDEQ'1'                                               MD023455A MD041713
+     C           *IN12     ANDEQ'1'                                                        MD023455A
+     C           FIRST     IFNE 'Y'                                                         MD041713
+     C                     EXCPT                                                           MD023455A
+     C                     CLOSELE0410P1                                                   MD023455A
+     C                     ENDIF                                                            MD041713
+     C                     MOVEL'N'       FIRST                                             MD041713
+     C                     ENDIF                                                           MD023455A
+      *                                                                                     MD023455
+      * Generate report when array has branch info, or when branch                          MD023455
+      * from array is not equal to current branch for reporting                             MD023455
+      *                                                                                     MD023455
+     C           C         DOWLE999                                                         MD023455
+     C           ABRC,C    ANDNE' '                                                         MD023455
+     C           ABRC,C    ANDNEBRCA                                                        MD023455
+     C           WENRP     ANDEQ'N'                                                         MD023455
+      *                                                                                     MD023455
+     C                     MOVEAABRC,C    WBRC    3                                         MD023455
+      *                                                                                     MD023455
+     C                     CALL 'AOBRCHR1'                                                  MD023455
+     C                     PARM '*MSG   ' @RTCD                                             MD023455
+     C                     PARM '*KEY   ' @OPTN                                             MD023455
+     C                     PARM WBRC      @DSNB                                             MD023455
+     C           SDBRCH    PARM SDBRCH    DSSDY                                             MD023455
+      *                                                                                     MD023455
+     C           @RTCD     IFNE *BLANKS                                                     MD023455
+     C                     MOVE 'Y'       WENRP                                             MD023455
+     C                     ELSE                                                             MD023455
+      *                                                                                     MD023455
+     C                     MOVE '1'       *IN29                                            MD023455A
+      *                                                                                    MD023455A
+     C                     OPEN LE0410P1                                                    MD023455
+     C                     Z-ADD*ZEROS    PAGE                                              MD023455
+     C                     Z-ADD*ZEROS    PAGE1                                             MD023455
+      *                                                                                     MD023455
+     C                     Z-ADDSFNUM     ZSNUM                                             MD023455
+      *                                                                                     MD023455
+     C                     CALL 'ZSFILE'                                                    MD023455
+     C                     PARM           SEQ                                               MD023455
+     C                     PARM WBRC      SENTY                                             MD023455
+     C                     PARM           SFILE                                             MD023455
+     C                     PARM           ZSNUM                                             MD023455
+     C                     PARM           ZSERR                                             MD023455
+      *                                                                                     MD023455
+     C           ZSERR     IFEQ 'Y'                                                         MD023455
+     C                     MOVE 'Y'       WENRP                                             MD023455
+     C                     SETON                     U7U8LR                                 MD023455
+     C                     RETRN                                                            MD023455
+     C                     ELSE                                                             MD023455
+      *                                                                                     MD023455
+      * Generate LE0410P1 report for branch with no details                                 MD023455
+      *                                                                                     MD023455
+     C                     EXCPT                                                            MD023455
+     C                     CLOSELE0410P1                                                    MD023455
+      *                                                                                     MD023455
+     C                     ADD  1         C                                                 MD023455
+     C                     MOVE '0'       *IN29                                            MD023455A
+     C                     ENDIF                                                            MD023455
+     C                     ENDIF                                                            MD023455
+      *                                                                                     MD023455
+     C                     ENDDO                                                            MD023455
+      *                                                                                     MD023455
+      * Increase array counting field when array branch is equal                            MD023455
+      * to current reported branch.                                                         MD023455
+      *                                                                                     MD023455
+     C           C         IFLE 999                                                         MD023455
+     C           *INLR     ANDEQ'0'                                                         MD023455
+     C           ABRC,C    ANDEQBRCA                                                        MD023455
+     C                     ADD  1         C                                                 MD023455
+     C                     ENDIF                                                            MD023455
+      *                                                                                     MD023455
+     C                     ENDIF                                                            MD023455
+      *                                                                                     MD023455
+     C                     ENDSR                                                            MD023455
      C********************************************************************S01117
      C*                                                                   S01117
      C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
@@ -1924,36 +2073,55 @@
 0629 O***********                        48 'KEY'                         S01117
 0630 O***********              DBKEY     78                               S01117
 0621 O        T 3      L3 10                                              S01117
-     O       AND       12                                                 090739
+     O*******AND       12                                                           090739 MD023455A
+     O       AND       12NLR                                                               MD023455A
+     O        E 3      L3 10                                                               MD023455A
+     O       AND       12N29                                                               MD023455A
      O                                   66 '*** END OF REPORT FOR'       S01117
      O                                   74 ' BRANCH '                    S01117
-     O                         BRCA      77                               S01117
+     O**********               BRCA      77                                          S01117 MD041713
+     O                         CURBR     77                                                 MD041713
      O                                   81 ' ***'                        S01117
 0621 O        T 3      LRN10NU7                                           S01117
      O       AND       12                                                 S01117
      O                                   76 '*** END OF REPORT ***'       S01117
-0686 OLE0410P1E   10                                                      S01117
+0686 O****LE0410P1E   10                                                            S01117 MD023455A
+     OLE0410P1E   10   29                                                                  MD023455A
 0678 O                                   22 'REFERENCE LE0410P1'          E15821
 0679 O                         TITL      89                               E15821
 0678 O                                  105 'DATE'                        E15821
 0679 O                         RUNA     112                               E15821
 0678 O                                  122 'PAGE'                        E15821
 0679 O                         PAGE     127                               E15821
-0686 O        E   13                                                      S01117
+0686 O********E*  13                                                                S01117 MD023455A
+0686 O        E   13   29                                                                  MD023455A
 0683 O                                   68 'CUSTOMER LENDING ACTIONS'    S01117
 0684 O                                   74 'TODAY'                       S01117
      O***********         10             88 'BRANCH'                S01117090739
      O***********         10   BRCA      92                         S01117090739
      O***********         10             93 '-'                     S01117090739
      O***********         10   BRNM     123                         S01117090739
-0686 O        E   14                                                      S01117
+     O                    10             88 'BRANCH'                                        MD023455
+     O                    10   WBRC      92                                                 MD023455
+     O                    10             93 '-'                                             MD023455
+     O                    10   BRNM     123                                                 MD023455
+0686 O********E*  14                                                                S01117 MD023455A
+     O        E   14   29                                                                  MD023455A
 0688 O                                   68 '------------------------'    S01117
 0689 O                                   74 '------'                      S01117
-0732 O        E   19                                                      S01117
-0733 O                                   50 '*** NO DETAILS TO REPOR'     S01117
-0734 O                                   55 'T ***'                       S01117
-0732 O        E   25                                                      S01117
-     O                                   76 '*** END OF REPORT ***'       S01117
+0732 O********E*  19                                                                S01117 MD023455A
+     O        E   19   29                                                                  MD023455A
+0733 O**********                         50 '*** NO DETAILS TO REPOR'                S01117 MD041713
+0734 O**********                         55 'T ***'                                  S01117 MD041713
+     O                                   74 '*** NO DETAILS TO REPOR'                       MD041713
+     O                                   79 'T ***'                                         MD041713
+0732 O********E*  25                                                                S01117 MD023455A
+     O        E   25   29                                                                  MD023455A
+     O**********                         76 '*** END OF REPORT ***'                  S01117 MD041713
+     O                                   66 '*** END OF REPORT FOR'                         MD041713
+     O                                   74 ' BRANCH '                                      MD041713
+     O                         WBRC      77                                                 MD041713
+     O                                   81 ' ***'                                          MD041713
 0631 O********T**203   LR                                                 S01117
 0632 O***********                        22 'REFERENCE LE0410'            S01117
 0631 OLE0410AUT  203   LR                                                 S01117

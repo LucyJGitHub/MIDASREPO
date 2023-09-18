@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1097127          Date 14Feb23              */
-/*       Prev Amend No. AR989454           Date 14Feb23              */
+/*       Last Amend No. MD052939           Date 27Jul23              */
+/*       Prev Amend No. AR1097127          Date 14Feb23              */
+/*                      AR989454           Date 14Feb23              */
 /*                      CSD103             Date 10Aug20              */
 /*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
@@ -52,6 +53,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052939 - MT941/942 generation background job must be      */
+/*                  submitted when subsystem starts.                 */
 /*       AR1097127 - Midas Export not used but the COB started the   */
 /*                   component that failed. Check if module is *ON   */
 /*                   before running MXC0600. (Child: AR1097128)      */
@@ -163,6 +166,7 @@
              DCL        VAR(&CRE072) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CRE072*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD027386*/
              DCL        VAR(&CSD103) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD103*/
+             DCL        VAR(&CGL013) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD052939*/
                                                                                           /*CSD103*/
 /*/COPY OFCPYSRCZ,CGL155_004                                         */                   /*CGL155*/
                                                                                           /*214363*/
@@ -295,6 +299,15 @@
 /************CALL       PGM(GOC0101)                                      */  /*CAP084*/  /*BG1343*/
 /************                                                             */  /*CAP084*/  /*BG1343*/
                                                                                           /*CAP084*/
+/** Check if MT94x Messages Generation is switched on (CGL013) */                       /*MD052939*/
+                                                                                        /*MD052939*/
+             CHGVAR     VAR(&RTCD) VALUE(' ')                                           /*MD052939*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &VERIFY 'CGL013' +
+                          &SFMT)                                                        /*MD052939*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD052939*/
+             CHGVAR     VAR(&CGL013) VALUE('Y')                                         /*MD052939*/
+             ENDDO                                                                      /*MD052939*/
+                                                                                        /*MD052939*/
 /* Read The Database Status                                         */
              RTVDTAARA  DTAARA(TSTATUS) RTNVAR(&TSTATUS)
 
@@ -429,6 +442,12 @@
              CALL       PGM(GOC0300)                                                      /*CGP004*/
              ENDDO                                                                        /*CGP004*/
                                                                                           /*CGP004*/
+/** Start MT94x Messages Generation batch job */                                        /*MD052939*/
+                                                                                        /*MD052939*/
+             IF         COND(&MPHAS *EQ 'A' *AND &CGL013 *EQ 'Y') THEN(DO)              /*MD052939*/
+             CALL       PGM(GLC001410) PARM('*START' '       ' '       ')               /*MD052939*/
+             ENDDO                                                                      /*MD052939*/
+                                                                                        /*MD052939*/
 /** Check if the Collateralised Lending Feature is on */                                  /*CLE024*/
                                                                                           /*CLE024*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE024*/

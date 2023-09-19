@@ -107,7 +107,7 @@
       *  MD058307 - COB: PDP LOAMs failed with dumps.                 *
       *             Amend to use larger workfield for FA_FAMT and     *
       *             CAF_FAMT.                                         *
-      *             Apply for MD061600                                *
+      *             Applied for MD061600                              *
       *  MD060729 - Warning message is still displayed even if        *
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *

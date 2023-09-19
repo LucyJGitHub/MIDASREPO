@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061389            Date 24May23              *
-      *  Prev Amend No. MD061274            Date 09May23              *
+      *  Last Amend No. MD061774           Date 25Aug23               *
+      *  Prev Amend No. MD061389            Date 24May23              *
+      *                 MD061274            Date 09May23              *
       *                 MD060441            Date 01Feb23              *
       *                 MD061006            Date 02Feb23              *
       *                 MD060824            Date 10Jan23              *
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE            *
       *  MD061389 - Incorrect period and spread on LE000372 report    *
       *             Amended the program to get the interest period    *
       *             from SDHSDRTD for CCR and SAVG                    *

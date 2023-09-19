@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *  Last Amend No. MD061707           Date 11Sep23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046998A          Date 15Apr21               *
       *                 248698             Date 01Jun20               *
       *                 MD057247           Date 01Feb21               *
       *                 MD050604           Date 21Feb20               *
@@ -128,6 +129,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061707 - Downgrade Request (MD-59109) - SE: BKRUB39 in-    *
+      *             correct posting amount on maturity.               *
+      *             Need to extend the fix done in SE2390 to this     *
+      *             program. Based from core fix MD-59109.            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
@@ -798,6 +803,8 @@
      C           *LIKE     DEFN SDRP      WREDPR
      C           *LIKE     DEFN SDRP      SREDPR
      C           *LIKE     DEFN CSNT      WCSNT
+     C           *LIKE     DEFN EVAM      WEVAM                                             MD061707
+     C                     MOVE *HIVAL    WEVAM                                             MD061707
      C*
      C* READ AND PROCESS ALL MATURITY ACTIONS UNTIL EOF
      C*
@@ -820,7 +827,8 @@
      C* CLEAR INDICATORS AND WORK FIELDS
      C*
      C                     Z-ADD0         NOREC   50
-     C                     Z-ADD0         WFVAL  130
+     C**********           Z-ADD0         WFVAL  130                                        MD061707
+     C                     Z-ADD0         WFVAL  150                                        MD061707
      C                     Z-ADD0         WINTD  130
      C                     MOVEA'00'      *IN,10
      C                     MOVE '0'       *IN15
@@ -1834,7 +1842,8 @@
      C*
      C* CALCULATE FACE VALUE
      C*
-     C                     Z-ADDNPSN      WFVAL  130
+     C**********           Z-ADDNPSN      WFVAL  130                                        MD061707
+     C                     Z-ADDNPSN      WFVAL                                             MD061707
      C           PPDI      IFEQ 'Y'
      C           SFPP      ANDNECPDP
      C                     MOVE CPDP      CPDP3   53
@@ -1848,6 +1857,44 @@
      C                     END
      C/COPY WNCPYSRC,SE2270C008
      C*
+      ** Process split of amount to be posted if WFVAL is greater than                      MD061707
+      ** 9,999,999,999,999.                                                                 MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'N'       WSPLIT                                            MD061707
+     C                     Z-ADDWFVAL     TFVAL  150                                        MD061707
+     C           NPAC      IFEQ 'Y'                                                         MD061707
+     C           NPSN      ANDLT0                                                           MD061707
+     C           TFVAL     MULT -1        TFVAL                                             MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C           5         SUB  NMDP      DC                                                MD061707
+     C                     ADD  ZCDP      DC                                                MD061707
+     C                     MULT POWER8,DC TFVAL                                             MD061707
+      *                                                                                     MD061707
+     C           TFVAL     DOWGTWEVAM                                                       MD061707
+     C                     Z-ADDWEVAM     EVAM                                              MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'M'       EVTP                                              MD061707
+     C                     MOVE '  '      TRST                                              MD061707
+     C*                                                                                     MD061707
+     C           NPSN      IFGE 0                                                           MD061707
+     C           NPAC      OREQ 'N'                                                         MD061707
+     C                     MOVE ' '       NEGI                                              MD061707
+     C                     ELSE                                                             MD061707
+     C                     MOVE 'N'       NEGI                                              MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'FV'      AMCD                                              MD061707
+     C                     MOVE WISSR     CSTN                                              MD061707
+     C                     MOVE '0'       RVRS                                              MD061707
+      *                                                                                     MD061707
+     C                     EXSR W01                                                         MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'Y'       WSPLIT                                            MD061707
+     C           TFVAL     SUB  WEVAM     TFVAL                                             MD061707
+      *                                                                                     MD061707
+     C                     ENDDO                                                            MD061707
+      *                                                                                     MD061707
      C                     MOVE 'M'       EVTP
      C                     MOVE '  '      TRST
      C*
@@ -1858,22 +1905,31 @@
      C                     MOVE 'N'       NEGI
      C                     END
      C*
+      ** Process remaining amount for split if WSPLIT is 'Y', otherwise                     MD061707
+      ** perform the usual no split processing.                                             MD061707
+      *                                                                                     MD061707
+     C           WSPLIT    IFEQ 'Y'                                                         MD061707
+     C                     Z-ADDTFVAL     EVAM                                              MD061707
+     C                     ELSE                                                             MD061707
      C           NPAC      IFEQ 'Y'                                       E13817
      C           NPSN      ANDLT0
      C           WFVAL     MULT -1        EVAM
      C                     ELSE
      C                     Z-ADDWFVAL     EVAM
      C                     END
+     C                     ENDIF                                                            MD061707
      C*
      C                     MOVE 'FV'      AMCD
      C**********           Z-ADDWISSR     CSTN                                                CSD027
      C                     MOVE WISSR     CSTN                                                CSD027
      C                     MOVE '0'       RVRS
      C*                                                                   E13817
+     C           WSPLIT    IFEQ 'N'                                                         MD061707
      C           5         SUB  NMDP      DC      10                      E13817
      C***********          ADD  CDP       DC                       E13817 E24106
      C                     ADD  ZCDP      DC                              E24106
      C                     MULT POWER8,DC EVAM                            E13817
+     C                     ENDIF                                                            MD061707
      C*
      C           EVAM      IFNE 0
      C                     EXSR W01
@@ -1941,6 +1997,40 @@
      C*                                                                   E19138
      C***********WFVAL     MULT LAVP      WCONS  130H                     E19138
      C*
+      ** Process split of amount to be posted if WCONS is greater than                      MD061707
+      ** 9,999,999,999,999.                                                                 MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'N'       WSPLIT                                            MD061707
+     C                     Z-ADDWCONS     TCONS  150                                        MD061707
+     C           NPAC      IFEQ 'Y'                                                         MD061707
+     C           NPSN      ANDLT0                                                           MD061707
+     C           TCONS     MULT -1        TCONS                                             MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C           TCONS     DOWGTWEVAM                                                       MD061707
+     C                     Z-ADDWEVAM     EVAM                                              MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'M'       EVTP                                              MD061707
+     C                     MOVE '  '      TRST                                              MD061707
+      *                                                                                     MD061707
+     C           NPSN      IFGE 0                                                           MD061707
+     C           NPAC      OREQ 'N'                                                         MD061707
+     C                     MOVE ' '       NEGI                                              MD061707
+     C                     ELSE                                                             MD061707
+     C                     MOVE 'N'       NEGI                                              MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'CO'      AMCD                                              MD061707
+     C                     MOVE WISSR     CSTN                                              MD061707
+     C                     MOVE '0'       RVRS                                              MD061707
+      *                                                                                     MD061707
+     C                     EXSR W01                                                         MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'Y'       WSPLIT                                            MD061707
+     C           TCONS     SUB  WEVAM     TCONS                                             MD061707
+      *                                                                                     MD061707
+     C                     ENDDO                                                            MD061707
+      *                                                                                     MD061707
      C                     MOVE 'M'       EVTP
      C                     MOVE '  '      TRST
      C*
@@ -1951,12 +2041,19 @@
      C                     MOVE 'N'       NEGI
      C                     END
      C*
+      ** Process remaining amount for split if WSPLIT is 'Y', otherwise                     MD061707
+      ** perform the usual no split processing.                                             MD061707
+      *                                                                                     MD061707
+     C           WSPLIT    IFEQ 'Y'                                                         MD061707
+     C                     Z-ADDTCONS     EVAM                                              MD061707
+     C                     ELSE                                                             MD061707
      C           NPAC      IFEQ 'Y'                                       E13817
      C           NPSN      ANDLT0
      C           WCONS     MULT -1        EVAM
      C                     ELSE
      C                     Z-ADDWCONS     EVAM
      C                     END
+     C                     ENDIF                                                            MD061707
      C*
      C                     MOVE 'CO'      AMCD
      C**********           Z-ADDWISSR     CSTN                                                CSD027
@@ -2473,6 +2570,40 @@
      C***********          END                                            S01117
      C                     Z-ADDZAMTCO    WCVAL
      C                     END
+      *                                                                                     MD061707
+      ** Process split of amount to be posted if WCVAL is greater than                      MD061707
+      ** 9,999,999,999,999.                                                                 MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'N'       WSPLIT  1                                         MD061707
+     C                     Z-ADDWCVAL     TCVAL  150                                        MD061707
+     C           NPAC      IFEQ 'Y'                                                         MD061707
+     C           NPSN      ANDLT0                                                           MD061707
+     C           TCVAL     MULT -1        TCVAL                                             MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C           TCVAL     DOWGTWEVAM                                                       MD061707
+     C                     Z-ADDWEVAM     EVAM                                              MD061707
+      *                                                                                     MD061707
+      ** Output countervalue key.                                                           MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'M'       EVTP                                              MD061707
+     C                     MOVE '  '      TRST                                              MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'CV'      AMCD                                              MD061707
+     C           NPSN      IFGE 0                                                           MD061707
+     C           NPAC      OREQ 'N'                                                         MD061707
+     C                     MOVE ' '       NEGI                                              MD061707
+     C                     ELSE                                                             MD061707
+     C                     MOVE 'N'       NEGI                                              MD061707
+     C                     ENDIF                                                            MD061707
+      *                                                                                     MD061707
+     C                     EXSR W01                                                         MD061707
+      *                                                                                     MD061707
+     C                     MOVE 'Y'       WSPLIT                                            MD061707
+     C           TCVAL     SUB  WEVAM     TCVAL                                             MD061707
+      *                                                                                     MD061707
+     C                     ENDDO                                                            MD061707
+      *                                                                                     MD061707
      C*
      C* OUTPUT COUNTERVALUE KEY
      C*
@@ -2487,12 +2618,19 @@
      C                     MOVE 'N'       NEGI
      C                     END
      C*
+      ** Process remaining amount for split if WSPLIT is 'Y', otherwise                     MD061707
+      ** perform the usual no split processing.                                             MD061707
+      *                                                                                     MD061707
+     C           WSPLIT    IFEQ 'Y'                                                         MD061707
+     C                     Z-ADDTCVAL     EVAM                                              MD061707
+     C                     ELSE                                                             MD061707
      C           NPAC      IFEQ 'Y'                                       E13817
      C           NPSN      ANDLT0
      C           WCVAL     MULT -1        EVAM
      C                     ELSE
      C                     Z-ADDWCVAL     EVAM
      C                     END
+     C                     ENDIF                                                            MD061707
      C*
      C           EVAM      IFNE 0
      C                     EXSR W01

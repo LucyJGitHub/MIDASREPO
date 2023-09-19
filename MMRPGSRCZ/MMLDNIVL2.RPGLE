@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052189           Date 01Jun23               *
-      *  Prev Amend No. MD046446           Date 14Apr23               *
+      *  Last Amend No. MD060858           Date 18Sep23               *
+      *  Prev Amend No. MD052189           Date 01Jun23               *
+      *                 MD046446           Date 14Apr23               *
       *                 MD037251           Date 13Mar23               *
       *                 MD049864           Date 11Mar23               *
       *                 MD054313           Date 10Mar23               *
@@ -68,6 +69,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060858 - CDL033 details from unauthorised TD floating deal *
+      *             are wrote in to the amendment of the deal.        *
+      *             Initialized work field WRCDT for Rate Change Date *
+      *             at the start of module.                           *
+      *             Applied for MD-61792.                             *
       *  MD052189 - MM fixes rate on the wrong date.                  *
       *  MD046446 - FLR0022 Encountered even with correct rate fix    *
       *             day and value date input                          *
@@ -463,6 +469,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
+      *                                                                                     MD060858
+      **  Initialize work fields used in the program to avoid from being                    MD060858
+      **  picked up (when still in WIP) by other processing.                                MD060858
+      *                                                                                     MD060858
+     C                   EVAL      WRCDT = *Zero                                            MD060858
 
       * Call Validation Modules in Sequence
 

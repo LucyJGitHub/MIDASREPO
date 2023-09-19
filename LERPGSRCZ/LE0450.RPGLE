@@ -442,11 +442,13 @@
       *  AR987344 - PDIN becomes negative when PD is reversed. Make   *
       *             sure the INTA was subtracted to PDIN only once    *
       *             PD is reversed. (Child: AR987345)                 *
+      *           - Applied for MD015646                              *
       *  MD015646 - Interest Auto Settle error when reversed PDs      *
       *  AR947177 - Auto settle indicator was changed to Y even if    *
       *             there's still an outstanding interest. Added      *
       *             condition when to change the auto settle to Y.    *
       *             (Child: AR947179)                                 *
+      *           - Applied for AR657524                              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *

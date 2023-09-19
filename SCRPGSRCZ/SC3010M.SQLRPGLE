@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056555           Date 31Aug20               *
-      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *  Last Amend No. MD061863           Date 07Sep23               *
+      *  Prev Amend No. MD056555           Date 31Aug20               *
+      *                 MD055681           Date 31Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR754826           Date 13May11               *
       *                 CUP007             Date 12Apr06               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061863 - disabled feature cannot be deleted                *
       *  MD056555 - Deliverable Data Split for SAR group              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -1660,7 +1662,8 @@
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :SCSARD                                                                        MD055681
-     C+ from SCSRDJW2                                                                       MD055681
+     C**from*SCSRDJW2                                                              MD055681 MD061863
+     C+ from SCSRDJW3                                                                       MD061863
      C+ where SARN = :ABSARN                                                                MD055681
      C/END-EXEC                                                                             MD055681
      C                   SETOFF                                       90                    MD055681
@@ -1858,11 +1861,13 @@
      C/EXEC SQL                                                                             MD055681
      C+ SELECT *                                                                            MD055681
      C+ into :SCSARD                                                                        MD055681
-     C+ from SCSRDJW2                                                                       MD055681
+     C**from*SCSRDJW2                                                              MD055681 MD061863
+     C+ from SCSRDJW3                                                                       MD061863
      C+ where SARN = :ABSARN                                                                MD055681
      C/END-EXEC                                                                             MD055681
      C                   SETOFF                                       9091                  MD055681
-     C                   IF        SQLCODE = 0                                              MD055681
+     C**********         IF        SQLCODE = 0                                     MD055681 MD061863
+     C                   IF        SQLCODE = 100                                            MD061863
      C                   SETON                                        90                    MD055681
      C                   ENDIF                                                              MD055681
      C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD055681
@@ -2090,7 +2095,8 @@
      C+ where SARN = :ABSARN and ENABLD = 'D'                                               MD055681
      C/END-EXEC                                                                             MD055681
      C                   SETOFF                                       9091                  MD055681
-     C                   IF        SQLCODE = 0                                              MD055681
+     C**********         IF        SQLCODE = 0                                     MD055681 MD061863
+     C                   IF        SQLCODE = 100                                            MD061863
      C                   SETON                                        90                    MD055681
      C                   ENDIF                                                              MD055681
      C                   IF        SQLCODE <> 0 and SQLCODE <> 100                          MD055681

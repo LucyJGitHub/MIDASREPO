@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  CBF005 - BF Infrastructure: Single Security User Maintenance *
       *           Profile                                             *
       *                                                               *
@@ -214,7 +216,8 @@
       *
      C/exec SQL
      C+ select PMARTF into :MenuArtf
-     C+ from MITB_PERMM
+     C***+*from*MITB_PERMM                                                                  MD060918
+     C+ from MIPRMJW0                                                                       MD060918
      C+ where PMINDX = :ACINDX and PMACTC = :Action
      C/end-exec
       *
@@ -253,7 +256,8 @@
      C
      C/exec SQL
      C+ declare PRcursor cursor for
-     C+ select PMARTF from MITB_PERMM
+     C***+*select*PMARTF from MITB_PERMM                                                    MD060918
+     C+ select PMARTF from MIPRMJW0                                                         MD060918
      C/end-exec
       *
      C/exec SQL

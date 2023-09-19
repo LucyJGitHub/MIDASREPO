@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD049728 *CREATE   Date 12Mar18               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. MD049728 *CREATE   Date 12Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD049728 - CGL002 Initialization program to insert Action    *
       *             code O                                            *
       *                                                               *
@@ -41,7 +43,8 @@
      D PermType        S              8
 
      D RECCNT          S              2  0
-     D PERMM         E DS                  EXTNAME(MITB_PERMM)
+     D*PERMM****     E DS                  EXTNAME(MITB_PERMM)                              MD060918
+     D PERMM         E DS                  EXTNAME(MIPRMJW0)                                MD060918
      D SFMNU         E DS                  EXTNAME(SFMENUPD)
      D  ACTION               158    167
      D  MIAC1                158    158
@@ -130,7 +133,8 @@
              EXEC SQL
               Declare PEcursor cursor for
               Select count(*)
-              from MITB_PERMM
+             //*from*MITB_PERMM                                                           //MD060918
+              from MIPRMJW0                                                               //MD060918
                 where PMINDX = :StrippedINDX and PMACTC = :ActionCode;
 
              EXEC SQL
@@ -148,10 +152,17 @@
              // proceed with INSERT into BFTC tables
              If RECCNT = 0;
                 EXEC SQL
-                  Insert into MITB_PERMM
+             //***Insert into MITB_PERMM                                                  //MD060918
+                  Insert into MIPRM_CTD                                                   //MD060918
                     Values (
-                      :StrippedINDX, :ActionCode, :XMARTF, :XMARTD);
+             //*******:StrippedINDX, :ActionCode, :XMARTF, :XMARTD);                      //MD060918
+                      :StrippedINDX, :ActionCode, :XMARTF, :XMARTD, 'C');                 //MD060918
 
+                EXEC SQL
+                  Insert into MIPRM_XTD                                                   //MD060918
+                    Values (                                                              //MD060918
+                      :XMARTF, 'C');                                                      //MD060918
+                                                                                          //MD060918
                 If SQLCode = 0;
                    EXEC SQL
                     Insert into BFTB_RESOURCE (

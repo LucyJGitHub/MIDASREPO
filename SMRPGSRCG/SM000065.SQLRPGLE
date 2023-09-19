@@ -16,9 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD019885 *CREATE   Date 04Apr14               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. MD019885 *CREATE   Date 04Apr14               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD019885 - Permission Upload Interface                       *
       *           - Applied for MD026157                              *
       *                                                               *
@@ -55,7 +57,8 @@
      D ReptLine        S            100A
      D Ret             S             10I 0 INZ(0)
 
-     DPERM           E DS                  EXTNAME(MITB_PERMM)
+     D*PERM*****      E DS                  EXTNAME(MITB_PERMM)                             MD060918
+     DPERM           E DS                  EXTNAME(MIPRMJW0)                                MD060918
 
      C     *ENTRY        PLIST
      C                   PARM                    Mode
@@ -77,21 +80,24 @@
                   Create table QTEMP/QTMENU as
                   ( select * from GZSFMENUPD
                      where ( MIINDX not like '*G%' and MIINDX not like '00%' )
-                       and MIINDX not in ( select PMINDX from MITB_PERMM ))
+       //**********    and MIINDX not in ( select PMINDX from MITB_PERMM ))               //MD060918
+                       and MIINDX not in ( select PMINDX from MIPRMJW0   ))               //MD060918
                   with data;
           Else;
              If OvRdQTMENU = '*NO';
                 Exec SQL
                      Create table QTEMP/QTMENU as
                      ( select * from GZSFMENUPD
-                        where MIINDX not in ( select PMINDX from MITB_PERMM ))
+       //**********     where MIINDX not in ( select PMINDX from MITB_PERMM ))            //MD060918
+                        where MIINDX not in ( select PMINDX from MIPRMJW0   ))            //MD060918
                      with data;
              EndIf;
           EndIf;
 
           Exec SQL
                Create table QTEMP/MIQT_PERMM as
-               (select * from MITB_PERMM) with no data;
+       //******(select * from MITB_PERMM) with no data;                                   //MD060918
+               (select * from MIPRMJW0  ) with no data;                                   //MD060918
 
           SM000038(Mode);
        EndIf;
@@ -118,7 +124,8 @@
 
        UP008010('*REPORT' : 'SM000065' : '');
 
-       Exec SQL Insert into MITB_PERMM
+       //Exec*SQL*Insert into MITB_PERMM                                                  //MD060918
+       Exec SQL Insert into MIPRMJW0                                                      //MD060918
                 ( select * from MIQT_PERMM);
 
        If Map = '*YES';

@@ -167,9 +167,9 @@
      C                   ENDIF
      C                   ENDIF
 
-     C*EXEC*SQL*                                                                            MD061879
-     C**close*C1                                                                            MD061879
-     C*END-EXEC*                                                                            MD061879
+     C***/EXEC*SQL                                                                          MD061879
+     C***+*close C1                                                                         MD061879
+     C***/END-EXEC                                                                          MD061879
 
      C                   Endif
      C/EXEC SQL                                                                             MD061879

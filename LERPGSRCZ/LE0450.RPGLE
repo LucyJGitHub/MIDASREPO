@@ -12,8 +12,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. AR987344           Date 18Sep23               *
+      *  Prev Amend No. MD015646           Date 18Sep23               *
+      *                 AR947177           Date 18Sep23               *
+      *                 249385             Date 01Aug22               *
+      *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 257879             Date 12May22               *
       *                 MD059275           Date 23May22               *
@@ -436,6 +439,16 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR987344 - PDIN becomes negative when PD is reversed. Make   *
+      *             sure the INTA was subtracted to PDIN only once    *
+      *             PD is reversed. (Child: AR987345)                 *
+      *           - Applied for MD015646                              *
+      *  MD015646 - Interest Auto Settle error when reversed PDs      *
+      *  AR947177 - Auto settle indicator was changed to Y even if    *
+      *             there's still an outstanding interest. Added      *
+      *             condition when to change the auto settle to Y.    *
+      *             (Child: AR947179)                                 *
+      *           - Applied for AR657524                              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
@@ -8661,7 +8674,7 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   180044
      C     *IN15         IFEQ      '1'                                                         18004
      C     INTA          ANDNE     *ZEROS                                                      18004
-     C     PDIN          SUB       INTA          PDIN                                          18004
+     C*****PDIN*         SUB       INTA          PDIN                                 18004 MD015646
      C     PDIN          IFLT      0                                                        AR628773
      C                   Z-ADD     0             PDIN                                       AR628773
      C                   ENDIF                                                              AR628773
@@ -8680,12 +8693,12 @@ L118 I                             P   72   77 7RTSPL
      C     PDNN          SUB       INTN          PDNN
      C                   ENDIF
       *                                                                                       CAS005
-     C     CPAM          IFEQ      *ZEROS
-     C     PDIN          ANDEQ     *ZEROS
-     C     MDAT          ANDLE     RUND
-     C     AUTOL         ANDNE     'C'                                                        CLE134
-     C                   MOVE      'Y'           AUTOL
-     C                   ENDIF
+     C*****CPAM*         IFEQ      *ZEROS                                                   AR947177
+     C*****PDIN*         ANDEQ     *ZEROS                                                   AR947177
+     C*****MDAT*         ANDLE     RUND                                                     AR947177
+     C*****AUTOL         ANDNE     'C'                                              CLE134  AR947177
+     C**********         MOVE      'Y'           AUTOL                                      AR947177
+     C**********         ENDIF                                                              AR947177
       *                                                                                       191069
      C                   ENDIF                                                                 CLE00
 1260 C**
@@ -8929,7 +8942,7 @@ L118 I                             P   72   77 7RTSPL
 1287 C   89MDAT          COMP      RUND                                 89
      C/COPY WNCPYSRC,LE0450C061
      C   89              MOVE      AUTOL         WAUTOL            1                          CLE134
-1287 C   89              MOVE      'Y'           AUTOL
+1287 C***89*****         MOVE      'Y'           AUTOL                                      AR947177
      C   89CLE134        IFEQ      'Y'                                                        CLE134
      C     WAUTOL        ANDEQ     'C'                                                        CLE134
      C                   MOVE      'C'           AUTOL                                        CLE134
@@ -8960,6 +8973,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C     CLE005        IFEQ      'Y'                                                        263427
      C     PAST          ANDEQ     'Y'                                                        263427
+     C     *IN15         ANDEQ     '0'                                                      AR987344
      C     PDIN          SUB       INTA          PDIN                                         263427
      C     PDIN          IFLT      0                                                        AR628773
      C                   Z-ADD     0             PDIN                                       AR628773
@@ -16906,10 +16920,17 @@ C    C                   ENDIF                                                  
      C**********           END                                            042529              183896
      C**********                                                          042529              183896
      C*                                                                                       191069
+     C                   Z-ADD     0             WKTOTL                                     AR947177
+     C     AITC          ADD       AIAP          WKTOTL           13 0                      AR947177
+     C                   ADD       AIMN          WKTOTL                                     AR947177
+     C     WKTOTL        SUB       ICTD          WKTOTL                                     AR947177
+     C     WKTOTL        SUB       IWOD          WKTOTL                                     AR947177
+      *                                                                                     AR947177
      C     AUTOL         IFEQ      'N'
      C     PDIN          ANDEQ     *ZEROS
      C     CPAM          ANDEQ     *ZEROS
      C     MDAT          ANDLE     RUND
+     C     IPRD          ANDEQ     WKTOTL                                                   AR947177
      C                   MOVE      'Y'           AUTOL
      C                   ENDIF
       *                                                                                       191069

@@ -12,11 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD061577             Date 18Jul23             *
-      *  Prev Amend No. MD058953 *CREATE     Date 29Sep21             *
+      *  Last Amend No. MD061879             Date 15Sep23             *
+      *  Prev Amend No. MD061577             Date 18Jul23             *
+      *                 MD058953 *CREATE     Date 29Sep21             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061879 - Some old files are not saved                      *
       *  MD061577 - Deliverable Data Split for UPDDSFPD               *
       *  MD058953 - Problem with DDS data take-on                     *
       *                                                               *
@@ -165,11 +167,14 @@
      C                   ENDIF
      C                   ENDIF
 
-     C/EXEC SQL
-     C+ close C1
-     C/END-EXEC
+     C***/EXEC*SQL                                                                          MD061879
+     C***+*close C1                                                                         MD061879
+     C***/END-EXEC                                                                          MD061879
 
      C                   Endif
+     C/EXEC SQL                                                                             MD061879
+     C+ close C1                                                                            MD061879
+     C/END-EXEC                                                                             MD061879
       *
      C/exec SQL
      C+ fetch next from UPDLVCursor into :UPDLVC

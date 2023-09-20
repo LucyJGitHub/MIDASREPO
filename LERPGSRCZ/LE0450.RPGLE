@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023220           Date 15Aug23               *
-      *  Prev Amend No. BA6048             Date 01Mar23               *
+      *  Last Amend No. MD061774           Date 25Aug23               *
+      *  Prev Amend No. MD023220           Date 15Aug23               *
+      *                 BA6048             Date 01Mar23               *
       *                 AR924081           Date 23Mar23               *
       *                 AR981899           Date 27Feb23               *
       *                 AR1096206          Date 02Feb23               *
@@ -441,6 +442,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
       *  MD023220 - No postings generated on subtype change for       *
       *             guarantee receiver of risk loan. Generate subtype *
       *             change account keys for guarantee receiver.       *

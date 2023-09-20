@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057871           Date 30Apr21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR325530           Date 27Apr10               *
+      *  Prev Amend No. MD057871           Date 30Apr21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR325530 - Populated DDFRNT field with value from APFOTRANID *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -329,6 +331,7 @@
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
+     C                   EXSR      SETUPVALID                                               AR325530
      C                   EXSR      UpdateDB
      C                   ENDIF
 
@@ -809,7 +812,25 @@
 
      C                   ENDSR
       *****************************************************************
-      /EJECT
+      /EJECT                                                                                MD034643
+      *****************************************************************                     AR325530
+      *                                                               *                     AR325530
+      * SETUPVALID - Set up additional fields that are needed on the  *                     AR325530
+      *    Valid file record.                                         *                     AR325530
+      *                                                               *                     AR325530
+      *****************************************************************                     AR325530
+     C     SETUPVALID    BEGSR                                                              AR325530
+      *                                                                                     AR325530
+      * Save Front Office ID on Insert                                                      AR325530
+     C                   IF        DDACTN = 'I'                                             AR325530
+     C                   IF        @_APFOTRANID <> *BLANKS                                  AR325530
+     C                   MOVEL     @_APFOTRANID  V_BVFOTRANID                               AR325530
+     C                   ENDIF                                                              AR325530
+     C                   ENDIF                                                              AR325530
+      *                                                                                     AR325530
+     C                   ENDSR                                                              AR325530
+      *****************************************************************                     AR325530
+      /EJECT                                                                                AR325530
       *****************************************************************
       *                                                               *
       * UPDATEDB - Update database                                    *

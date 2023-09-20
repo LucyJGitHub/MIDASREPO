@@ -1254,6 +1254,7 @@
      C                   MOVE      PDateOut      WkITLD                                     MD061394
       *                                                                                     MD061394
      C                   IF        DDACTN = 'E'                                             MD061394
+     C                             OR DDACTN = 'D'                                          MD061394
       *                                                                                     MD061394
       ** Below codes will be executed when First Coupon has already                         MD061394
       ** reaced and if IR Event Date is equal to Initial Date                               MD061394

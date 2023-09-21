@@ -809,7 +809,7 @@
       *****************************************************************
      C     SR_GtCurr     BEGSR
       *
-     C                   CALL      'AOCURR0'
+     C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*KEY   '     @Optn
      C                   PARM                    P_Curr

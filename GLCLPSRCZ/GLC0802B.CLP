@@ -9,14 +9,16 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA5909             Date 07Aug23              */
+/*       Prev Amend No. CLE174             Date 07Aug23              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 13Dec95              */
+/*                      S01408             Date 13Dec95              */
 /*                      AUS017             Date 14Aug92              */
 /*                      E40440             DATE 22MAY92             */
 /*                      E22608             DATE 04SEP90             */
@@ -29,6 +31,9 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       BA5909 - Various Changes to the Events Reports             */
+/*       CLE174 - Include all loans in Cash Flow Report             */
+/*                 (Autosettle Ind)                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook GLC0802B01                  */
 /*       AUS017  -  Australian Release - FX/MM Daily Events by      */
@@ -64,6 +69,13 @@
    DCL VAR(&RSEQ) TYPE(*CHAR) LEN(5) /* RCF sequence number */        /*S01117*/
    DCL VAR(&RLEV) TYPE(*CHAR) LEN(1) /* RCF level flag (S/C/B)        /*S01117*/
    DCL VAR(&RENT) TYPE(*CHAR) LEN(3) /* RCF entity code (all/comp/bch)/*S01117*/
+             DCL        VAR(&BA5909) TYPE(*CHAR) LEN(1)                                   /*BA5909*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE174*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CLE174*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE174*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                          /*CLE174*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CLE174*/
+             DCL        VAR(&CLE174) TYPE(*CHAR) LEN(1)                                   /*CLE174*/
 /*/COPY WNCPYSRC,GLC0802B04                                          */
 /**/
 /**********  DCLDTAARA  DTAARA(MMOD)                             S01129 S01179*/
@@ -72,6 +84,26 @@
 /**********  RCVDTAARA  DTAARA(MMOD)                             S01129 S01179*/
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                    /*S01179*/
 /**/                                                                  /*S01129*/
+/** Access SAR file to determine if switchable feature BA5909     */                      /*BA5909*/
+/** is switched ON.  If ON, override to new LF A5LNCBL0           */                      /*BA5909*/
+/**/                                                                                      /*BA5909*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA5909*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA5909*/
+             CHGVAR     VAR(&SAR) VALUE('BA5909')                                         /*BA5909*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*BA5909*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&BA5909) VALUE('Y'))                                        /*BA5909*/
+                                                                                          /*BA5909*/
+/** Access SAR file to determine if switchable feature CLE174     */                      /*CLE174*/
+/** is switched ON.  If ON, override to new LF DLEVNIV2           */                      /*CLE174*/
+/**/                                                                                      /*CLE174*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE174*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE174*/
+             CHGVAR     VAR(&SAR) VALUE('CLE174')                                         /*CLE174*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CLE174*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE174) VALUE('Y'))                                        /*CLE174*/
+                                                                                          /*CLE174*/
              CHGJOB     SWS(00000000)
              SNDMSG     MSG('EVENTS BY CURRENCY REPORT')  TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,GLC0802B05                                          */
@@ -88,7 +120,7 @@
 /*********** OVRDBF     FILE(TABLE)   TOFILE(TABDLEI)                 /*S01194*/
              IF         COND(&PARM = '1') THEN(DO)
 /***********    OVRDBF    FILE(EVNTM) TOFILE(STEVE)      */           /*S01129*/
- 
+
                 IF      COND(%SST(&MMOD 21 1) *NE 'Y') THEN(DO)       /*S01129*/
                         OVRDBF FILE(EVNTM) TOFILE(STEVE)              /*S01129*/
                         CHGJOB SWS(XXXX1XXX)                          /*S01129*/
@@ -110,7 +142,13 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC0802B01                                           /*S01408*/
                                                                       /*S01408*/
- 
+/**CLE174**/                                                                   /*CLE174*/ /*BA5909*/
+/* CLE174 and BA5909 */                                                                   /*BA5909*/
+/*           IF         COND(&CLE174 *EQ 'Y') THEN(DO)                         /*CLE174*/ /*BA5909*/
+             IF         COND((&CLE174 *EQ 'Y') *OR (&BA5909 *EQ 'Y')) THEN(DO)            /*BA5909*/
+             OVRDBF     FILE(DLEVNIL1) TOFILE(DLEVNIL2)                                   /*CLE174*/
+             ENDDO                                                                        /*CLE174*/
+
 /* REPORT BY SYSTEM   */
 /***************IF   COND(&RLEV *EQ 'S') THEN(CALL PGM(DL0550) +
                                   PARM(&RSEQ))          */ /*S01117*/ /*E22608*/
@@ -123,7 +161,7 @@
              IF         COND((&RLEV *EQ 'S') *OR (&RLEV *EQ ' ')) +
                           THEN(CALL PGM(GL0550) PARM(&TYPE &RSEQ))    /*AUS017*/
 /*/COPY WNCPYSRC,GLC0802B07                                          */
- 
+
 /* REPORT BY BRANCH   */
 /***************IF   COND(&RLEV *EQ 'B') THEN(CALL PGM(DL0551) +
                                   PARM(&RSEQ &RENT))    */ /*S01117*/ /*E22608*/
@@ -133,7 +171,7 @@
                 IF   COND(&RLEV *EQ 'B') THEN(CALL PGM(GL0551) +
                                   PARM(&TYPE &RSEQ &RENT))            /*AUS017*/
 /*/COPY WNCPYSRC,GLC0802B09                                          */
- 
+
 /* REPORT BY COMPANY  */
 /***************IF   COND(&RLEV *EQ 'C') THEN(CALL PGM(DL0552) +
                                   PARM(&RSEQ &RENT))    */ /*S01117*/ /*E22608*/

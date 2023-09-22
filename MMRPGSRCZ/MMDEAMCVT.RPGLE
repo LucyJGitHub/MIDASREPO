@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 256226             Date 11Jan22               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR643746           Date 17Jul23               *
+      *  Prev Amend No. 256226             Date 11Jan22               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027637           Date 19Aug14               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR643746 - Cannot authorize deal amendment. Show 0 amount    *
+      *             instead of blanks in Interest Rate for SC deal    *
+      *             amendment. Apply fix AR579717.                    *
       *  256226 - Authorise a zero interest rate on Deal Amendment.   *
       *           Apply fix 255576. Reverse fix of MD027637           *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -288,6 +292,7 @@
      C                   ELSE
       *                                                                                       CDL017
      C     HNINTR        IFEQ      0                                                          CDL017
+     C     HNMTYP        ANDNE     'SC'                                                     AR643746
      C                   MOVE      *BLANKS       DDINTR                                       CDL017
      C     HNINTR        MULT      10000000      @@AMTW                                       256226
      C                   Z-ADD     7             @@QECN                                       256226

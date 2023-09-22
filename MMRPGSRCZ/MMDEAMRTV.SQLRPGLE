@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR583273           Date 14Jul23               *
-      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *  Last Amend No. AR583254           Date 15Jul23               *
+      *  Prev Amend No. AR583273           Date 14Jul23               *
+      *                 MD056602           Date 04Sep20               *
       *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
@@ -94,6 +95,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR583254 - Sending a MMDEAM from API with a deal number ins- *
+      *             tead of an Associated FOID ended in error. Remove *
+      *             use of Associated Front Office ID as part of key  *
+      *             list for MMDEAMPD. Also remove cross checking of  *
+      *             FOASID to MMDEALLL file.                          *
       *  AR583273 - Manually Open/Close file DEALSH to prevent the    *
       *           locking on file MMDELULL. (Child: AR583274)         *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
@@ -695,7 +701,8 @@
       *
       * ACCESS DEAL AMENDMENT WITH FRONT OFFICE TRANSACTION ID
       *
-     C                   MOVE      FOASID        OrigDealNo       20
+     C**********         MOVE      FOASID        OrigDealNo       20                        AR583254
+     C                   MOVE      *BLANKS       OrigDealNo       20                        AR583254
      C                   MOVE      FOTRID        UniqDeamID       20
 
      C     FrntOfKey     CHAIN     MMDEAMOI                           99
@@ -736,34 +743,34 @@
       *
      C                   MOVEL     HNDS38        DDDS38
      C                   END
-      *
-      * FRONT OFFICE ASSOCIATED TRANSACTION ID
-      * MUST POINT TO A MIDAS DEAL
-      *
-     C     FOASID        IFNE      *BLANKS                                                  MD021204
+      *****************************************************************                     AR583254
+      **FRONT*OFFICE*ASSOCIATED*TRANSACTION*ID*************************                     AR583254
+      **MUST*POINT*TO*A*MIDAS*DEAL*************************************                     AR583254
+      *****************************************************************                     AR583254
+     C*****FOASID        IFNE      *BLANKS                                         MD021204 AR583254
       *                                                                                     MD021204
-     C     FOASID        CHAIN     MMDELFOI                           99
-     C     *IN99         IFEQ      '1'                                                        256482
-     C                   MOVEL     FOASID        WDDLNO            6 0                        256482
-     C     WDDLNO        CHAIN     MMDEALLL                           99                      256482
-     C     *IN99         IFEQ      '1'
-     C                   MOVE      'N'           OKACTN
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'APM0104'     MsgIdArr(Ix)
+     C*****FOASID        CHAIN     MMDELFOI                           99                    AR583254
+     C******IN99         IFEQ      '1'                                               256482 AR583254
+     C**********         MOVEL     FOASID        WDDLNO            6 0               256482 AR583254
+     C*****WDDLNO        CHAIN     MMDEALLL                           99             256482 AR583254
+     C******IN99         IFEQ      '1'                                                      AR583254
+     C**********         MOVE      'N'           OKACTN                                     AR583254
+     C**********         ADD       1             Ix                                         AR583254
+     C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             AR583254
+     C**********         MOVEL     'APM0104'     MsgIdArr(Ix)                               AR583254
      C**********         MOVEL     FOASID        MsgDtaArr(Ix)                              MD000091
-     C                   EVAL      BLen = %Len(%Trim(FOASID))                               MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)                    MD000091
-     C                   GOTO      EVFRNT
-     C                   ELSE                                                                 256482
-     C                   MOVEL     H@DN38        DDDLNO                                       256482
-     C                   END
-      *
-     C                   ELSE                                                                 256482
-     C                   MOVEL     HKDN38        DDDLNO
-     C                   ENDIF                                                                256482
+     C**********         EVAL      BLen = %Len(%Trim(FOASID))                       MD000091AR583254
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)            MD000091AR583254
+     C**********         GOTO      EVFRNT                                                   AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     H@DN38        DDDLNO                              256482 AR583254
+     C**********         END                                                                AR583254
+      *****************************************************************                     AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     HKDN38        DDDLNO                                     AR583254
+     C**********         ENDIF                                                       256482 AR583254
       *                                                                                     MD021204
-     C                   ENDIF                                                              MD021204
+     C**********         ENDIF                                                     MD021204 AR583254
       *
      C     EVFRNT        ENDSR
       *****************************************************************

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR660635           Date 16Jul21               *
-      *  Prev Amend No. 260191A            Date 22May20               *
+      *  Last Amend No. MD061394           Date 07Jul23               *
+      *  Prev Amend No. AR660635           Date 16Jul21               *
+      *                 260191A            Date 22May20               *
       *                 260191             Date 22May20               *
       *                 259978             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -52,6 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061394 - Security Diary event type Spread Change not       *
+      *             accepted for initial date.                        *
+      *           - Allow 'IR' insert if event date is equal to ini-  *
+      *             tial date.                                        *
       *  AR660635 - Deletion of Diary Event of a matured security     *
       *             causes SEC0602 to fail. Prevent deletion.         *
       *             (Child Artifact: AR660636)                        *
@@ -332,6 +337,7 @@
      D Work5N          S              5P 0
      D Work2N          S              2P 0
      D Work1N          S              1P 0
+     D WkITLD          S              6A                                                    MD061394
       *
       ** Work fields for parameter
      D PReDsp          S              1A
@@ -1239,6 +1245,39 @@
      C                   ENDIF
 
      C                   ENDDO
+      *                                                                                     MD061394
+     C                   IF        *IN34 = *OFF                                             MD061394
+      *                                                                                     MD061394
+     C                   EVAL      WkITLD = *BLANKS                                         MD061394
+     C                   EVAL      PDateIn = F1ITLD                                         MD061394
+     C                   EXSR      SrZDATE2                                                 MD061394
+     C                   MOVE      PDateOut      WkITLD                                     MD061394
+      *                                                                                     MD061394
+     C                   IF        DDACTN = 'E'                                             MD061394
+     C                             OR DDACTN = 'D'                                          MD061394
+      *                                                                                     MD061394
+      ** Below codes will be executed when First Coupon has already                         MD061394
+      ** reaced and if IR Event Date is equal to Initial Date                               MD061394
+      *                                                                                     MD061394
+     C                   IF        DDSDED = WkITLD                                          MD061394
+     C                   EVAL      *IN34 = *ON                                              MD061394
+     C                   ENDIF                                                              MD061394
+      *                                                                                     MD061394
+     C                   ELSE                                                               MD061394
+      *                                                                                     MD061394
+      ** Switch ON *IN34 if IR Event Date is equal to Initial Date                          MD061394
+      ** and initial date is not past first coupon date                                     MD061394
+      *                                                                                     MD061394
+     C                   IF        DDSDED = WkITLD                                          MD061394
+     C                             AND WEvtDNo < F1FCPN                                     MD061394
+     C                             AND BJRDNB  < F1FCPN                                     MD061394
+     C                   EVAL      *IN34 = *ON                                              MD061394
+     C                   ENDIF                                                              MD061394
+      *                                                                                     MD061394
+     C                   ENDIF                                                              MD061394
+      *                                                                                     MD061394
+     C                   ENDIF                                                              MD061394
+      *                                                                                     MD061394
 
      C                   IF        NOT *IN34
      C                   MOVE      'N'           OKSDED

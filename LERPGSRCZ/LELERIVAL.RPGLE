@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD035417           Date 22Aug23               *
-      *  Prev Amend No. AR1076352          Date 15Jun23               *
+      *  Last Amend No. MD054915           Date 23Sep23               *
+      *  Prev Amend No. MD054897           Date 23Sep23               *
+      *                 MD035417           Date 22Aug23               *
+      *                 AR1076352          Date 15Jun23               *
       *                 MD053935           Date 08Jun23               *
       *                 MD060620           Date 25May23               *
       *                 MD061418           Date 24May23               *
@@ -131,6 +133,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054915 - Serious midas error occurred when reversing new   *
+      *             spread. Use the old rate of the loan to calculate *
+      *             the effective interest when reversing the new     *
+      *             rate.                                             *
+      *  MD054897 - After rejection of loan rollover, new funding     *
+      *             spread/rate has changed to a much larger value.   *
+      *             Format DDNFRSB during restore of original value   *
+      *             for reject action.                                *
+      *           - Get value of funding details when new funding     *
+      *             details are blanked out.                          *
       *  MD035417 - Funding indicator 62 is never switched off.       *
       *             Switch off *IN62 to skip funding spread rate/sign *
       *             validation.                                       *
@@ -5913,6 +5925,29 @@
      C     DDNCHI        ANDEQ     *BLANK                                                     CLE030
      C     DDACTN        ANDEQ     'Q'                                                        CLE030
      C     CLE030        ANDEQ     'Y'                                                        CLE030
+      *                                                                                     MD054915
+      ** New rollover details is reversed. Obtain base rate                                 MD054915
+      ** and spread/rate to be used in computation from file.                               MD054915
+      *                                                                                     MD054915
+     C     DDNBRAB       OREQ      '*'                                                      MD054915
+     C     DDNRTSB       ANDEQ     '*'                                                      MD054915
+     C     DDNSINB       ANDEQ     '*'                                                      MD054915
+     C     DDNCASB       ANDEQ     '*'                                                      MD054915
+     C     DDNCHIB       ANDEQ     '*'                                                      MD054915
+     C     DDACTN        ANDEQ     'A'                                                      MD054915
+     C     DDNBRA        OREQ      '*'                                                      MD054915
+     C     DDNRTS        ANDEQ     '*'                                                      MD054915
+     C     DDNSIN        ANDEQ     '*'                                                      MD054915
+     C     DDNCAS        ANDEQ     '*'                                                      MD054915
+     C     DDNCHI        ANDEQ     '*'                                                      MD054915
+     C     DDACTN        ANDEQ     'X'                                                      MD054915
+     C     DDNBRA        OREQ      '*'                                                      MD054915
+     C     DDNRTS        ANDEQ     '*'                                                      MD054915
+     C     DDNSIN        ANDEQ     '*'                                                      MD054915
+     C     DDNCAS        ANDEQ     '*'                                                      MD054915
+     C     DDNCHI        ANDEQ     '*'                                                      MD054915
+     C     DDACTN        ANDEQ     'Q'                                                      MD054915
+     C     CLE030        ANDEQ     'Y'                                                      MD054915
       *
       **  Next base rate code on file is blank.
      C*****NBRA*         IFEQ      *ZEROS                                                     CSD103
@@ -9211,7 +9246,20 @@
       *                                                                                     AR702532
       ** New Funding Spread/Rate and sign                                                   AR702532
       *                                                                                     AR702532
-     C                   MOVEL     DDNFRSB       L_CLNFRS                                   AR702532
+     C                   Z-ADD     7             @@IDP                                      MD054897
+     C                   Z-ADD     4             @@IINT                                     MD054897
+     C                   MOVE      *BLANKS       @@ALPH                                     MD054897
+     C                   MOVE      DDNFRSB       @@ALPH                                     MD054897
+     C                   MOVE      'N'           @@MTID            1                        MD054897
+     C                   EXSR      VALAMT                                                   MD054897
+     C     @@ERCD        IFEQ      0                                                        MD054897
+     C                   MOVE      @@AMT         VNFRS                                      MD054897
+     C**********         MOVEL     DDNFRSB       L_CLNFRS                          AR702532 MD054897
+     C                   Z-ADD     VNFRS         L_CLNFRS                                   MD054897
+     C                   ELSE                                                               MD054897
+     C                   Z-ADD     *ZEROS        L_CLNFRS                                   MD054897
+     C                   ENDIF                                                              MD054897
+      *                                                                                     MD054897
      C                   MOVEL     DDNFSNB       L_CLNFSN                                   AR702532
      C                   ENDIF                                                              AR702532
       *                                                                                     AR702532

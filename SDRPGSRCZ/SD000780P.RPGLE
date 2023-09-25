@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       *                 BUG23146           Date 25Mar09               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -68,23 +70,23 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Country of Tax Codes details - Retrieve
      FSDCTTXL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Control file retrieval index
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
- 
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
+
       ** Country of Tax Codes Printer file - Details
      FSD000780P1O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       ** Country of Tax Codes Printer file - Audit
      FSD000780AUO    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -93,10 +95,10 @@
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
       ** The following fields are defined in the external file:
@@ -106,39 +108,39 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       *                                                                                     BUG23146
       ** External data structure for Country Details                                        BUG23146
       *                                                                                     BUG23146
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)                                BUG23146
- 
+
       ** DS for access objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *                                                                                       CER048
       ** Switchable Feature Details Data Structure                                            CER048
       *                                                                                       CER048
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER048
- 
+
       ** File Information Data Structure for SD000780P1.
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for SD000780AU
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
      D  EndOfFile             02     02
@@ -157,7 +159,7 @@
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZDATE2
      D ZDayNo          S              5P 0
      D ZDate           S              6P 0
@@ -167,24 +169,24 @@
                                                                                               236137
      D ZFIELD          S             16                                                       236137
      D ZADEC           S              1  0                                                    236137
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D SEnty           S              3
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       ** Parameters for access object programs
      D PRtcd           S              7
      D POptn           S              7
      D PSARd           S              6
- 
+
       ** Parameter list fields
      D PMode           S              1
      D PLevl           S              1
      D PEnty           S              3
- 
+
       ** Other fields used
      D WRun            S              1
      D WOpen           S              1    INZ('N')
@@ -201,7 +203,7 @@
      D CER048          S              1                                                       CER048
      D CER054          S              1                                                       CER054
      D CGL157          S              1                                                       CGL177
- 
+
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
       *
@@ -223,98 +225,98 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Set file pointer to first record and do initial read.
- 
+
      C     *LOVAL        SETLL     SDCTTXL1
      C                   READ      SDCTTXL1                               02
- 
+
       ** Write to Audit File if file is empty.
- 
+
      C                   IF        EndOfFile = True
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   DOU       EndOfFile = True
- 
+
       ** Count no. of records processed.
- 
+
      C                   EVAL      WNoRec = WNoRec + 1
- 
+
       ** Process Report Lines.
- 
+
      C                   EXSR      SRPrint
- 
+
       ** Read next record.
- 
+
      C                   READ      SDCTTXL1                               02
      C                   ENDDO
- 
+
      C                   EXSR      SREnd
- 
+
       *****************************************************************
       *  P R O G R A M   E N D                                        *
       *****************************************************************
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       *  SRPrnt - Print details                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPrint       BEGSR
- 
+
      C                   IF        WOpen <> 'Y'
      C                   EVAL      WOpen = 'Y'
      C                   OPEN      SD000780P1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C**********         EVAL      RqdLn1 = 1                                                 236137
      C**********         EVAL      RqdLn1 = 2                                          236137 CER048
      C**********         EVAL      RqdLn1 = 3                                        CER048 BUG23146
      C**********         EVAL      RqdLn1 = 20                                       BUG23146 CER054
      C                   EVAL      RqdLn1 = 21                                                CER054
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** For initial print of details or overflow has occured, print the Header
       ** of the report.
- 
+
      C                   IF        DifLn1 <= RqdLn1 OR
      C                             WFirst = 'Y'
      C                   WRITE     HEADP1
      C                   EVAL      WFIRST = 'N'
      C                   ENDIF
- 
+
       ** Write details to printer fields.
- 
+
      C                   EVAL      *IN22 = *OFF
- 
+
       ***Print*Country of Tax value only at the beginning of a new Country of Tax           BUG23146
       ***group*or at the beginnig of a new page.                                            BUG23146
- 
+
      C**********         IF        EWCTRT <> WCtrt OR                                       BUG23146
      C**********                   DifLn1 <= RqdLn1                                         BUG23146
      C                   EVAL      RCTRT = EWCTRT
@@ -323,7 +325,7 @@
      C**********         ELSE                                                               BUG23146
      C**********         EVAL      RCTRT = *Blanks                                          BUG23146
      C**********         ENDIF                                                              BUG23146
- 
+
       *                                                                                     BUG23146
       ** Get Country Name for Country Tax                                                   BUG23146
       *                                                                                     BUG23146
@@ -336,9 +338,9 @@
      C                   EVAL      RCTNM = A4CNNM                                           BUG23146
                                                                                             BUG23146
       ** Country of Residence
- 
+
      C                   EVAL      RCTRR = EWCTRR
- 
+
       *                                                                                     BUG23146
       ** Get Country Name for Country of Residence                                          BUG23146
       *                                                                                     BUG23146
@@ -353,70 +355,70 @@
      C                   ENDIF                                                              BUG23146
                                                                                             BUG23146
       ** Default Tax Status 1
- 
+
      C                   EVAL      RTXS1 = EWTXS1
- 
+
       ** Effective Date 1
- 
+
      C                   EVAL      ZDayNo = EWEDT1
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *Zero         ZDate
      C                   PARM      *BLanks       ZADate
- 
+
      C                   MOVE      ZADate        REDT1
- 
+
       ** Transition Type 1
- 
+
      C                   EVAL      RTRT1 = EWTRT1
- 
+
       ** Default Tax Status 2
- 
+
      C                   EVAL      RTXS2 = EWTXS2
- 
+
       ** Effective Date 2
- 
+
      C                   EVAL      ZDayNo = EWEDT2
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *Zero         ZDate
      C                   PARM      *BLanks       ZADate
- 
+
      C                   MOVE      ZADate        REDT2
- 
+
       ** Transition Type 2
- 
+
      C                   EVAL      RTRT2 = EWTRT2
- 
+
       ** Tax Basket
- 
+
      C                   EVAL      RTXBS = EWTXBS
- 
+
       ** Withholding Tax Account Code
- 
+
      C                   EVAL      RWTAC = EWWTAC
- 
+
       ** Last Change Type
- 
+
      C                   EVAL      RCHTP = *BLANKS
- 
+
      C                   IF        EWCHTP = 'I'
      C                   EVAL      RCHTP = 'INSERT'
      C                   ELSE
      C                   EVAL      RCHTP = 'AMEND'
      C                   ENDIF
- 
+
       ** Last Change Date
- 
+
      C                   EVAL      ZDayNo = EWLCDT
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *Zero         ZDate
      C                   PARM      *BLanks       ZADate
- 
+
      C                   MOVE      ZADate        RLCDT
                                                                                               236137
       ** De Minimis Rule Applicable indicator.                                                236137
@@ -555,13 +557,13 @@
                                                                                               CGL177
      C                   ENDIF                                                                CGL177
                                                                                               CGL177
- 
+
       ** Write Detail
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -569,26 +571,40 @@
       *  SREnd - Write trailer in report                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SREnd         BEGSR
- 
+
      C**********         EVAL      RqdLn1 = 4                                               BUG23146
      C**********         EVAL      DifLn1 = OFLLN1 - PRTLN1                                 BUG23146
      C**********         IF        DifLn1 <= RqdLn1                                         BUG23146
      C**********         WRITE     HEADP1                                                   BUG23146
      C**********         ENDIF                                                              BUG23146
- 
+
       ** Write out report trailer.
- 
+
      C                   WRITE     TRAILP1
- 
+
       ** Retrieve control details.
- 
+
      C                   EVAL      WFName = 'SDCTTXPD'
-     C     WFName        CHAIN     SDFCTLL1                           03
- 
+     C*****WFName        CHAIN     SDFCTLL1                           03                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFName        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       03                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        03                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
       ** Database error.
- 
+
      C                   IF        RecNotFnd = True
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = WFName
@@ -597,25 +613,25 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RINSER = AHNOIN
      C                   EVAL      RAMEND = AHNOAM
      C                   EVAL      RDELET = AHNODL
      C                   EVAL      RAUDIT = AHNORC
      C                   EVAL      RCOUNT = WNoRec
- 
+
      C                   IF        RCOUNT <> RAUDIT
      C                   EVAL      *IN21 = *On
      C                   ELSE
      C                   EVAL      *IN21 = *Off
      C                   ENDIF
- 
+
       ** Write audit report.
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -623,58 +639,58 @@
       *  SRAudit - Write audit report                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAudit       BEGSR
- 
+
      C                   OPEN      SD000780AU
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** If there is a record read, write audit control report.
- 
+
      C                   IF        WNoRec <> 0
      C                   WRITE     CONTROL
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR ='1'
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -686,29 +702,29 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRtcd
      C                   PARM                    PMode
      C                   PARM                    PSeq
      C                   PARM                    PLevl
      C                   PARM                    PEnty
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error.
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -717,9 +733,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PRTLN1 = 0
@@ -803,9 +819,9 @@
      C                   EVAL      *IN39 = '0'                                                CGL177
      C                   ENDIF                                                                CGL177
                                                                                               CGL177
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -820,9 +836,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blank
      C                   EVAL      WRun = 'Y'
      C                   EVAL      *INU7 = *On
@@ -831,14 +847,14 @@
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

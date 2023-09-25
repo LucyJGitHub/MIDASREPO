@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  BUG12645 - COB component SDC0602 failed because of unmatched *
@@ -83,8 +85,8 @@
      F                                     COMMIT
       *
       ** SD Standing Data Controls Logical File
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       *
       ** Accounts by Report Logical File
      FSDACRCL0  UF A E           K DISK    INFSR(*PSSR)
@@ -115,10 +117,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -127,12 +129,12 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -146,7 +148,7 @@
       *
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *
@@ -154,7 +156,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D DFound          S              1A
      D DSuccess        S              1A
@@ -201,7 +203,7 @@
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *DTAARA       DEFINE                  LDA
       *
      C                   EVAL      Input_Acct    = PDATA
@@ -223,10 +225,10 @@
      C                   ELSE
      C                   ROLBK
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -238,17 +240,17 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    PDATA
      C                   PARM                    RetCodeOut
      C                   PARM                    PPROGRAM
- 
+
      C     KACCDK        KLIST
      C                   KFLD                    KAcctCode
- 
+
      C     KACRC         KLIST
      C                   KFLD                    KRSNO
      C                   KFLD                    KRSCD
@@ -265,7 +267,7 @@
       ** Datebase error
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
      C                   EVAL      DBKEY  =  @OPTN
@@ -275,9 +277,9 @@
      C                   EVAL      DBPROC =  'SR/*INZSR '
      C                   EXSR      *PSSR
      C                   OUT       LDA
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       /EJECT
@@ -401,20 +403,40 @@
      C                   EVAL      DSuccess  = 'N'
       *
      C                   DO        100
-     C     KFile         CHAIN(e)  SDFCTLL0
-     C                   IF        %Error()
+     C*****KFile         CHAIN(e)  SDFCTLL0                                                 MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      KFile         AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+     C**********         IF        %Error()                                                 MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
      C                   EXSR      SrDelay
      C                   ITER
      C                   ELSE
-     C                   IF        %Found()
+     C**********         IF        %Found()                                                 MD061008
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061008
      C                   IF        DFound = 'Y'
      C                   EVAL      AHNOAM = AHNOAM + 1
      C                   ELSE
      C                   EVAL      AHNORC = AHNORC + 1
      C                   EVAL      AHNOIN = AHNOIN + 1
      C                   ENDIF
-     C                   UPDATE(e) @AHREAU
-     C                   IF        not %Error()
+     C**********         UPDATE(e) @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C**********         IF        not %Error()                                             MD061008
+     C     ZRETRN        IFEQ      *BLANKS                                                  MD061008
      C                   EVAL      DSuccess  = 'Y'
      C                   ENDIF
      C                   ENDIF
@@ -620,7 +642,7 @@
      C                   MOVE      ACTRCA1       A5TRCA
      C                   MOVE      ACEACC1       A5EACC
      C                   MOVE      ACGPDT        A5GPDT
- 
+
      C                   ENDSR
       *                                                                                     BUG12523
       /EJECT                                                                                BUG12523
@@ -646,15 +668,15 @@
       *  SrAlign - Align Numeric Data                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SrAlign       BEGSR
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    PZreturn
      C                   PARM                    PZfield
      C                   PARM                    PZdecimals
      C                   PARM                    PZdigits
- 
+
      C                   ENDSR
       *
       /EJECT

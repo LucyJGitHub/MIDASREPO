@@ -12,26 +12,28 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
      FSDCOTPL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       * Midas SD Collateral type Details Master File
- 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       * Midas SD Standing Data Controls index
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -43,12 +45,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -59,53 +61,53 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D ChkCotyFmt    E DS                  EXTNAME(SDCOTPPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D SDVCoty       E DS                  EXTNAME(SDVCOTYPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid collateral Detail
- 
+
      D OKCotDets     E DS                  EXTNAME(SDECOTYPD)
       * Error indicators
- 
+
      D B_COTYF       E DS                  EXTNAME(SDCOTPPD)
      D                                     PREFIX(B_)
       **  Externally described DS for 'BEFORE UPDATE' collateral type
- 
+
       **  Collateral Details File
      D COTYF         E DS                  EXTNAME(SDCOTPPD)
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -141,7 +143,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -155,37 +157,37 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
- 
+
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the transaction
      C     A_COTYLC      CASEQ     'I'           INSERT
      C     A_COTYLC      CASEQ     'A'           AMEND
      C     A_COTYLC      CASEQ     'D'           DELETE
      C                   ENDCS
- 
+
       * Exit From Program
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -195,13 +197,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    @@RTCD            7
- 
+
       ** Externally described DS for valid Collateral Detail
      C                   PARM                    SDVCOTY
       *
@@ -218,14 +220,14 @@
      C                   EVAL      DBASE  =  909                                * DBERR 909 *
      C                   EXSR      *PSSR                                        *************
      C                   ENDIF
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -235,9 +237,9 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current Customer details
- 
+
      C                   CALLB     'SDCOTYRTV'
       * Inputs
       *
@@ -271,7 +273,7 @@
       *
       * OK - Collateral code
      C                   PARM                    DDCOLTOK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -282,28 +284,28 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        CHCTTMST <> A_COTMST
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
      C                             DDCOLTOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C                 2 0
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError         132
@@ -315,11 +317,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -329,7 +331,7 @@
       *                                                              *
       ****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access Collateral Details
      C     A_COCOLT      CHAIN     SDCOTPL0                           99
       ** Database error
@@ -339,13 +341,13 @@
      C                   EVAL      DBASE  =  900
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise Collateral Detail
      C                   CLEAR                   COTYF
- 
+
       ** Store Old fields for comparisons
      C                   MOVEL(P)  COTYF         B_COTYF
- 
+
       ** SET COLLATERAL FIELDS ON INSERT
      C                   MOVEL     A_CORECI      CTRECI
      C                   MOVEL     A_COCOLT      CTCOLT
@@ -367,12 +369,12 @@
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      CTTMST  = TimeStamp
       *
       ** Write new collateral Detail
      C                   WRITE     SDCotpD0
- 
+
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
      C                   ENDSR
@@ -384,7 +386,7 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Collateral Details
      C     A_COCOLT      CHAIN     SDCOTPL0                           9998
       ** Database error
@@ -401,10 +403,10 @@
      C                   EVAL      DBASE  =  902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
      C                   MOVEL(P)  COTYF         B_COTYF
- 
+
      ** SET COLLATERAL FIELDS ON AMEND
      C                   MOVEL     A_CORECI      CTRECI
      C                   MOVEL     A_COCOLT      CTCOLT
@@ -423,20 +425,20 @@
      C                   MOVEL     A_CORVLF      CTRVLF
      C                   MOVEL     A_CORVLN      CTRVLN
      C                   MOVEL     A_COFRNT      CTFRNT
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      CTTMST  = TimeStamp
- 
- 
+
+
       *
       ** Update Collateral Record
      C                   UPDATE    SDCOTPD0
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -446,7 +448,7 @@
       *                                                              *
       ****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access Collateral Details
      C     A_COCOLT      CHAIN     SDCOTPL0                           9998
      ** Database error
@@ -463,15 +465,15 @@
      C                   EVAL      DBASE  =  904
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
      C                   MOVEL(P)  COTYF         B_COTYF
- 
+
       ** Delete record
      C                   DELETE    SDCOTPD0
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -484,7 +486,24 @@
       *
      C                   MOVE      *BLANKS       WKFLNM           10
      C                   MOVEL     'SDCOTPPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WKFLNM        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9899                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        98                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       * Record not found
      C     *IN98         IFEQ      '1'
@@ -517,7 +536,16 @@
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
      C                   ENDSR
      C****************************************************************
@@ -534,7 +562,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************

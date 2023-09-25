@@ -19,17 +19,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Prev Amend No. CSD009  *CREATE    Date 10Oct00               *
+      *                 CSD009  *CREATE    Date 10Oct00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
       *                                                               *
@@ -58,13 +60,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDGELRL0  UF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDPRFML1  UF   E           K DISK    INFSR(*PSSR)
- 
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
- 
+
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -94,7 +96,7 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -133,19 +135,19 @@
       *
       ** Field for reseting matrix
      D WStars          S             10A   INZ('**********')
- 
+
      D CSD009          S              1A
- 
+
      D @RUN            S              1A
      D PMode           S              1A
- 
+
      D PSARd           S              6A
      D PRtcd           S              7A
      D POptn           S              7A
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -156,7 +158,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -179,7 +181,7 @@
       ** Program termination
       *
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
       *
       *********************************************************************
@@ -285,20 +287,43 @@
       *
       ** Read next record to process
      C                   READ      @DWREHF                                01
- 
+
      C                   ENDDO
       *
       ** Update audit file with no of amends equal to number of records
       ** processed.
      C                   EVAL       AHFLNM = *BLANKS
      C                   EVAL       AHFLNM = 'SDPRFMPD'
-     C     AHFLNM        CHAIN     @AHREAU                            01
+     C*****AHFLNM        CHAIN     @AHREAU                            01
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       01                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        01                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
      C                   IF        EndofFile = False
      C                   EVAL      AHNOAM = AHNORC
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *********************************************************************
@@ -374,7 +399,7 @@
      C                   IF        BKGPC5 = *BLANK
      C                   EVAL      BKGPC5 = '0'
      C                   ENDIF
- 
+
      C                   UPDATE    @BKREEB                              02
       *
       ** Error occured on update, perform standard dberror processing
@@ -386,7 +411,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *********************************************************************
@@ -400,9 +425,9 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Mode processing
@@ -435,7 +460,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANK
      C                   EVAL      CSD009 = 'Y'
      C                   ELSE
@@ -457,24 +482,24 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
- 
+
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT

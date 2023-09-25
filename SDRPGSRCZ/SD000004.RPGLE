@@ -11,16 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CAS002  *CREATE    Date 14Jan02               *
+      *                 CAS002  *CREATE    Date 14Jan02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CAS002 - Hedge Strategy/Linkage                              *
       *                                                               *
@@ -46,10 +48,10 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Standing Data Controls
-     FSDFCTLL0  UF A E           K DISK    INFSR(*PSSR)
- 
+     F*SDFCTLL0* UF A E           K DISK    INFSR(*PSSR)                                    MD061008
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -57,27 +59,27 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WkFile          S             10    DIM(4) CTDATA PERRCD(1)
      D I               S              1  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -87,34 +89,34 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
      C                   EVAL      I = 1
- 
-     C                   DOW       I < 5
-     C     WkFile(I)     CHAIN     SDFCTLL0                           10
- 
-     C                   IF        *IN10 = *On
- 
-      ** Initialise no. of inserts, amends, deletes and records
- 
-     C                   EVAL      AHNORC = *Zeros
-     C                   EVAL      AHNOIN = *Zeros
-     C                   EVAL      AHNOAM = *Zeros
-     C                   EVAL      AHNODL = *Zeros
-     C                   EVAL      AHFLNM = WkFile(I)
-     C                   WRITE     @AHREAU
-     C                   ENDIF
- 
-     C                   EVAL      I = I + 1
-     C                   ENDDO
- 
+
+     C**********         DOW       I < 5                                                    MD061008
+     C*****WkFile(I)     CHAIN     SDFCTLL0                           10                    MD061008
+      **********                                                                            MD061008
+     C**********         IF        *IN10 = *On                                              MD061008
+      **********                                                                            MD061008
+      ***Initialise no. of inserts, amends, deletes and records                             MD061008
+      **********                                                                            MD061008
+     C**********         EVAL      AHNORC = *Zeros                                          MD061008
+     C**********         EVAL      AHNOIN = *Zeros                                          MD061008
+     C**********         EVAL      AHNOAM = *Zeros                                          MD061008
+     C**********         EVAL      AHNODL = *Zeros                                          MD061008
+     C**********         EVAL      AHFLNM = WkFile(I)                                       MD061008
+     C**********         WRITE     @AHREAU                                                  MD061008
+     C**********         ENDIF                                                              MD061008
+      **********                                                                            MD061008
+     C**********         EVAL      I = I + 1                                                MD061008
+     C**********         ENDDO                                                              MD061008
+
       ** End of program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -126,13 +128,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   EVAL      DBPGM = 'SD000004'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -142,23 +144,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        RunBefore = *BLANK
      C                   EVAL      RunBefore = 'Y'
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

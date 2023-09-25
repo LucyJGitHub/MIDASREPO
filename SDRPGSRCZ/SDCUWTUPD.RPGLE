@@ -11,27 +11,29 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CSD079  *CREATE    Date 05Feb07               *
+      *                 CSD079  *CREATE    Date 05Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API                   *
       *                                                               *
       *****************************************************************
- 
+
      FSDWTCSL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     RENAME(SDWTCSD0:@WTCSL0)
       ** Midas SD Withholding Tax Detail Master File
- 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
+     F**********                           INFSR(*PSSR)                                     MD061008
       ** Midas SD Standing Data Controls index
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -43,12 +45,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -59,106 +61,106 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
      D TimeStamp       S               Z
       ** Timestamp for the transaction
- 
+
      D ChkCUWTFmt    E DS                  EXTNAME(SDVCUWTPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D SDVCUWT       E DS                  EXTNAME(SDVCUWTPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid Withholding Tax Detail
- 
+
      D OKCwhDets     E DS                  EXTNAME(SDECUWTPD)
       ** Error indicators
- 
+
      D B_CUWTF       E DS                  EXTNAME(SDWTCSPD)
      D                                     PREFIX(B_)
       ** Externally described DS for 'BEFORE UPDATE' Customer-
       ** Withholding Tax Details
- 
+
       ** Withholding Tax Details File
      D CUWTF         E DS                  EXTNAME(SDWTCSPD)
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
       ** Dummy message ID and message file fields for use on the calls
       ** to ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Outward parameters
       ** RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
- 
+
       ** I :  File name
      D    PBFNME               1     10
- 
+
       ** I :  Long Key
      D    PBLKEY              11     60
- 
+
       ** I :  Deleted Data Record Pt1
      D    PBDR01              61    310
- 
+
       ** I :  Deleted Data Record Pt2
      D    PBDR02             311    560
- 
+
       ** I :  Deleted Data Record Pt3
      D    PBDR03             561    810
- 
+
       ** I :  Deleted Data Record Pt4
      D    PBDR04             811   1060
- 
+
       ** I :  Deleted Data Record Pt5
      D    PBDR05            1061   1310
- 
+
       ** I :  Deleted Data Record Pt6
      D    PBDR06            1311   1560
- 
+
       ** I :  Deleted Data Record Pt7
      D    PBDR07            1561   1810
- 
+
       ** I :  Deleted Data Record Pt8
      D    PBDR08            1811   2060
- 
+
       ** I :  Deleted Data Record Pt9
      D    PBDR09            2061   2310
- 
+
       ** I :  Deleted Data Record Pt10
      D    PBDR10            2311   2560
- 
+
       ** I :  Deleted Data Record Pt11
      D    PBDR11            2561   2810
- 
+
       ** I :  Deleted Data Record Pt12
      D    PBDR12            2811   3060
- 
+
       ** I :  Last Change Date
      D    PBLCD             3061   3063P 0
- 
+
       ** I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -172,65 +174,65 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
- 
+
      D WKACSN          S              2P 0
       ** Account sequence field (packed) for call to CLINTSE
- 
+
      D CRTT_Arr        S              2    DIM(30)
       ** Country of tax treaty Arr
- 
+
      D INTS_Arr        S              3    DIM(30)
       ** Intermediary Status Arr
- 
+
      D DCRC_Arr        S              1    DIM(30)
       ** Documentation received_Arr
- 
+
      D DCEX_Arr        S              5P 0 DIM(30)
       ** Documentation Expiry Date_Arr
- 
+
      D EXCD_Arr        S              2    DIM(30)
       ** Exemption code Arr
- 
+
      D BCWA_Arr        S              1    DIM(30)
       ** Backup WHT applicable Y/N Arr
- 
+
      D RPCD_Arr        S              2    DIM(30)
       ** Recipient code Arr
- 
+
      D TXBS_Arr        S              2    DIM(30)
       ** Tax Basket Arr
- 
+
      D RFSI_Arr        S              1    DIM(30)
       ** Report foreign src income Y/N Arr
- 
+
      D DBTT_Arr        S              1    DIM(30)
       ** Double tax treaty Y/N Arr
- 
+
      D TIN_Arr         S             20    DIM(30)
       ** Tax Indentification Number Arr
- 
+
      D Ctr             S              3P 0
- 
+
       ** Entry Parameters
      D PRETCD          S              7A
      D PRTCD           S              7A
      D POPTN           S              7A
- 
+
      D PReturn         S              6A
      D PType           S              1A
- 
+
      D PMODE           S              6A
      D PRSMD           S              6A
      D PACTN           S              1A
      D DDCLAS          S              1A
- 
+
      D Ix              S              3P 0
      D WriteY          S              1A
      D WKFLNM          S             10A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -238,27 +240,27 @@
       *  MAIN - Main processing                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program
- 
+
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        PRETCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the transaction
- 
+
      C     A_WTTYLC      CASEQ     'I'           INSERT
      C     A_WTTYLC      CASEQ     'A'           AMEND
      C     A_WTTYLC      CASEQ     'D'           DELETE
      C                   ENDCS
- 
+
       ** Exit From Program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -268,42 +270,42 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
- 
+
      C                   PARM                    PRETCD
- 
+
       ** Externally described DS for valid Withholding Tax Detail
- 
+
      C                   PARM                    SDVCUWT
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    PRTCD
      C                   PARM      '*FIRST  '    POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY  = POPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  = 909
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    PReturn
      C                   PARM                    PType
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -313,60 +315,60 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current Customer details
- 
+
      C                   CALLB     'SDCUWTRTV'
- 
+
       ** Inputs
       ** Return code
- 
+
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    PMODE
- 
+
       ** Response mode
- 
+
      C                   PARM      ' '           PRSMD
- 
+
       ** Action Code
- 
+
      C                   PARM      A_WTTYLC      PACTN
- 
+
       ** Midas Customer Number
- 
+
      C                   PARM                    A_WTCSNO
- 
+
       ** Securities Classifications
- 
+
      C                   PARM      'D'           DDCLAS
- 
+
       ** Outputs
       ** Withholding Tax Details in File Format
- 
+
      C                   PARM                    ChkCUWTFmt
- 
+
       ** OK - Action code
- 
+
      C                   PARM      *BLANK        DDACTNOK
- 
+
       ** OK - Customer Number
- 
+
      C                   PARM                    DDCSNOOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
      C                   PARM      *BLANK        MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM      *ZERO         Ix
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -376,9 +378,9 @@
       *                                                               *
       *****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access Withholding Tax Details
- 
+
      C     A_WTCSNO      CHAIN     SDWTCSL0
      C                   IF        %FOUND(SDWTCSL0)
       *
@@ -387,23 +389,23 @@
      C                   EVAL      DBASE  = 900
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise Withholding Tax Detail
- 
+
      C                   CLEAR                   CUWTF
- 
+
       ** Set Withholding Tax details Fields for Insert
- 
+
      C                   EVAL        WHRECI = A_WTRECI
      C                   EVAL        WHCSNO = A_WTCSNO
      C                   EVAL        WHTYLC = A_WTTYLC
      C                   EVAL        WHLCD  = A_WTLCD
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      WHTMST  = TimeStamp
      C                   CLEAR                   CRTT_Arr
      C                   CLEAR                   INTS_Arr
@@ -416,14 +418,14 @@
      C                   CLEAR                   RFSI_Arr
      C                   CLEAR                   DBTT_Arr
      C                   CLEAR                   TIN_Arr
- 
+
      C                   EXSR      Pop_FldArr
      C                   EVAL      Ctr = 1
- 
+
      C                   DOW       Ctr < 31
- 
+
       ** Store Old fields for comparisons
- 
+
      C                   CLEAR                   B_CUWTF
      C                   IF        Ctr <> 1 and CRTT_Arr(Ctr)=*BLANKS
      C                             and INTS_Arr(Ctr)=*BLANKS and
@@ -438,9 +440,9 @@
      C                             TIN_Arr(Ctr)=*BLANKS
      C                   LEAVE
      C                   ELSE
- 
+
       ** Set up fields
- 
+
      C                   MOVEL     CRTT_Arr(Ctr) WHCRTT
      C                   MOVEL     INTS_Arr(Ctr) WHINTS
      C                   MOVEL     DCRC_Arr(Ctr) WHDCRC
@@ -452,9 +454,9 @@
      C                   MOVEL     RFSI_Arr(Ctr) WHRFSI
      C                   MOVEL     DBTT_Arr(Ctr) WHDBTT
      C                   MOVEL     TIN_Arr(Ctr)  WHTIN
- 
+
       ** Write new Withholding Tax Detail
- 
+
      C                   WRITE     @WTCSL0                              23
      C                   IF        *IN23 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
@@ -466,9 +468,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Update SD Standing Data Control File
- 
+
      C                   EXSR      UPDCTRL
      C                   ENDSR
       *****************************************************************
@@ -479,36 +481,36 @@
       *                                                               *
       *****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Withholding Tax Details
- 
+
      C     A_WTCSNO      CHAIN     SDWTCSL0                           9998
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
      C                   EVAL      DBASE  =902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record Locked
- 
+
      C                   IF        *IN98 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
- 
+
      C                   EVAL      DBASE  =  903
- 
+
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set Withholding Tax detail fields on Amend
- 
+
      C                   EVAL      WHRECI = A_WTRECI
      C                   EVAL      WHCSNO = A_WTCSNO
- 
+
      C                   CLEAR                   CRTT_Arr
      C                   CLEAR                   INTS_Arr
      C                   CLEAR                   DCRC_Arr
@@ -520,49 +522,49 @@
      C                   CLEAR                   RFSI_Arr
      C                   CLEAR                   DBTT_Arr
      C                   CLEAR                   TIN_Arr
- 
+
      C                   EXSR      Pop_FldArr
      C                   Eval      Ctr = 1
- 
+
       ** Read Withholding Tax Details File
- 
+
      C     A_WTCSNO      SETLL     SDWTCSL0
      C     A_WTCSNO      READE     SDWTCSL0                               22
- 
+
       ** Error if record not found
- 
+
      C                   IF        *IN22 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
      C                   EVAL      DBASE  =  904
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   DOW       *IN22 = *OFF
      C                   DELETE    SDWTCSL0
      C     A_WTCSNO      READE     SDWTCSL0                               22
      C                   ENDDO
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      WHTMST  = TimeStamp
- 
+
      C                   MOVE      *BLANK        WriteY
- 
+
      C                   DOW       Ctr < 31
      C                   IF        CRTT_Arr(Ctr)<>*BLANKS
- 
+
       ** Store old fields for comparisons
- 
+
      C                   MOVEL(P)  CUWTF         B_CUWTF
- 
+
       ** Set up fields
- 
+
      C                   IF        A_WTTYLC = 'A'
- 
+
      C                   MOVEL     A_WTTYLC      WHTYLC
      C                   MOVEL     A_WTLCD       WHLCD
      C                   MOVEL     CRTT_Arr(Ctr) WHCRTT
@@ -576,41 +578,41 @@
      C                   MOVEL     RFSI_Arr(Ctr) WHRFSI
      C                   MOVEL     DBTT_Arr(Ctr) WHDBTT
      C                   MOVEL     TIN_Arr(Ctr)  WHTIN
- 
+
       ** Write/update file
- 
+
      C                   IF        *IN22 = *ON
      C                   WRITE     @WTCSL0                              23
      C                   MOVE      'Y'           WriteY
- 
+
      C                   ENDIF
- 
+
      C                   IF        *IN23 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
- 
+
      C                   EVAL      DBASE  =  905
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ELSE
      C                   DELETE    @WTCSL0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ctr
- 
+
      C                   ENDDO
- 
+
      C                   IF        WriteY <> 'Y'
      C                   WRITE     @WTCSL0
      C                   ENDIF
- 
+
       ** Update SD Standing Data Control File
- 
+
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -620,22 +622,22 @@
       *                                                               *
       *****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access Withholding Tax Details
- 
+
      C     A_WTCSNO      CHAIN     SDWTCSL0                           9998
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
      C                   EVAL      DBASE  =906
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record Locked
- 
+
      C                   IF        *IN98 = *ON
      C                   EVAL      DBKEY  = A_WTCSNO
      C                   EVAL      DBFILE = 'SDWTCSPD'
@@ -653,28 +655,28 @@
      C                   CLEAR                   RFSI_Arr
      C                   CLEAR                   DBTT_Arr
      C                   CLEAR                   TIN_Arr
- 
+
      C                   EXSR      Pop_FldArr
- 
+
      C                   MOVE      *OFF          *IN01
      C                   MOVE      *OFF          *IN02
      C     A_WTCSNO      SETLL     SDWTCSL0
      C     *IN01         DOWEQ     *OFF
      C     A_WTCSNO      READE     SDWTCSL0                               01
- 
+
      C                   IF        *IN01
      C                   ITER
      C                   ENDIF
      C
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   MOVEL(P)  CUWTF         B_CUWTF
- 
+
      C                   IF        *IN01 = *OFF
- 
+
       ** Delete record
- 
+
      C                   DELETE    @WTCSL0                              02
      C
      C                   IF        *IN02
@@ -685,11 +687,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Update SD Standing Data Control File
- 
+
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1061,7 +1063,7 @@
      C                   EVAL      TIN_Arr(30)  = A_WTTIN30
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1070,57 +1072,83 @@
       *                                                               *
       *****************************************************************
      C     UPDCTRL       BEGSR
- 
+
      C                   MOVE      *BLANKS       WKFLNM
      C                   MOVEL     'SDWTCSPD'    WKFLNM
-     C     WKFLNM        CHAIN     @AHREAU                            9899
- 
+     C*****WKFLNM        CHAIN     @AHREAU                            9899                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WKFLNM        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9899                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        98                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
+
       ** Record not found
- 
+
      C     *IN98         IFEQ      '1'
      C                   MOVEL     'SDWTCSPD'    DBKEY
      C                   MOVEL     'SDFCTLPA'    DBFILE
- 
+
      C                   MOVEL     '909'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Record locked
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     'SDWTCSPD'    DBKEY
      C                   MOVEL     'SDFCTLPA'    DBFILE
- 
+
      C                   MOVEL     '910'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       ** Input
- 
+
      C     A_WTTYLC      WHENEQ    'I'
      C                   EVAL      AHNORC = (AHNORC + 1)
      C                   EVAL      AHNOIN = (AHNOIN + 1)
- 
+
       ** Amend
- 
+
      C     A_WTTYLC      WHENEQ    'A'
      C                   EVAL      AHNOAM = (AHNOAM + 1)
- 
+
       ** Delete
- 
+
      C     A_WTTYLC      WHENEQ    'D'
      C                   EVAL      AHNORC = (AHNORC - 1)
      C                   EVAL      AHNODL = (AHNODL + 1)
      C                   ENDSL
- 
+
       ** Update the standing data controls file
- 
-     C                   UPDATE    @AHREAU
- 
+
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1135,7 +1163,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************

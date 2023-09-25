@@ -10,11 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165  *CREATE    Date 17Feb15               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165  *CREATE    Date 17Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Withholding Tax Enhancement                         *
       *                                                               *
@@ -23,13 +25,13 @@
      F                                     RENAME(SDWTRCD0:SDWTRCD2)
       ** RTV: Withholding Tax Rate Codes        Retrieval index
       *
-     FSDFCTLL1  IF   E           K DISK
+     F*SDFCTLL1* IF   E           K DISK                                                    MD061008
       ** RTV: Standing Data Controls    Retrieval index
       *
      FSDBANKL1  IF   E           K DISK
       ** RTV: Bank Details              Retrieval index
       *
-     FSDFCTLL0  UF   E           K DISK
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061008
       ** UPD: Standing Data Controls    Update index
       *
      FSD000204P1O    E             PRINTER OFLIND(*IN97)
@@ -563,7 +565,21 @@
       ** Move fields to key list.
       *
      C                   MOVEL     @CN(05)       AHFLNM
-     C     KRSSA         CHAIN     @AHREAV                            90
+     C*****KRSSA         CHAIN     @AHREAV                            90                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       90                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
      C     *IN90         IFEQ      '1'
       *
       ** DBF Record not found.
@@ -603,7 +619,24 @@
       *
      C     KLCHSB        KLIST
      C                   KFLD                    AHFLNM
-     C     KLCHSB        CHAIN     @AHREAU                            9091
+     C*****KLCHSB        CHAIN     @AHREAU                            9091                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       9091                  MD061008
+     C     ZRETRN        IFEQ      '*NRF'                                                   MD061008
+     C                   SETON                                        90                    MD061008
+     C                   ENDIF                                                              MD061008
+     C     ZRETRN        IFEQ      '*ERROR'                                                 MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
      C     *IN90         IFEQ      '1'
       *
@@ -641,7 +674,21 @@
      C                   Z-ADD     *ZERO         AHNOAM
      C                   Z-ADD     *ZERO         AHNODL
       *
-     C                   UPDATE    @AHREAU                              91
+     C**********         UPDATE    @AHREAU                              91                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       91                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        91                    MD061008
+     C                   ENDIF                                                              MD061008
+                                                                                            MD061008
      C     *IN91         IFEQ      '1'
       *
       ** Change error detected.

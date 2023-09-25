@@ -12,20 +12,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
       *
       * SF Midas User by USRP
      FMUSER     UF A E           K DISK    COMMIT
@@ -56,11 +58,11 @@
      F                                     INFSR(*PSSR)
      F                                     PREFIX(Z_)
       *
- 
-     FSDFCTLL0  UF A E           K DISK    COMMIT
-     F                                     INFSR(*PSSR)
+
+     F*SDFCTLL0* UF A E           K DISK    COMMIT                                          MD061008
+     F**********                           INFSR(*PSSR)                                     MD061008
       * Midas SD Standing Data Controls index
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -72,12 +74,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -88,19 +90,19 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D ChkAMUSFmt    E DS                  EXTNAME(MUSERDD)
      D                                     PREFIX(CH)
      D ChkBBRCFmt    E DS                  EXTNAME(MBRBSDD)
@@ -110,7 +112,7 @@
      D ChkCOMPFmt    E DS                  EXTNAME(MCMPSDD)
      D                                     PREFIX(CK)
       ** Rename fields for Timestamp checking
- 
+
      D SFVAMUS       E DS                  EXTNAME(SFVAMUSPD)
      D                                     PREFIX(A_)
       ** Externally desc'd DS for valid User Defn + Menu Item Detail
@@ -123,7 +125,7 @@
      D SFVCOMP       E DS                  EXTNAME(SFVCOMPPD)
      D                                     PREFIX(D_)
       ** Externally desc'd DS for valid Companies Detail
- 
+
      D OKAmuDets     E DS                  EXTNAME(SFEAMUSPD)
       * Error indicators for User Defn + Menu Items
      D OKBbrDets     E DS                  EXTNAME(SFEBBRCPD)
@@ -135,7 +137,7 @@
      D OKComDets     E DS                  EXTNAME(SFECOMPPD)
      D                                     PREFIX(C_)
       * Error indicators for Companies
- 
+
      D B_AMUSF       E DS                  EXTNAME(MUSERDD)
      D                                     PREFIX(E_)
       **  Externally described DS for 'BEFORE UPDATE' User Defn + MI
@@ -148,7 +150,7 @@
      D B_COMPF       E DS                  EXTNAME(MCMPSDD)
      D                                     PREFIX(H_)
       **  Externally described DS for 'BEFORE UPDATE' Companies
- 
+
       **  User Defn + Menu Items Details File
      D AMUSF         E DS                  EXTNAME(MUSERDD)
       **  Booking Branches Details File
@@ -160,18 +162,18 @@
       **  Companies Details File
      D COMPF         E DS                  EXTNAME(MCMPSDD)
      D                                     PREFIX(C_)
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       * Data Structure for SAR Details
@@ -192,7 +194,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -228,7 +230,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -242,42 +244,42 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
       ** Fields defined for Enhancement CGL008
      D CGL008          S              1A
      D WFLG            S              1A
      D WUSER1          S             50A
- 
+
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend, Re-activate or Delete the transaction
      C     A_USCHTP      CASEQ     'I'           INSERT
      C     A_USCHTP      CASEQ     'A'           AMEND
      C     A_USCHTP      CASEQ     'D'           DELETE
      C     A_USCHTP      CASEQ     'R'           REACTIVE
      C                   ENDCS
- 
+
       * Exit From Program
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -287,13 +289,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    @@RTCD            7
- 
+
       ** Externally described DS for valid User Definition + Menu
       ** Items Detail
      C                   PARM                    SFVAMUS
@@ -346,7 +348,7 @@
      C                   PARM      '*FIRST  '    @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
       *
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -354,7 +356,7 @@
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
       *
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -364,10 +366,10 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current User Maintenance + Menu Items details
      C                   MOVE      A_USUSRP      MidasUSRP        10
- 
+
      C                   CALLB     'SFAMUSRTV'
       * Inputs
       *
@@ -409,7 +411,7 @@
       *
       * OK - User
      C                   PARM                    DDUSRPOK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -420,28 +422,28 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        CHUSTMST <> A_USTMST
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
      C                             DDUSRPOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C                 2 0
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError         132
@@ -453,11 +455,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -467,7 +469,7 @@
       *                                                              *
       ****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access User Details
      C     A_USUSRP      CHAIN     MUSER                              99
       ** Database error
@@ -477,7 +479,7 @@
      C                   EVAL      DBASE  = 901
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise User Maintenance + Menu Items Detail
      C                   CLEAR                   AMUSF
       ** Initialise Booking Branch Detail
@@ -486,7 +488,7 @@
      C                   CLEAR                   OBRCF
       ** Initialise Companies Detail
      C                   CLEAR                   COMPF
- 
+
       ** Store Old fields for comparisons
      C                   MOVEL(P)  AMUSF         B_AMUSF
      C                   MOVEL(P)  BBRCF         B_BBRCF
@@ -581,7 +583,7 @@
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      USTMST  = TimeStamp
       *
       ** Write new User Definition + Menu Item Detail
@@ -619,7 +621,7 @@
      C                   EVAL      REFFLG = 'Y'
      C                   UPDATE    MUSERDDF
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -629,7 +631,7 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access User Details from User File
      C     A_USUSRP      CHAIN     MUSER                              96
       ** Database error
@@ -674,7 +676,7 @@
      C                   MOVEL(P)  OBRCF         B_OBRCF
       ** Update 'BEFORE' status of User Companies
      C                   MOVEL(P)  COMPF         B_COMPF
- 
+
       *
       ** SET User Maintenance + Menu Items Detail FIELDS ON AMEND
       *
@@ -779,10 +781,10 @@
      ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      USTMST  = TimeStamp
- 
- 
+
+
       *
       ** Update User Maintenance + Menu Items Record
      C                   UPDATE    MUSERDDF
@@ -850,7 +852,7 @@
       *
      C                   ENDIF
       *
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -860,7 +862,7 @@
       *                                                              *
       ****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access User Details from User File
      C     A_USUSRP      CHAIN     MUSER                              96
       ** Database error
@@ -879,7 +881,7 @@
       ** Access User Details from Companies File
      C     A_USUSRP      CHAIN     MCMPS                              99
       *
- 
+
      ** Update 'BEFORE' status of User
      C                   MOVEL(P)  AMUSF         B_AMUSF
       *
@@ -963,7 +965,7 @@
      C                   PARM                    TimeStamp
       *
      C                   EVAL      USTMST  = TimeStamp
- 
+
       ** Update User Maintenance + Menu Items Record Marked for DELETE
      C                   UPDATE    MUSERDDF
       *
@@ -1016,7 +1018,7 @@
      C                   PARM                    A_USDIRID
      C                   PARM                    A_USDIRAD
       *
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1267,7 +1269,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ** Note: if non-standard processing required, use the PSSR_ILENE
       ** subroutine
       ****************************************************************

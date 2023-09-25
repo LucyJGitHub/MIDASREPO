@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -61,8 +63,8 @@
      F                                     COMMIT
       ** Midas SD Customer Lending ICD Update
 
-     FSDFCTLL0  UF A E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF A E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       ** Midas SD Standing Data Controls
 
       ** Array containing Copyright statement
@@ -139,7 +141,21 @@
       ** Insert new record SDYLDCPD to SDFCTLPA
 
      C                   EVAL      WFNAME = 'SDYLDCPD'
-     C     WFNAME        CHAIN     SDFCTLL0                           40
+     C*****WFNAME        CHAIN     SDFCTLL0                           40                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFNAME        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       40                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        40                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
 
      C                   IF        *IN40 = *ON
      C                   EVAL      AHFLNM = WFNAME
@@ -147,26 +163,40 @@
      C                   EVAL      AHNOIN = *ZERO
      C                   EVAL      AHNOAM = *ZERO
      C                   EVAL      AHNODL = *ZERO
-     C                   WRITE     @AHREAU                              50
+     C**********         WRITE     @AHREAU                              50                  MD061008
 
-     C                   IF        *IN50 = *ON
-     C     *LOCK         IN        LDA
-     C                   MOVEL     'SDFCTLPA'    DBFILE
-     C                   MOVEL     '003'         DBASE
-     C                   MOVEL     '*WRITE'      DBKEY
-     C                   MOVEL     'SD009011'    DBPGM
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ELSE
-     C                   COMMIT
-     C                   ENDIF
+     C**********         IF        *IN50 = *ON                                              MD061008
+     C******LOCK         IN        LDA                                                      MD061008
+     C**********         MOVEL     'SDFCTLPA'    DBFILE                                     MD061008
+     C**********         MOVEL     '003'         DBASE                                      MD061008
+     C**********         MOVEL     '*WRITE'      DBKEY                                      MD061008
+     C**********         MOVEL     'SD009011'    DBPGM                                      MD061008
+     C**********         OUT       LDA                                                      MD061008
+     C**********         EXSR      *PSSR                                                    MD061008
+     C**********         ELSE                                                               MD061008
+     C**********         COMMIT                                                             MD061008
+     C**********         ENDIF                                                              MD061008
 
      C                   ENDIF
 
       ** Insert new record SDYLDRPD to SDFCTLPA
 
      C                   EVAL      WFNAME = 'SDYLDRPD'
-     C     WFNAME        CHAIN     SDFCTLL0                           40
+     C*****WFNAME        CHAIN     SDFCTLL0                           40                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFNAME        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       40                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        40                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
 
      C                   IF        *IN40 = *ON
      C                   EVAL      AHFLNM = WFNAME
@@ -174,19 +204,19 @@
      C                   EVAL      AHNOIN = *ZERO
      C                   EVAL      AHNOAM = *ZERO
      C                   EVAL      AHNODL = *ZERO
-     C                   WRITE     @AHREAU                              50
+     C**********         WRITE     @AHREAU                              50                  MD061008
 
-     C                   IF        *IN50 = *ON
-     C     *LOCK         IN        LDA
-     C                   MOVEL     'SDFCTLPA'    DBFILE
-     C                   MOVEL     '004'         DBASE
-     C                   MOVEL     '*WRITE'      DBKEY
-     C                   MOVEL     'SD009011'    DBPGM
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ELSE
-     C                   COMMIT
-     C                   ENDIF
+     C**********         IF        *IN50 = *ON                                              MD061008
+     C******LOCK         IN        LDA                                                      MD061008
+     C**********         MOVEL     'SDFCTLPA'    DBFILE                                     MD061008
+     C**********         MOVEL     '004'         DBASE                                      MD061008
+     C**********         MOVEL     '*WRITE'      DBKEY                                      MD061008
+     C**********         MOVEL     'SD009011'    DBPGM                                      MD061008
+     C**********         OUT       LDA                                                      MD061008
+     C**********         EXSR      *PSSR                                                    MD061008
+     C**********         ELSE                                                               MD061008
+     C**********         COMMIT                                                             MD061008
+     C**********         ENDIF                                                              MD061008
 
      C                   ENDIF
 

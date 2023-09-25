@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD055751           Date 22May20              */
-/*       Prev Amend No. MD055146           Date 04Feb20              */
+/*       Last Amend No. MD061814           Date 19Sep23              */
+/*       Prev Amend No. MD055751           Date 22May20              */
+/*                      MD055146           Date 04Feb20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD020205A          Date 27Jun13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -26,6 +27,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061814 - COB: GOC0100 00068 performance enhancement       */
+/*                - Use SQL DELETE for clearing GZGLJEN* files if    */
+/*                  the program is called during COB and this system */
+/*                  has only one zone.                               */
 /*       MD055751 - Global Sync Issue for GOC0100 during COB         */
 /*                  Include zone in the creation of SQL view.        */
 /*       MD055146 - Failed MXC004802 seq. 00001 and others           */
@@ -71,6 +76,9 @@
              DCL        VAR(&BLSY  )  TYPE(*CHAR) LEN(1)
              DCL        VAR(&STRRRN) TYPE(*DEC) LEN(10 0)                              /*MD020205A*/
              DCL        VAR(&ENDRRN) TYPE(*DEC) LEN(10 0)                              /*MD020205A*/
+             DCL        VAR(&PHASE)   TYPE(*CHAR) LEN(1)                                /*MD061814*/
+             DCL        VAR(&NBRZON)  TYPE(*DEC)  LEN(10 0)                             /*MD061814*/
+             DCL        VAR(&CLRSQL)  TYPE(*CHAR) LEN(100)                              /*MD061814*/
 
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
                                                                                         /*MD055146*/
@@ -238,7 +246,20 @@
              CALL       PGM(&PGM) PARM(&ZOZONE &STRRRN &ENDRRN)                        /*MD020205A*/
              ENDDO                                                                     /*MD020205A*/
              ELSE       CMD(DO)                                                        /*MD020205A*/
+             IF         COND(%SST(&PGM 1 7) = 'GOGLJEN') THEN(DO)                       /*MD061814*/
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASE)                              /*MD061814*/
+             RTVMBRD    FILE(GPZONEPD) NBRCURRCD(&NBRZON)                               /*MD061814*/
+             IF         COND((&PHASE *NE 'A') *AND (&NBRZON = 1)) THEN(DO)              /*MD061814*/
+             CHGVAR     VAR(&CLRSQL) VALUE('delete from' *BCAT &GPF)                    /*MD061814*/
+             RUNSQL     SQL(&CLRSQL) COMMIT(*NC)                                        /*MD061814*/
+             ENDDO                                                                      /*MD061814*/
+             ELSE       CMD(DO)                                                         /*MD061814*/
+             CALL       PGM(&PGM) PARM(&ZOZONE)                                         /*MD061814*/
+             ENDDO                                                                      /*MD061814*/
+             ENDDO                                                                      /*MD061814*/
+             ELSE       CMD(DO)                                                         /*MD061814*/
              CALL       PGM(&PGM) PARM(&ZOZONE)
+             ENDDO                                                                      /*MD061814*/
              ENDDO                                                                     /*MD020205A*/
 /**********  CALL       PGM(QCMDEXC) PARM(&GLFCLO 60)                */                 /*MD055146*/
              CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)

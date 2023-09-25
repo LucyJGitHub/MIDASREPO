@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060729           Date 20Dec22               *
-      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *  Last Amend No. MD050176           Date 10Dec21               *
+      *  Prev Amend No. AR316158           Date 10Dec21               *
+      *                 MD060729           Date 20Dec22               *
+      *                 MD057537           Date 13Sep22               *
       *                 257949             Date 05Jul22               *
       *                 256362             Date 09Jun22               *
       *                 CLE125             Date 02Nov21               *
@@ -111,6 +113,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050176 - Enhance fix AR316158 such that it will not allow  *
+      *             reversal of Past Due if there is at least one live*
+      *             manual repayment attached to it.                  *
+      *           - Applied for MD-59193                              *
+      *  AR316158 - System allows the reversal of Past Due even if    *
+      *             there is a Manual Rapayment referring to it.      *
+      *             Added condition such that the reversal of Past Due*
+      *             will not be allowed if there is a repayment       *
+      *             attached to it.                                   *
+      *           - Applied for MD-59193                              *
       *  MD060729 - Warning message is still displayed even if        *
       *             principal amount is less than the ten billion     *
       *             threshold.Format the Ten Billion constant to      *
@@ -632,6 +644,9 @@
      D WK_FAMT         S             14  0                                                  MD058307
      D WKC_FAMT        S             14  0                                                  MD058307
      D WrkTenB         S             15P 0                                                  MD060729
+     D ZDAYPD          S              5  0                                                  AR316158
+     D WKLNRF          S              6A                                                    AR316158
+     D WKLSEQ          S              3  0                                                  AR316158
 
       /COPY WNCPYSRC,LELOAMV002
 
@@ -1524,15 +1539,38 @@
      C                   ENDIF
       *
       ** If amendment type is PD and action code is reversal and
-      ** repayment was inserted against it (TAMT is less than or equal
-      ** to zero), do not allow reversal of PD record.
+      ** repayment was inserted against it, do not allow the                                AR316158
+      ** reversal of Past Due record.                                                       AR316158
+      **repayment*was*inserted*against*it*(TAMT*is*less*than*or*equal                       AR316158
+      ***to*zero),*do*not*allow*reversal*of*PD*record.****************                      AR316158
+      *                                                                                     AR316158
+     C                   CALLB     'ZDATE1'                                                 AR316158
+     C                   PARM      DDVDAT        ZDATEA                                     AR316158
+     C                   PARM                    ZDAYNO                                     AR316158
+     C                   PARM      BJDFIN        DateFmt                                    AR316158
+     C                   PARM                    ErrorFlag                                  AR316158
+     C                   Z-ADD     ZDAYNO        ZDAYPD                                     AR316158
+      *                                                                                     AR316158
+     C                   MOVE      DDLOAN        WKLNRF                                     AR316158
+     C                   MOVE      DDSEQN        WKLSEQ                                     AR316158
      C     DDATYP        IFEQ      'PD'
      C     DDACTN        ANDEQ     'R'
-     C     CAM_TAMT      ANDLE     0
+     C*****CAM_TAMT      ANDLE     0                                                        AR316158
+     C     WKLNRF        SETLL     LOAMSDKF                                                 AR316158
+     C     WKLNRF        READE     LOAMSDKF                               99                AR316158
+     C     *IN99         DOWEQ     '0'                                                      AR316158
+     C     AM_RECI       IFEQ      'D'                                                      AR316158
+     C     AM_AMTP       ANDEQ     'MR'                                                     AR316158
+     C     ZDAYPD        ANDEQ     AM_XAVD                                                  AR316158
+     C     WKLSEQ        ANDEQ     AM_XASQ                                                  AR316158
      C                   MOVE      'N'           DDATYPOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDATYP'
      C                   MOVEL     'LEA1041'     MsgIdArr(Idx)
+     C                   LEAVE                                                              MD050176
+     C                   ENDIF                                                              AR316158
+     C     WKLNRF        READE     LOAMSDKF                               99                AR316158
+     C                   ENDDO                                                              AR316158
      C                   ENDIF
       *
       ** If amendment type is repayment schedule, output error message

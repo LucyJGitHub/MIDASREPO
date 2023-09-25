@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD019885 *CREATE   Date 04Apr14               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. MD019885 *CREATE   Date 04Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD019885 - Permission Upload Interface                       *
       *           - Applied for MD026157                              *
       *                                                               *
@@ -65,7 +67,8 @@
            PermMCnt = 0;
 
            Exec SQL
-            Select count(*) into :PermMCnt from MITB_PERMM
+       //***Select*count(*) into :PermMCnt from MITB_PERMM                                //MD060918
+            Select count(*) into :PermMCnt from MIPRMJW0                                  //MD060918
             where PMINDX = :MenuCode;
 
            If PermMCnt = 0;
@@ -189,7 +192,8 @@
 
            Exec SQL
             select EXSUFX into :ActionText
-              from MITB_ASFEX
+        //****from*MITB_ASFEX                                                             //MD060918
+              from MIAFXJW0                                                               //MD060918
              where EXACTC = trim(:PMACTC)
                and EXINDX = trim(:PMINDX);
 
@@ -199,7 +203,8 @@
 
            Exec SQL
             select SFSUFX into :ActionText
-              from MITB_ASSFX
+        //****from*MITB_ASSFX                                                             //MD060918
+              from MIASFJW0                                                               //MD060918
              where SFACTC = trim(:PMACTC);
 
            EndIf;

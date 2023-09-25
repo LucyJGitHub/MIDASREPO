@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR1085933          Date 06Feb13               *
-      *  Prev Amend No. CBF005   *CREATE   Date 04Jul11               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. AR1085933          Date 06Feb13               *
+      *                 CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  AR1085933 - Position to function not working properly        *
       *  CBF005 - BF Infrastructure: Single Security User Maintenance *
       *           Profile                                             *
@@ -362,7 +364,8 @@
       *
      C/exec SQL
      C+ select PMARTF into :Permission
-     C+ from MITB_PERMM
+     C***+*from*MITB_PERMM                                                                  MD060918
+     C+ from MIPRMJW0                                                                       MD060918
      C+ where PMINDX = :ACINDX and PMACTC = :Action
      C/end-exec
       *

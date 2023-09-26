@@ -10,8 +10,13 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031643           Date 05Sep23               *
-      *  Prev Amend No. AR814854           Date 24Mar23               *
+      *  Last Amend No. AR1050205          Date 20Sep23               *
+      *  Prev Amend No. MD053130           Date 20Sep23               *
+      *                 MD046102           Date 20Sep23               *
+      *                 AR827109           Date 20Sep23               *
+      *                 AR749052           Date 20Sep23               *
+      *                 MD031643           Date 05Sep23               *
+      *                 AR814854           Date 24Mar23               *
       *                 249385             Date 01Aug22               *
       *                 MD058815           Date 28Sep21               *
       *                 MD059190           Date 08Nov21               *
@@ -248,6 +253,27 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1050205 - DB erron on LE0410 due to blank CCY on ACTN3DN,  *
+      *              ACTN3DK. Prevent moving KEY1 to CCY.             *
+      *              (Child: AR1050207)                               *
+      *  MD053130 - Loans take wrong base rate on rollover day.       *
+      *             Enhance fix AR827109.  Apply setting of *IN56 &   *
+      *             *IN52 for CHIN = 'R' & RFDY <> '00'. Also, if     *
+      *             BAVDNR is GT RLDT, use old rate. Also enhance fix *
+      *             MD046102, if CHIN = 'N' then save BRTEL to NBRT.  *
+      *  MD046102 - Loan is not picking up the correct historic base  *
+      *             rate during a backvalued rollover. Get base rate  *
+      *             from history if RLDT is less than BAVDNR. Populate*
+      *             BRTE as well for CHIN = N/D. Enhance fix AR827109.*
+      *             Also, base rate for CHIN=N should be the loan's   *
+      *             base rate.                                        *
+      *  AR827109 - Not possible to change the base rate code with    *
+      *             back value date.                                  *
+      *             If backvalued rollover date is earlier than run   *
+      *             date, get base rate from history file.            *
+      *             Patterned fix 247970. (Child: AR827110)           *
+      *  AR749052 - Funding details not displayed.  Default funding   *
+      *             details.  Apply 263440. (Child: AR749053)         *
       *  MD031643 - Incorrect interest accrual after processing       *
       *             payment due in holiday and taken on same date of  *
       *             rollover with rate change. Override WNIAD with    *
@@ -2677,6 +2703,22 @@
      C                     MOVE CHIN      NCHI                                              MD059190
      C                     ENDIF                                                            MD059190
      C/COPY WNCPYSRC,LE0390C001
+      *                                                                                     AR749052
+      ** If Analytical Accounting is on and new funding details are not present,            AR749052
+      ** default values to current funding details.                                         AR749052
+      *                                                                                     AR749052
+     C           BGN0ST    IFEQ 'Y'                                                         AR749052
+     C           NFRS      IFEQ *ZERO                                                       AR749052
+     C                     Z-ADDFSRP      NFRS                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C           NFSN      IFEQ *BLANK                                                      AR749052
+     C                     MOVELFSGN      NFSN                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C           NFPC      IFEQ *BLANK                                                      AR749052
+     C                     MOVELFPRC      NFPC                                              AR749052
+     C                     ENDIF                                                            AR749052
+     C                     ENDIF                                                            AR749052
+      *                                                                                     AR749052
 0672 C* CHECK IF R/O DETAILS ARE PRESENT.(50=ON)
 0673 C           NCAC      COMP 0                    50  53
 0674 C***50***** NBRAL     COMP 0                    51                                       CSD103
@@ -3119,7 +3161,19 @@
 0687 C* 52. NEW RATE- 56-OLD RATE
 0688 C********** VDNR      COMP RLDT                 565252               S01194
      C/COPY WNCPYSRC,LE0390C018
+     C           CHIN      IFEQ 'R'                                                         AR827109
+     C           RFDY      ANDNE'00'                                                        MD053130
+     C********** BAVDNR    IFEQ RLDT                                               AR827109 MD053130
+     C           BAVDNR    IFGE RLDT                                                        MD053130
+     C                     MOVE '1'       *IN56                                             AR827109
+     C                     MOVE '0'       *IN52                                             AR827109
+     C                     ELSE                                                             AR827109
+     C                     MOVE '0'       *IN56                                             AR827109
+     C                     MOVE '1'       *IN52                                             AR827109
+     C                     ENDIF                                                            AR827109
+     C                     ELSE                                                             AR827109
 0688 C           BAVDNR    COMP RLDT                 565252               S01194
+     C                     ENDIF                                                            AR827109
      C/COPY WNCPYSRC,LE0390C019
 0689 C*
 0690 C           COP1      TAG                             !! COP1 TAG !!
@@ -3178,6 +3232,34 @@
      C                     ENDIF                                          CLE011
       *                                                                   CLE011
      C                     ENDIF                                          CLE011
+      *                                                                                     AR827109
+     C           CHIN      IFEQ 'N'                                                         MD046102
+     C           BRTT      ANDEQNBRAL                                                       MD046102
+     C                     MOVE BRTEL     NBRT                                              MD053130
+     C                     MOVE BRTEL     BRTE                                              MD046102
+     C                     ELSE                                                             MD046102
+     C           RLDT      IFLT RUND                                                        AR827109
+     C           RLDT      ANDNE*ZEROS                                                      AR827109
+     C           RFRI      ANDNE'Y'                                                         AR827109
+     C           RLDT      ANDLTBAVDNR                                                      MD046102
+     C**********           MOVE KEY1      CCY                                     AR827109 AR1050205
+     C                     MOVE KEY2      WBRTT                                             AR827109
+     C                     Z-ADDRLDT      WDAYN                                             AR827109
+     C                     CALL 'AOBSHSR0'                                                  AR827109
+     C                     PARM *BLANKS   PRTCD                                             AR827109
+     C                     PARM '*KEY    'POPTN                                             AR827109
+     C**********           PARM           CCY                                     AR827109 AR1050205
+     C                     PARM           KEY1                                             AR1050205
+     C                     PARM           WBRTT                                             AR827109
+     C                     PARM           WDAYN                                             AR827109
+     C           SDBSHS    PARM           SDBSHS                                            AR827109
+      *                                                                                     AR827109
+     C           PRTCD     IFEQ *BLANK                                                      AR827109
+     C                     MOVE G0CBSR    NBRT                                              AR827109
+     C                     MOVE G0CBSR    BRTE                                              MD046102
+     C                     ENDIF                                                            AR827109
+     C                     ENDIF                                                            AR827109
+     C                     ENDIF                                                            MD046102
       **********                                                                   AR826115 MD034840
      C********** NEWCOB    IFEQ 'Y'                                                MD031355 MD034840
      C********** BPBRCF    IFEQ 'N'                                                AR826115 MD034840

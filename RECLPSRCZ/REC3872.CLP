@@ -46,33 +46,33 @@
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(*BLANKS) /*AR945431*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(20) /*AR945431*/
-             DCL        VAR(&OPTN1) TYPE(*CHAR) LEN(20) /*AR945431*/
-             DCL        VAR(&VAL) TYPE(*CHAR) LEN(200) /*AR945431*/
-             DCL        VAR(&VAL1) TYPE(*CHAR) LEN(200) /*AR945431*/
-             DCL        VAR(&NONRETL) TYPE(*CHAR) LEN(1) /*AR945431*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)                    /*AR945431*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(20)                                  /*AR945431*/
+             DCL        VAR(&OPTN1) TYPE(*CHAR) LEN(20)                                 /*AR945431*/
+             DCL        VAR(&VAL) TYPE(*CHAR) LEN(200)                                  /*AR945431*/
+             DCL        VAR(&VAL1) TYPE(*CHAR) LEN(200)                                 /*AR945431*/
+             DCL        VAR(&NONRETL) TYPE(*CHAR) LEN(1)                                /*AR945431*/
 /**/
              SNDPGMMSG  MSG('REC3872 - Inactive & Blocked Accounts +
                           Report') TOMSGQ(MRUNQ)
 /**/
              /* Check system value for Include Non Retail Accounts in the report */
 
-             CHGVAR     VAR(&RTCD) VALUE(*BLANKS) /*AR945431*/
-             CHGVAR     VAR(&OPTN) VALUE('IncludeNonRetailRpt') /*AR945431*/
-             CHGVAR     VAR(&VAL) VALUE(*BLANKS) /*AR945431*/
+             CHGVAR     VAR(&RTCD) VALUE(*BLANKS)                                       /*AR945431*/
+             CHGVAR     VAR(&OPTN) VALUE('IncludeNonRetailRpt')                         /*AR945431*/
+             CHGVAR     VAR(&VAL) VALUE(*BLANKS)                                        /*AR945431*/
 
              CALL       PGM(AOSVALR0) PARM(&RTCD &OPTN &VAL &OPTN1 &VAL1 &OPTN1 +
                           &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 +
-                          &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1) /*AR945431*/
+                          &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1 &OPTN1 &VAL1)                 /*AR945431*/
 
              IF         COND(&RTCD *NE '       ') THEN(CHGVAR VAR(&NONRETL) +
-                          VALUE('N')) /*AR945431*/
+                          VALUE('N'))                                                   /*AR945431*/
 
 
 
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&NONRETL) +
-                          VALUE(&VAL)) /*AR945431*/
+                          VALUE(&VAL))                                                  /*AR945431*/
 /**/
              CHGJOB     SWS(00000000)
 /**/
@@ -80,7 +80,7 @@
              IF         COND(&RENT *NE 'ALL' *AND &RENT *NE '   ') +
                           THEN(DO)
 /*/COPY WNCPYSRC,REC3872001                                          */
-   IF         COND(&NONRETL *NE 'Y')    THEN(DO) /*AR945431*/
+   IF         COND(&NONRETL *NE 'Y')    THEN(DO)                                       /*AR945431*/
 
              OPNQRYF    FILE((ACCNTAB) (CLINTCB)) FORMAT(IBPAIB) +
                           QRYSLT('(ACCNTAB/RECI *EQ "D" *AND +
@@ -109,9 +109,9 @@
                           (RETB 'ACCNTAB/RETB') (ACOC +
                           'CLINTCB/ACOC') (ZZ009 '%SST(ZZ024 1 9)' +
                           *CHAR 9)) IGNDECERR(*YES)
-   ENDDO      /*AR945431*/
+   ENDDO                                                                                /*AR945431*/
 
-             ELSE       CMD(DO) /*AR945431*/
+             ELSE       CMD(DO)                                                         /*AR945431*/
 
                 OPNQRYF    FILE((ACCNTAB) (CLINTCB)) FORMAT(IBPAIB) +
                              QRYSLT('(ACCNTAB/RECI *EQ "D" *AND ACCNTAB/BRCA *EQ +
@@ -132,16 +132,16 @@
                              'ACCNTAB/LDBL') (NETB 'ACCNTAB/CLBL') (LACD +
                              'ACCNTAB/LACD') (RETB 'ACCNTAB/RETB') (ACOC +
                              'CLINTCB/ACOC') (ZZ009 '%SST(ZZ024 1 9)' *CHAR 9)) +
-                             IGNDECERR(*YES) /*AR945431*/
+                             IGNDECERR(*YES)                                            /*AR945431*/
 
-             ENDDO      /*AR945431*/
+             ENDDO                                                                      /*AR945431*/
 /*/COPY WNCPYSRC,REC3872002                                          */
              ENDDO
 /**/
              ELSE       CMD(DO)
 /*/COPY WNCPYSRC,REC3872003                                          */
 
-   IF         COND(&NONRETL *NE 'Y')    THEN(DO) /*AR945431*/
+   IF         COND(&NONRETL *NE 'Y')    THEN(DO)                                        /*AR945431*/
 
              OPNQRYF    FILE((ACCNTAB) (CLINTCB)) FORMAT(IBPAIB) +
                           QRYSLT('(ACCNTAB/RECI *EQ "D" *AND +
@@ -166,8 +166,8 @@
                           (RETB 'ACCNTAB/RETB') (ACOC 'CLINTCB/ACOC') +
                           (ZZ009 '%SST(ZZ024 1 9)' *CHAR 9)) +
                           IGNDECERR(*YES)
-   ENDDO      /*AR945431*/
-             ELSE       CMD(DO) /*AR945431*/
+   ENDDO                                                                                /*AR945431*/
+             ELSE       CMD(DO)                                                         /*AR945431*/
 
                 OPNQRYF    FILE((ACCNTAB) (CLINTCB)) FORMAT(IBPAIB) +
                              QRYSLT('(ACCNTAB/RECI *EQ "D" *AND ACCNTAB/RETB *NE +
@@ -187,8 +187,8 @@
                              'CLINTCB/CRNM') (GRBL 'ACCNTAB/LDBL') (NETB +
                              'ACCNTAB/CLBL') (LACD 'ACCNTAB/LACD') (RETB +
                              'ACCNTAB/RETB') (ACOC 'CLINTCB/ACOC') (ZZ009 +
-                             '%SST(ZZ024 1 9)' *CHAR 9)) IGNDECERR(*YES) /*AR945431*/
-             ENDDO      /*AR945431*/
+                             '%SST(ZZ024 1 9)' *CHAR 9)) IGNDECERR(*YES)                /*AR945431*/
+             ENDDO                                                                      /*AR945431*/
 
 /*/COPY WNCPYSRC,REC3872004                                          */
              ENDDO

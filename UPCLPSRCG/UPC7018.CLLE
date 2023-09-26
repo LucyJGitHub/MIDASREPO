@@ -11,11 +11,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD061067           Date 17Jul23              */
-/*       Prev Amend No. CUP045   *CREATE   Date 01Jun22              */
+/*       Last Amend No. MD061799           Date 22Sep23              */
+/*       Prev Amend No. MD061794           Date 22Sep23              */
+/*                      MD061067           Date 17Jul23              */
+/*                      CUP045   *CREATE   Date 01Jun22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061799 - Do not set zone LIBL as UPDLVCPD is in the       */
+/*                  Bridge library. Correct MPHAS.                   */
+/*                - Applied for MD061850.                            */
+/*       MD061794 - Error with job OTR_POST as triggers are added    */
+/*                  on files in Implementation library               */
+/*                - Applied for MD061850.                            */
 /*       MD061067 - Missing process for UDF tables                   */
 /*                - Applied for MD061569.                            */
 /*       CUP045 - One Touch Bridge - refresh                         */
@@ -43,7 +51,8 @@
              DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&GBSID) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD061067*/
+/**********  DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80) */                   /*MD061067**MD061799*/
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(200)                               /*MD061799*/
              DCL        VAR(&ZPRX) TYPE(*CHAR) LEN(2)                                   /*MD061067*/
              DCL        VAR(&CURGRCV) TYPE(*CHAR) LEN(10)                               /*MD061067*/
              DCL        VAR(&CURGSEQ) TYPE(*DEC) LEN(10 0)                              /*MD061067*/
@@ -68,6 +77,9 @@
              CALL UP7002 (&PRFX &CMPN &ERROR)
              IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
 
+/* Set library list */                                                                  /*MD061794*/
+              CALL       PGM(UPC0014) PARM(&PRFX)                                       /*MD061794*/
+                                                                                        /*MD061794*/
 /* Start journaling. */
              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
                 CALL       PGM(SCBEGINJRN) PARM(&PRFX '*START')
@@ -101,6 +113,20 @@
              CALL       PGM(SCHAEXIT) PARM(&PRFX)                                       /*MD061067*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD061067*/
                                                                                         /*MD061067*/
+/* Set MPHAS to 'A' */                                                                  /*MD061799*/
+             CHGDTAARA  DTAARA(MPHAS (1 1)) VALUE('A')                                  /*MD061799*/
+                                                                                        /*MD061799*/
+/* Update GPZONEPD */                                                                   /*MD061799*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX)                              /*MD061799*/
+/* The zone to be updated is the one from SDSVLXTD in the *I library */                 /*MD061799*/
+/* whose GISVAL is BrgOldZonePrefix *                                                   /*MD061799*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GPZONEPD set +
+                        ZOMSYS = ' *BCAT '''' *TCAT &ZPRX *TCAT '''' *TCAT +
+                        ' where zomsys = (select gival from SDSVLXTD ' +
+                        *BCAT ' where gisval = ' *BCAT '''' *TCAT +
+                        'BrgOldZonePrefix' *TCAT '''' *BCAT ')')                        /*MD061799*/
+             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061799*/
+                                                                                        /*MD061799*/
              ENDDO                                                                      /*MD061067*/
                                                                                         /*MD061067*/
 /* Additional process for *GLOBAL */                                                    /*MD061067*/
@@ -108,11 +134,11 @@
 /* Clear GPAUJCPD */                                                                    /*MD061067*/
              CLRPFM     FILE(GPAUJCPD)                                                  /*MD061067*/
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD061067*/
-/* Update GPZONEPD */                                                                   /*MD061067*/
-             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX)                              /*MD061067*/
-             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GPZONEPD set +
-                        ZOMSYS = ' *BCAT '''' *TCAT &ZPRX *TCAT '''')                   /*MD061067*/
-             RUNSQL     SQL(&SQLSTM) COMMIT(*NC)                                        /*MD061067*/
+/**Update*GPZONEPD */                                                         /*MD061067**MD061799*/
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ZPRX) */                 /*MD061067**MD061799*/
+/**********  CHGVAR     VAR(&SQLSTM) VALUE('UPDATE GPZONEPD set +
+                        ZOMSYS = ' *BCAT '''' *TCAT &ZPRX *TCAT '''') */      /*MD061067**MD061799*/
+/**********  RUNSQL     SQL(&SQLSTM) COMMIT(*NC) */                           /*MD061067**MD061799*/
                                                                                         /*MD061067*/
 /* Determine the most recent global journal sequence number and currently rcv */        /*MD061067*/
 /**/                                                                                    /*MD061067*/

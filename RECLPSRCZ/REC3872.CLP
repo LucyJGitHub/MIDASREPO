@@ -80,7 +80,7 @@
              IF         COND(&RENT *NE 'ALL' *AND &RENT *NE '   ') +
                           THEN(DO)
 /*/COPY WNCPYSRC,REC3872001                                          */
-   IF         COND(&NONRETL *NE 'Y')    THEN(DO)                                       /*AR945431*/
+   IF         COND(&NONRETL *NE 'Y')    THEN(DO)                                        /*AR945431*/
 
              OPNQRYF    FILE((ACCNTAB) (CLINTCB)) FORMAT(IBPAIB) +
                           QRYSLT('(ACCNTAB/RECI *EQ "D" *AND +

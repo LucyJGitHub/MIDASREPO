@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR987344           Date 18Sep23               *
-      *  Prev Amend No. MD015646           Date 18Sep23               *
+      *  Last Amend No. 230214             Date 03Jul23               *
+      *  Prev Amend No. AR987344           Date 18Sep23               *
+      *                 MD015646           Date 18Sep23               *
       *                 AR947177           Date 18Sep23               *
       *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
@@ -439,6 +440,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230214 - Reset CBLI and TLXI in RPDTUP and INDTUP regardless *
+      *           of the rundate as long as the event is actioned     *
+      *           within the day.                                     *
+      *         - Applied for AR907601 (Child: AR907602).             *
       *  AR987344 - PDIN becomes negative when PD is reversed. Make   *
       *             sure the INTA was subtracted to PDIN only once    *
       *             PD is reversed. (Child: AR987345)                 *
@@ -14867,9 +14872,11 @@ C    C                   ENDIF                                                  
 1902 C**
 1903 C**   RESET BIT SETTINGS
 1904 C** - ONLY IF BITS WERE ON FOR THIS PAYMENT I.E. RUND LE VDAT
-1905 C     RUND          COMP      VDAT                                 8787
-1906 C   87              BITOFF    '2'           TLXI
-1907 C   87              BITOFF    '01'          CBLI
+1905 C*****RUND*         COMP      VDAT                                 8787                  230214
+1906 C***87*****         BITOFF    '2'           TLXI                                         230214
+1907 C***87*****         BITOFF    '01'          CBLI                                         230214
+     C                   BITOFF    '2'           TLXI                                         230214
+     C                   BITOFF    '01'          CBLI                                         230214
 1908 C**
 1909 C                   ENDSR
 1910 C**
@@ -14943,9 +14950,11 @@ C    C                   ENDIF                                                  
 1934 C**
 1935 C**   RESET BIT SETTINGS
 1936 C**
-1937 C     RUND          COMP      VDAT                                 8787
-1938 C   87              BITOFF    '3'           TLXI
-1939 C   87              BITOFF    '23'          CBLI
+1937 C*****RUND*         COMP      VDAT                                 8787                  230214
+1938 C***87*****         BITOFF    '3'           TLXI                                         230214
+1939 C***87*****         BITOFF    '23'          CBLI                                         230214
+     C                   BITOFF    '3'           TLXI                                         230214
+     C                   BITOFF    '23'          CBLI                                         230214
 1940 C**
 1941 C                   ENDSR
 1942 C**

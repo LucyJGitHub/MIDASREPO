@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 255626             Date 25Jul22               *      
+      *  Last Amend No. AR632107           Date 17Jul23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 AR806147           Date 21May18               *
@@ -93,12 +94,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR632107 - MM Deal Amendments are going to repair queue.     *
+      *             Allow the use of Deal Number and Associate Front  *
+      *             Office Id in Deals Amendment via MQ/API.          *
+      *             Enhanced fix for AR583254. (Child AR632108)       *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
       *           properly updated when a deal amendment is authorised*
       *           and related deal amendments with lower value or     *
-      *           sequence are authorised.                            *      
+      *           sequence are authorised.                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
@@ -688,13 +693,34 @@
      C**********         MOVEL     'APM0105'     MsgIdArr(Ix)                               MD021204
      C**********         GOTO      EVFRNT                                                   MD021204
      C**********         END                                                                MD021204
+      *                                                                                     AR632107
+      ** For LBBW-NYK, allow blank Associated Front Office Id.                              AR632107
+      ** However, deal number must be present.                                              AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFEQ      *BLANK                                                   AR632107
+     C     DDDLNO        ANDEQ     *BLANKS                                                  AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+      *                                                                                     AR632107
+      ** SUPPLY CORRECT MESSAGE ID.                                                         AR632107
+      *                                                                                     AR632107
+     C                   MOVEL     '       '     MsgIdArr(Ix)                               AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   END                                                                AR632107
       *
       * ACCESS DEAL AMENDMENT WITH FRONT OFFICE TRANSACTION ID
       *
      C                   MOVE      FOASID        OrigDealNo       20
      C                   MOVE      FOTRID        UniqDeamID       20
 
-     C     FrntOfKey     CHAIN     MMDEAMOI                           99
+      *                                                                                     AR632107
+      ** For LBBW-NYK, Associated Front Office Id is not always supplied.                   AR632107
+      ** Assumption here is that Front Office Id is a complete and unique key.              AR632107
+      *                                                                                     AR632107
+
+     C     UniqDeamID    CHAIN     MMDEAMOI                           99                    AR632107
+     C*****FrntOfKey     CHAIN     MMDEAMOI                           99                    AR632107
       *
       * IF INSERT
       *
@@ -748,8 +774,9 @@
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C                   MOVEL     'APM0104'     MsgIdArr(Ix)
      C**********         MOVEL     FOASID        MsgDtaArr(Ix)                              MD000091
-     C                   EVAL      BLen = %Len(%Trim(FOASID))                               MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)                    MD000091
+     C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
+     C**********         EVAL      BLen = %Len(%Trim(FOASID))                      MD000091 AR632107
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)           MD000091 AR632107
      C                   GOTO      EVFRNT
      C                   ELSE                                                                 256482
      C                   MOVEL     H@DN38        DDDLNO                                       256482
@@ -1040,7 +1067,7 @@
      C*
      C*****@DEAMK        SETLL     MMDEAMLL                           65                      191881
      C*****@DEAMK        READPE    MMDEAMLL                               65                  191881
-     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626     
+     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626
      C*****@@DLNO        SETLL     MMDEAMLL                           65               191881 255626
      C     @@DLNO        READPE    MMDEAMLL                               65                  191881
 B2   C     *IN65         DOWEQ     '0'

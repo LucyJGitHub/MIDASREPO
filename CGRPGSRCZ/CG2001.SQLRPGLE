@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058069           Date 11May21               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD061619           Date 03Aug23               *
+      *  Prev Amend No. MD058069           Date 11May21               *
+      *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
       *               . MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061619 - Next Print Date is not updated.                   *
+      *           - applied for MD-61678.                             *
       *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *
       *           - Translate graphic fields of CGCORRPD and CGCDSHPD *
@@ -274,6 +277,10 @@
      C+ , CPARDT = :CPARDT                                                                  MD054955
      C+ , CPAACT = :CPAACT                                                                  MD054955
      C+ , CPRDNB = :CPRDNB                                                                  MD054955
+     C+ , CPNPDT = :CDDPDT                                                                  MD061619
+     C+ , CPNTDT = :CDNTDT                                                                  MD061619
+     C+ , CPBSNB = :CDBSNB                                                                  MD061619
+     C+ , CPCACC = :CDCACC                                                                  MD061619
      C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955

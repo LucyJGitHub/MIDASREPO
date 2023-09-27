@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061227           Date 28Apr23               *
-      *  Prev Amend No. MD043665           Date 21Jun22               *
+      *  Last Amend No. MD061775           Date 08Aug23               *
+      *  Prev Amend No. MD061227           Date 28Apr23               *
+      *                 MD043665           Date 21Jun22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD020349           Date 06Jun13               *
       *                 MD054693A          Date 27Jan20               *
@@ -147,6 +148,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061775 - When CGL017 is on, opt 1 and 2 not working.       *
+      *           - Added codes to execute SRMOD to determine module  *
+      *             of tramsaction.                                   *
       *  MD061227 - The opening balance line has a batch number in    *
       *             Projected Account Movements Enquiry. Initialise   *
       *             ABTCH in WRTSU2. Also, write TNMR in ABTCH for    *
@@ -1664,6 +1668,11 @@
      C                     MOVELSTNMR     RFRNUM  6 P                                       MD054492
      C                     MOVELSTNMR     FTREF  15 P                                       MD054492
       *                                                                                     MD054492
+      ** Initialise value of TRYPA used on SRMOD                                            MD061775
+      *                                                                                     MD061775
+     C                     MOVE TRYP      TRYPA                                             MD061775
+     C                     EXSR SRMOD                                                       MD061775
+      *                                                                                     MD061775
      C                     SELEC                                                            MD054492
      C********** UFTRYP    IFEQ 'ME'                                               BUG26687 MD054492
      C           UFTRYP    WHEQ 'ME'                                                        MD054492
@@ -5185,6 +5194,11 @@ E1   C                     END
      C                     MOVE *BLANKS   ABTCH                                             MD061227
      C           AMONT     IFEQ *BLANKS                                   CGL017
      C           CQNMR     ANDEQ*BLANKS                                   CGL017
+      *
+      ** Switch ON indicator 88 to disable selection on                                     MD061775
+      ** Opening Ledger Balance                                                             MD061775
+      *                                                                                     MD061775
+     C                     MOVE '1'       *IN88                                             MD061775
       *                                                                   CGL017
      C           VALDN     IFLE RNDT                                      CGL017
      C                     Z-ADDRNDT      ZDAYNO                          CGL017
@@ -5222,6 +5236,7 @@ E1   C                     END
       *                                                                   CGL017
      C                     MOVE SFLD31    SFLDS3                          CGL017
      C                     WRITESFLRCD                                    CGL017
+     C                     MOVE '0'       *IN88                                             MD061775
      C                     MOVEL*BLANKS   PDESC                           CGL017
      C*                                                                   CGL017
      C                     ADD  1         RRN                             CGL017

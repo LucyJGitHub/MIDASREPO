@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 03Jul13              */
+/*       Last Amend No. BA6048             Date 01Mar23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 03Jul13              */
 /*                      AR1089839          Date 19Feb13              */
 /*                      CLE075AS           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       BA6048 - New Special Instructions for LE Loans              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - PDP changes still taking security copies         */
@@ -86,14 +88,14 @@ PGM PARM(&CNAM &CSEQ)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /*/COPY WNCPYSRC,LEC0451004                                          */
- 
+
 /*/COPY WNCPYSRC,LEC0451005                                          */
              SNDPGMMSG  MSG('MATURED LOANS FILE UPDATE') +
                         TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,LEC0451006                                          */
- 
+
 /* Write current journal sequence number to file SCJSEQPD, using */                     /*CLE075AS*/
 /* command SCWRTJREG */                                                                 /*CLE075AS*/
                                                                                         /*CLE075AS*/
@@ -145,7 +147,7 @@ PGM PARM(&CNAM &CSEQ)
 /**********  IF         COND(&STAT *EQ 'N') THEN(DO)               */                   /*CLE075AS*/
 /*/COPY WNCPYSRC,LEC0451007                                          */
 /**COPY*NEWLY*MATURED*LOANS*INTO*THE*NEW*FILE*READY*FOR*FILE*UPDATE*/                   /*CLE075AS*/
- 
+
 /**********  CPYF       FROMFILE(MATLNMT) TOFILE(NMTLNMT) MBROPT(*ADD)*/                /*CLE075AS*/
 /**********  CPYF       FROMFILE(MATLNHH) TOFILE(NMTLNHH) +
                           MBROPT(*REPLACE)                         */                   /*CLE075AS*/
@@ -200,10 +202,10 @@ PGM PARM(&CNAM &CSEQ)
 /**********    MONMSG     MSGID(CPF2817)                           */            /*CAS016 CLE075AS*/
                                                                                           /*CAS016*/
 /**********  ENDDO                                                 */            /*CAS016 CLE075AS*/
- 
+
 /**CLEAR*MATURED*LOANS*FILE*READY*FOR*TO*BE*OUTPUT*BY*LE0451*TO*******/                 /*BUG26773*/
 /**DRIVE*LE0900*******************************************************/                 /*BUG26773*/
- 
+
 /**********  CLRPFM     FILE(MATLNMT)                                */                 /*BUG26773*/
 /**********  CLRPFM     FILE(MATLNZX)                                */                 /*BUG26773*/
 /**********  CLRPFM     FILE(NMTLNZX)                                */                 /*BUG26773*/
@@ -252,10 +254,10 @@ PGM PARM(&CNAM &CSEQ)
 /**********  MONMSG     MSGID(CPF2817)                             */            /*247012 CLE075AS*/
 /**********  ENDDO                                                 */            /*CAS009 CLE075AS*/
 /*/COPY WNCPYSRC,LEC0451008                                          */
- 
+
 /**********           CHGVAR     VAR(&STAT) VALUE('Y')             */                   /*CLE075AS*/
 /**********           CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)*/                  /*CLE075AS*/
- 
+
                                                                      /*S01408*/
 /*/COPY WNCPYSRC,LEC0451001                                          */
                                                                      /*S01408*/
@@ -263,9 +265,24 @@ PGM PARM(&CNAM &CSEQ)
                                                                      /*S01408*/
 /*/COPY WNCPYSRC,LEC0451002                                          */
                                                                      /*S01408*/
- 
+                                                                                          /*BA6048*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*BA6048*/
+                                                                                          /*BA6048*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA6048*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA6048*/
+             CHGVAR     VAR(&SARD) VALUE('BA6048')                                        /*BA6048*/
+                                                                                          /*BA6048*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*BA6048*/
+                                                                                          /*BA6048*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*BA6048*/
+                     CALL PGM(A6000096)                                                   /*BA6048*/
+             ENDDO                                                                        /*BA6048*/
+                                                                                          /*BA6048*/
+           ENDDO                                                                          /*BA6048*/
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+
 /**********  RGZPFM     FILE(NMTLNMT)                                                     /*228542*/
 /**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
              CALL       PGM(SCC000060) PARM('LEFHST' '*FIRST')                            /*193112*/
@@ -274,7 +291,7 @@ PGM PARM(&CNAM &CSEQ)
 /**********    MONMSG     MSGID(CPF2105)                           */            /*CAS009 CLE075AS*/
 /**********    DLTF       FILE(XLECFLFPD)                          */            /*CAS009 CLE075AS*/
 /**********    MONMSG     MSGID(CPF2105)                           */            /*CAS009 CLE075AS*/
- 
+
 /*/COPY WNCPYSRC,LEC0451003                                          */
 /**********           CHGVAR     VAR(&STAT) VALUE('N')             */                   /*CLE075AS*/
 /**********           CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)*/                  /*CLE075AS*/
@@ -323,7 +340,7 @@ PGM PARM(&CNAM &CSEQ)
              ENDDO                                                                      /*CLE075AS*/
                                                                                         /*CLE075AS*/
              CALL       PGM(LE9001)                                                       /*247012*/
- 
+
 /* Write current journal sequence number to file SCJSEQPD, using */                     /*CLE075AS*/
 /* command SCWRTJREG */                                                                 /*CLE075AS*/
                                                                                         /*CLE075AS*/
@@ -335,5 +352,5 @@ PGM PARM(&CNAM &CSEQ)
                                                                                         /*CLE075AS*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 ENDPGM

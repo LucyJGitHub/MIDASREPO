@@ -1,0 +1,176 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Summary of Generated Entries from REEODPF')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000038 - Midas LE Summary of Generated Entries           */
+/*                   from REEODPF                                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061267  *CREATE  Date 26Jul23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061267 - Credit Lines (CLE025) fixes.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&PRF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DNWD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RDNB) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CTRLDT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CTRD) TYPE(*CHAR) LEN(5)
+
+             DCLF       FILE(SDBANKPD)
+             DCLF       FILE(SDGELRPD) OPNID(A)
+
+
+             COPYRIGHT TEXT('(c) Finastra International Limited 2023')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('LEC000038 - Midas LE Summary of +
+                          Generated Entries from REEODPF') +
+                          TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(XXXXXX00)
+
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+
+/** Retrieve system prefix */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRF)
+             CHGVAR     VAR(&PLIB) VALUE(&PRF *TCAT 'DPLIB')
+
+
+/** Call CB0160 to get value of restart indicator */
+
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+
+/** If it is NOT a restart, backup RESEODPD1 */
+
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+                DLTF       FILE(XRESEODP1)
+                MONMSG     MSGID(CPF2105)
+
+                CPYF       FROMFILE(RESEODP1) TOFILE(&PLIB/XRESEODP1) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+
+
+/** If it is a restart */
+
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(&PLIB/XRESEODP1) TOFILE(RESEODP1) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                            FILE(RESEODP1))
+             ENDDO
+
+
+/** Call CB0150 to update restart indicator */
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+
+/** Clear Files */
+
+             CLRPFM     FILE(RESEODPD)
+
+/** Retrieve Bank ICD for run date and next working date */
+
+             RCVF       RCDFMT(SDBANKD0)
+
+             CHGVAR     VAR(&RDNB) VALUE(&BJRDNB)
+             CHGVAR     VAR(&DNWD) VALUE(&BJDNWD)
+
+/** Retrieve Accruals/Profit Date */
+
+             RCVF       RCDFMT(SDGELRD0) OPNID(A)
+
+             CHGVAR     VAR(&CTRLDT) VALUE(&BJDNWD - 1)
+
+             IF         COND(&A_BKAPDT *LE &CTRLDT) THEN(DO)
+             CHGVAR     VAR(&CTRLDT) VALUE(&A_BKAPDT)
+             ENDDO
+             CHGVAR     VAR(&CTRD) VALUE(&CTRLDT)
+
+/** Include RE cap valued within calculated control date */
+
+             IF         COND(&CSEQ *EQ 00001) THEN(DO)
+
+                CPYF       FROMFILE(GEICPD) TOFILE(RESEODP1) +
+                             MBROPT(*ADD) INCREL((*IF ATYP *EQ 'R') +
+                             (*AND PSTD *EQ &RDNB) (*AND VALD *LE +
+                             &CTRD)) FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(GOTO +
+                             CMDLBL(ABNOR))
+             ENDDO
+
+             IF         COND(&CSEQ *EQ 00002) THEN(DO)
+
+                CPYF       FROMFILE(GEIC2PD) TOFILE(RESEODP1) +
+                             MBROPT(*ADD) INCREL((*IF ATYP *EQ 'R') +
+                             (*AND PSTD *EQ &RDNB) (*AND VALD *LE +
+                             &CTRD)) FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(GOTO +
+                             CMDLBL(ABNOR))
+             ENDDO
+
+
+/** Generate the entries of RESEODPF */
+
+             CALL       PGM(LE000038)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+/** If no error occured in the program */
+
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/** Delete backup file */
+
+                DLTF       FILE(&PLIB/XRESEODP1)
+                MONMSG     MSGID(CPF2105)
+
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/** Abnormal termination - batch job */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000038 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             DMPCLPGM
+
+ENDPGM:
+             ENDPGM

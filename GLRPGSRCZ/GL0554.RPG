@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 243951             Date 10Feb23               *
-      *  Prev Amend No. MD059248           Date 10Jan22               *
+      *  Last Amend No. MD061682           Date 23Aug23               *
+      *  Prev Amend No. MD061683           Date 03Aug23               *
+      *                 243951             Date 10Feb23               *
+      *                 MD059248           Date 10Jan22               *
       *                 MD058285           Date 22Jun21               *
       *                 249578             Date 22May20               *
       *                 MD055401           Date 25Oct20               *
@@ -141,6 +143,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061682 - FM2021F Reconciliation issue on RSACMTPD.         *
+      *             Ensure that generated projection on Maturity Date *
+      *             of Deal is combined (Principal and Interest) when *
+      *             IPDS of deal is 'N'. Otherwise, projection for    *
+      *             Principal and Interest will be generated separate-*
+      *             ly.                                               *
+      *  MD061683 - Projected account movements for deposit deal      *
+      *             interest are incorrect in FM.                     *
+      *           - Deduct tax if TAXI is 'Y'.                        *
       *  243951 - For taxable deals, correct projection of core       *
       *           withholding tax (calculated using rate BNHKTR)      *
       *           at interest payment and maturity. Net interest      *
@@ -1680,13 +1691,31 @@
      C*****Do*not Process Deal Events with ETPY 'M2'               S01314 CEU003
      C**   Do not Process Deal Events with ETPY 'M2' or 'MY'              CEU003
       *                                                                   138004
+      ** Check if rollover involves a capital increase                                      MD061682
+      *                                                                                     MD061682
+     C                     Z-ADD0         WPAMT  130                                        MD061682
+     C           RLVI      IFEQ 'Y'                                                         MD061682
+     C           PART      ANDEQ'M1'                                                        MD061682
+     C           *IN02     ANDEQ'1'                                                         MD061682
+     C           RBDN      ANDNE0                                                           MD061682
+      *                                                                                     ND061682
+     C           RLVI      OREQ 'Y'                                                         MD061682
+     C           PART      ANDEQ'M2'                                                        MD061682
+     C           *IN02     ANDEQ'1'                                                         MD061682
+     C           RBDN      ANDNE0                                                           MD061682
+      *                                                                                     ND061682
+     C           EAMT      ADD  OTHA      WPAMT                                             MD061682
+     C           WPAMT     SUB  RBDA      WPAMT                                             MD061682
+     C                     ENDIF                                                            MD061682
+      *                                                                                     MD061682
      C**   If interest paid seperately indicator not equal to "Y"         138004
       *                                                                   138004
      C           IPSI      IFNE 'Y'                                       138004
       *                                                                   138004
      C           *IN02     IFEQ '1'                                       S01314
      C           PART      ANDEQ'M2'                                      S01314
-     C           RLVI      ANDNE'Y'                                                         MD033601
+     C********** RLVI      ANDNE'Y'                                                MD033601 MD061682
+     C           WPAMT     ANDGE0                                                           MD061682
      C           *IN02     OREQ '1'                                       CEU003
      C           PART      ANDEQ'MY'                                      CEU003
      C                     SETON                         41               S01314
@@ -1755,6 +1784,7 @@
      C           PART      ANDEQ'M1'                                                        MD033601
      C           *IN02     ANDEQ'1'                                                         MD033601
      C           RBDN      ANDNE0                                                           MD033601
+     C           WPAMT     ANDLT0                                                           MD061682
      C***********RLVI      ANDEQ'Y'                                 085626138004
      C   42                Z-ADDEAMT      REPAMT                          085626
      C                     ELSE                                           085626
@@ -2211,8 +2241,9 @@
      C*
      C  N65                GOTO END
       *                                                                                       CGL015
-     C           CGL015    IFEQ 'Y'                                                           CGL015
-     C           TAXI      OREQ 'Y'                                                           243951
+     C********** CGL015    IFEQ 'Y'                                                  CGL015 MD061683
+     C********** TAXI      OREQ 'Y'                                                  243951 MD061683
+     C           TAXI      IFEQ 'Y'                                                         MD061683
      C           *IN02     IFEQ '1'                                                           CGL015
      C           *IN42     IFEQ '1'                                                           CGL015
      C           REPAMT    SUB  ETAX      REPAMT                                              CGL015

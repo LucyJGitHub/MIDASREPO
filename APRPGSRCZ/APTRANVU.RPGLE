@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057739           Date 28Apr22               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. BA6045             Date 09Jan23               *
+      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
       *                 CIR020             Date 02Aug21               *
@@ -239,6 +240,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BA6045 - Collateral API Changes                              *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
@@ -262,9 +264,9 @@
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
-      *  MD055446 - There are parties and fields missing from the BRT *	
-      *             details tab in Customer Input plus date of birth  *	
-      *             issues.                                           *	
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
       *           - Include BRT century fields on TransInEx2.         *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -1183,6 +1185,7 @@ RGC  D RPIF4LN         S              4  0                                      
      D FTCRLn          S              4  0                                                    CGL132
      D CRSSLn          S              4  0                                                    CGL157
      D CRDDLn          S              4  0                                                    CGL157
+     D BA6045          S              1                                                       BA6045
      D/COPY OFCPYSRCZ,CRE101_001                                                              CRE101
       ** +--- Start of main processing -----------------------------------+
 
@@ -2432,6 +2435,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
+     C                   IF        BA6045 = 'Y'                                               BA6045
+     C                   EVAL      %Subst(BufferTotal:2:10)= %Subst(Buffer:2:10)              BA6045
+     C                   ENDIF                                                                BA6045
 
       * Collateral Allocations
      C     TransTYPE     WHENEQ    'COLA'
@@ -7626,6 +7632,19 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   IF        PRTCD = *BLANKS                                            CRE020
      C                   EVAL      CRE020 = 'Y'                                               CRE020
      C                   ENDIF                                                                CRE020
+                                                                                              BA6045
+      ** Check if BA6045 is on.                                                               BA6045
+                                                                                              BA6045
+     C                   EVAL      BA6045 = 'N'                                               BA6045
+     C                   CALL      'AOSARDR0'                                                 BA6045
+     C                   PARM      *BLANKS       PRTCD                                        BA6045
+     C                   PARM      '*VERIFY'     POPTN                                        BA6045
+     C                   PARM      'BA6045'      PSARD                                        BA6045
+     C     SCSARD        PARM      SCSARD        DSFDY                                        BA6045
+                                                                                              BA6045
+     C                   IF        PRTCD = *BLANKS                                            BA6045
+     C                   EVAL      BA6045 = 'Y'                                               BA6045
+     C                   ENDIF                                                                BA6045
      C/COPY WNCPYSRC,APH00035
 
       ** Check if SWIFT2009 is installed                                                      CSW209

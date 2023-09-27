@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060190           Date 28Jun22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD013615A          Date 01Sep23               *
+      *  Prev Amend No. MD013615           Date 01Sep23               *
+      *                 MD060190           Date 28Jun22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
       *                 AR953522B          Date 01Mar13               *
@@ -166,6 +168,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD013615A - Projected principal repayment before MR or RE    *
+      *              are missing, events code and order of events are *
+      *              incorrect. Store repayment details in data struc-*
+      *              ture then display before or after the non-repay- *
+      *              ment events. Determine the event code for repay- *
+      *              ment on every process.                           *
+      *  MD013615 - Monthly Projected Principal Repayments disappear  *
+      *             when a Manual Repayment or Repayment Schedule     *
+      *             amount is entered.                                *
+      *           - Due Date is not taking in to account the Pay Due  *
+      *             Day Indicator of the Loan.                        *
       *  MD060190 - Class code is not reflected on the enquiry screen.*
       *             Use 61st element of the array for CLE138.         *
       *  CLE138 - Class Codes for Facilities                          *
@@ -527,6 +540,7 @@
      E/COPY ZSRSRC,ZDATE9Z1                                               CLE014
      E/COPY ZSRSRC,ZFREQBZ1                                                                   207963
      E/COPY ZSRSRC,ZHOLE                                                                      207963
+     E                    RFQA     9999 80  A                                              MD013615A
       /SPACE 3
      ILEMNFUPF                                                            190124
      I              RECI                            RECIBG                190124
@@ -774,6 +788,16 @@
      I                                        1   6 WRLNRF                                    CLE148
      I                                    P   7  130WRRAMT                CLE014
       *                                                                   CLE014
+      *                                                                                    MD013615A
+     IRFRQDS     IDS                       9999  80                                        MD013615A
+      * Repayment Frequency Data Structure                                                 MD013615A
+      *                                                                                    MD013615A
+     I                                        1   50WRVLDT                                 MD013615A
+     I                                        6  12 WRFVDT                                 MD013615A
+     I                                       13  53 WRFATP                                 MD013615A
+     I                                       54  73 WRAAMT                                 MD013615A
+     I                                       74  74 WRCODE                                 MD013615A
+     I                                       75  80 WRLOAN                                 MD013615A
      ISDBANK    E DSSDBANKPD
       ** Data Structure for Bank Details
       *
@@ -822,12 +846,24 @@
       *  SRSFIL  -  Fill Subfile Page                                 *
       *  SRFRMT  -  Format Subfile record                             *
       *  SRCLRS  -  Clears the subfile message queue                  *
+      *  SRSRFQ  -  Store the details in Repayment Freq. Data         *                    MD013615A
+      *             Structure                                         *                    MD013615A
+      *  SRDRFQ  -  Display the details from Repayment Freq. Data     *                    MD013615A
+      *             Structure                                         *                    MD013615A
+      *  SRSRTR  -  Sort the details from Repayment Freq. Data        *                    MD013615A
+      *             Structure                                         *                    MD013615A
+      *  SRCNRF  -  Calculate the next repayment date according to    *                    MD013615A
+      *             the PDDI of the loan                              *                    MD013615A
+      *  *INZSR  -  Initialisation subroutine                         *                    MD013615A
       *  *PSSR   -  Error handling subroutine                         *
       *                                                               *
       *  ZASNMS  -  Sends messages to the program's message queue     *
       *  ZDATE1  -  Validate & cvt date to a day nbr                  *
       *  ZDATE2  -  Convert day number to a date                      *
       *  ZFRPED  -  Edit Amount                                       *
+      *  ZFRQB3  -  Calculate next pay/stmnt date-non w/dy            *                    MD013615A
+      *  ZBKDT   -  Find nth working day back                         *                    MD013615A
+      *  ZFWDT   -  Find nth working day from given date              *                    MD013615A
       *                                                               *
       *****************************************************************
       /EJECT
@@ -1583,6 +1619,15 @@
      C                     ENDIF
       *
      C                     MOVELSSCODE    WCODE   1
+      *                                                                                    MD013615A
+      * Start date and End date for repayment frequency                                    MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWVLDT     WRSDT   50                                       MD013615A
+     C                     Z-ADD99999     WREDT   50                                       MD013615A
+      *                                                                                    MD013615A
+     C           SSCODE    IFEQ 'B'                                                        MD013615A
+     C           AGRDNB    SUB  1         WREDT                                            MD013615A
+     C                     ENDIF                                                           MD013615A
       *
      C                     ENDSR
       *
@@ -1876,6 +1921,7 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                   CLE014
      C           CLE014    IFEQ 'Y'                                       CLE014
      C                     Z-ADD*ZERO     C       40                      CLE014
+     C                     Z-ADD*ZERO     WRQ     40       No# Repayment Freq.             MD013615A
      C                     ENDIF                                          CLE014
       *                                                                   CLE014
      C                     EXSR SRSFIL
@@ -2110,16 +2156,18 @@ I    C           TRCA      IFEQ 'TR'                                            
      C********** ORED      ANDEQAGRDNB                                    144088              204479
      C           FREC      ANDEQ'CLOANCL2'                                144088
      C           RECIC2    ANDNE'R'                                       190124
-     C           CLE014    OREQ 'Y'                                       CLE014
-     C           SSCODE    ANDEQ'B'                                       CLE014
-     C           NRPD      ANDLTAGRDNB                                    CLE014
+     C********** CLE014    OREQ 'Y'                                                 CLE014 MD013615A
+     C********** SSCODE    ANDEQ'B'                                                 CLE014 MD013615A
+     C********** NRPD      ANDLTAGRDNB                                              CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
-     C           FREC      ANDEQ'CLOANCL5'                                CLE014
-     C           WWRIT     ANDEQ'Y'                                       CLE014
+     C********** FREC      ANDEQ'CLOANCL5'                                          CLE014 MD013615A
+     C********** WWRIT     ANDEQ'Y'                                                 CLE014 MD013615A
      C           CLE014    OREQ 'Y'                                       CLE014
-     C           SSCODE    ANDEQ'F'                                       CLE014
-     C           NRPD      ANDGEAGRDNB                                    CLE014
+     C********** SSCODE    ANDEQ'F'                                                 CLE014 MD013615A
+     C********** NRPD      ANDGEAGRDNB                                              CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
+     C           SSCODE    ANDNE'H'                                                        MD013615A
+     C           SSCODE    ANDNE'P'                                                        MD013615A
      C           FREC      ANDEQ'CLOANCL5'                                CLE014
      C           WWRIT     ANDEQ'Y'                                       CLE014
      C           SSCODE    OREQ 'F'                                       157214
@@ -2198,7 +2246,7 @@ I    C           TRCA      IFEQ 'TR'                                            
      C           PASTDU    ANDNE'Y'                                                           204669
      C           RECIC3    ANDNE'R'                                                           204441
      C           CLE014    OREQ 'Y'                                       CLE014
-     C           NRPD      ANDGEWVLDT                                     CLE014
+     C********** NRPD      ANDGEWVLDT                                               CLE014 MD013615A
      C********** ORED      ANDEQAGRDNB                                    CLE014              204383
      C           FREC      ANDEQ'CLOANCL5'                                CLE014
      C           WRAMT     ANDGT*ZERO                                     CLE014
@@ -2216,16 +2264,26 @@ I    C           TRCA      IFEQ 'TR'                                            
      C           FREC      ANDEQ'LEMNFUPE'                                                    189343
      C           RECIED    ANDNE'R'                                                           204433
      C                     EXSR SRFRMT
+      *                                                                                    MD013615A
+      * Check for repayment events to display                                              MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRDRFQ                                                     MD013615A
       *                                                                                      BUG7847
      C           FREC      IFNE 'CLOANCL5'                                                   BUG7847
       *                                                                                      BUG7847
      C                     MOVE *ON       *IN24
-     C                     ADD  1         WSRRN
+     C**********           ADD  1         WSRRN                                            MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFGE 10                                                         MD013615A
+     C                     Z-ADD1         WSRRN                                            MD013615A
+     C                     ENDIF                                                           MD013615A
       *
       ** Lookup if WSRRN = 11
       *
-     C           WSRRN     IFNE 11
+     C********** WSRRN     IFNE 11                                                         MD013615A
+     C           WSRRN     IFLE 10                                                         MD013615A
      C                     ADD  1         SRRN
+     C                     ADD  1         WSRRN                                            MD013615A
      C                     WRITELE0211S0
       *                                                                                     BUG21833
      C           FSTRT     IFEQ 'N'                                                         BUG21833
@@ -2262,16 +2320,26 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                   128980
      C                     ELSE                                           128980
      C                     EXSR SRFRMT                                    128980
+      *                                                                                    MD013615A
+      * Check for repayment events to display                                              MD013615A
+      *                                                                                    MD013615A
+     C                     EXSR SRDRFQ                                                     MD013615A
       *                                                                                      BUG7847
      C           FREC      IFNE 'CLOANCL5'                                                   BUG7847
       *                                                                                      BUG7847
      C                     MOVE *ON       *IN24                           128980
-     C                     ADD  1         WSRRN                           128980
+     C**********           ADD  1         WSRRN                                     128980 MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFGE 10                                                         MD013615A
+     C                     Z-ADD1         WSRRN                                            MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                   128980
       ** Lookup if WSRRN = 11                                             128980
       *                                                                   128980
-     C           WSRRN     IFNE 11                                        128980
+     C********** WSRRN     IFNE 11                                                  128980 MD013615A
+     C           WSRRN     IFLE 10                                                         MD013615A
      C                     ADD  1         SRRN                            128980
+     C                     ADD  1         WSRRN                                            MD013615A
      C                     WRITELE0211S0                                  128980
       *                                                                                     BUG21833
      C           FSTRT     IFEQ 'N'                                                         BUG21833
@@ -2317,6 +2385,60 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     ENDIF
       *
      C                     ENDDO
+      *                                                                                    MD013615A
+      * Display the remaining details from repayment freq.                                 MD013615A
+      * data structure                                                                     MD013615A
+      *                                                                                    MD013615A
+     C           *IN25     IFEQ '1'                                                        MD013615A
+     C           WRQ       ANDNE0                                                          MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD1         WRP                                              MD013615A
+     C                     Z-ADD1         WRC                                              MD013615A
+      *                                                                                    MD013615A
+     C           WRP       DOWLEWRQ                                                        MD013615A
+      *                                                                                    MD013615A
+     C           WRC       OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+     C           WRVLDT    IFLE WREDT                                                      MD013615A
+     C                     MOVE '1'       *IN24                                            MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE WRFVDT    SVLDT                                            MD013615A
+     C                     MOVE WRFATP    SFATP                                            MD013615A
+     C                     MOVE WRAAMT    SAAMT                                            MD013615A
+     C                     MOVE WRCODE    SCODE                                            MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFGE 10                                                         MD013615A
+     C                     Z-ADD1         WSRRN                                            MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFLE 10                                                         MD013615A
+     C                     ADD  1         SRRN                                             MD013615A
+     C                     ADD  1         SSREC                                            MD013615A
+     C                     ADD  1         WSRRN                                            MD013615A
+     C                     WRITELE0211S0                                                   MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     RESETRFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     ELSE                                                            MD013615A
+      *                                                                                    MD013615A
+      * Details is not for display, reset current repayment                                MD013615A
+      * freq. data structure                                                               MD013615A
+      *                                                                                    MD013615A
+     C                     RESETRFRQDS                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WRC       IFLT 9999                                                       MD013615A
+     C                     ADD  1         WRC                                              MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ADD  1         WRP                                              MD013615A
+     C                     ENDDO                                                           MD013615A
+      *                                                                                    MD013615A
+      * Initialised the value of field to zero                                             MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD0         WRQ                                              MD013615A
+     C                     ENDIF                                                           MD013615A
       *
      C           SRRN      IFEQ *ZERO
      C                     MOVEL'LEF0230' ZAMSID
@@ -2533,17 +2655,65 @@ I    C           TRCA      IFEQ 'TR'                                            
       ** principal for repayment types 1 and 2                            CLE014
       *                                                                   CLE014
      C                     MOVE '0'       *IN06                           CLE014
+     C                     MOVE 'N'       WEXTLP                                           MD013615A
+     C                     Z-ADD0         ZNRDYS                                           MD013615A
+     C                     Z-ADD0         WRNXTR  50                                       MD013615A
       *                                                                   CLE014
      C           NRPD      IFNE 0                                                             207963
      C                     Z-ADDNRPD      ZDAYNO                                              207963
+     C                     Z-ADDNRPD      WRNXTR                                           MD013615A
      C                     Z-ADDRDYN      ZMDAY                                               207963
      C                     MOVELSACCY     ZCCY                                                207963
      C                     MOVELRFRQ      ZFREQ                                               207963
+     C                     ELSE                                                            MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate no repayment freq. details                           MD013615A
+      * to store in the data structure                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
      C                     ENDIF                                                              207963
       *                                                                   CLE014
       ** Save REPT since value might change after reading LEFCAMLA                           BUG7847
       *                                                                                      BUG7847
      C                     Z-ADDREPT      WREPT                                              BUG7847
+      *                                                                                    MD013615A
+     C                     Z-ADD*ZERO     WRZDYN  50                                       MD013615A
+     C                     MOVE *BLANK    WRSTD   1                                        MD013615A
+      *                                                                                    MD013615A
+      * Setup repayment narrative to the temporary field                                   MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C                     MOVE *BLANKS   WRFATT 41                                        MD013615A
+     C                     MOVEL'RE-'     WRFAT1  9                                        MD013615A
+     C                     MOVE LNRF      WRFAT1                                           MD013615A
+     C                     MOVEAATP@,13   WRFATT                                           MD013615A
+     C                     MOVELWRFAT1    WRFATT                                           MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE RFRQ      WFREQ                                            MD013615A
+      *                                                                                    MD013615A
+     C           WFREQ     IFNE *BLANK                                                     MD013615A
+      *                                                                                    MD013615A
+      * Setup narrative with type of repayment freq.                                       MD013615A
+      *                                                                                    MD013615A
+     C                     SELEC                                                           MD013615A
+     C           WFREQ     WHEQ 'W'                                                        MD013615A
+     C           WRFATT    CAT  WWEEK:1   WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'F'                                                        MD013615A
+     C           WRFATT    CAT  WFNIGT:1  WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'M'                                                        MD013615A
+     C           WRFATT    CAT  WMNTH:1   WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'T'                                                        MD013615A
+     C           WRFATT    CAT  W2MNTH:1  WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'Q'                                                        MD013615A
+     C           WRFATT    CAT  WQUAR:1   WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'X'                                                        MD013615A
+     C           WRFATT    CAT  W6MNTH:1  WRFATT                                           MD013615A
+     C           WFREQ     WHEQ 'Y'                                                        MD013615A
+     C           WRFATT    CAT  WYEAR:1   WRFATT                                           MD013615A
+     C                     ENDSL                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDIF                                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                      BUG7847
      C           REPT      IFLE 2                                         CLE014
       *                                                                   CLE014
@@ -2625,21 +2795,66 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     ADD  PRAM      MAMNT                           CLE014
      C                     ENDIF                                          CLE014
      C                     ENDIF                                          CLE014
+      *                                                                                    MD013615A
+     C                     Z-ADDVDATLA    WLASD                                            MD013615A
       *                                                                   CLE014
      C                     READ LEFCAMLA                 06               CLE014
       *                                                                                       207963
      C                     ELSE                                                               207963
-     C           MAMNT     IFGT 0                                                             207963
+     C********** MAMNT     IFGT 0                                                   207963 MD013615A
+      *                                                                                    MD013615A
+     C           MAMNT     IFLT RAMT                                                       MD013615A
+     C                     Z-ADDMAMNT     WPRAM                                            MD013615A
+     C                     SUB  MAMNT     MAMNT                                            MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     Z-ADDRAMT      WPRAM                                            MD013615A
      C                     SUB  RAMT      MAMNT                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C           MAMNT     IFLT 0                                                             207963
      C                     Z-ADD0         MAMNT                                               207963
      C                     ENDIF                                                              207963
-     C                     ENDIF                                                              207963
+     C**********           ENDIF                                                    207963 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WLASD                                            MD013615A
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********                                                                  MD013615 MD013615A
+     C********** PDDI      IFEQ 'A'                                               MD013615 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the intial next repayment date according to                              MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                      MD013615
+     C**********           ELSE                                                   MD013615 MD013615A
+     C**********           EXSR ZFREQB                                              207963 MD013615A
+     C**********           ENDIF                                                  MD013615 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                     MD013615
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      * Store the details in repayment freq. data structure                                MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRZDYN    ANDLEMDAT                                                       MD013615A
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
+     C                     MOVE 'Y'       WRSTD                                            MD013615A
+     C                     EXSR SRSRFQ                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to store in the data structure                                             MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     ENDIF                                                              207963
      C                     ENDDO                                          CLE014
       *                                                                                       207963
@@ -2707,7 +2922,7 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                                       207963
      C           WLASD     IFNE VDATHL                                    CLE014
      C           WLASD     ANDNE*ZEROS                                    CLE014
-     C           WSTAC     ANDEQ*BLANK                                    CLE014
+     C********** WSTAC     ANDEQ*BLANK                                              CLE014 MD013615A
      C                     Z-ADDVDATHL    ZIEND                           CLE014
      C                     EXSR SRINCL                                    CLE014
      C                     ADD  ZINTR     WCALC  152                      CLE014
@@ -2832,6 +3047,7 @@ I    C           TRCA      IFEQ 'TR'                                            
      C           AMTPHL    WHEQ 'SA'                                      CLE014
      C           STAIHL    IFEQ *BLANK                                    CLE014
      C                     Z-ADDVDATHL    WLICD                           CLE014
+     C                     MOVE *BLANK    WSTAC                                            MD013615A
      C                     ELSE                                           CLE014
      C                     MOVE 'Y'       WSTAC                           CLE014
      C                     ENDIF                                          CLE014
@@ -2848,18 +3064,36 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                                     BUG21833
      C           WLASD     IFNE ZDAYNO                                                        207963
      C           WLASD     ANDNE*ZEROS                                                        207963
-     C           WSTAC     ANDEQ*BLANK                                                        207963
+     C********** WSTAC     ANDEQ*BLANK                                              207963 MD013615A
      C           ZDAYNO    ANDLTMDAT                                                          207963
      C                     Z-ADDZDAYNO    ZIEND                                               207963
      C                     EXSR SRINCL                                                        207963
      C                     ADD  ZINTR     WCALC                                               207963
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     Z-ADDZDAYNO    WLASD                                               207963
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
+      *                                                                                    MD013615A
      C           RFRQ      IFNE ' '                                                           207963
-     C                     EXSR ZFREQB                                                        207963
+     C**********                                                                  MD013615 MD013615A
+     C********** PDDI      IFEQ 'A'                                               MD013615 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                      MD013615
+     C**********           ELSE                                                   MD013615 MD013615A
+     C**********           EXSR ZFREQB                                              207963 MD013615A
+     C**********           ENDIF                                                  MD013615 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                     MD013615
      C                     ELSE                                                               207963
      C                     Z-ADDMDAT      ZDAYNO                                              207963
      C                     ENDIF                                                              207963
-     C                     ENDIF                                                              207963
+     C**********           ENDIF                                                    207963 MD013615A
       *                                                                                       207963
      C           WCALC     SUB  WIPAID    WOUTIN                                              207963
       *                                                                                       207963
@@ -2896,6 +3130,22 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     Z-ADD0         WCUPR                                               207963
      C                     ENDIF                                                              207963
      C                     ENDIF                                                              207963
+      *                                                                                    MD013615A
+      * Store the details in repayment freq. data structure                                MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRZDYN    ANDLEMDAT                                                       MD013615A
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
+     C                     MOVE 'Y'       WRSTD                                            MD013615A
+     C                     EXSR SRSRFQ                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to store in the data structure                                             MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                       207963
      C                     ENDIF                                                              207963
      C                     ENDDO                                                              207963
@@ -2979,6 +3229,8 @@ I    C           TRCA      IFEQ 'TR'                                            
       ** If a repayment is found, subtract repayment amount to maturi     CLE014
       ** ty amount.                                                       CLE014
       *                                                                   CLE014
+     C                     MOVE *BLANKS   WREPAY                                           MD013615A
+      *                                                                                    MD013615A
      C           LNRF      IFEQ WRLNRF                                    CLE014
      C**********           SUB  WRRAMT    MAMNT                                        CLE014 207963
      C                     MOVE 'Y'       WREPAY                          CLE014
@@ -3720,10 +3972,10 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     MOVEAATP@,49   SFATP                                              BUG8261
      C                     MOVELRETL      SFATP                                              BUG8261
      C                     ENDIF                                                             BUG8261
-      *                                                                                      BUG8261
-      ** Check if screen inputs have been changed                                            BUG7847
-      *                                                                                      BUG7847
-     C                     EXSR SRCHK                                                        BUG7847
+      *****************************************************************            BUG8261 MD013615A
+      ***Check*if*screen*inputs*have*been*changed**********************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+     C**********           EXSR SRCHK                                              BUG7847 MD013615A
       *                                                                                      BUG7847
      C           FREC      IFEQ 'CLOANCL3'                                                   BUG7847
      C           FREC      OREQ 'CLOANCL5'                                                   BUG7847
@@ -3745,7 +3997,9 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                   CLE014
      C           WCURT     IFLE *ZEROS                                    CLE014
      C           CPAM      OREQ *ZEROS                                    CLE014
+     C           WSTAC     OREQ 'Y'                                                        MD013615A
      C                     Z-ADD*ZEROS    ZINTR                           CLE014
+     C                     Z-ADDZIEND     WLICD                                            MD013615A
      C                     ELSE                                           CLE014
       *                                                                   CLE014
      C                     Z-ADDWLICD     ZIBEG                           CLE014
@@ -4278,38 +4532,38 @@ I    C           TRCA      IFEQ 'TR'                                            
       *
      C                     ENDSR
       *****************************************************************                      BUG7847
-      *                                                               *                      BUG7847
-      *  SRCHK - Check if screen inputs have been changed             *                      BUG7847
-      *                                                               *                      BUG7847
-      *  Called by: SRFRMT                                            *                      BUG7847
-      *                                                               *                      BUG7847
-      *  Calls    : None                                              *                      BUG7847
-      *                                                               *                      BUG7847
+      *****************************************************************            BUG7847 MD013615A
+      ***SRCHK*-*Check*if*screen*inputs*have*been*changed**************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Called*by:*SRFRMT*********************************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Calls****:*None***********************************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
       *****************************************************************                      BUG7847
-      *                                                                                      BUG7847
-     C           SRCHK     BEGSR                                                             BUG7847
-      *                                                                                      BUG7847
-     C                     MOVE 'N'       WCHGIN                                             BUG7847
-      *                                                                                      BUG7847
-     C           WPBRCA    IFNE SSBRCA                                                       BUG7847
-     C           WPCUST    ORNE SSCUST                                                       BUG7847
-     C           WPFACT    ORNE SSFACT                                                       BUG7847
-     C           WPFCNO    ORNE SSFCNO                                                       BUG7847
-     C           WPVLDT    ORNE SSVLDT                                                       BUG7847
-     C           WPCODE    ORNE SSCODE                                                       BUG7847
-     C                     Z-ADD*ZERO     WDAYNO                                             BUG7847
-     C                     MOVE 'Y'       WCHGIN                                             BUG7847
-     C                     MOVE SSBRCA    WPBRCA                                             BUG7847
-     C                     MOVE SSCUST    WPCUST                                             BUG7847
-     C                     MOVE SSFACT    WPFACT                                             BUG7847
-     C                     MOVE SSFCNO    WPFCNO                                             BUG7847
-     C                     MOVE SSVLDT    WPVLDT                                             BUG7847
-     C                     MOVE SSCODE    WPCODE                                             BUG7847
-     C                     Z-ADD1         SSREC                                              BUG7847
-     C                     ENDIF                                                             BUG7847
-      *                                                                                      BUG7847
-     C                     ENDSR                                                             BUG7847
-      *                                                                                      BUG7847
+     C**********                                                                   BUG7847 MD013615A
+     C********** SRCHK     BEGSR                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           MOVE 'N'       WCHGIN                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C********** WPBRCA    IFNE SSBRCA                                             BUG7847 MD013615A
+     C********** WPCUST    ORNE SSCUST                                             BUG7847 MD013615A
+     C********** WPFACT    ORNE SSFACT                                             BUG7847 MD013615A
+     C********** WPFCNO    ORNE SSFCNO                                             BUG7847 MD013615A
+     C********** WPVLDT    ORNE SSVLDT                                             BUG7847 MD013615A
+     C********** WPCODE    ORNE SSCODE                                             BUG7847 MD013615A
+     C**********           Z-ADD*ZERO     WDAYNO                                   BUG7847 MD013615A
+     C**********           MOVE 'Y'       WCHGIN                                   BUG7847 MD013615A
+     C**********           MOVE SSBRCA    WPBRCA                                   BUG7847 MD013615A
+     C**********           MOVE SSCUST    WPCUST                                   BUG7847 MD013615A
+     C**********           MOVE SSFACT    WPFACT                                   BUG7847 MD013615A
+     C**********           MOVE SSFCNO    WPFCNO                                   BUG7847 MD013615A
+     C**********           MOVE SSVLDT    WPVLDT                                   BUG7847 MD013615A
+     C**********           MOVE SSCODE    WPCODE                                   BUG7847 MD013615A
+     C**********           Z-ADD1         SSREC                                    BUG7847 MD013615A
+     C**********           ENDIF                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           ENDSR                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
       *****************************************************************                      BUG7847
       *                                                               *                      BUG7847
       *  SRPNRD - Project the Next Repayment Date routine             *                      BUG7847
@@ -4349,6 +4603,13 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     MOVELCCY       SACCY                                              BUG7847
      C                     Z-ADDWRAMT     ZFLD15                                             BUG7847
      C                     ENDIF                                                             BUG7847
+      *                                                                                    MD013615A
+      * Sort the details on repayment freq. data structure                                 MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRQ       ANDNE0                                                          MD013615A
+     C                     EXSR SRSRTR                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                      BUG7847
       ** Display Maturity                                                                    BUG7847
       *                                                                                      BUG7847
@@ -4390,7 +4651,7 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                                      BUG7847
      C           SRPR2     BEGSR                                                             BUG7847
       *                                                                                      BUG7847
-     C                     MOVE 'N'       WEXTLP                                             BUG7847
+     C*********            MOVE 'N'       WEXTLP                                   BUG7847 MD013615A
       *                                                                                      BUG7847
       ** Continue the computation of principal at maturity                                   BUG7847
       **    and display the projected next repayment date                                    BUG7847
@@ -4401,21 +4662,25 @@ I    C           TRCA      IFEQ 'TR'                                            
       ** For repayment type 2, repayment is wholly for principal                             BUG7847
       *                                                                                      BUG7847
      C                     MOVE ZDAYNO    TDAYNO  50                                        AR830785
-     C           ZDAYNO    DOWLTMDAT                                                         BUG7847
+     C********** ZDAYNO    DOWLTMDAT                                               BUG7847 MD013615A
+     C           ZDAYNO    DOWLEMDAT                                               BUG7847 MD013615A
      C           ZDAYNO    ANDGETDAYNO                                                      AR830785
      C           MAMNT     ANDGT0                                                            BUG7847
      C           *INKC     ANDEQ*OFF                                                         BUG7847
      C           *INKE     ANDEQ*OFF                                                         BUG7847
      C           WEXTLP    ANDEQ'N'                                                          BUG7847
       *                                                                                      BUG7847
-     C                     SUB  RAMT      MAMNT                                              BUG7847
+     C**********           SUB  RAMT      MAMNT                                    BUG7847 MD013615A
      C           MAMNT     IFLE RAMT                                                         BUG7847
      C                     Z-ADDMAMNT     WPRAM                                              BUG7847
+     C                     SUB  MAMNT     MAMNT                                            MD013615A
      C                     ELSE                                                              BUG7847
      C                     Z-ADDRAMT      WPRAM                                              BUG7847
+     C                     SUB  RAMT      MAMNT                                            MD013615A
      C                     ENDIF                                                             BUG7847
       *                                                                                      BUG7847
      C                     Z-ADDZDAYNO    WLASD                                              BUG7847
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
       *                                                                                      BUG7847
       ** Format Due Date                                                                     BUG7847
       *                                                                                      BUG7847
@@ -4423,7 +4688,21 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     MOVELZADATE    SVLDT                                              BUG7847
       *                                                                                      BUG7847
      C           RFRQ      IFNE ' '                                                          BUG7847
-     C                     EXSR ZFREQB                                                       BUG7847
+     C**********                                                                  MD013615 MD013615A
+     C********** PDDI      IFEQ 'A'                                               MD013615 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                      MD013615
+     C**********           ELSE                                                   MD013615 MD013615A
+     C**********           EXSR ZFREQB                                             BUG7847 MD013615A
+     C**********           ENDIF                                                  MD013615 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                     MD013615
      C                     ELSE                                                              BUG7847
      C                     Z-ADDMDAT      ZDAYNO                                             BUG7847
      C                     ENDIF                                                             BUG7847
@@ -4431,10 +4710,26 @@ I    C           TRCA      IFEQ 'TR'                                            
      C           MAMNT     IFLT 0                                                            BUG7847
      C                     Z-ADD0         MAMNT                                              BUG7847
      C                     ENDIF                                                             BUG7847
+      *                                                                                    MD013615A
+      * Store the details in repayment freq. data structure                                MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRZDYN    ANDLEMDAT                                                       MD013615A
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
+     C                     MOVE 'N'       WRSTD                                            MD013615A
+     C                     EXSR SRSRFQ                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to store in the data structure                                             MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                      BUG7847
-     C                     EXSR SRDISP                                                       BUG7847
-      *                                                                                      BUG7847
-     C                     MOVE 'Y'       WPNRPD                                             BUG7847
+     C**********           EXSR SRDISP                                             BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           MOVE 'Y'       WPNRPD                                   BUG7847 MD013615A
       *                                                                                      BUG7847
      C                     ENDDO                                                             BUG7847
       *                                                                                      BUG7847
@@ -4453,7 +4748,15 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                                      BUG7847
      C           SRPR13    BEGSR                                                             BUG7847
       *                                                                                      BUG7847
-     C                     MOVE 'N'       WEXTLP                                             BUG7847
+     C**********           MOVE 'N'       WEXTLP                                   BUG7847 MD013615A
+      *****************************************************************           MD013615 MD013615A
+      ***If*WLASD*=*ZDAYNO*set*WLASD*to*less*than*ZDAYNO*so*correct****           MD013615 MD013615A
+      ***projection*processing*can*take*place*otherwise*projected******           MD013615 MD013615A
+      ***repayments*are*not*displayed.*********************************           MD013615 MD013615A
+      *****************************************************************           MD013615 MD013615A
+     C********** WLASD     IFEQ ZDAYNO                                            MD013615 MD013615A
+     C**********           Z-ADDIACD      WLASD                                   MD013615 MD013615A
+     C**********           ENDIF                                                  MD013615 MD013615A
       *                                                                                      BUG7847
       ** Continue the computation of principal at maturity                                   BUG7847
       **    and display the projected next repayment date                                    BUG7847
@@ -4466,7 +4769,8 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     ENDIF                                                              249836
       *                                                                                       249836
      C                     MOVE ZDAYNO    TDAYNO                                            AR830785
-     C           ZDAYNO    DOWLTMDAT                                                         BUG7847
+     C********** ZDAYNO    DOWLTMDAT                                               BUG7847 MD013615A
+     C           ZDAYNO    DOWLEMDAT                                                       MD013615A
      C           ZDAYNO    ANDGETDAYNO                                                      AR830785
      C           MAMNT     ANDGT0                                                            BUG7847
      C           *INKC     ANDEQ*OFF                                                         BUG7847
@@ -4475,11 +4779,14 @@ I    C           TRCA      IFEQ 'TR'                                            
       *                                                                                      BUG7847
      C           WLASD     IFNE ZDAYNO                                                       BUG7847
      C           WLASD     ANDNE*ZEROS                                                       BUG7847
-     C           WSTAC     ANDEQ*BLANK                                                       BUG7847
+     C********** WSTAC     ANDEQ*BLANK                                             BUG7847 MD013615A
      C                     Z-ADDZDAYNO    ZIEND                                              BUG7847
      C                     EXSR SRINCL                                                       BUG7847
      C                     ADD  ZINTR     WCALC                                              BUG7847
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     Z-ADDZDAYNO    WLASD                                              BUG7847
+     C                     Z-ADDZDAYNO    WRZDYN                                           MD013615A
       *                                                                                      BUG7847
       ** Format Due Date                                                                     BUG7847
       *                                                                                      BUG7847
@@ -4487,18 +4794,38 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     MOVELZADATE    SVLDT                                              BUG7847
       *                                                                                      BUG7847
      C           RFRQ      IFNE ' '                                                          BUG7847
-     C                     EXSR ZFREQB                                                       BUG7847
+     C**********                                                                  MD013615 MD013615A
+     C********** PDDI      IFEQ 'A'                                               MD013615 MD013615A
+      *                                                                                    MD013615A
+      * Calculate the initial next repayment date according to                             MD013615A
+      * frequency details                                                                  MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRNXTR    ZDAYNO                                           MD013615A
+     C                     EXSR ZFRQB3                                                      MD013615
+     C**********           ELSE                                                   MD013615 MD013615A
+     C**********           EXSR ZFREQB                                             BUG7847 MD013615A
+     C**********           ENDIF                                                  MD013615 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    WRNXTR                                           MD013615A
+     C                     EXSR SRCNRF                                                     MD013615A
+      *                                                                                     MD013615
      C                     ELSE                                                              BUG7847
      C                     Z-ADDMDAT      ZDAYNO                                             BUG7847
      C                     ENDIF                                                             BUG7847
       *                                                                                      BUG7847
-     C                     ENDIF                                                             BUG7847
+     C**********           ENDIF                                                   BUG7847 MD013615A
       *                                                                                      BUG7847
       ** For repayment types 1 and 3, compute for separate principal                         BUG7847
       ** and interest repayments for the repayment made                                      BUG7847
       *                                                                                      BUG7847
      C           WREPT     IFEQ 1                                                            BUG7847
+      *                                                                                    MD013615A
+     C           WCUPR     IFLT RAMT                                                       MD013615A
+     C                     Z-ADDWCUPR     WPRAM                                            MD013615A
+     C                     ELSE                                                            MD013615A
      C                     Z-ADDRAMT      WPRAM                                              BUG7847
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
      C                     Z-ADDZINTR     WINTA                                              BUG7847
      C                     ENDIF                                                             BUG7847
       *                                                                                      BUG7847
@@ -4537,10 +4864,26 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     ENDIF                                                             BUG7847
       *                                                                                      BUG7847
      C                     ENDIF                                                             BUG7847
+      *                                                                                    MD013615A
+      * Store the details in repayment freq. data structure                                MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFEQ 'CLOANCL5'                                                 MD013615A
+     C           WRZDYN    ANDLEMDAT                                                       MD013615A
+     C           WEXTLP    ANDEQ'N'                                                        MD013615A
+     C                     MOVE 'N'       WRSTD                                            MD013615A
+     C                     EXSR SRSRFQ                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Updated the field to indicate that no more repayment freq.                         MD013615A
+      * details to store in the data structure                                             MD013615A
+      *                                                                                    MD013615A
+     C           RFRQ      IFEQ ' '                                                        MD013615A
+     C                     MOVE 'Y'       WEXTLP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
       *                                                                                      BUG7847
-     C                     EXSR SRDISP                                                       BUG7847
-      *                                                                                      BUG7847
-     C                     MOVE 'Y'       WPNRPD                                             BUG7847
+     C**********           EXSR SRDISP                                             BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           MOVE 'Y'       WPNRPD                                   BUG7847 MD013615A
       *                                                                                      BUG7847
      C                     Z-ADDWCUPR     MAMNT                                              BUG7847
       *                                                                                      BUG7847
@@ -4549,66 +4892,399 @@ I    C           TRCA      IFEQ 'TR'                                            
      C                     ENDSR                                                             BUG7847
       *                                                                                      BUG7847
       *****************************************************************                      BUG7847
-      *                                                               *                      BUG7847
-      *  SRDISP - Display the Projected Next Repayment Date           *                      BUG7847
-      *                                                               *                      BUG7847
-      *  Called by: SRPR2  - Project the Next Repayment Date routine  *                      BUG7847
-      *             for repayment type 2                              *                      BUG7847
-      *                                                               *                      BUG7847
-      *             SRPR13 - Project the Next Repayment Date routine  *                      BUG7847
-      *             for repayment types 1 and 3                       *                      BUG7847
-      *                                                               *                      BUG7847
-      *  Calls    : SRCVAM, ZFRPED, SRCHK                             *                      BUG7847
-      *                                                               *                      BUG7847
+     *****************************************************************            BUG7847 MD013615A
+      ***SRDISP*-*Display*the*Projected*Next*Repayment Date************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Called*by:*SRPR2**-*Project*the*Nex* Repayment*Date*routine***            BUG7847 MD013615A
+      **************for*repayment*type*2*******************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      **************SRPR13*-*Project*the*Next*Repayment*Date*routine***            BUG7847 MD013615A
+      **************for*repayment*types*1*and*3************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Calls****:*SRCVAM,*ZFRPED,*SRCHK******************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
       *****************************************************************                      BUG7847
-      *                                                                                      BUG7847
-     C           SRDISP    BEGSR                                                             BUG7847
-      *                                                                                      BUG7847
-     C           FREC      IFEQ 'CLOANCL5'                                                   BUG7847
-     C           WPRAM     ANDGT*ZERO                                                        BUG7847
-     C           WLASD     ANDGTWDAYNO                                                       BUG7847
-     C                     MOVELCCY       SACCY                                               253809
-     C                     Z-ADDWPRAM     ZFLD15                                             BUG7847
-     C                     EXSR SRCVAM                                                       BUG7847
-      *                                                                                      BUG7847
-      ** Format Amount                                                                       BUG7847
-      *                                                                                      BUG7847
-     C                     Z-ADDA6NBDP    ZDECS                                              BUG7847
-     C                     EXSR ZFRPED                                                       BUG7847
-     C                     MOVE ZOUT25    SAAMT                                              BUG7847
-      *                                                                                      BUG7847
-     C                     MOVE *ON       *IN24                                              BUG7847
-     C                     ADD  1         WSRRN                                              BUG7847
-      *                                                                                      BUG7847
-      ** Lookup if WSRRN = 11                                                                BUG7847
-      *                                                                                      BUG7847
-     C           WSRRN     IFLE 10                                                           BUG7847
-     C                     ADD  1         SRRN                                               BUG7847
-     C                     WRITELE0211S0                                                     BUG7847
-     C                     Z-ADDWLASD     WDAYNO                                             BUG7847
-     C                     ENDIF                                                             BUG7847
-      *                                                                                      BUG7847
-      ** Display the next projected repayment date                                           BUG7847
-      *                                                                                      BUG7847
-     C           WSRRN     IFGE 10                                                           BUG7847
-     C                     WRITELE0211F1                                                     BUG7847
-     C                     WRITELE0211C1                                                     BUG7847
-     C                     EXFMTLE0211C0                                                     BUG7847
-     C                     ADD  10        SSREC                                              BUG7847
-     C                     Z-ADD*ZERO     WSRRN                                              BUG7847
-     C                     EXSR SRCHK                                                        BUG7847
-      *                                                                                      BUG7847
-     C           WCHGIN    IFEQ 'Y'                                                          BUG7847
-     C                     MOVE 'Y'       WEXTLP                                             BUG7847
-     C                     ENDIF                                                             BUG7847
-      *                                                                                      BUG7847
-     C                     ENDIF                                                             BUG7847
-      *                                                                                      BUG7847
-     C                     ENDIF                                                             BUG7847
-      *                                                                                      BUG7847
-     C                     ENDSR                                                             BUG7847
-      *                                                                                      BUG7847
+     C**********                                                                   BUG7847 MD013615A
+     C********** SRDISP    BEGSR                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C********** FREC      IFEQ 'CLOANCL5'                                         BUG7847 MD013615A
+     C********** WPRAM     ANDGT*ZERO                                              BUG7847 MD013615A
+     C********** WLASD     ANDGTWDAYNO                                             BUG7847 MD013615A
+     C**********           MOVELCCY       SACCY                                     253809 MD013615A
+     C**********           Z-ADDWPRAM     ZFLD15                                   BUG7847 MD013615A
+     C**********           EXSR SRCVAM                                             BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Format*Amount*************************************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+     C**********           Z-ADDA6NBDP    ZDECS                                    BUG7847 MD013615A
+     C**********           EXSR ZFRPED                                             BUG7847 MD013615A
+     C**********           MOVE ZOUT25    SAAMT                                    BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           MOVE *ON       *IN24                                    BUG7847 MD013615A
+     C**********           ADD  1         WSRRN                                    BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Lookup*if*WSRRN*=*11******************************************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+     C********** WSRRN     IFLE 10                                                 BUG7847 MD013615A
+     C**********           ADD  1         SRRN                                     BUG7847 MD013615A
+     C**********           WRITELE0211S0                                           BUG7847 MD013615A
+     C**********           Z-ADDWLASD     WDAYNO                                   BUG7847 MD013615A
+     C**********           ENDIF                                                   BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+      ***Display*the*next*projected*repayment*date*********************            BUG7847 MD013615A
+      *****************************************************************            BUG7847 MD013615A
+     C********** WSRRN     IFGE 10                                                 BUG7847 MD013615A
+     C**********           WRITELE0211F1                                           BUG7847 MD013615A
+     C**********           WRITELE0211C1                                           BUG7847 MD013615A
+     C**********           EXFMTLE0211C0                                           BUG7847 MD013615A
+     C**********           ADD  10        SSREC                                    BUG7847 MD013615A
+     C**********           Z-ADD*ZERO     WSRRN                                    BUG7847 MD013615A
+     C**********           EXSR SRCHK                                              BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C********** WCHGIN    IFEQ 'Y'                                                BUG7847 MD013615A
+     C**********           MOVE 'Y'       WEXTLP                                   BUG7847 MD013615A
+     C**********           ENDIF                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           ENDIF                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           ENDIF                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
+     C**********           ENDSR                                                   BUG7847 MD013615A
+     C**********                                                                   BUG7847 MD013615A
       ********************************************************************
+      *                                                                  *                 MD013615A
+      *  *INZSR - Initialization Subroutine                              *                 MD013615A
+      *                                                                  *                 MD013615A
+      ********************************************************************                 MD013615A
+     C           *INZSR    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+      * Initialise the value of fields on repayment freq. data structure                   MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD1         WIC     50                                       MD013615A
+     C                     Z-ADD1         WIX     40                                       MD013615A
+      *                                                                                    MD013615A
+     C           WIC       DOWLE9999                                                       MD013615A
+      *                                                                                    MD013615A
+     C           WIX       OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD99999     WRVLDT                                           MD013615A
+     C                     MOVE *BLANKS   WRLOAN                                           MD013615A
+     C                     MOVE *BLANKS   WRFVDT                                           MD013615A
+     C                     MOVE *BLANKS   WRFATP                                           MD013615A
+     C                     MOVE *BLANKS   WRAAMT                                           MD013615A
+     C                     MOVE *BLANKS   WRCODE                                           MD013615A
+      *                                                                                    MD013615A
+     C           WIX       IFLT 9999                                                       MD013615A
+     C                     ADD  1         WIX                                              MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ADD  1         WIC                                              MD013615A
+     C                     ENDDO                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      ********************************************************************                 MD013615A
+      /EJECT                                                                               MD013615A
+      ********************************************************************                 MD013615A
+      *                                                                  *                 MD013615A
+      *  SRSRFQ - Store the details in Repayment Freq. Data Structure    *                 MD013615A
+      *                                                                  *                 MD013615A
+      *  Called by: SRFRMT, SRPR2, SRPR13                                *                 MD013615A
+      *                                                                  *                 MD013615A
+      *  Calls: ZDATE2, SRCVAM, ZFRPED                                   *                 MD013615A
+      *                                                                  *                 MD013615A
+      ********************************************************************                 MD013615A
+     C           SRSRFQ    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+      * Store the details if the repayment date is within set start                        MD013615A
+      * date and end date of repayment frequency enquiry for facility                      MD013615A
+      *                                                                                    MD013615A
+     C           WRZDYN    IFGE WRSDT                                                      MD013615A
+     C           WRZDYN    ANDLEWREDT                                                      MD013615A
+     C           WPRAM     ANDGT0                                                          MD013615A
+      *                                                                                    MD013615A
+     C           WRQ       IFLT 9999                                                       MD013615A
+     C                     ADD  1         WRQ                                              MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WRQ       IFLE 9999                                                       MD013615A
+      *                                                                                    MD013615A
+     C           WRQ       OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+      * Repayment Date and Repayment Loan number                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRZDYN    WRVLDT                                           MD013615A
+     C                     MOVE LNRF      WRLOAN                                           MD013615A
+      *                                                                                    MD013615A
+      * Repayment Due Date and Narrative                                                   MD013615A
+      *                                                                                    MD013615A
+     C           WRSTD     IFEQ 'Y'                                                        MD013615A
+     C                     MOVE WRFATT    WRFATP                                           MD013615A
+     C                     Z-ADDZDAYNO    WRTVDT  50                                       MD013615A
+     C                     Z-ADDWRZDYN    ZDAYNO                                           MD013615A
+     C                     EXSR ZDATE2                                                     MD013615A
+     C                     MOVELZADATE    WRFVDT                                           MD013615A
+     C                     Z-ADDWRTVDT    ZDAYNO                                           MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVE SVLDT     WRFVDT                                           MD013615A
+     C                     MOVE SFATP     WRFATP                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Repayment Amount                                                                   MD013615A
+      *                                                                                    MD013615A
+     C                     MOVELCCY       SACCY                                            MD013615A
+     C                     Z-ADDWPRAM     ZFLD15                                           MD013615A
+     C                     EXSR SRCVAM                                                     MD013615A
+     C                     Z-ADDA6NBDP    ZDECS                                            MD013615A
+     C                     EXSR ZFRPED                                                     MD013615A
+     C                     MOVE ZOUT25    WRAAMT                                           MD013615A
+      *                                                                                    MD013615A
+      * Repayment Code                                                                     MD013615A
+      *                                                                                    MD013615A
+     C           WRZDYN    IFLT AGRDNB                                                     MD013615A
+     C                     MOVE 'B'       WRCODE                                           MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVE 'F'       WRCODE                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDIF                                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      ********************************************************************                 MD013615A
+      /EJECT                                                                               MD013615A
+      ********************************************************************                 MD013615A
+      *                                                                  *                 MD013615A
+      *  SRDRFQ - Display the details from Repayment Freq. Data          *                 MD013615A
+      *           Structure                                              *                 MD013615A
+      *                                                                  *                 MD013615A
+      *  Called by: SRSFIL                                               *                 MD013615A
+      *  Calls: SRSRTR                                                   *                 MD013615A
+      *                                                                  *                 MD013615A
+      ********************************************************************                 MD013615A
+     C           SRDRFQ    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+      * Display the repayment freq. event that is less than                                MD013615A
+      * the non-repayment event or up to loan's maturity date                              MD013615A
+      *                                                                                    MD013615A
+     C           FREC      IFNE 'CLOANCL5'                                                 MD013615A
+     C           WRQ       ANDNE0                                                          MD013615A
+      *                                                                                    MD013615A
+      * Save non-repayment event screen details.                                           MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE SVLDT     WSVLDT  7                                        MD013615A
+     C                     MOVE SFATP     WSFATP 41                                        MD013615A
+     C                     MOVE SAAMT     WSAAMT 20                                        MD013615A
+     C                     MOVE SCODE     WSCODE  1                                        MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD1         WRP     50       Rep. Freq. Process              MD013615A
+     C                     Z-ADD1         WRC     40       Rep. Freq. Counter              MD013615A
+     C                     Z-ADD0         WRA     40       Rep. Freq. Available            MD013615A
+     C                     Z-ADD0         WRR     40       Rep. Freq. Remove               MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWREDT     WRTEDT  50       Rep. Freq. Temp. Date           MD013615A
+      *                                                                                    MD013615A
+     C           ZDAYNO    IFLT WRTEDT                                                     MD013615A
+     C                     Z-ADDZDAYNO    WRTEDT                                           MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WRP       DOWLEWRQ                                                        MD013615A
+     C           WRQ       ANDNE0                                                          MD013615A
+      *                                                                                    MD013615A
+     C           WRC       OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+      * If loan's maturity record, display the repayment events of                         MD013615A
+      * loans that is less than or equal to maturity loan no.                              MD013615A
+      *                                                                                    MD013615A
+     C           WRVLDT    IFLT WRTEDT                                                     MD013615A
+     C           WRVLDT    ORLE WRTEDT                                                     MD013615A
+     C           WRLOAN    ANDLELNRF                                                       MD013615A
+     C           FREC      ANDEQ'CLOANCL3'                                                 MD013615A
+     C                     MOVE '1'       *IN24                                            MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE WRFVDT    SVLDT                                            MD013615A
+     C                     MOVE WRFATP    SFATP                                            MD013615A
+     C                     MOVE WRAAMT    SAAMT                                            MD013615A
+     C                     MOVE WRCODE    SCODE                                            MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFGE 10                                                         MD013615A
+     C                     Z-ADD1         WSRRN                                            MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WSRRN     IFLE 10                                                         MD013615A
+     C                     ADD  1         SRRN                                             MD013615A
+     C                     ADD  1         SSREC                                            MD013615A
+     C                     ADD  1         WSRRN                                            MD013615A
+     C                     WRITELE0211S0                                                   MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Reset current repayment freq. data structure                                       MD013615A
+      *                                                                                    MD013615A
+     C                     RESETRFRQDS                                                     MD013615A
+     C                     ADD  1         WRR                                              MD013615A
+      *                                                                                    MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     ADD  1         WRA                                              MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           WRC       IFLT 9999                                                       MD013615A
+     C                     ADD  1         WRC                                              MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ADD  1         WRP                                              MD013615A
+     C                     ENDDO                                                           MD013615A
+      *                                                                                    MD013615A
+      * Update no. of repayment freq. with remaining available                             MD013615A
+      * repayment freq.                                                                    MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDWRA       WRQ                                              MD013615A
+      *                                                                                    MD013615A
+      * Sort the remaining details on repayment freq. data structure                       MD013615A
+      *                                                                                    MD013615A
+     C           WRR       IFNE 0                                                          MD013615A
+     C           WRQ       ANDNE0                                                          MD013615A
+     C                     EXSR SRSRTR                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Set pointer for repayment freq. data structure                                     MD013615A
+      *                                                                                    MD013615A
+     C           WRQ       IFNE 0                                                          MD013615A
+     C           WRQ       OCUR RFRQDS                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+      * Restore non-repayment event details back to screen fields                          MD013615A
+      *                                                                                    MD013615A
+     C                     MOVE WSVLDT    SVLDT                                            MD013615A
+     C                     MOVE WSFATP    SFATP                                            MD013615A
+     C                     MOVE WSAAMT    SAAMT                                            MD013615A
+     C                     MOVE WSCODE    SCODE                                            MD013615A
+      *                                                                                    MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      ********************************************************************                 MD013615A
+      /EJECT                                                                               MD013615A
+      ********************************************************************                 MD013615A
+      *                                                                  *                 MD013615A
+      *  SRSRTR - Sort the details from Repayment Freq. Data Structure   *                 MD013615A
+      *                                                                  *                 MD013615A
+      *  Called by: SRPNRD, SRDRFQ                                       *                 MD013615A
+      *                                                                  *                 MD013615A
+      ********************************************************************                 MD013615A
+     C           SRSRTR    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+      * Clear repayment freq. sorting array                                                MD013615A
+      *                                                                                    MD013615A
+     C                     CLEARRFQA                                                       MD013615A
+      *                                                                                    MD013615A
+      * Initialised sorting array variable                                                 MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD1         S       40                                       MD013615A
+     C                     Z-ADD1         WRP                                              MD013615A
+      *                                                                                    MD013615A
+      * Copy the details from repayment freq. data structure to                            MD013615A
+      * repayment freq. sorting array                                                      MD013615A
+      *                                                                                    MD013615A
+     C           WRP       DOWLE9999                                                       MD013615A
+      *                                                                                    MD013615A
+     C           S         OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     MOVELRFRQDS    RFQA,S                                           MD013615A
+      *                                                                                    MD013615A
+     C           S         IFLT 9999                                                       MD013615A
+     C                     ADD  1         S                                                MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ADD  1         WRP                                              MD013615A
+     C                     ENDDO                                                           MD013615A
+      *                                                                                    MD013615A
+      * Sort the repayment frequency record                                                MD013615A
+      *                                                                                    MD013615A
+     C                     SORTARFQA                                                       MD013615A
+      *                                                                                    MD013615A
+      * Copy the record from repayment frequency sorted array back                         MD013615A
+      * to repayment frequency data structure                                              MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADD1         S                                                MD013615A
+     C                     Z-ADD1         WRP                                              MD013615A
+      *                                                                                    MD013615A
+     C           WRP       DOWLE9999                                                       MD013615A
+      *                                                                                    MD013615A
+     C           S         OCUR RFRQDS                                                     MD013615A
+      *                                                                                    MD013615A
+     C                     MOVEARFQA,S    RFRQDS                                           MD013615A
+      *                                                                                    MD013615A
+     C           S         IFLT 9999                                                       MD013615A
+     C                     ADD  1         S                                                MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ADD  1         WRP                                              MD013615A
+     C                     ENDDO                                                           MD013615A
+      *                                                                                    MD013615A
+      * Clear repayment frequency array                                                    MD013615A
+      *                                                                                    MD013615A
+     C                     CLEARRFQA                                                       MD013615A
+      *                                                                                    MD013615A
+      * Set pointer for repayment frequency data structure                                 MD013615A
+      *                                                                                    MD013615A
+     C           WRQ       IFNE 0                                                          MD013615A
+     C           WRQ       OCUR RFRQDS                                                     MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      ********************************************************************                 MD013615A
+      /EJECT                                                                               MD013615A
+      ********************************************************************                 MD013615A
+      *                                                                  *                 MD013615A
+      *  SRCNRF - Calculate the next repayment date according to the     *                 MD013615A
+      *           PDDI of the loan                                       *                 MD013615A
+      *                                                                  *                 MD013615A
+      *  Called By: SRFRMT, SRPR2, SRPR13                                *                 MD013615A
+      *  Calls: ZBKDT, ZFWDT, ZDATE2                                     *                 MD013615A
+      *                                                                  *                 MD013615A
+      ********************************************************************                 MD013615A
+     C           SRCNRF    BEGSR                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     SELEC                                                           MD013615A
+     C           PDDI      WHEQ 'A'                                                        MD013615A
+     C                     Z-ADDZDAYNO    ZDYNBR                                           MD013615A
+     C           PDDI      WHEQ 'P'                                                        MD013615A
+     C                     EXSR ZBKDT                                                      MD013615A
+     C           PDDI      WHEQ 'N'                                                        MD013615A
+     C                     EXSR ZFWDT                                                      MD013615A
+     C           PDDI      WHEQ 'M'                                                        MD013615A
+     C           PDDI      OREQ ' '                                                        MD013615A
+     C                     EXSR ZDATE2                                                     MD013615A
+      *                                                                                    MD013615A
+     C           *IN98     IFEQ '0'                                                        MD013615A
+     C                     MOVE ZDATE     MMYY    40P                                      MD013615A
+     C                     MOVELMMYY      MMNLCD  20P                                      MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVELZDATE     MMNLCD    P                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDAYNO    @DAYNO  50                                       MD013615A
+     C                     EXSR ZFWDT                                                      MD013615A
+     C                     Z-ADDZDYNBR    ZDAYNO                                           MD013615A
+     C                     EXSR ZDATE2                                                     MD013615A
+      *                                                                                    MD013615A
+     C           *IN98     IFEQ '0'                                                        MD013615A
+     C                     MOVE ZDATE     MMYY      P                                      MD013615A
+     C                     MOVELMMYY      MMNWKD  20P                                      MD013615A
+     C                     ELSE                                                            MD013615A
+     C                     MOVELZDATE     MMNWKD    P                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C           MMNLCD    IFNE MMNWKD                                                     MD013615A
+     C                     Z-ADD@DAYNO    ZDAYNO                                           MD013615A
+     C                     EXSR ZBKDT                                                      MD013615A
+     C                     ENDIF                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSL                                                           MD013615A
+      *                                                                                    MD013615A
+     C                     Z-ADDZDYNBR    ZDAYNO                                           MD013615A
+      *                                                                                    MD013615A
+     C                     ENDSR                                                           MD013615A
+      ********************************************************************                 MD013615A
      C/COPY ZSRSRC,ZDATE1Z2
      C/COPY ZSRSRC,ZDATE2Z2
      C/COPY ZSRSRC,ZFRPEDZ3
@@ -4617,10 +5293,13 @@ I    C           TRCA      IFEQ 'TR'                                            
      C/COPY ZSRSRC,ZDATE9Z3                                               CLE014
      C/COPY ZSRSRC,ZDAT10Z2                                               CLE014
      C***/COPY*ZSRSRC,ZXRATEZ1                                     128979 155749
+     C/COPY ZSRSRC,ZFRQB3                                                                   MD013615
      C/COPY ZSRSRC,ZFREQBZ2                                                                   207963
      C/COPY ZSRSRC,ZACCH                                                                      207963
      C/COPY ZSRSRC,ZCHKH                                                                      207963
      C/COPY ZSRSRC,RULE78Z1                                                                   CLE028
+     C/COPY ZSRSRC,ZBKDT                                                                   MD013615A
+     C/COPY ZSRSRC,ZFWDT                                                                   MD013615A
       *                                                                   134808
       ** Change the utilization narrative to include the utilization      134808
       ** sequence number.                                                 134808

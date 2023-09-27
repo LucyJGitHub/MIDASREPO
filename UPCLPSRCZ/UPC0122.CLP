@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CUP047             Date 27Aug23              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CUP047 - Alternative OWNER and AUTL for Bridge upgrade      */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG27240- Applied CPK029 file locking fix                   */
@@ -59,6 +61,11 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CUP047*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CUP047*/
+/*/COPY SDCPYSRC,SDSVALDCL                                                                /*CUP047*/
 
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
 /**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
@@ -109,6 +116,28 @@ VALIDATE:                                                                       
 
              CHGVAR     VAR(&XLIB) VALUE(&SBSID *TCAT 'XLIB')
              CHGVAR     VAR(&USER) VALUE(&SBSID *TCAT 'OWNER')                            /*CPK017*/
+                                                                                          /*CUP047*/
+/*  Check if feature CUP047 is on */                                                      /*CUP047*/
+                                                                                          /*CUP047*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CUP047*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CUP047*/
+             CHGVAR     VAR(&SARD) VALUE('CUP047')                                        /*CUP047*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CUP047*/
+                                                                                          /*CUP047*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CUP047*/
+                                                                                          /*CUP047*/
+/*  Check System Values for CUP047 */                                                     /*CUP047*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC  +
+                          'AlternativeBrgOWNER' &SVAL1  +
+                          &SVALK2 &SVAL2  +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CUP047*/
+             IF         COND(&SVAL1 *NE '          ') THEN(CHGVAR +
+                          VAR(&USER) VALUE(&SVAL1))                                       /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+                                                                                          /*CUP047*/
 /* Check that user exists. */                                                             /*CPK017*/
              CHKOBJ     OBJ(&USER) OBJTYPE(*USRPRF)                                       /*CPK017*/
 

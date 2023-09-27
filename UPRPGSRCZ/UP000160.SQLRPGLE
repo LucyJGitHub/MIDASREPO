@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International 2023                              *
       *                                                               *
-      *  Last Amend No. MD060960 *CREATE     Date 16Jan23             *
+      *  Last Amend No. CUP047               Date 27Aug23             *
+      *  Prev Amend No. MD060960 *CREATE     Date 16Jan23             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
       *  MD060960 - Some dependents do not exist yet as their         *
       *             CRTDUPOBJ has not been executed yet. Fix is to    *
       *             rebuild the order.                                *
@@ -63,6 +65,8 @@
      D TOFILE          S             10A
      D OWNR            S             10A
      D AUTL            S             10A
+     D X_OWNR          S             10A                                                      CUP047
+     D X_AUTL          S             10A                                                      CUP047
      D UPZDEP        E DS                  EXTNAME(UPZDEPTD)
      D UPZXRR        E DS                  EXTNAME(UPZXRRPD)
      D UPZSCR        E DS                  EXTNAME(UPZSCRTD)
@@ -83,6 +87,36 @@
 
      C                   eval      AUTL = Prefix + 'DATABASE'
      C                   eval      OWNR = Prefix + 'OWNER'
+                                                                                              CUP047
+      ** Determine if CUP047 is on                                                            CUP047
+                                                                                              CUP047
+     C                   Call      'AOSARDR0'                                                 CUP047
+     C                   Parm      *BLANKS       @RTCD             7                          CUP047
+     C                   Parm      '*VERIFY'     @OPTN             7                          CUP047
+     C                   Parm      'CUP047'      PSARD             6                          CUP047
+                                                                                              CUP047
+     C                   If        @RTCD = *Blanks                                            CUP047
+      ** If feature is on, check system values                                                CUP047
+     C/exec SQL                                                                               CUP047
+     C+ select GIVAL into :X_AUTL from SDSVLXTD                                               CUP047
+     C+ where GISVAL = 'AlternativeBrgAUTLDB'                                                 CUP047
+     C/end-exec                                                                               CUP047
+     C                   If        SQLCODE = 0 and                                            CUP047
+     C                             X_AUTL <> *blanks                                          CUP047
+     C                   eval      AUTL = X_AUTL                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
+     C/exec SQL                                                                               CUP047
+     C+ select GIVAL into :X_OWNR from SDSVLXTD                                               CUP047
+     C+ where GISVAL = 'AlternativeBrgOWNER'                                                  CUP047
+     C/end-exec                                                                               CUP047
+     C                   If        SQLCODE = 0 and                                            CUP047
+     C                             X_OWNR <> *blanks                                          CUP047
+     C                   eval      OWNR = X_OWNR                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
 
       * First, delete script records generated for DV lib (by UP000051) for files
       * which are dependent (listed in UPZORDTD)

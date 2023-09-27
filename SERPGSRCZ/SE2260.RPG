@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR316724           Date 18Sep23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 215959             Date 21Mar16               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -89,6 +90,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR316724 - Exclude the current factor in computing the       *
+      *             consideration when processing type = 8 during     *
+      *             processing/COB as this current factor is already  *
+      *             considered during I/C of the trade. Applied fix   *
+      *             260909.                                           *
+      *           - Complete 260909 as not applied in this program.   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
@@ -1388,18 +1395,18 @@
       ***  If Asset-Backed Security, adjust Cons. for Current Factor.     E20086
       *                                                                   E20086
      C           *LIKE     DEFN TCSR      FTCSR                           E20086
-     C           PROT      IFEQ '8'                                       E20086
+     C********** PROT      IFEQ '8'                                                  E20086 AR316724
      C/COPY WNCPYSRC,SE2260C017
-      * Half Adjust if CSE085 is switched on.                             CSE085
-     C           CSE085    IFEQ 'Y'                                       CSE085
-     C           TCSR      MULT TCFC      FTCSR     H                     CSE085
-     C                     ELSE                                           CSE085
-     C           TCSR      MULT TCFC      FTCSR                           E20086
-     C                     ENDIF                                          CSE085
-     C           TCSR      MULT TCFC      FTCSR                           E20086
-     C                     ELSE                                           E20086
+      **Half*Adjust*if*CSE085*is*switched*on.**************************              CSE085 AR316724
+     C********** CSE085    IFEQ 'Y'                                                  CSE085 AR316724
+     C********** TCSR      MULT TCFC      FTCSR     H                                CSE085 AR316724
+     C**********           ELSE                                                      CSE085 AR316724
+     C********** TCSR      MULT TCFC      FTCSR                                      E20086 AR316724
+     C**********           ENDIF                                                     CSE085 AR316724
+     C********** TCSR      MULT TCFC      FTCSR                                      E20086 AR316724
+     C**********           ELSE                                                      E20086 AR316724
      C                     Z-ADDTCSR      FTCSR                           E20086
-     C                     END                                            E20086
+     C**********           END                                                       E20086 AR316724
      C/COPY WNCPYSRC,SE2260C016
       *                                                                   E20086
      C           *IN01     IFEQ '1'

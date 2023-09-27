@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD055682           Date 31Jul20              */
-/*       Prev Amend No. MD055681           Date 31Jul20              */
+/*       Last Amend No. MD037264           Date 19Sep23              */
+/*       Prev Amend No. MD055682           Date 31Jul20              */
+/*                      MD055681           Date 31Jul20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CCB022             Date 06Aug12              */
 /*                      261725             Date 27Jul12              */
@@ -35,6 +36,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037264 - Do no run Global Updater if MPHAS <> 'A'.        */
+/*                  It will be started later in the COB, in          */
+/*                  component GOC0002, which runs before CBC0540.    */
 /*       MD055682 - Deliverable Data Split for TRIG                  */
 /*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
@@ -104,6 +108,7 @@
              DCL        VAR(&ALCOBJERR) TYPE(*CHAR) LEN(1)  VALUE('N')                    /*CPK020*/
              DCL        VAR(&WRTFILE)   TYPE(*CHAR) LEN(10)                               /*CPK020*/
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(512)                               /*BG5090R1*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                  /*MD037264*/
                                                                                           /*CCB022*/
 /* Parameters passed to SC001005 */                                                       /*CCB022*/
                                                                                           /*CCB022*/
@@ -138,7 +143,9 @@
                           PGM(GOC0002) PARM('END  ' '*LIBL     ' ' '))       /*BUG6550*/ /*BG18886*/
 
 /************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYPR)                              /*BG5090R1*/
-
+                                                                                        /*MD037264*/
+             RTVDTAARA  DTAARA(MPHAS *ALL) RTNVAR(&MPHAS)                               /*MD037264*/
+ 
 /* Create temporary file to hold error messages. */                                       /*CPK020*/
              DLTF       FILE(QTEMP/UPERRMQT)                                              /*CPK020*/
              MONMSG     MSGID(CPF2105)                                                    /*CPK020*/
@@ -566,10 +573,12 @@ END:
 /**********               '*ADDTRIG')) THEN(CALL PGM(GOC0002) +                      */ /*AR725021*/
 /**********               PARM('START' '*LIBL     ' ' '))                 */ /*243463*/ /*AR725021*/
                                                                                         /*AR725021*/
+             IF         COND(&MPHAS = 'A') THEN(DO)                                     /*MD037264*/
              IF         COND((&JOBTYPE = '0') & (&ACTION = +
                           '*RMVALLTRIG' *OR &ACTION = '*RMVTRIG' *OR +
                           &ACTION = '*ADDTRIG')) THEN(CALL +
                           PGM(GOC0002) PARM('START' '*LIBL     ' ' '))                  /*AR725021*/
+             ENDDO                                                                      /*MD037264*/
                                                                                           /*244609*/
 /** Remove this 244609 when BUG6550 is also removed from this program */                  /*244609*/
                                                                                           /*244609*/

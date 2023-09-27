@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. 241383             Date 15Jun12               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD059520           Date 21Feb22               *
       *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
@@ -156,6 +157,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  241383 - During release of closed customer, save child       *
+      *           details to prevent overwrite by parent customer.    *
+      *           Applied for AR967456 (Child: AR967457).             *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
@@ -551,6 +555,9 @@
      D                                     PREFIX(A)                                        BUG23518
       ** Customer in File Format
      D CustFilFmt    E DS                  EXTNAME(SDCUSTPD)
+      ** Customer in File Format (temp)                                                       241383
+     D CustFilTmp    E DS                  EXTNAME(SDCUSTPD)                                  241383
+     D                                     PREFIX(T_)                                         241383
       ** Customer Ext in File Format                                                          CGL132
      D CuXcFilFmt    E DS                  EXTNAME(SDCUSTXC)                                  CGL132
       ** SWIFT Details in File Format                                                         CSW207
@@ -3539,6 +3546,7 @@
       *                                                                                       246639
      C     Ix            IFEQ      0                                                          246639
      C     BBPCNB        ANDNE     *BLANKS                                                    246639
+     C                   MOVE      CustFilFmt    CustFilTmp                                   241383
      C     BBPCNB        CHAIN     SDCUSTLR                           44                      246639
      C     *IN44         IFEQ      '0'                                                        246639
      C     BBCLST        ANDEQ     'Y'                                                        246639
@@ -3547,6 +3555,7 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               246639
      C                   MOVEL     'USR9474'     MsgIdArr(Ix)                                 246639
      C                   ENDIF                                                                246639
+     C                   MOVE      CustFilTmp    CustFilFmt                                   241383
      C                   ENDIF                                                                246639
       ** If parent customer defined and found, re access SDCUSTLR using the                 MD048748
       ** customer number to ensure it is these customer details returned to                 MD048748

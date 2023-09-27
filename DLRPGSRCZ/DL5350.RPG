@@ -11,7 +11,9 @@
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Last Amend No. AR785722           Date 11Sep23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Prev Amend No. AR746974A          Date 11Sep23               *
+      *                 AR746974           Date 11Sep23               *
+      *                 249385             Date 01Aug22               *
       *                 MD057662           Date 13Jun22               *
       *                 MD058849           Date 14Mar22               *
       *                 MD058815           Date 28Sep21               *
@@ -86,6 +88,8 @@
       *                                                               *
       *  AR785722 - Write to DLDLDCQD should not be conditioned to    *
       *             CLE025. (Child: AR785723)                         *
+      *  AR746974 - Automatic rollover for Repo/Bond Borrowing        *
+      *             on Securities side (Child: AR746975)              *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  MD057662 - Deal number was reused during rollover even if the*
@@ -305,6 +309,20 @@
      FSDTIX   UF  E           K        DISK         KINFSR *PSSR A
      F                                              KCOMIT                                   BUG4847
      FSDSTAAL1IF  E           K        DISK                                                 MD023322
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR                            AR746974
+     FDPTMVDL1UF  E           K        DISK         KINFSR *PSSR A                          AR746974
+     F            DPTMVDF                           KRENAMEDPTMVL1                          AR746974
+     F                                              KCOMIT                                  AR746974
+     FDPTMVDY1UF  E           K        DISK         KINFSR *PSSR A    UC                    AR746974
+     F                                              KCOMIT                                  AR746974
+     FDPTMVDY2UF  E           K        DISK         KINFSR *PSSR A    UC                    AR746974
+     F                                              KCOMIT                                  AR746974
+     FUDEPP   UF  E           K        DISK         KINFSR *PSSR A                          AR746974
+     F                                              KCOMIT                                  AR746974
+     FDPTMVA  UF  E                    DISK         KINFSR *PSSR                            AR746974
+     F                                              KCOMIT                                  AR746974
+     FUDEPPA  UF  E                    DISK         KINFSR *PSSR                            AR746974
+     F                                              KCOMIT                                  AR746974
       /COPY WNCPYSRC,DL5350FFP1
       *****************************************************************
       /EJECT
@@ -2917,6 +2935,7 @@
      I              QQACCD                          QQACCZ
      I/COPY ZSRSRC,ZDAT10Z1                                                                  BUG3838
      I/COPY ZSRSRC,ZSEDITZ2                                                                  BUG4847
+     I/COPY ZSRSRC,ZTNLU1Z1                                                                AR746974A
       *
      I            DS
      I                                        1  153@AMT1
@@ -3327,6 +3346,7 @@
       *  17.  ZA0830  - Check holiday routine                         *
       *  18.  #ZZ01   - Initialization routine                        *
       *  20.  #ZZ20   - End-program routine                           *
+      *  21.  #WD01   - Write new record for DPTMVD, DPTMVDX1/X2      *                     AR746974
       *                                                               *
       ********************************************************************
       /EJECT
@@ -3431,6 +3451,34 @@
      C                     ELSE                                                              BUG3838
      C                     MOVEL'N'       CLE025                                             BUG3838
      C                     ENDIF                                                             BUG3838
+      *                                                                                     AR746974
+      ** Access SAR Details file to see if CAC005 is switched on                            AR746974
+      *                                                                                     AR746974
+     C                     CALL 'AOSARDR0'                                                  AR746974
+     C                     PARM *BLANKS   @RTCD                                             AR746974
+     C                     PARM '*VERIFY' @OPTN                                             AR746974
+     C                     PARM 'CAC005'  @SARD                                             AR746974
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR746974
+      *                                                                                     AR746974
+     C           @RTCD     IFEQ *BLANK                                                      AR746974
+     C                     MOVEL'Y'       CAC005  1                                         AR746974
+     C                     ELSE                                                             AR746974
+     C                     MOVEL'N'       CAC005                                            AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+      ** Access SAR Details file to see if S01401 is switched on                            AR746974
+      *                                                                                     AR746974
+     C                     CALL 'AOSARDR0'                                                  AR746974
+     C                     PARM *BLANKS   @RTCD                                             AR746974
+     C                     PARM '*VERIFY' @OPTN                                             AR746974
+     C                     PARM 'S01401'  @SARD                                             AR746974
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR746974
+      *                                                                                     AR746974
+     C           @RTCD     IFEQ *BLANK                                                      AR746974
+     C                     MOVEL'Y'       S01401  1                                         AR746974
+     C                     ELSE                                                             AR746974
+     C                     MOVEL'N'       S01401                                            AR746974
+     C                     ENDIF                                                            AR746974
       *                                                                                       259376
       ** Use Access Program to read the module details file                                   259376
       *                                                                                       259376
@@ -3616,6 +3664,10 @@
      C                     Z-ADD1         DBASE
      C                     EXSR DBERR
      C                     END
+      *                                                                                     AR746974
+      ** Set up record for DPTMVD                                                           AR746974
+      *                                                                                     AR746974
+     C                     EXSR #WD01                                                       AR746974
       *
       **  Set up record for DEALSDC
       **  if generate authorized deal                                                        BUG3838
@@ -4683,6 +4735,13 @@
       *
      C                     MOVEL'O'       HKRBSI
      C                     MOVE @NEWDL    HKROBY
+      *                                                                                    AR746974A
+      **  Aim to move Front-office ID and Assoc Front-office ID to                         AR746974A
+      **  new deal and blank out those fields in the old deal.                             AR746974A
+      *                                                                                    AR746974A
+     C                     MOVE *BLANKS   HKFRNT                                           AR746974A
+     C                     MOVE *BLANKS   HKAFRT                                           AR746974A
+      *                                                                                    AR746974A
      C                     UPDATMMDELDP0               72
       *
      C           #UA09     ENDSR
@@ -5967,6 +6026,346 @@ E01  C                     ENDIF                                                
      C                     WRITEDTRIXDF                72
       *
      C           #WC09     ENDSR
+      *****************************************************************                     AR746974
+      /EJECT                                                                                AR746974
+      *****************************************************************                     AR746974
+      *                                                               *                     AR746974
+      * #WD01 - Set up record for DPTMVD                              *                     AR746974
+      *                                                               *                     AR746974
+      * Called by: SR/#BA01                                           *                     AR746974
+      *                                                               *                     AR746974
+      * Calls: GO220005, SR/EXTDPT, SR/DEPINS, SR/UPDUDA, SR/UPDDPA   *                     AR746974
+      *                                                               *                     AR746974
+      *****************************************************************                     AR746974
+     C           #WD01     BEGSR                           ** #WD01  **                     AR746974
+      *                                                                                     AR746974
+     C                     Z-ADD0         ##DINS  50                                        AR746974
+     C                     Z-ADD0         ##DNOR  50                                        AR746974
+      *                                                                                     AR746974
+     C                     MOVE *BLANKS   DPRNXX  6                                         AR746974
+     C                     MOVE @OLDDL    DPRNXX                                            AR746974
+     C           DPRNXX    SETLLDPTMVDL1                                                    AR746974
+     C           DPRNXX    READEDPTMVDL1                 86                                 AR746974
+     C           *IN86     DOWEQ*OFF                                                        AR746974
+      *                                                                                    AR746974A
+      **  Aim to move Front-office ID and Assoc Front-office ID to                         AR746974A
+      **  new depot movement and blank out those fields in the old trans                   AR746974A
+      *                                                                                    AR746974A
+     C                     MOVE DMFRNT    @DMFRN 20                                        AR746974A
+     C                     MOVE DMAFRT    @DMAFR 20                                        AR746974A
+     C                     MOVE *BLANKS   DMFRNT                                           AR746974A
+     C                     MOVE *BLANKS   DMAFRT                                           AR746974A
+      *                                                                                    AR746974A
+     C                     UPDATDPTMVL1                86                                  AR746974A
+      *                                                                                    AR746974A
+     C           *IN86     IFEQ '1'                                                        AR746974A
+     C           *LOCK     IN   LDA                                                        AR746974A
+     C                     MOVEL'DPTMVD'  DBFILE                                           AR746974A
+     C                     MOVELDPRNXX    DBKEY                                            AR746974A
+     C                     Z-ADD30        DBASE                                            AR746974A
+     C                     EXSR DBERR                                                      AR746974A
+     C                     ENDIF                                                           AR746974A
+      *                                                                                    AR746974A
+     C           DPSS      CHAINSECTY                88                                     AR746974
+     C                     MOVE 'D'       RECI             ** Record ID **                  AR746974
+     C                     MOVE HKDN38    DPAD             ** Assoc. Deal No. **            AR746974
+     C                     MOVE HKDVSD    DMTD             ** Trade Date **                 AR746974
+     C                     MOVE HKDVSD    DPVD             ** Value Date **                 AR746974
+     C                     MOVE HKTMST    DMTMST           ** Timestamp **                  AR746974
+     C                     Z-ADDBJRDNB    ORED             ** Orig. entry date **           AR746974
+     C                     Z-ADDBJRDNB    LCD              ** Last change date **           AR746974
+     C                     MOVE 'I'       CHTP             ** Type of last change **        AR746974
+     C                     MOVE HKORBR    ORBR             ** Originating Branch **         AR746974
+     C**********           Z-ADD0         TNLU                                    AR746974 AR746974A
+     C                     MOVE @DMFRN    DMFRNT           ** Front Office ID  **          AR746974A
+     C                     MOVE @DMAFR    DMAFRT           ** Assoc Frnt-Ofc ID**          AR746974A
+     C                     MOVELNATN      TNLU             ** Last Transaction No. **      AR746974A
+     C                     BITOF'01'      TACI             ** Accounting Indicator **      AR746974A
+     C                     BITOF'0'       DPMS             ** Message Indicator **         AR746974A
+      *                                                                                     AR746974
+     C                     MOVE HKDN38    DPRN             ** Reference **                  AR746974
+      *                                                                                     AR746974
+      ** Movement Date IN                                                                   AR746974
+      *                                                                                     AR746974
+     C           DPMV      IFEQ 'RR'                                                        AR746974
+     C           DPMV      OREQ 'BB'                                                        AR746974
+     C           DPMV      OREQ 'PL'                                                        AR746974
+     C                     MOVE HKDVSD    DPMD                                              AR746974
+     C                     ELSE                                                             AR746974
+      *                                                                                     AR746974
+      ** If this is a call deposit maturity date may not have been entered                  AR746974
+      ** Therefore set Depot Out date to maturity of security. If there                     AR746974
+      ** is no Maturity date e.g with shares set it to 99999.                               AR746974
+      *                                                                                     AR746974
+     C           HKTYPE    IFEQ 'CD'                                                        AR746974
+     C           HKMATD    IFNE 0                                                           AR746974
+     C                     MOVE HKMATD    DPMD             ** Movement DATE IN **           AR746974
+     C                     ELSE                                                             AR746974
+     C           MATY      IFNE 0                                                           AR746974
+     C                     MOVE MATY      DPMD                                              AR746974
+     C                     ELSE                                                             AR746974
+     C                     Z-ADD99999     DPMD                                              AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ELSE                                                             AR746974
+     C                     MOVE HKMATD    DPMD                                              AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+      ** Movement Date OUT                                                                  AR746974
+      *                                                                                     AR746974
+     C           DPMV      IFEQ 'RP'                                                        AR746974
+     C           DPMV      OREQ 'BL'                                                        AR746974
+     C           DPMV      OREQ 'PD'                                                        AR746974
+     C                     MOVE HKDVSD    DPDO             ** Movement Date OUT **          AR746974
+     C                     ELSE                                                             AR746974
+      *                                                                                     AR746974
+      ** If this is a call loan maturity date will not have been entered                    AR746974
+      ** Therefore set Depot In date to maturity of security. If there                      AR746974
+      ** is no Maturity date e.g with shares set it to 99999.                               AR746974
+      *                                                                                     AR746974
+     C           HKTYPE    IFEQ 'CL'                                                        AR746974
+     C           HKMATD    IFNE 0                                                           AR746974
+     C                     MOVE HKMATD    DPDO             ** Movement Date OUT **          AR746974
+     C                     ELSE                                                             AR746974
+     C           MATY      IFNE 0                                                           AR746974
+     C                     MOVE MATY      DPDO                                              AR746974
+     C                     ELSE                                                             AR746974
+     C                     Z-ADD99999     DPDO                                              AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ELSE                                                             AR746974
+     C                     MOVE HKMATD    DPDO             ** Movement Date OUT **          AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+      ** If CAC005 is on convert Book Code to Pseudo Book                                   AR746974
+      *                                                                                     AR746974
+     C           CAC005    IFEQ 'Y'                                                         AR746974
+     C                     CALL 'AOBKPCR0'                                                  AR746974
+     C                     PARM *BLANKS   PRTCD   7                                         AR746974
+     C                     PARM '*PSEUDO' POPTN   7                                         AR746974
+     C                     PARM HKBOKC    PBOOK   2                                         AR746974
+     C                     PARM HKPRFC    PPRFC   4                                         AR746974
+     C                     PARM           PPSCD   2                                         AR746974
+     C                     MOVE PPSCD     DPBK             ** Book Code **                  AR746974
+     C                     ELSE                                                             AR746974
+     C                     MOVE HKBOKC    DPBK             ** Book Code **                  AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C                     WRITEDPTMVL1                                                     AR746974
+     C                     ADD  1         ##DINS                                            AR746974
+     C                     ADD  1         ##DNOR                                            AR746974
+      *                                                                                     AR746974
+      ** IF S01401 IS SWITCHED ON DEPOT MOVEMENT EXTENSION                                  AR746974
+      ** RECORDS REQUIRE UPDATE                                                             AR746974
+      *                                                                                     AR746974
+     C           S01401    IFEQ 'Y'                                                         AR746974
+     C                     EXSR EXTDPT                                                      AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+      ** Update User Depot positions                                                        AR746974
+      *                                                                                     AR746974
+     C                     EXSR DEPINS                                                      AR746974
+      *                                                                                     AR746974
+     C           DPRNXX    READEDPTMVDL1                 86                                 AR746974
+     C                     ENDDO                                                            AR746974
+      *                                                                                     AR746974
+      ** UPDATE DEPOT MOVEMENTS AUDIT FILE                                                  AR746974
+      *                                                                                     AR746974
+     C                     EXSR UPDDPA                                                      AR746974
+      *                                                                                     AR746974
+      ** Update User Depot positions audit file                                             AR746974
+      *                                                                                     AR746974
+     C                     EXSR UPDUDA                                                      AR746974
+      *                                                                                     AR746974
+      ** Call the program to populate the UDF fields                                        AR746974
+      *                                                                                     AR746974
+     C                     CALL 'GO220005'                                                  AR746974
+     C                     PARM           DPRNXX                                            AR746974
+     C                     PARM           DPRN                                              AR746974
+      *                                                                                     AR746974
+     C           #WD09     ENDSR                                                            AR746974
+      *****************************************************************                     AR746974
+      /EJECT                                                                                AR746974
+      *****************************************************************                     AR746974
+      *                                                               *                     AR746974
+      * EXTDPT - If S01401 is switched ON depot movement extension    *                     AR746974
+      *          should also be updated.                              *                     AR746974
+      *                                                               *                     AR746974
+      * Called by: SR/#WD01                                           *                     AR746974
+      *                                                               *                     AR746974
+      * Calls: None                                                   *                     AR746974
+      *                                                               *                     AR746974
+      *****************************************************************                     AR746974
+     C           EXTDPT    BEGSR                                                            AR746974
+      *                                                                                     AR746974
+      ** Check whether depot movements exist on permanent depot movement                    AR746974
+      ** extension files for this depot movement. If they do exist then                     AR746974
+      ** copy the records.                                                                  AR746974
+      *                                                                                     AR746974
+     C                     MOVE DPSS      K#DPSS 10                                         AR746974
+     C                     MOVE DPRNXX    K#TDRF  6                                         AR746974
+      *                                                                                     AR746974
+     C           K#RCD     KLIST                                                            AR746974
+     C                     KFLD           K#DPSS                                            AR746974
+     C                     KFLD           K#TDRF                                            AR746974
+      *                                                                                     AR746974
+     C                     OPEN DPTMVDY1                                                    AR746974
+      *                                                                                     AR746974
+     C           K#RCD     CHAINDPTMVDY1             89                                     AR746974
+     C           *IN89     DOWEQ*OFF                                                        AR746974
+     C                     MOVE DPRN      DPDPRN                                            AR746974
+     C                     WRITEDPTMVDD1                                                    AR746974
+     C           K#RCD     READEDPTMVDY1                 89                                 AR746974
+     C                     ENDDO                                                            AR746974
+      *                                                                                     AR746974
+     C                     CLOSEDPTMVDY1                                                    AR746974
+     C                     OPEN DPTMVDY2                                                    AR746974
+      *                                                                                     AR746974
+     C           K#RCD     CHAINDPTMVDY2             89                                     AR746974
+     C           *IN89     DOWEQ*OFF                                                        AR746974
+     C                     MOVE DPRN      D2DPRN                                            AR746974
+     C                     WRITEDPTMVDD2                                                    AR746974
+     C           K#RCD     READEDPTMVDY2                 89                                 AR746974
+     C                     ENDDO                                                            AR746974
+      *                                                                                     AR746974
+     C                     CLOSEDPTMVDY2                                                    AR746974
+      *                                                                                     AR746974
+     C                     ENDSR                                                            AR746974
+      *****************************************************************                     AR746974
+      /EJECT                                                                                AR746974
+      *****************************************************************                     AR746974
+      *                                                               *                     AR746974
+      * DEPINS - Update User Depot positions as new depot movement    *                     AR746974
+      *          has been created/generated during COB.               *                     AR746974
+      *                                                               *                     AR746974
+      * Called by: SR/#WD01                                           *                     AR746974
+      *                                                               *                     AR746974
+      * Calls: None                                                   *                     AR746974
+      *                                                               *                     AR746974
+      *****************************************************************                     AR746974
+     C           DEPINS    BEGSR                                                            AR746974
+      *                                                                                     AR746974
+     C           UDEPPK    KLIST                                                            AR746974
+     C                     KFLD           DPBA                                              AR746974
+     C                     KFLD           DPSS                                              AR746974
+     C                     KFLD           DPID                                              AR746974
+     C                     KFLD           DPBK                                              AR746974
+     C                     KFLD           DPMK                                              AR746974
+      *                                                                                     AR746974
+     C                     Z-ADD0         ##UINS  50                                        AR746974
+      *                                                                                     AR746974
+      ** Update User In depot - value fields only updated if                                AR746974
+      ** movement date not after run date                                                   AR746974
+      *                                                                                     AR746974
+     C           UDEPPK    CHAINUDEPPDF              91                                     AR746974
+      *                                                                                     AR746974
+      ** If not found, create new record                                                    AR746974
+      *                                                                                     AR746974
+     C           *IN91     IFEQ *ON                                                         AR746974
+     C           *IN91     OREQ *OFF                                                        AR746974
+     C           RECI      ANDEQ'*'                                                         AR746974
+     C                     MOVE 'D'       RECI                                              AR746974
+     C                     MOVE DPBA      UDBA                                              AR746974
+     C                     MOVE DPSS      UDSN                                              AR746974
+     C                     MOVE DPID      UDPT                                              AR746974
+     C                     MOVE DPBK      UDBK                                              AR746974
+     C                     MOVE DPMK      UDMK                                              AR746974
+     C                     Z-ADDBJRDNB    UDDT                                              AR746974
+     C                     Z-ADD*ZEROS    UECN                                              AR746974
+     C                     Z-ADD*ZEROS    UDNT                                              AR746974
+     C                     Z-ADD*ZEROS    UDNV                                              AR746974
+     C                     Z-ADD*ZEROS    UDNS                                              AR746974
+     C                     Z-ADD*ZEROS    UNRT                                              AR746974
+     C                     Z-ADD*ZEROS    UNRV                                              AR746974
+     C                     Z-ADD*ZEROS    UDTP                                              AR746974
+     C                     Z-ADD*ZEROS    UDPV                                              AR746974
+     C                     Z-ADD*ZEROS    UDTS                                              AR746974
+     C                     Z-ADD*ZEROS    UDSV                                              AR746974
+     C                     Z-ADD*ZEROS    USNT                                              AR746974
+     C                     Z-ADD*ZEROS    USNR                                              AR746974
+     C                     Z-ADD*ZEROS    USNV                                              AR746974
+     C                     Z-ADD*ZEROS    USRV                                              AR746974
+     C                     Z-ADD*ZEROS    UNSI                                              AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C           *IN91     IFEQ *OFF                                                        AR746974
+     C           DPMV      IFEQ 'RP'                                                        AR746974
+     C           DPMD      ANDGTBJRDNB                                                      AR746974
+     C           DPMV      OREQ 'BL'                                                        AR746974
+     C           DPMD      ANDGTBJRDNB                                                      AR746974
+     C           DPMV      OREQ 'PD'                                                        AR746974
+     C           DPMD      ANDGTBJRDNB                                                      AR746974
+     C                     SUB  DPNA      USNT                                              AR746974
+     C           DPDO      IFLE BJRDNB                                                      AR746974
+     C                     SUB  DPNA      USNV                                              AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C           DPMV      IFEQ 'RR'                                                        AR746974
+     C           DPDO      ANDGTBJRDNB                                                      AR746974
+     C           DPMV      OREQ 'BB'                                                        AR746974
+     C           DPMD      ANDGTBJRDNB                                                      AR746974
+     C           DPMV      OREQ 'PL'                                                        AR746974
+     C           DPMD      ANDGTBJRDNB                                                      AR746974
+     C                     ADD  DPNA      USNR                                              AR746974
+     C           DPMD      IFLE BJRDNB                                                      AR746974
+     C                     ADD  DPNA      USRV                                              AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C           *IN91     IFEQ *ON                                                         AR746974
+     C                     WRITEUDEPPDF                                                     AR746974
+     C                     ADD  1         ##UINS                                            AR746974
+      *                                                                                     AR746974
+     C                     ELSE                                                             AR746974
+     C                     UPDATUDEPPDF                                                     AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C                     ENDSR                                                            AR746974
+      *****************************************************************                     AR746974
+      /EJECT                                                                                AR746974
+      *****************************************************************                     AR746974
+      *                                                               *                     AR746974
+      * UPDDPA - Update Depot Movement Audit file                     *                     AR746974
+      *                                                               *                     AR746974
+      * Called by: SR/#WD01                                           *                     AR746974
+      *                                                               *                     AR746974
+      * Calls: None                                                   *                     AR746974
+      *                                                               *                     AR746974
+      *****************************************************************                     AR746974
+     C           UPDDPA    BEGSR                                                            AR746974
+      *                                                                                     AR746974
+     C           1         CHAINDPTMVAF              93                                     AR746974
+     C           *IN93     IFEQ *OFF                                                        AR746974
+     C                     ADD  ##DINS    SINS                                              AR746974
+     C                     ADD  ##DNOR    NORE                                              AR746974
+     C                     UPDATDPTMVAF                                                     AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C                     ENDSR                                                            AR746974
+      *****************************************************************                     AR746974
+      /EJECT                                                                                AR746974
+      *****************************************************************                     AR746974
+      *                                                               *                     AR746974
+      * UPDUDA - Update User Depot positions audit file               *                     AR746974
+      *                                                               *                     AR746974
+      * Called by: SR/#WD01                                           *                     AR746974
+      *                                                               *                     AR746974
+      * Calls: None                                                   *                     AR746974
+      *                                                               *                     AR746974
+      *****************************************************************                     AR746974
+     C           UPDUDA    BEGSR                                                            AR746974
+      *                                                                                     AR746974
+     C           1         CHAINUDEPPAF              93                                     AR746974
+     C           *IN93     IFEQ *OFF                                                        AR746974
+     C                     ADD  ##UINS    NORE                                              AR746974
+     C                     UPDATUDEPPAF                                                     AR746974
+     C                     ENDIF                                                            AR746974
+      *                                                                                     AR746974
+     C                     ENDSR                                                            AR746974
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6662,6 +7061,7 @@ E01  C                     ENDIF                                                
      C/COPY ZSRSRC,GLINTCZ1                                                                 MD023322
      C/COPY ZSRSRC,ZINTDYZ2                                                                 MD023322
      C/COPY ZSRSRC,ZDATE9Z3                                                                 MD023322
+     C/COPY ZSRSRC,ZTNLU1Z2                                                                AR746974A
       *****************************************************************
       /EJECT
       *****************************************************************

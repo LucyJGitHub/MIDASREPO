@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058763           Date 08Nov21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. AR658107           Date 17Jul23               *
+      *  Prev Amend No. MD058763           Date 08Nov21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
@@ -121,6 +122,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR658107 - Auto-settle indicator on Fees to be set to 'N'.   *
+      *             Default AutoSettle indicator to N upon Insert or  *
+      *             amend when field is left blank. (Child: AR658108) *
       *  MD058763 - Error message LER5607 is displayed despite valid  *
       *             input. Amend conditions to conform with           *
       *             alphanumeric base rates.                          *
@@ -2066,10 +2070,10 @@
       ** Fee Input on 'Advise/Confirmed Indicator' field, both                                CLE054
       ** on Insert or Amend Mode.                                                             CLE054
       *                                                                                       CLE054
-     C                   IF        CLE054 = 'Y'                                               CLE054
-     C                             AND DDEADV = *BLANKS                                       CLE054
-     C                   EVAL      DDEADV = BPDASI                                            CLE054
-     C                   ENDIF                                                                CLE054
+     C**********         IF        CLE054 = 'Y'                                      CLE054 AR658107
+     C**********                   AND DDEADV = *BLANKS                              CLE054 AR658107
+     C**********         EVAL      DDEADV = BPDASI                                   CLE054 AR658107
+     C**********         ENDIF                                                       CLE054 AR658107
       *
       **  Can only be Y, N, or blank.
      C     DDEADV        IFEQ      *BLANKS
@@ -2118,7 +2122,11 @@
      C     DDACTN        Andeq     'I'                                                        237347
      C     DDEADV        Oreq      *Blanks                                                    237347
      C     DDACTN        Andeq     'A'                                                        237347
-     C                   Eval      DDEADV = BPDASI                                            237347
+     C**********         Eval      DDEADV = BPDASI                                   237347 AR658107
+      *                                                                                     AR658107
+      ** AutoSettle Indicator should be defaulted to N.                                     AR658107
+      *                                                                                     AR658107
+     C                   Eval      DDEADV = 'N'                                             AR658107
      C                   Endif                                                                237347
       *
       **  Can't auto settle calculated fees if adjustment outstanding

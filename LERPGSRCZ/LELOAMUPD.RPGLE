@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 28Apr22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD015646           Date 18Sep23               *
+      *  Prev Amend No. MD026384           Date 28Apr22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD054317           Date 09Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD015646 - Interest auto settle error when reversal of PDs   *
       *  MD026384 - Added generation by assignment processing.        *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2330,6 +2332,13 @@
      C     LO_BRTT       ANDEQ     *BLANKS                                                    CSD103
      C                   MOVE      *BLANK        LO_CHIN                                    AR547813
      C                   ENDIF                                                              AR547813
+      *                                                                                     MD015646
+      ** Amend PDIN in CLOANCL when reversal of a PD                                        MD015646
+      *                                                                                     MD015646
+     C     LACHTP        IFEQ      'R'                                                      MD015646
+     C     LAAMTP        ANDEQ     'PD'                                                     MD015646
+     C     LO_PDIN       SUB       LAINTA        LO_PDIN                                    MD015646
+     C                   ENDIF                                                              MD015646
       *                                                                                     AR547813
      C                   UPDATE    CLOANCLF
      C                   ENDIF

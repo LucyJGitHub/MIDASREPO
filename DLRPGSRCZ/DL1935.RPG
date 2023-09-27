@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. 250570             Date 11Jan22               *
+      *  Last Amend No. AR636899           Date 17Jul23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 250570             Date 11Jan22               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR636899 - Update TABLETX during action code = 'C' to not    *
+      *             cause FOOB during COB.                            *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -1619,6 +1622,45 @@
      C           DLSWPC    CHAINDLSWPRL2             64                   100317
      C           *IN64     DOWEQ'0'                                       100317
      C           DLSWPC    DELETDLSWPRL2             64                   100317
+     C*                                                                                     AR636899
+     C** Get Header Record for Update                                                       AR636899
+     C*                                                                                     AR636899
+     C                     MOVE *BLANKS   @KEY                                              AR636899
+     C                     MOVE 'IR'      @KEY1                                             AR636899
+     C           @KEY      CHAINFDTTOTLL             7074                                   AR636899
+     C*                                                                                     AR636899
+     C**  Data Base Error                                                                   AR636899
+     C*                                                                                     AR636899
+     C           *IN70     IFEQ '1'                                                         AR636899
+     C                     MOVEL@KEY      DBKEY            ***************                  AR636899
+     C                     MOVEL'FDTTOTLL'DBFILE           * DB ERROR 005*                  AR636899
+     C                     MOVE '005'     DBASE            ***************                  AR636899
+     C                     EXSR *PSSR                                                       AR636899
+     C                     END                                                              AR636899
+     C*                                                                                     AR636899
+     C** If Record Locked Send Message and Release Main Update Record                       AR636899
+     C*                                                                                     AR636899
+     C           *IN74     IFEQ '1'                                                         AR636899
+     C                     CALL 'ZA0250'                                                    AR636899
+     C                     MOVEL'FIS0039' @MSGID                                            AR636899
+     C                     CALL 'ZA0240'                                                    AR636899
+     C                     PARM           @MSGID                                            AR636899
+     C                     MOVE 'N'       @UPDTD                                            AR636899
+     C                     ROLBK                                                            AR636899
+     C                     GOTO #VALK9                                                      AR636899
+     C                     END                                                              AR636899
+      *                                                                                     AR636899
+      ** Update No. of records deleted                                                      AR636899
+      *                                                                                     AR636899
+     C           *IN64     IFEQ *OFF                                                        AR636899
+     C           IRDLTF    ANDNE'*'                                                         AR636899
+     C                     ADD  1         NDEL                                              AR636899
+     C                     ENDIF                                                            AR636899
+      *                                                                                     AR636899
+      ** Update TABLETX                                                                     AR636899
+      *                                                                                     AR636899
+     C                     UPDATTABLETXF                                                    AR636899
+      *                                                                                     AR636899
      C                     END                                            100317
      C                     END                                            100317
      C*                                                                   100317

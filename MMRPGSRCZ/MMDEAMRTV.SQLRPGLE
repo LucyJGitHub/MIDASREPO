@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 255626             Date 25Jul22               *      
+      *  Last Amend No. AR583273           Date 14Jul23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 AR806147           Date 21May18               *
@@ -93,12 +94,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR583273 - Manually Open/Close file DEALSH to prevent the    *
+      *           locking on file MMDELULL. (Child: AR583274)         *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
       *           properly updated when a deal amendment is authorised*
       *           and related deal amendments with lower value or     *
-      *           sequence are authorised.                            *      
+      *           sequence are authorised.                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
@@ -224,6 +227,7 @@
      F                                     RENAME(MMDEAMP0:MMDEAMP4)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
      FDEALSH    IF   E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                           AR583273
      F                                     RENAME(DEALSDBF:DEALSHBF)
      F                                     RENAME(DEALSDCF:DEALSHCF)
      F                                     RENAME(DEALSDDF:DEALSHDF)
@@ -1040,7 +1044,7 @@
      C*
      C*****@DEAMK        SETLL     MMDEAMLL                           65                      191881
      C*****@DEAMK        READPE    MMDEAMLL                               65                  191881
-     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626     
+     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626
      C*****@@DLNO        SETLL     MMDEAMLL                           65               191881 255626
      C     @@DLNO        READPE    MMDEAMLL                               65                  191881
 B2   C     *IN65         DOWEQ     '0'
@@ -1322,6 +1326,7 @@ E2   C                   ENDDO
      C** Check that the deal does not exist on
      C** DEALSH file else, it is an error
      C*
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65
      C*
      C** Record already exists in DEALSH file
@@ -1332,6 +1337,7 @@ E2   C                   ENDDO
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI
      C                   ELSE                                                    CSE006
      C*                                                                          CSE006
@@ -1344,8 +1350,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                              CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                  CSE006
      C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                    CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI                                        CSE006
      C                   END                                                     CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   END
      C*
      C** Check valid deal for key fields
@@ -1408,6 +1416,7 @@ E2   C                   ENDDO
       ** Check that the deal does not exist on                                              BUG16961
       ** DEALSH file else, it is an error                                                   BUG16961
       *                                                                                     BUG16961
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65                    BUG16961
       *                                                                                     BUG16961
       ** Record already exists in DEALSH file                                               BUG16961
@@ -1419,8 +1428,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                                         BUG16961
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                             BUG16961
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)                               BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAF                                                   BUG16961
      C                   ENDIF                                                              BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
       *                                                                                      BUG7537
       ** Remove the rest of processing below as this will be                                 BUG7537
       ** handled in main screen validation subr/VALACI.                                      BUG7537

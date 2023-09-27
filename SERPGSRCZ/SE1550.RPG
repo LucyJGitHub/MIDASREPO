@@ -18,8 +18,10 @@
       *  (c) Finastra International Limited 2001                      *
       *      1988, 1991.                                              *
       *                                                               *
-      *  Last Amend No. 260318             Date 07Jun21               *
-      *  Prev Amend No. 258879             Date 22May20               *
+      *  Last Amend No. CSE115             Date 29Aug23               *
+      *  Prev Amend No. CSE114             Date 29Aug23               *
+      *                 260318             Date 07Jun21               *
+      *                 258879             Date 22May20               *
       *                 249578             Date 22May20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -63,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE115 - Default SE Shadow Posting Value Date to Event Date  *
+      *  CSE114 - Exclude SE Interbranch Entries from SE Shadow Post  *
       *  260318 - Event type for position settlements not shown       *
       *           correctly in the projected account movements.       *
       *           Applied for MD-57791.                               *
@@ -298,7 +302,7 @@
      C*  P R O G R A M     S T A R T                                  *
      C*================================================================
      C*
-     C           *IN69     IFEQ '0'
+B1   C           *IN69     IFEQ '0'
      C*
      C* Prepare LDA
      C*
@@ -337,6 +341,29 @@
      C                     MOVE 'Y'       CRE009                          CRE009
      C                     ENDIF                                          CRE009
       *
+      ** Determine if feature CSE114 is installed.                        CSE114
+      *                                                                   CSE114
+     C                     MOVE 'N'       CSE114                          CSE114
+     C                     CALL 'AOSARDR0'                                CSE114
+     C                     PARM '       ' @RTCD                           CSE114
+     C                     PARM '*VERIFY' @OPTN                           CSE114
+     C                     PARM 'CSE114'  WSARD   6                       CSE114
+      *                                                                   CSE114
+     C           @RTCD     IFEQ *BLANK                                    CSE114
+     C                     MOVE 'Y'       CSE114  1                       CSE114
+     C                     END                                            CSE114
+      *
+      ** Determine if feature CSE115 is installed.                        CSE115
+      *                                                                   CSE115
+     C                     MOVE 'N'       CSE115                          CSE115
+     C                     CALL 'AOSARDR0'                                CSE115
+     C                     PARM '       ' @RTCD                           CSE115
+     C                     PARM '*VERIFY' @OPTN                           CSE115
+     C                     PARM 'CSE115'  WSARD   6                       CSE115
+      *                                                                   CSE115
+     C           @RTCD     IFEQ *BLANK                                    CSE115
+     C                     MOVE 'Y'       CSE115  1                       CSE115
+     C                     END                                            CSE115
      C*
      C* Get Installation Control Data record 1
      C*
@@ -434,7 +461,7 @@
      C                     END                                            088755
      C*                                                                   088755
      C                     SETON                     69
-     C                     END
+E1   C                     END
      C*
      C* Count records in
      C*
@@ -447,11 +474,11 @@
      C*
      C                     SETOF                     50
      C*
-     C           *IN01     IFEQ '1'
+B1   C           *IN01     IFEQ '1'
      C***********TRVD      IFEQ DNWD                                      S01154
      C***********TRVD      IFEQ RUND                               S01154 132257
      C***********TRVD      IFLT DNWD                               132257 CRE009
-     C           CRE009    IFEQ 'Y'                                       CRE009
+B2   C           CRE009    IFEQ 'Y'                                       CRE009
      C           TRVD      ANDLEWDATE                                     CRE009
      C           IBRE      ANDNE'Y'                                                           258879
      C********** TRVD      ANDGERUND                                                   132257 258879
@@ -462,7 +489,7 @@
      C********** SKTD      ANDEQ'T'                                                    S01448 201149
      C/COPY WNCPYSRC,SE1550C003
      C*
-     C           TRSM      IFEQ 4
+B3   C           TRSM      IFEQ 4
      C           TRSM      OREQ 5
      C           TRSM      OREQ 14
      C           TRSM      OREQ 15
@@ -474,15 +501,15 @@
      C*                                                                   061659
      C** If settlement is via nostro obtain details                       061659
      C*                                                                   061659
-     C                     ELSE                                           061659
-     C           TRSM      IFEQ 1                                         061659
+X3   C                     ELSE                                           061659
+B4   C           TRSM      IFEQ 1                                         061659
      C           TRSM      OREQ 7                                         061659
      C           TRSM      OREQ 8                                         061659
      C                     MOVELTRSC      A7CYCD                          061659
      C                     MOVELTRSA      A7NONB                          061659
      C                     MOVE '1'       *IN50                           061659
      C           KLNOST    CHAINSDNOSTL1             33                   061659
-     C           *IN33     IFEQ '1'                                       061659
+B5   C           *IN33     IFEQ '1'                                       061659
      C           *LOCK     IN   LDA                                       061659
      C                     Z-ADD21        DBASE             ************  061659
      C                     MOVEL'SDNOST'  DBFILE            * DATABASE *  061659
@@ -492,19 +519,19 @@
      C                     SETON                     U7U8                 061659
      C                     OUT  LDA                                       061659
      C                     EXSR *PSSR                                     061659
-     C                     END                                            061659
-     C                     END                                            061659
+E5   C                     END                                            061659
+E4   C                     END                                            061659
       *                                                                   061659
-     C                     END
-     C                     END
+E3   C                     END
+E2   C                     END
      C*
-     C                     ELSE
-     C           APNS      IFEQ 'Y'                                       S01154
+X1   C                     ELSE
+B2   C           APNS      IFEQ 'Y'                                       S01154
      C           EVRECI    OREQ 'A'                                                           249578
      C***********CCDT      IFEQ DNWD                                      S01154
      C***********CCDT      IFEQ RUND                               S01154 132257
      C***********CCDT      IFLT DNWD                               132257 CRE009
-     C           CRE009    IFEQ 'Y'                                       CRE009
+B3   C           CRE009    IFEQ 'Y'                                       CRE009
      C           CCDT      ANDLEWDATE                                     CRE009
      C********** CCDT      ANDGERUND                                                   132257 258879
      C           CRE009    OREQ 'N'                                       CRE009
@@ -512,7 +539,7 @@
      C********** CCDT      ANDGERUND                                                   CRE009 258879
      C/COPY WNCPYSRC,SE1550C004
      C*
-     C           CCSM      IFEQ 4
+B4   C           CCSM      IFEQ 4
      C           CCSM      OREQ 5
      C           CCSM      OREQ 14
      C           CCSM      OREQ 15
@@ -523,15 +550,15 @@
      C*                                                                   061659
      C** If settlement is via nostro obtain details                       061659
      C*                                                                   061659
-     C                     ELSE                                           061659
-     C           CCSM      IFEQ 1                                         061659
+X4   C                     ELSE                                           061659
+B5   C           CCSM      IFEQ 1                                         061659
      C           CCSM      OREQ 7                                         061659
      C           CCSM      OREQ 8                                         061659
      C                     MOVELCCEC      A7CYCD                          061659
      C                     MOVELCCSA      A7NONB                          061659
      C                     MOVE '1'       *IN50                           061659
      C           KLNOST    CHAINSDNOSTL1             33                   061659
-     C           *IN33     IFEQ '1'                                       061659
+B6   C           *IN33     IFEQ '1'                                       061659
      C           *LOCK     IN   LDA                                       061659
      C                     Z-ADD21        DBASE             ************  061659
      C                     MOVEL'SDNOST'  DBFILE            * DATABASE *  061659
@@ -541,34 +568,34 @@
      C                     SETON                     U7U8                 061659
      C                     OUT  LDA                                       061659
      C                     EXSR *PSSR                                     061659
-     C                     END                                            061659
-     C                     END                                            061659
+E6   C                     END                                            061659
+E5   C                     END                                            061659
       *                                                                   061659
-     C                     END
-     C                     END
-     C                     END                                            S01154
+E4   C                     END
+E3   C                     END
+E2   C                     END                                            S01154
      C*
-     C                     END
+E1   C                     END
      C*
      C* Further action required
      C*
-     C           *IN50     IFEQ '1'
+B1   C           *IN50     IFEQ '1'
      C*
      C   01                MOVE '  '      CCSM
      C  N01                MOVE '  '      TRSM
      C*
-     C           TRSM      IFEQ 14
+B2   C           TRSM      IFEQ 14
      C           CCSM      OREQ 14
-     C           *IN01     IFEQ '1'
+B3   C           *IN01     IFEQ '1'
      C                     MOVELTRSA      WORK10 100
      C                     ELSE
      C                     MOVELCCSA      WORK10
-     C                     END
+E3   C                     END
      C*
      C* Fetch key fields to access account file
      C*
      C           WORK10    CHAINACNUMF               33
-     C           *IN33     IFEQ '1'                        ***************
+B3   C           *IN33     IFEQ '1'                        ***************
      C           *LOCK     IN   LDA                                       S01117
      C***********          MOVE '03'      DBASE            **DB*ERROR*03**E20651
      C***********          MOVE '11'      DBASE     **DB*ERROR*11**E20651 S01117
@@ -582,11 +609,11 @@
      C                     OUT  LDA                                       S01117
      C                     EXSR *PSSR                                     S01117
      C                     RETRN
-     C                     END
+E3   C                     END
      C*
-     C                     ELSE
-     C           *IN01     IFEQ '1'
-     C           TRSM      IFEQ 1                                         061659
+X2   C                     ELSE
+B3   C           *IN01     IFEQ '1'
+B4   C           TRSM      IFEQ 1                                         061659
      C           TRSM      OREQ 7                                         061659
      C           TRSM      OREQ 8                                         061659
      C                     MOVELA7CUST    CNUM                            061659
@@ -596,7 +623,7 @@
      C                     MOVELA7BRCD    BRCA                            061659
      C***********          MOVELA7BRCD    TRBA                     061659 086485
      C                     MOVELA7BRCD    TRTA                            086485
-     C                     ELSE                                           061659
+X4   C                     ELSE                                           061659
      C                     MOVELTRSA      CNUM
      C                     MOVE TRSC      CCY
      C**********           MOVE TRSA      WORK6   6                                           CGL029
@@ -605,9 +632,9 @@
      C                     MOVE WORK6     ACSQ
      C***********          MOVE TRBA      BRCA                     S01117 086485
      C                     MOVE TRTA      BRCA                            086485
-     C                     END                                            061659
-     C                     ELSE
-     C           CCSM      IFEQ 1                                         061659
+E4   C                     END                                            061659
+X3   C                     ELSE
+B4   C           CCSM      IFEQ 1                                         061659
      C           CCSM      OREQ 7                                         061659
      C           CCSM      OREQ 8                                         061659
      C                     MOVELA7CUST    CNUM                            061659
@@ -617,7 +644,7 @@
      C                     MOVELA7BRCD    BRCA                            061659
      C***********          MOVELA7BRCD    CCBA                     061659 086485
      C                     MOVELA7BRCD    CCTA                            086485
-     C                     ELSE                                           061659
+X4   C                     ELSE                                           061659
      C                     MOVELCCSA      CNUM
      C                     MOVE CCEC      CCY
      C                     MOVE CCSA      WORK6
@@ -625,9 +652,9 @@
      C                     MOVE WORK6     ACSQ
      C***********          MOVE CCBA      BRCA                     S01117 086485
      C                     MOVE CCTA      BRCA                            086485
-     C                     END                                            061659
-     C                     END
-     C                     END
+E4   C                     END                                            061659
+E3   C                     END
+E2   C                     END
      C*
      C           ACCNTK    CHAINACCNTABF             33
      C           *IN33     IFEQ '1'                        ***************
@@ -647,11 +674,11 @@
      C*
      C* Only output shadow posting if a/c type 'R'
      C*
-     C           ATYP      IFEQ 'R'
+B2   C           ATYP      IFEQ 'R'
      C                     EXSR SHDPST
-     C                     END
+E2   C                     END
      C*
-     C                     END
+E1   C                     END
      C*
      C* Do audit process at last record time
      C*
@@ -783,7 +810,10 @@
      CL0         *IN71     IFEQ '1'
      CL0         *IN72     OREQ '1'
      CL0         *IN73     OREQ '1'
+      ** Only check for trailer if CSE114 is switched off.                CSE114
+     CL0         CSE114    IFEQ 'N'                                       CSE114
      CL0                   SETON                     U8
+     CL0                   ENDIF                                          CSE114
      CL0                   END
      C*
      CL0         *INU8     IFEQ '0'
@@ -824,6 +854,7 @@
      C*                                                               *
      CSR         SHDPST    BEGSR
      C*
+     C*
      C/COPY WNCPYSRC,SE1550C007
      C                     MOVE 'P'       RECI
      C                     MOVE *BLANKS   ZZ006
@@ -845,7 +876,7 @@
      C                     BITOF'01234567'PRIN
      C                     MOVE 'S'       GETP
      C                     Z-ADD1         ACUM
-     C           *IN01     IFEQ '1'
+B1   C           *IN01     IFEQ '1'
      C                     Z-ADDTRVD      PSTD
      C                     Z-ADDTRVD      VALD
      C***********          MOVELTRSS      WORK16 16                       S01154
@@ -867,27 +898,27 @@
      C***********PSTA      IFGT *ZEROS                                    071134
       *                                                                   071134
       * Incoming amount is a debit, outgoing is a credit.                 071134
-     C           TRIO      IFEQ 'I'                                       071134
+B2   C           TRIO      IFEQ 'I'                                       071134
      C                     Z-ADD0         DRCR
      C                     ELSE
      C                     Z-ADD1         DRCR
-     C                     END
+E2   C                     END
      C***********          END                                            071134
      C*                                                                   S01117
      C** Transfer trade profit centre to posting                          S01117
      C*                                                                   S01117
      C                     MOVE TRPRFC    PRFC                            S01117
-     C                     ELSE
-     C           *IN02     IFEQ '1'
+X1   C                     ELSE
+B2   C           *IN02     IFEQ '1'
      C***********CCET      IFEQ 'PP'                                      071134
      C***********CCEA      IFGT *ZEROS                                    071134
       *                                                                   071134
       * Incoming amount is a debit, outgoing is a credit.                 071134
-     C           CCIO      IFEQ 'I'                                       071134
+B3   C           CCIO      IFEQ 'I'                                       071134
      C                     Z-ADD0         DRCR
      C                     ELSE
      C                     Z-ADD1         DRCR
-     C                     END
+E3   C                     END
      C***********          ELSE                                           071134
      C***********CCEA      IFGT *ZEROS                                    071134
      C***********          Z-ADD1         DRCR                            071134
@@ -898,9 +929,9 @@
      C*                                                                   S01117
      C** Obtain customer position profit centre                           S01117
      C*                                                                   S01117
-     C           BKPRCU    IFEQ 'Y'                                       088755
+B3   C           BKPRCU    IFEQ 'Y'                                       088755
      C           KSEPCC    CHAINSEPCCD               33                   S01117
-     C           *IN33     IFEQ '1'                                       S01117
+B4   C           *IN33     IFEQ '1'                                       S01117
      C           *LOCK     IN   LDA                        ***************S01117
      C                     Z-ADD12        DBASE            **DB ERROR 12**S01117
      C                     MOVEL'SEPCCD'  DBFILE           ***************S01117
@@ -912,12 +943,12 @@
      C                     OUT  LDA                                       S01117
      C                     EXSR *PSSR                                     S01117
      C                     RETRN                                          S01117
-     C                     END                                            S01117
-     C                     END                                            088755
+E4   C                     END                                            S01117
+E3   C                     END                                            088755
      C                     MOVE PCCU      PRFC                            S01117
      C*                                                                   S01117
-     C                     ELSE
-     C           *IN03     IFEQ '1'
+X2   C                     ELSE
+B3   C           *IN03     IFEQ '1'
      C***********CCET      IFEQ 'PP'                                      071134
      C***********CCEA      IFGT *ZEROS                                    071134
      C***********          Z-ADD1         DRCR                            071134
@@ -928,29 +959,32 @@
      C***********CCEA      IFGT *ZEROS                                    071134
       *                                                                   071134
       * Incoming amount is a debit, outgoing is a credit.                 071134
-     C           CCIO      IFEQ 'I'                                       071134
+B4   C           CCIO      IFEQ 'I'                                       071134
      C                     Z-ADD0         DRCR
      C                     ELSE
      C                     Z-ADD1         DRCR
-     C                     END
+E4   C                     END
      C***********          END                                            071134
      C*                                                                   S01117
      C** Depot positions do not have profit centres                       S01117
      C*                                                                   S01117
      C                     MOVE *BLANKS   PRFC                            S01117
      C*                                                                   S01117
-     C                     END
-     C                     END
+E3   C                     END
+E2   C                     END
      C                     Z-ADDCCDT      PSTD
      C*                                                                   S01510
      C** If S01510 is active and payment date not the same as event       S01510
      C** date, set value date to payment date                             S01510
      C*                                                                   S01510
-     C           CCPD      IFNE CCDT                                      S01510
+B2   C           CCPD      IFNE CCDT                                      S01510
+      ** Always set value date of the shadow posting to event date if     CSE115
+      ** CSE115 is switched ON. (will always execute the else part)       CSE115
+     C           CSE115    ANDEQ'N'                                       CSE115
      C                     Z-ADDCCPD      VALD                            S01510
      C                     ELSE                                           S01510
      C                     Z-ADDCCDT      VALD
-     C                     END                                            S01510
+E2   C                     END                                            S01510
      C*                                                                   S01510
       *                                                                                       260318
       ** For depot or customer position events: write event name                              260318
@@ -959,9 +993,9 @@
      C                     MOVELCCTA      NAR25  25                                           260318
      C                     MOVE CCSS      NAR21  21                                           260318
      C           CCCE      LOKUPTABCOD    TABNAM         71                                   260318
-     C           *IN71     IFEQ '1'                                                           260318
+B2   C           *IN71     IFEQ '1'                                                           260318
      C                     MOVELTABNAM    NAR21                                               260318
-     C                     ENDIF                                                              260318
+E2   C                     ENDIF                                                              260318
      C**********           MOVELCCSS      PNAR                                                260318
      C                     MOVE NAR21     NAR25                                               260318
      C                     MOVELNAR25     PNAR                                                260318
@@ -970,7 +1004,7 @@
      C***********          Z-ADDCCBR      BRCD                            S01117
      C***********          MOVE CCBA      BRCA                     S01117 091969
      C                     MOVE CCTA      BRCA                            091969
-     C                     END
+E1   C                     END
      C                     WRITEAPOSTPDF
      C*
      C* Keep total for audit record
@@ -985,6 +1019,7 @@
      C                     EXSR ZHASH
      C                     Z-ADDINT,S     HSHINT
      C                     Z-ADDDEC,S     HSHDEC
+     C*
      C*
      C/COPY WNCPYSRC,SE1550C008
      CSR                   ENDSR

@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046998A          Date 15Apr21               *
+      *  Last Amend No. CSE118             Date 29Aug23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046998A          Date 15Apr21               *
       *                 248698             Date 01Jun20               *
       *                 MD057247           Date 01Feb21               *
       *                 MD050604           Date 21Feb20               *
@@ -128,6 +129,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSE118 - SE Amortised-to-date must reflect Current Holding   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046998A - Recompiled due to changes in /COPY ZDYYRZ3       *
       *            - Applied fix for MD057480                         *
@@ -412,6 +414,7 @@
      F****77*-*SECED*RECORD*READ                                   E13817 E20085
      F****78*-*EOF*ON*SECED                                        E13817 E20085
      F*                                                               *
+     F*   51 - FEATURE CSE118 ON                                      *                       CSE118
      F*   52 - AUSTRALIAN YIELD SECURITY                              *   S01232
      F*   88 - EOF ON BKPHD FOR READE                                 *
      F*   89 - EOF ON MATAC                                           *
@@ -492,6 +495,12 @@
      IINVTPDF                                                                                 CSE037
      I              SFLG                            ISFLG                                     CSE037
      I*                                                                   E13817
+     IBKPOSDF                                                                                 CSE118
+      *                                                                                       CSE118
+      * TO RENAME BKPOSD FIELDS                                                               CSE118
+      *                                                                                       CSE118
+     I              RECI                            RECIX                                     CSE118
+     I*                                                                                       CSE118
      I* DATA STRUCTURES FOR Z-SUBROUTINES
      I*
      I/COPY ZSRSRC,ZNCDZ2
@@ -1226,6 +1235,11 @@
      C                     ELSE
      C                     EXSR W02
      C                     END
+     C*                                                                                       CSE118
+     C           CSE118    IFEQ 'Y'                                                           CSE118
+     C                     Z-ADD0         NPSN                                                CSE118
+     C                     EXCPTUBKPOS                                                        CSE118
+     C                     END                                                                CSE118
      C*
      C           ENDRD     TAG                             *** ENDRD  ***
      C                     END
@@ -1431,6 +1445,21 @@
      C                     ELSE                                                               CSE035
      C                     MOVE 'N'       CSE035                                              CSE035
      C                     ENDIF                                                              CSE035
+      *                                                                                       CSE118
+      ** Access SAR details file to see if CSE118 is installed                                CSE118
+      *                                                                                       CSE118
+     C                     CALL 'AOSARDR0'                                                    CSE118
+     C                     PARM *BLANKS   @RTCD                                               CSE118
+     C                     PARM '*VERIFY' @OPTN                                               CSE118
+     C                     PARM 'CSE118'  @SARD                                               CSE118
+      *                                                                                       CSE118
+     C           @RTCD     IFEQ *BLANK                                                        CSE118
+     C                     MOVE 'Y'       CSE118  1                                           CSE118
+     C                     MOVE '1'       *IN51                                               CSE118
+     C                     ELSE                                                               CSE118
+     C                     MOVE 'N'       CSE118                                              CSE118
+     C                     MOVE '0'       *IN51                                               CSE118
+     C                     ENDIF                                                              CSE118
      C*                                                                   CAC002
      C**  Access Securities Trading details                               CAC002
      C*                                                                   CAC002
@@ -2672,6 +2701,10 @@ SP   C************         Z-ADD1         Z
      C                     Z-ADD*ZERO     INDN                                                CAS006
      C                     ENDIF                                                              CAS006
      C*
+     C           CSE118    IFEQ 'Y'                                                           CSE118
+     C                     Z-ADD0         DPFP                                                CSE118
+     C                     ENDIF                                                              CSE118
+      *                                                                                       CSE118
      C                     UPDATBKPHDDF
      C*
      C*
@@ -2825,8 +2858,13 @@ SP   C************         Z-ADD1         Z
      C*  FLAG THE BOOK POSITION AS MATURED (RECI EQUAL TO 'M')            E14236
      C*                                                                   E14236
      C                     ELSE                                           E14236
-     C                     MOVEL'M'       RECI                            E14236
+     C           CSE118    IFEQ 'N'                                                           CSE118
+     C***********          MOVEL'M'       RECI                                         E14236 CSE118
+     C                     MOVEL'M'       RECIX                                               CSE118
      C                     EXCPTUBKPOS                                    E14236
+     C                     ELSE                                                               CSE118
+     C                     MOVEL'M'       RECIX                                               CSE118
+     C                     END                                                                CSE118
      C                     END                                            E14236
      C*                                                                   E14236
      C                     ENDSR
@@ -3419,7 +3457,9 @@ SP   C************         Z-ADD1         Z
      C***/COPY ZSRSRC,ZYLDZ2                                              E22957
       ***O/EJECT                                                          E22957
      OBKPOSDF E                UBKPOS                                     E14236
-     O                         RECI                                       E14236
+     O**********               RECI                                                    E14236 CSE118
+     O                         RECIX                                                          CSE118
+     O                 51      NPSN                                                           CSE118
       /EJECT
       ***
 **  CPY@

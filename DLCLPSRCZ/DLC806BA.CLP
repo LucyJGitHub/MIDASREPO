@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. BA5909             Date 07Aug23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL002             Date 22Sep97              */
+/*                      CDL002             Date 22Sep97              */
 /*                      064998             Date 23Dec93              */
 /*                S01433               DATE  04OCT93                 */
 /*                E27942               DATE  03SEP91                 */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       BA5909 - Various Changes to the Events Reports             */
 /*       MD046248 - Finastra Rebranding                              */
 /* CDL002 - FX Netting.                                             */
 /* 064998  - If called twice through the same job the program leaves*/
@@ -61,6 +63,8 @@
              DCL        VAR(&CDL002) TYPE(*CHAR) LEN(1) VALUE('N')    /*CDL002*/
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)              /*CDL002*/
              DCL        VAR(&BNNTCE) TYPE(*CHAR) LEN(1) VALUE('N')    /*CDL002*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*BA5909*/
+             DCL        VAR(&BA5909) TYPE(*CHAR) LEN(1)                                   /*BA5909*/
 /**/
 /*   MONITOR FOR ANY ERRORS AND SEND APPROPRIATE MESSAGE */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -75,6 +79,16 @@
              CHGVAR     VAR(&PTNO) VALUE(%SST(&PARM 8 6))            /*E17   */
 /*********** CHGVAR     VAR(&EXR) VALUE(%SST(&PARM 14 14))             E17   */
              CHGVAR     VAR(&EXR) VALUE(%SST(&PARM 14 1))            /*E17   */
+/**/                                                                                      /*BA5909*/
+/** Access SAR file to determine if switchable feature BA5909                */           /*BA5909*/
+/** is switched ON.  If ON, override to new LFs EVLNCBV0 and EVLPCBV0.       */           /*BA5909*/
+/**/                                                                                      /*BA5909*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BA5909*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BA5909*/
+             CHGVAR     VAR(&SARD) VALUE('BA5909')                                        /*BA5909*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                     /*BA5909*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&BA5909) VALUE('Y'))                                        /*BA5909*/
                                                                       /*CDL002*/
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CDL002')  /*CDL002*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
@@ -105,8 +119,16 @@
                  CHGVAR     VAR(&PROPNR) VALUE('Against branch limits +
                             (one branch)')
                ENDDO
+                                                                                          /*BA5909*/
+             IF         COND(&BA5909 *EQ 'Y') THEN(DO)                                    /*BA5909*/
+                 OVRDBF     FILE(EVLN) TOFILE(A5LNCBV0)                                   /*BA5909*/
+                 OVRDBF     FILE(EVLP) TOFILE(A5LPCBV0)                                   /*BA5909*/
+             ENDDO                                                                        /*BA5909*/
+             ELSE (DO)                                                                    /*BA5909*/
                OVRDBF     FILE(EVLN) TOFILE(EVLBBN)
                OVRDBF     FILE(EVLP) TOFILE(EVLBBP)
+             ENDDO                                                                        /*BA5909*/
+                                                                                          /*BA5909*/
                                                                       /*CDL002*/
                IF         COND((&CDL002 *EQ 'Y') *AND (&BNNTCE *EQ +
                           'Y')) THEN(DO)                              /*CDL002*/
@@ -144,8 +166,16 @@
                IF         COND(&PROD *EQ '1') THEN(DO)
                  CHGVAR     VAR(&PROPNR) VALUE('Against system limits')
                  CHGVAR     VAR(&NUMB) VALUE(' ')
+                                                                                          /*BA5909*/
+             IF         COND(&BA5909 *EQ 'Y') THEN(DO)                                    /*BA5909*/
+                 OVRDBF     FILE(EVLN) TOFILE(A5LNCBV0)                                   /*BA5909*/
+                 OVRDBF     FILE(EVLP) TOFILE(A5LPCBV0)                                   /*BA5909*/
+             ENDDO                                                                        /*BA5909*/
+             ELSE (DO)                                                                    /*BA5909*/
                  OVRDBF     FILE(EVLN) TOFILE(EVLNCB)
                  OVRDBF     FILE(EVLP) TOFILE(EVLPCB)
+             ENDDO                                                                        /*BA5909*/
+                                                                                          /*BA5909*/
                                                                       /*CDL002*/
                IF         COND((&CDL002 *EQ 'Y') *AND (&BNNTCE *EQ +
                           'Y')) THEN(DO)                              /*CDL002*/
@@ -161,8 +191,16 @@
                  CHGVAR     VAR(&PROPNR) VALUE('Against all limits +
                             (by customer)')
                  CHGVAR     VAR(&NUMB) VALUE(' ')
+                                                                                          /*BA5909*/
+             IF         COND(&BA5909 *EQ 'Y') THEN(DO)                                    /*BA5909*/
+                 OVRDBF     FILE(EVLN) TOFILE(A5LNCBV0)                                   /*BA5909*/
+                 OVRDBF     FILE(EVLP) TOFILE(A5LPCBV0)                                   /*BA5909*/
+             ENDDO                                                                        /*BA5909*/
+             ELSE (DO)                                                                    /*BA5909*/
                  OVRDBF     FILE(EVLN) TOFILE(EVLNCB)
                  OVRDBF     FILE(EVLP) TOFILE(EVLPCB)
+             ENDDO                                                                        /*BA5909*/
+                                                                                          /*BA5909*/
                                                                       /*CDL002*/
                IF         COND((&CDL002 *EQ 'Y') *AND (&BNNTCE *EQ +
                           'Y')) THEN(DO)                              /*CDL002*/
@@ -175,8 +213,16 @@
                  CHGVAR     VAR(&PROPNR) VALUE('Against all limits +
                             (one customer)')
                  CHGVAR     VAR(&NUMB) VALUE(&CUNO)
+                                                                                          /*BA5909*/
+             IF         COND(&BA5909 *EQ 'Y') THEN(DO)                                    /*BA5909*/
+                 OVRDBF     FILE(EVLN) TOFILE(A5LNCBV0)                                   /*BA5909*/
+                 OVRDBF     FILE(EVLP) TOFILE(A5LPCBV0)                                   /*BA5909*/
+             ENDDO                                                                        /*BA5909*/
+             ELSE (DO)                                                                    /*BA5909*/
                  OVRDBF     FILE(EVLN) TOFILE(EVLNCB)
                  OVRDBF     FILE(EVLP) TOFILE(EVLPCB)
+             ENDDO                                                                        /*BA5909*/
+                                                                                          /*BA5909*/
                                                                       /*CDL002*/
                IF         COND((&CDL002 *EQ 'Y') *AND (&BNNTCE *EQ +
                           'Y')) THEN(DO)                              /*CDL002*/
@@ -189,8 +235,16 @@
                  CHGVAR     VAR(&PROPNR) VALUE('Against all limits +
                             (one parent plus children)')
                  CHGVAR     VAR(&NUMB) VALUE(&PTNO)
+                                                                                          /*BA5909*/
+             IF         COND(&BA5909 *EQ 'Y') THEN(DO)                                    /*BA5909*/
+                 OVRDBF     FILE(EVLN) TOFILE(A5LNCBV0)                                   /*BA5909*/
+                 OVRDBF     FILE(EVLP) TOFILE(A5LPCBV0)                                   /*BA5909*/
+             ENDDO                                                                        /*BA5909*/
+             ELSE (DO)                                                                    /*BA5909*/
                  OVRDBF     FILE(EVLN) TOFILE(EVLNCB)
                  OVRDBF     FILE(EVLP) TOFILE(EVLPCB)
+             ENDDO                                                                        /*BA5909*/
+                                                                                          /*BA5909*/
                                                                       /*CDL002*/
                IF         COND((&CDL002 *EQ 'Y') *AND (&BNNTCE *EQ +
                           'Y')) THEN(DO)                              /*CDL002*/
@@ -237,7 +291,7 @@
              ELSE       CMD(CALL PGM(DL0762) PARM(&RSEQ &PROD &NUMB +
                         &OB))                                         /*S01433*/
              ENDDO
- 
+
              GOTO       CMDLBL(END)
 ABNOR:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

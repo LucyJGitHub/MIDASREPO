@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *  Last Amend No. BA5909             Date 07Aug23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD055652           Date 13Jul20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 AR743357           Date 22Apr15               *
@@ -141,6 +142,7 @@
 0010 F*                                                               *
 0012 F*---------------------------------------------------------------*
       *                                                               *
+      *  BA5909 - Various Changes to the Events Reports               *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD055652 - Dbase error occurs when generating MR event code  *
       *             for discount loan. Add event keys (63R1, 65R1 and *
@@ -802,6 +804,9 @@
      ISDMOD     E DSSDMMODPD                                              CTI001
      I**  EXTERNAL DS FOR MODULE ID'S                                     CTI001
      I*                                                                   CTI001
+     ISDCUST    E DSSDCUSTPD                                                                  BA5909
+     I**  EXTERNALLY DESCRIBED DS FOR CUSTOMER DETAILS                                        BA5909
+     I*                                                                                       BA5909
       /COPY ZSRSRC,ZHOLI                                                  S01195
       /COPY ZSRSRC,ZSEDITZ2                                               CLE004
      I*                                                                   S01195
@@ -1044,6 +1049,20 @@
      C           @RTCD     IFEQ *BLANK                                    CEU017
      C                     MOVE '1'       *IN53                           CEU017
      C                     END                                            CEU017
+      *                                                                                       BA5909
+      *   Access SAR details file to see if BA5909 is installed.                              BA5909
+      *                                                                                       BA5909
+     C                     MOVE 'N'       BA5909                                              BA5909
+     C                     MOVE '0'       *IN57                                               BA5909
+     C                     CALL 'AOSARDR0'                                                    BA5909
+     C                     PARM '       ' @RTCD                                               BA5909
+     C                     PARM '*VERIFY' @OPTN                                               BA5909
+     C                     PARM 'BA5909'  WSARD                                               BA5909
+      *                                                                                       BA5909
+     C           @RTCD     IFEQ *BLANK                                                        BA5909
+     C                     MOVE 'Y'       BA5909  1                                           BA5909
+     C                     MOVE '1'       *IN57                                               BA5909
+     C                     END                                                                BA5909
      C*                                                                   AUS017
      C**   INITIALIZE FX AND MM DEAL INDICATORS                           AUS017
      C*                                                                   AUS017
@@ -1550,12 +1569,49 @@
      C**********           MOVE RECIST    RECI                            E20669
      C**********           END                                            E20669
 0270 C*    COUNT NUMBER OF RECORDS READ FROM EVENTM
+      *                                                                                       BA5909
+      * Call new program to find CD Holder Name and Town                                      BA5909
+      *                                                                                       BA5909
+     C           BA5909    IFEQ 'Y'                                                           BA5909
+     C           DTYP      ANDEQ'CI'                                                          BA5909
+      *                                                                                       BA5909
+     C                     CALL 'AOCUSTR0'                                                    BA5909
+     C                     PARM *BLANKS   @RTCD   7                                           BA5909
+     C                     PARM '*KEY   ' @OPTN   7                                           BA5909
+     C                     PARM CPCN      @KEY1  10                                           BA5909
+     C                     PARM *BLANKS   @KYST   7                                           BA5909
+     C           SDCUST    PARM SDCUST    DSSDY                                               BA5909
+      *                                                                                       BA5909
+      ** Customer record not found - Error                                                    BA5909
+     C           @RTCD     IFNE *BLANKS                                                       BA5909
+     C                     MOVE '20'      DBASE            *************                      BA5909
+     C                     MOVEL@KEY1     DBKEY            *DB ERROR 20*                      BA5909
+     C                     MOVEL'SDCUSTPD'DBFILE           *************                      BA5909
+     C                     EXSR *PSSR                                                         BA5909
+     C                     ENDIF                                                              BA5909
+      *                                                                                       BA5909
+     C                     MOVELBBCRTN    CTWN                                                BA5909
+     C                     MOVELBBCRNM    CRNM                                                BA5909
+      *                                                                                       BA5909
+     C                     END                                                                BA5909
+      *                                                                                       BA5909
       * Keep separate record count for the Security (II) Events.          S01129
       *                                                                   S01129
      C           *IN26     IFEQ '1'                                       S01129
      C           *IN27     OREQ '1'                                       S01129
      C           *IN28     OREQ '1'                                       S01129
      C********** *IN29     OREQ '1'                                S01129 E20669
+      *                                                                                       BA5909
+      * Call new program to get security issuer and coupon rate                               BA5909
+     C           BA5909    IFEQ 'Y'                                                           BA5909
+     C                     CALL 'SD2602'                                                      BA5909
+     C                     PARM           SECS                                                BA5909
+     C                     PARM           CPNR   117                                          BA5909
+     C                     PARM           CRNM                                                BA5909
+     C                     PARM           CTWN                                                BA5909
+     C                     Z-ADDCPNR      EINRX                                               BA5909
+     C                     END                                                                BA5909
+      *                                                                                       BA5909
      C                     ADD  1         #SEIN   50                      S01129
      C                     ELSE                                           S01129
       *                                                                   S01129
@@ -1869,6 +1925,16 @@
      C                     SETON                         41               E23278
      C                     GOTO END                                       E23278
      C                     END                                            E23278
+      *                                                                                       BA5909
+      *    Rollover Events with Blank INOI should be included                                 BA5909
+      *                                                                                       BA5909
+     C           BA5909    IFEQ 'Y'                                                           BA5909
+     C           *IN21     ANDEQ'1'                                                           BA5909
+     C           PART      IFEQ 'R5'                                                          BA5909
+     C           PART      OREQ 'R6'                                                          BA5909
+     C                     SETOF                     21                                       BA5909
+     C                     END                                                                BA5909
+     C                     END                                                                BA5909
       *                                                                   E23278
       **   Allow Deal Events having field 'FIPI' blank to be processed    E23278
      C***47*02***                                                         CLE004
@@ -3234,6 +3300,15 @@ O    O**************** 13                34 'LE'                          CDL038
 0742 O*****                    DLST      46                               S01129
      O**********      N27N28N29DLST      46                        S01129 E20669
      O****************N27N28   DLST      46                        E20669 CDL038
+      *                                                                                       BA5909
+     O                 25 57             36 '    '                                            BA5909
+     O                 26 57             36 '    '                                            BA5909
+     O                 27 57             36 '    '                                            BA5909
+     O                 28 57             36 '    '                                            BA5909
+     O                 25 57   SECS      46                                                   BA5909
+     O                 26 57   SECS      46                                                   BA5909
+     O                 27 57   SECS      46                                                   BA5909
+     O                 28 57   SECS      46                                                   BA5909
 0743 O**********      N13N17   FFIN      49                               E20669
 0743 O                N13      FFIN      49                               E20669
 0744 O                         EDATA     57
@@ -3272,6 +3347,10 @@ O    O**************** 13                34 'LE'                          CDL038
      O                 02N23   EXRT     113 '   0 .        '              090909
 0758 O                 03N23   EINRX    113 '  0 .        '
 0758 O                 13N23   EINRX    113 '  0 .        '
+     O                 25 57   EINRX    113 '  0 .        '                                   BA5909
+     O                 26 57   EINRX    113 '  0 .        '                                   BA5909
+     O                 27 57   EINRX    113 '  0 .        '                                   BA5909
+     O                 28 57   EINRX    113 '  0 .        '                                   BA5909
      O*****************02 11************114 '-'                           S01119
      O                 02 11N23         114 '-'                           S01119
      O*
@@ -3279,10 +3358,14 @@ O    O**************** 13                34 'LE'                          CDL038
      O*
      O*                25      SECS     113                               E43518
      O**********       17 25   SECS     113                        E43518 E20669
-     O                 25      SECS     113                               E20669
-     O                 26      SECS     113                               S01129
-     O                 27      SECS     113                               S01129
-     O                 28      SECS     113                               S01129
+     O**********       25      SECS     113                                            E20669 BA5909
+     O**********       26      SECS     113                                            S01129 BA5909
+     O**********       27      SECS     113                                            S01129 BA5909
+     O**********       28      SECS     113                                            S01129 BA5909
+     O                 25N57   SECS     113                                                   BA5909
+     O                 26N57   SECS     113                                                   BA5909
+     O                 27N57   SECS     113                                                   BA5909
+     O                 28N57   SECS     113                                                   BA5909
      O**********       29      SECS     113                        S01129 E20669
 0759 O***             N42 61 30EAMT     132 ' ,   ,   ,   , 0 '           S01119
 0760 O***             N42 61 31EAMT     132 '   ,   ,   , 0 . '           S01119

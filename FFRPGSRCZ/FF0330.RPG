@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037994           Date 11May16               *
+      *  Last Amend No. CFF014             Date 21Aug23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037994           Date 11May16               *
       *                 AR746662           Date 03May11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -64,6 +65,11 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
       *                                                               *
+      *  CFF014 - Historical LIFO feature                             *
+      *           Enable the closing out of trades to be done on a    *
+      *           'Historical FIFO' basis, i.e. where trades that are *
+      *           valued today are considered only after historical   *
+      *           trades have been matched for close-out.             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037994 - FX Option Premium/Discount was not reversed out   *
       *             after Expiry of Options.                          *
@@ -796,6 +802,18 @@
      C                     OUT  LDA                                       CFF007
      C                     EXSR DBERR                                     CFF007
      C                     ENDIF                                          CFF007
+      *                                                                                       CFF014
+     C                     CALL 'AOSARDR0'                                                    CFF014
+     C                     PARM *BLANKS   PRTCD   7                                           CFF014
+     C                     PARM '*VERIFY' POPTN   7                                           CFF014
+     C                     PARM 'CFF014'  PSARD   6                                           CFF014
+     C                     PARM           DSFDY                                               CFF014
+     C           PRTCD     IFEQ *BLANK                                                        CFF014
+     C                     MOVE 'Y'       CFF014  1                                           CFF014
+     C                     EXSR RESET                                                         CFF014
+     C                     ELSE                                                               CFF014
+     C                     MOVE 'N'       CFF014                                              CFF014
+     C                     ENDIF                                                              CFF014
      C*
       **               Access PF/TABTB80 for LIFI indicator
      C*
@@ -868,6 +886,8 @@
       **               Open ascending sequence files
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C*
      C                     OPEN WTRNSFP
      C                     OPEN WTRNSFS
@@ -887,6 +907,10 @@
       ** Flag same day processing
      C*
      C                     MOVE 'D'       SDST    1
+     C           LIFI      IFEQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
+     C                     MOVE 'S'       SDST                                                CFF014
+     C                     ENDIF                                                              CFF014
      C*
      C                     ENDSR
      C*
@@ -913,6 +937,8 @@
       **               Set to start of ascending sequence files
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C*
      C***********BRCD      SETLLWTRNSFPF                                  S01117
      C***********BRCD      SETLLWTRNSFSF                                  S01117
@@ -937,6 +963,10 @@
      C*
      C                     MOVE 'S'       SDST
      C*
+     C           LIFI      IFEQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
+     C                     MOVE 'D'       SDST                                                CFF014
+     C                     ENDIF                                                              CFF014
      C                     ENDSR
      C*
      C********************************************************************
@@ -1153,7 +1183,6 @@
      C********************************************************************
      C*
      C           SDCHK     BEGSR
-     C*
       **     IF purchased transaction date > sold trans date
       **     AND FIFO processing
       **     OR purchased transaction date < sold trans date
@@ -1162,6 +1191,9 @@
      C*
      C           TRSDP     IFLT TRSDS
      C           LIFI      ANDEQ'F'
+     C           TRSDP     ORLT TRSDS                                                         CFF014
+     C           LIFI      ANDEQ'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C*
      C           TRSDP     ORGT TRSDS
      C           LIFI      ANDEQ'L'
@@ -1178,6 +1210,9 @@
      C*
      C           TRSDP     IFGT TRSDS
      C           LIFI      ANDEQ'F'
+     C           TRSDP     ORGT TRSDS                                                         CFF014
+     C           LIFI      ANDEQ'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C*
      C           TRSDP     ORLT TRSDS
      C           LIFI      ANDEQ'L'
@@ -2097,6 +2132,8 @@
       **          READ ascending key file
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C                     READ WTRNSFPF                 50
      C                     END
      C*
@@ -2135,6 +2172,8 @@
       **          READ ascending key file
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C                     READ WTRNSFSF                 50
      C                     END
      C*
@@ -2180,6 +2219,8 @@
       **          Update ascending key file
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C                     EXCPTTRNSFP
      C                     END
      C*
@@ -2218,6 +2259,8 @@
       **          Update ascending key file
      C*
      C           LIFI      IFEQ 'F'
+     C           LIFI      OREQ 'H'                                                           CFF014
+     C           CFF014    ANDEQ'Y'                                                           CFF014
      C                     EXCPTTRNSFS
      C                     END
      C*

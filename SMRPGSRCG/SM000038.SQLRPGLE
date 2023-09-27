@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*XBI *  OVRDBF FILE(QTMENU) TOFILE(GPMENUPD)                         *
-/*XBI *  OVRDBF FILE(MIQT_PERMM) TOFILE(MITB_PERMM)                   *
+/**** *  OVRDBF FILE(MIQT_PERMM) TOFILE(MITB_PERMM)                   *                     MD060918
+/*XBI *  OVRDBF FILE(MIQT_PERMM) TOFILE(MIPRMJW0)                     *                     MD060918
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Generate Permission Mapping')
       *****************************************************************
@@ -43,7 +44,8 @@
      D UpperCase       S              1    DIM(26) CTDATA PERRCD(26)
       *
      D MENU          E DS                  EXTNAME(GPMENUPD)
-     D BFPM          E DS                  EXTNAME(MITB_PERMM)
+     D*BFPM****      E DS                  EXTNAME(MITB_PERMM)                              MD060918
+     D BFPM          E DS                  EXTNAME(MIPRMJW0)                                MD060918
       *
       *
      C     *ENTRY        PLIST

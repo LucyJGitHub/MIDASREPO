@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. 263442             Date 07Jul23               *
-      *  Prev Amend No. MD059808           Date 29Apr22               *
+      *  Last Amend No. AR919382           Date 20Sep23               *
+      *  Prev Amend No. 263442             Date 07Jul23               *
+      *                 MD059808           Date 29Apr22               *
       *                 MD059137           Date 29Oct21               *
       *                 MD058182           Date 25May21               *
       *                 MD058108           Date 18May21               *
@@ -168,6 +169,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR919382 - Invoice/advices generated per calendar days.      *
+      *             Calculate bill and telex date using working       *
+      *             days. (Child: AR919383)                           *
       *  263442 - Field COFA not being calculated correctly for       *
       *           manual repayment reversal.                          *
       *           Field WINRAT not processed correctly in QNTRAT      *
@@ -1928,6 +1932,31 @@
 0693 C   41                Z-ADD0         BILTX
      C/COPY WNCPYSRC,LE0370C012
 0694 C  N41      RUND      ADD  BLDY      BILTX   50
+      *                                                                                     AR919382
+      ** Calculate Bill and Telex using working days.                                       AR919382
+      *                                                                                     AR919382
+     C           *IN41     IFEQ '0'                                                         AR919382
+     C                     MOVE CCY       ZCCY                                              AR919382
+     C                     MOVE 'E'       WK@TYP                                            AR919382
+     C                     EXSR SETCCY                                                      AR919382
+     C           W@SCCY    IFNE *BLANKS                                                     AR919382
+     C                     MOVE W@SCCY    ZCCY                                              AR919382
+     C                     ENDIF                                                            AR919382
+     C                     MOVE MDST      W@TYPE                                            AR919382
+     C                     MOVE OMDA      W@OUR                                             AR919382
+      *                                                                                     AR919382
+     C                     EXSR SETLOC                                                      AR919382
+     C           W@STLL    IFNE *BLANK                                                      AR919382
+     C                     MOVE W@STLL    ZLOC                                              AR919382
+     C                     ELSE                                                             AR919382
+     C                     MOVE SYSL      ZLOC                                              AR919382
+     C                     ENDIF                                                            AR919382
+      *                                                                                     AR919382
+     C                     MOVE RUND      ZDAYNO                                            AR919382
+     C                     MOVE BLDY      ZNRDYS                                            AR919382
+     C                     EXSR ZFWDT                                                       AR919382
+     C                     MOVE ZDYNBR    BILTX                                             AR919382
+     C                     ENDIF                                                            AR919382
      C/COPY WNCPYSRC,LE0370C013
 0695 C*
      C** IF BILL/TELEX DATE < DNWD ,TAKE DNWD AS BILL/TELEX DATE          E47221
@@ -4309,8 +4338,9 @@
      C                     MOVE W@TCII    W@TCYI                          CLE031
       * Settlement  ccy                                                   CLE031
      C                     EXSR SETCCY                                    CLE031
-     C                     MOVE W@SCCY    ZCCY                            CLE031
+     C**********           MOVE W@SCCY    ZCCY                                       CLE031 AR919382
      C           W@SCCY    IFNE *BLANKS                                                       218782
+     C                     MOVE W@SCCY    ZCCY                                              AR919382
      C                     EXSR CURTAB                                    CLE031
      C                     MOVE W@TCII    W@CYII                          CLE031
       *                                                                   CLE031
@@ -4338,6 +4368,7 @@
      C                     EXSR SETCCY                                    CLE031
       *                                                                   CLE031
      C           W@SCCY    IFNE *BLANKS                                   CLE031
+     C                     MOVE W@SCCY    ZCCY                                              AR919382
      C                     MOVE W@SCCY    @KEYB                           CLE031
      C                     ENDIF                                          CLE031
       *                                                                   CLE031

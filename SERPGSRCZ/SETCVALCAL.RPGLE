@@ -34,8 +34,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR316724 - Complete application of 260909 based on old       *
-      *             release.                                          *
+      *  AR316724 - Include the current factor in computing the       *
+      *             consideration when processing type = 8 during     *
+      *             processing/COB as this current factor is already  *
+      *             considered during I/C of the trade. Applied fix   *
+      *             260909.                                           *
+      *           - Complete application of original 260909.          *
       *  260909 - Security Trade calculates wrong consideration on MBS*
       *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *

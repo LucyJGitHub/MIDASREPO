@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD061467           Date 07Jun23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061467A          Date 22Sep23               *
+      *  Prev Amend No. MD061467           Date 07Jun23               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL088             Date 07Jul15               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -58,6 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061467A - Deal Amendment type Spread Change not allowed for*
+      *              deals with dealtype "CI".                        *
+      *            - Added deal type 'CI'.                            *
       *  MD061467 - Deal Amendment type Spread Change not allowed for *
       *             deals with dealtype "CI".                         *
       *           - Repositioned GEMS fix 245960.                     *
@@ -273,7 +277,8 @@
 
       ** Key for chain to MMDEALLL
      D @DLKEY          S              6S 0
-     D CDL006          S              1A   IMPORT                               CDL006
+     D*CDL006***       S              1A   IMPORT                                   CDL006 MD061467A
+     D CDL006          S              1A                                                   MD061467A
 
      D PSysVal01       S             20A                                                      240942
      D PCurSet01       S            200A                                                      240942
@@ -486,6 +491,7 @@
      C     H@MTYP        AndNe     'IP'                                         CDL019
      C     H@MTYP        AndNe     'TD'                                         CDL019
      C     H@MTYP        AndNe     'IT'                                         CDL019
+     C     H@MTYP        AndNe     'CI'                                                    MD061467A
       *                                                                         CDL019
      C     H@MTYP        OrNe      'CD'                                         CDL006
      C     H@MTYP        AndNe     'CL'                                         CDL006
@@ -805,7 +811,20 @@
      C                   MOVE      'Y'           CDL088                                       CDL088
      C                   ENDIF                                                                CDL088
       *                                                                                       CDL088
-
+      *                                                                                    MD061467A
+      ** Verify if optional feature CDL066 is ON or OFF                                    MD061467A
+      *                                                                                    MD061467A
+     C                   MOVE      'N'           CDL006                                    MD061467A
+     C                   CALLB     'AOSARDR0'                                              MD061467A
+     C                   PARM      *BLANKS       @RTCD                                     MD061467A
+     C                   PARM      '*VERIFY'     @OPTN                                     MD061467A
+     C                   PARM      'CDL006'      @SARD                                     MD061467A
+     C     SCSARD        PARM      SCSARD        DSFDY                                     MD061467A
+      *                                                                                    MD061467A
+     C                   IF        @RTCD = *BLANK                                          MD061467A
+     C                   MOVE      'Y'           CDL006                                    MD061467A
+     C                   ENDIF                                                             MD061467A
+      *                                                                                    MD061467A
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

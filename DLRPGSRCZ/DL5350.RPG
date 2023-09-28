@@ -10,11 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR785722           Date 11Sep23               *
-      *  Prev Amend No. AR746974A          Date 11Sep23               *
+      *  Last Amend No. AR790468           Date 11Sep23               *
+      *  Prev Amend No. AR785722           Date 11Sep23               *
+      *                 AR746974A          Date 11Sep23               *
       *                 AR746974           Date 11Sep23               *
       *                 249385             Date 01Aug22               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
       *                 MD057662           Date 13Jun22               *
       *                 MD058849           Date 14Mar22               *
       *                 MD058815           Date 28Sep21               *
@@ -87,6 +87,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR790468 - Add calculation for extra 1 day when first/last   *
+      *             interest payment is ticked. (Child: AR790469)     *
       *  AR785722 - Write to DLDLDCQD should not be conditioned to    *
       *             CLE025. (Child: AR785723)                         *
       *  AR746974 - Automatic rollover for Repo/Bond Borrowing        *
@@ -4898,7 +4900,11 @@ E01  C                     ENDIF                                                
      C                     ELSE
      C                     Z-ADDHKMTTI    @TTOTI
      C                     END
+     C           HKAMNP    IFLT 0                                                           AR790468
+     C                     Z-SUBHKAMNP    @PRIN                                             AR790468
+     C                     ELSE                                                             AR790468
      C                     Z-ADDHKAMNP    @PRIN  150
+     C                     ENDIF                                                            AR790468
       *
       **  Maturity date for the original deal now becomes the value
       **  date
@@ -5509,16 +5515,20 @@ E01  C                     ENDIF                                                
      C           HKAMNP    IFLT 0                                                             244735
      C**********           Z-ADDHKAMNP    PCPL                                               BUG7448
      C                     Z-SUBHKAMNP    PCPL                                               BUG7448
-     C                     Z-SUBHKAMNP    RODA                                               BUG7448
+     C**********           Z-SUBHKAMNP    RODA                                      BUG7448 AR790468
      C                     ENDIF                                                             BUG7448
      C           HKMTTI    IFLT 0                                                            BUG7448
      C                     Z-SUBHKMTTI    TOTI                                               BUG7448
+     C                     ELSE                                                             AR790468
+     C                     Z-ADDHKMTTI    TOTI                                              AR790468
      C                     ENDIF                                                             BUG7448
       *                                                                                      BUG7448
      C                     ELSE                                                              BUG7448
      C           HKAMNP    IFLT 0                                                            BUG7448
      C                     Z-SUBHKAMNP    PCPL                                               BUG7448
-     C                     Z-SUBHKAMNP    RODA                                               BUG7448
+     C**********           Z-SUBHKAMNP    RODA                                      BUG7448 AR790468
+     C                     ELSE                                                             AR790468
+     C                     Z-ADDHKAMNP    PCPL                                              AR790468
      C                     ENDIF                                                             BUG7448
      C********** HKMTTI    IFGT 0                                                    BUG7448  244735
      C           HKMTTI    IFLT 0                                                             244735
@@ -5582,6 +5592,7 @@ E01  C                     ENDIF                                                
       *
      C                     MOVE HKDADN    RODN
      C**********           Z-ADDHKAMNP    RODA                                               BUG7448
+     C                     Z-ADD@PRIN     RODA                                              AR790468
      C                     Z-ADD0         RBDN
      C                     Z-ADD0         RBDA
      C                     MOVE HKICMT    ICBS
@@ -5595,6 +5606,14 @@ E01  C                     ENDIF                                                
      C                     Z-ADD0         IPRD
      C                     Z-ADD0         IPRM
      C                     Z-ADD0         ICTD
+      *                                                                                     AR790468
+      ** If first & last day indicator = Y, calculate the one day's                         AR790468
+      ** interest difference, and put it in AIAN field                                      AR790468
+      *                                                                                     AR790468
+     C           HKFLID    IFEQ 'Y'                                                         AR790468
+     C                     EXSR CAL1DY                                                      AR790468
+     C                     ENDIF                                                            AR790468
+      *                                                                                     AR790468
      C                     Z-ADD0         DAVD
      C                     Z-ADD0         DASN
      C                     Z-ADD0         TAXD
@@ -6367,6 +6386,27 @@ E01  C                     ENDIF                                                
      C                     ENDIF                                                            AR746974
       *                                                                                     AR746974
      C                     ENDSR                                                            AR746974
+      *****************************************************************                     AR790468
+      /EJECT                                                                                AR790468
+      *****************************************************************                     AR790468
+      *                                                               *                     AR790468
+      * CAL1DY - Calculate for 1 day interest when HKFLID='Y'         *                     AR790468
+      *                                                               *                     AR790468
+      * Called by: SR/#WB01                                           *                     AR790468
+      *                                                               *                     AR790468
+      * Calls: None                                                   *                     AR790468
+      *                                                               *                     AR790468
+      *****************************************************************                     AR790468
+     C           CAL1DY    BEGSR                                                            AR790468
+     C                     Z-ADDVDAT      @@BEG                                             AR790468
+     C           @@BEG     ADD  1         @@END                                             AR790468
+     C                     Z-ADDPCPL      @@AMT                                             AR790468
+     C                     Z-ADDINTR      @@RATE                                            AR790468
+     C                     MOVE ICBS      @@CALC                                            AR790468
+      *                                                                                     AR790468
+     C                     EXSR MM1030                                                      AR790468
+     C                     Z-ADD@@INTR    AIAN                                              AR790468
+     C                     ENDSR                                                            AR790468
       *****************************************************************
       /EJECT
       *****************************************************************

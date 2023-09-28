@@ -797,6 +797,32 @@
      C**********         ENDIF                                                       256482 AR583254
       *                                                                                     MD021204
      C**********         ENDIF                                                     MD021204 AR583254
+      *                                                                                     AR632107
+      ** Front Office Associated Transaction ID                                             AR632107
+      ** must point to a Midas Deal                                                         AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFNE      *BLANKS                                                  AR632107
+      *                                                                                     AR632107
+     C     FOASID        CHAIN     MMDELFOI                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVEL     FOASID        WDDLNO            6 0                      AR632107
+     C     WDDLNO        CHAIN     MMDEALLL                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+     C                   MOVEL     'APM0104'     MsgIdArr(Ix)                               AR632107
+     C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     H@DN38        DDDLNO                                     AR632107
+     C                   END                                                                AR632107
+      *                                                                                     AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     HKDN38        DDDLNO                                     AR632107
+     C                   ENDIF                                                              AR632107
+      *                                                                                     AR632107
+     C                   ENDIF                                                              AR632107
       *
      C     EVFRNT        ENDSR
       *****************************************************************

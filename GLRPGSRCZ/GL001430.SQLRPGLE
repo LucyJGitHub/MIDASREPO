@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. MD060966           Date 25Jan23               *
+      *  Last Amend No. MD061033           Date 27Sep23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 MD060966           Date 25Jan23               *
       *                 MD060784           Date 02Dec22               *
       *                 MD060685           Date 27Oct22               *
       *                 MD058830           Date 01Oct21               *
@@ -71,6 +72,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061033 - GLC001430 went to MSGW.                           *
+      *           - Reset next page number to 0 if current page       *
+      *             number is 99999.                                  *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *           Do not zeroise MGTRAT if feature is ON. MGTRAT      *
       *           will need to be passed to MG00940 for formatting    *
@@ -761,7 +765,12 @@
      C                   Endif                                                                CRE008
      C                   ENDIF                                                                212319
      C*                                                                                       CRE008
+     C                   IF        N40LSN < 99999                                           MD061033
      C                   EVAL      MGSTNO = N40LSN + 1                          Last Statement Page
+     C                   ELSE                                                               MD061033
+     C                   EVAL      MGSTNO = 1                                               MD061033
+     C                   ENDIF                                                              MD061033
+      *                                                                                     MD061033
      C                   EVAL      MGLSDT = N40LSD                              Last Statement Date
      C                   EVAL      MGIOBL = N40LCA                              Initial Opening Bala
      C                   EVAL      MGFCBL = N40LCA + WkBalance                  Final Closing Balanc
@@ -924,7 +933,12 @@
      C                   EVAL      UpN40LSD = BJRDNB                            Last Statement Date
      C/COPY OFCPYSRCZ,CGL146_075                                                             CGL146A
      C                   TIME                    UpN40LST                       Last Statement Time
+     C                   IF        N40LSN < 99999                                           MD061033
      C                   EVAL      UpN40LSN = N40LSN + 1                        Last Statement Page
+     C                   ELSE                                                               MD061033
+     C                   EVAL      UpN40LSN = 1                                             MD061033
+     C                   ENDIF                                                              MD061033
+      *                                                                                     MD061033
      C                   EVAL      UpN40LCA = N40LCA + WkBalance                Final Closing Balanc
      C                   IF        N40NSD < BJDNWD                              Not a demand
      C/COPY OFCPYSRCZ,CGL146_074                                                             CGL146A

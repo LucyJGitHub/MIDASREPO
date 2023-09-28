@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR583254           Date 15Jul23               *
-      *  Prev Amend No. AR583273           Date 14Jul23               *
+      *  Last Amend No. AR632107           Date 17Jul23               *
+      *  Prev Amend No. AR583254           Date 15Jul23               *
+      *                 AR583273           Date 14Jul23               *
       *                 MD056602           Date 04Sep20               *
       *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
@@ -95,6 +96,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR632107 - MM Deal Amendments are going to repair queue.     *
+      *             Allow the use of Deal Number and Associate Front  *
+      *             Office Id in Deals Amendment via MQ/API.          *
+      *             Enhanced fix for AR583254. (Child AR632108)       *
       *  AR583254 - Sending a MMDEAM from API with a deal number ins- *
       *             tead of an Associated FOID ended in error. Remove *
       *             use of Associated Front Office ID as part of key  *
@@ -698,6 +703,21 @@
      C**********         MOVEL     'APM0105'     MsgIdArr(Ix)                               MD021204
      C**********         GOTO      EVFRNT                                                   MD021204
      C**********         END                                                                MD021204
+      *                                                                                     AR632107
+      ** For LBBW-NYK, allow blank Associated Front Office Id.                              AR632107
+      ** However, deal number must be present.                                              AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFEQ      *BLANK                                                   AR632107
+     C     DDDLNO        ANDEQ     *BLANKS                                                  AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+      *                                                                                     AR632107
+      ** SUPPLY CORRECT MESSAGE ID.                                                         AR632107
+      *                                                                                     AR632107
+     C                   MOVEL     '       '     MsgIdArr(Ix)                               AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   END                                                                AR632107
       *
       * ACCESS DEAL AMENDMENT WITH FRONT OFFICE TRANSACTION ID
       *
@@ -705,7 +725,13 @@
      C                   MOVE      *BLANKS       OrigDealNo       20                        AR583254
      C                   MOVE      FOTRID        UniqDeamID       20
 
-     C     FrntOfKey     CHAIN     MMDEAMOI                           99
+      *                                                                                     AR632107
+      ** For LBBW-NYK, Associated Front Office Id is not always supplied.                   AR632107
+      ** Assumption here is that Front Office Id is a complete and unique key.              AR632107
+      *                                                                                     AR632107
+
+     C     UniqDeamID    CHAIN     MMDEAMOI                           99                    AR632107
+     C*****FrntOfKey     CHAIN     MMDEAMOI                           99                    AR632107
       *
       * IF INSERT
       *
@@ -771,6 +797,32 @@
      C**********         ENDIF                                                       256482 AR583254
       *                                                                                     MD021204
      C**********         ENDIF                                                     MD021204 AR583254
+      *                                                                                     AR632107
+      ** Front Office Associated Transaction ID                                             AR632107
+      ** must point to a Midas Deal                                                         AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFNE      *BLANKS                                                  AR632107
+      *                                                                                     AR632107
+     C     FOASID        CHAIN     MMDELFOI                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVEL     FOASID        WDDLNO            6 0                      AR632107
+     C     WDDLNO        CHAIN     MMDEALLL                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+     C                   MOVEL     'APM0104'     MsgIdArr(Ix)                               AR632107
+     C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     H@DN38        DDDLNO                                     AR632107
+     C                   END                                                                AR632107
+      *                                                                                     AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     HKDN38        DDDLNO                                     AR632107
+     C                   ENDIF                                                              AR632107
+      *                                                                                     AR632107
+     C                   ENDIF                                                              AR632107
       *
      C     EVFRNT        ENDSR
       *****************************************************************

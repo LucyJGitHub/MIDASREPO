@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD028928           Date 27Sep23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD030328           Date 25Nov14               *
       *                 MD027482           Date 25Nov14               *
       *                 MD028258           Date 25Nov14               *
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028928 - Error message USR0652 still displayed when pre-   *
+      *             vious Additional Reporting with invalid SWIFT     *
+      *             Characters was changed to blank                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030328 - In Reporting Information default maintenance,     *
@@ -138,74 +142,74 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSD000111DFCF   E             WORKSTN
      F                                     SFILE(SD000111S1:SRLRN)
      F                                     INFSR(*PSSR)
- 
+
       ** Standard Reporting Information Update Index
      FSDRPIFL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDRPIFD0:RPIFL1)
- 
+
       ** Standard Reporting Information Retrieval Index
      FSDRPIFL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDRPIFD0:RPIFL0)
- 
+
       ** Customer Extension SWIFT Details Retrieve Index
      FSDCSSWL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Deal type/sub-type file
      FFDDTSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
       **
       **------------------------------------------------------------------------
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
- 
+
      D ZMUSER          DS
      D  DBRN                  11     13
      D  BANK                  17     17
- 
+
      ** Additional Information array
      D AddlRepiDS      DS
      D***S4AD01                                                                               CSW214
@@ -248,62 +252,62 @@
      D  S7AD18                                                                                CSW214
      D  S7AD19                                                                                CSW214
      D  S7AD20                                                                                CSW214
- 
+
       ** Action Code Array
      D ActnCdAr        S              1    DIM(6)
- 
+
       ** FX deal type array
      D***FXDLAr*         S              2A   DIM(9) CTDATA PERRCD(1)                        MD021546
      D***FXDLDes         S             30A   DIM(9) ALT(FXDLAr)                             MD021546
      D FXDLAr          S              2A   DIM(10) CTDATA PERRCD(1)                         MD021546
      D FXDLDes         S             30A   DIM(10) ALT(FXDLAr)                              MD021546
- 
+
       ** FRA/IRS deal type array
      D FRAIRSAr        S              2A   DIM(6) CTDATA PERRCD(1)
      D FRAIRSDes       S             30A   DIM(6) ALT(FRAIRSAr)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Account Code Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for Branch Code Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D BQQDFAC       E                     EXTFLD(QQDFAC)
- 
+
       ** External data structure for Currency Code Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for Deal Type/Sub-type Details
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
- 
+
       ** External data structure for Midas Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Customer Extension SWIFT Details
      D SDCSSW        E DS                  EXTNAME(SDCSSWPD)
- 
+
       ** Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       ** Function keys
      D CAIN12          S              1
      D CAIN10          S              1
      D CAIN12A         S              1                                                       CSW214
- 
+
       ** Error work fields
      D PRTCD           S              7
      D POPTN           S              7
@@ -311,12 +315,12 @@
      D PACOD           S              4
      D PCUST           S             10
      D PKYST           S              7
- 
+
       ** Message file workfields
      D PZMsgFile       S             10A
      D PZMsgID         S             10
      D PZMsgData       S             45
- 
+
       ** General workfields
      D PMODE           S              1
      D WLRCD           S              4  0
@@ -374,10 +378,10 @@
      D CodeWordCnt     S              2  0                                                 MD023614A
      D SlashCnt        S              2  0                                                 MD023614A
      D CSW214          S              1                                                       CSW214
- 
+
       ** Subfile workfields
      D WSkipRec        S              1
- 
+
       ** REPIKY key fields
      D K1BRCH          S              3
      D K1TYPE          S              2
@@ -385,7 +389,7 @@
      D K1CUSN          S              6
      D K1CURR          S              3
      D K1PMLI          S              1
- 
+
       ** QCLSCAN parameters
      D QLength1        S              3  0
      D QStart          S              3  0
@@ -394,19 +398,19 @@
      D QTrim           S              1
      D QWild           S              1
      D QResult         S              3  0
- 
+
       ** System Values
      D SVAL1           S             20A   INZ('DLSWIFTCtpyNonSWIFT')
      D SVAL2           S             20A   INZ('DLSWIFTCtpySWIFT')
- 
+
       ** Valid SWIFT/Telex characters
      D ISO             C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ-
      D                                      abcdefghijklmnopqrstuvwxyz-
      D                                      1234567890 /+-?:().,'''
- 
+
       ** Valid Alphabetic Characters
      D Alpha           C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -414,51 +418,51 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Main Program
- 
+
      C                   DO        *HIVAL
- 
+
       ** Initialise and load subfile page
- 
+
      C                   EXSR      SRBuild
- 
+
      C                   EVAL      W1RSF = 'N'
      C                   EVAL      WSCR3 = 'N'                                                CSW214
- 
+
       ** Display screen until reload requested
- 
+
      C                   DOW       W1RSF = 'N'
- 
+
       ** Display screen
- 
+
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *IN03         CASEQ     *ON           SREnd
      C     *IN05         CASEQ     *ON           SRReload
      C     *IN27         CASEQ     *ON           SRLoad
      C                   CAS                     SRProcess
      C                   ENDCS
- 
+
      C                   IF        *IN03 = *ON
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDDO
       *****************************************************************
       /EJECT
@@ -468,26 +472,26 @@
       *                                                               *
       *****************************************************************
      C     SRBuild       BEGSR
- 
+
       ** Clear messages from program message queue                                          MD021923
                                                                                             MD021923
      C                   CALL      'ZA0250'                                                 MD021923
                                                                                             MD021923
       ** Initialise & load subfile page
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000111C1
      C                   EVAL      *IN80 = *OFF
- 
+
       ** Reset Number of Records in Subfile
- 
+
      C                   Z-ADD     0             WLRCD
- 
+
      C     *LOVAL        SETLL     SDRPIFL0
      C                   READ      SDRPIFL0                               82
- 
+
       ** Save previous selector values
- 
+
      C     *LIKE         DEFINE    SEBRCH        WZBRCH
      C                   EVAL      WZBRCH = SEBRCH
      C     *LIKE         DEFINE    SETYPE        WZTYPE
@@ -500,18 +504,18 @@
      C                   EVAL      WZCURR = SECURR
      C     *LIKE         DEFINE    SEPMLI        WZPMLI
      C                   EVAL      WZPMLI = SEPMLI
- 
+
       ** Load subfile page
- 
+
      C                   EXSR      SRLoad
- 
+
       ** If no records found, display error message
- 
+
      C                   IF        *IN82 = *ON AND SRLRN = 0
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -521,21 +525,21 @@
       *                                                               *
       *****************************************************************
      C     SRLoad        BEGSR
- 
+
      C                   EVAL      *IN73 = *OFF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   Z-ADD     WLRCD         SRLRN
      C                   Z-ADD     1             WRCTR
- 
+
       ** Load next subfile page
- 
+
      C                   DOW       *IN82 = '0' and WRCTR <= WSFPG
- 
+
      C                   EVAL      WSkipRec = 'N'
      C                   ADD       1             SRLRN
- 
+
      C                   IF        SEBRCH <> *BLANKS
      C                   CALL      'QCLSCAN'
      C                   PARM                    RPBRCH
@@ -551,7 +555,7 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SETYPE <> *BLANKS
      C                   CALL      'QCLSCAN'
      C                   PARM                    RPTYPE
@@ -567,7 +571,7 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SESTPE <> *BLANKS
      C                   CALL      'QCLSCAN'
      C                   PARM                    RPSTPE
@@ -583,7 +587,7 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SECUSN <> *BLANKS
      C                   CALL      'QCLSCAN'
      C**********         PARM                    RPSTPE                                     MD021633
@@ -600,7 +604,7 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SECURR <> *BLANKS
      C                   CALL      'QCLSCAN'
      C                   PARM                    RPCURR
@@ -617,40 +621,40 @@
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SEPMLI <> *BLANKS
      C                   IF        SEPMLI <> RPPMLI
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WSkipRec = 'N'
- 
+
       ** Clear subfile fields
- 
+
      C                   EXSR      SRClrScrn
- 
+
       ** Load subfile fields
- 
+
      C                   EXSR      SRMove
- 
+
       ** Output to subfile
- 
+
      C                   ADD       1             WRCTR                81
- 
+
      C                   WRITE     SD000111S1
- 
+
      C                   ELSE
      C                   SUB       1             SRLRN
      C                   ENDIF
- 
+
       ** End of File
- 
+
      C                   READ      SDRPIFL0                               82
      C                   ENDDO
- 
+
      C                   Z-ADD     SRLRN         WLRCD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -659,22 +663,22 @@
       *  SRDisplay - Display Subfile                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
       ** Display appropriate header depending upon Mode
- 
+
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN84 = *ON
      C                   ENDIF
- 
+
       ** Check for authorised action codes for user/program
- 
+
      C                   EXSR      SrChkActn
- 
+
      C                   WRITE     SD000111F5
      C                   WRITE     SD000111C0
- 
+
      C                   IF        WLRCD = 0
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000111C1
@@ -688,11 +692,11 @@
      C                   ELSE
      C                   EXFMT     SD000111C1
      C                   ENDIF
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -702,7 +706,7 @@
       *                                                               *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
      C     REPIKY        KLIST
      C                   KFLD                    K1BRCH
      C                   KFLD                    K1TYPE
@@ -710,7 +714,7 @@
      C                   KFLD                    K1CUSN
      C                   KFLD                    K1CURR
      C                   KFLD                    K1PMLI
- 
+
      C                   EVAL      S1RECI = *BLANKS
      C                   EVAL      S1BRCH = *BLANKS
      C                   EVAL      S1TYPE = *BLANKS
@@ -720,24 +724,24 @@
      C                   EVAL      S1PMLI = *BLANKS
      C                   EVAL      S1RPNM = *BLANKS
      C                   EVAL      S1RPTN = *BLANKS
- 
+
       ** Process Enquire/Amend/Delete
- 
+
      C                   IF        *IN09 <> *ON
- 
+
      C                   DOW       *IN03 = *OFF and *IN12 = *OFF
      C                             and W1RSF = 'N' and WLRCD <> *ZEROS
- 
+
      C                   EVAL      ActnCnt = 0
      C                   READC     SD000111S1                             62
- 
+
      C                   DOW       *IN62 = *OFF
- 
+
      C                   EVAL      *IN73 = *OFF
      C                   EVAL      ActnErr = *BLANKS
- 
+
       ** Invalid Action Code
- 
+
      C                   IF        S1ACTN <> 'E' AND
      C                             S1ACTN <> 'D' AND
      C                             S1ACTN <> 'A' AND
@@ -754,9 +758,9 @@
      C                   ENDIF
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** User can only enquire a deleted record
- 
+
      C                   IF        (S1ACTN = 'A' OR S1ACTN = 'D') AND
      C                             S1RECI = '*'
      C                   MOVE      'Y'           ActnErr           1
@@ -765,9 +769,9 @@
      C                   EVAL      PZMsgID = 'USR8703'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** User not authorised to action code
- 
+
      C                   IF        S1ACTN = 'A' AND *IN16 = *OFF
      C                             OR S1ACTN = 'D' AND *IN17 = *OFF
      C                             OR S1ACTN = 'E' AND *IN18 = *OFF
@@ -777,30 +781,30 @@
      C                   EVAL      PZMsgID = 'USR0726'
      C                   EXSR      SRZAsnms
      C                   ENDIF
- 
+
       ** Process Enquire
- 
+
      C                   IF        S1ACTN = 'E'
      C                   EXSR      SREnquire
      C                   ENDIF
- 
+
       ** Process Delete
- 
+
      C                   IF        S1ACTN = 'D' AND PMODE = 'M'
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       ** Process Amend
- 
+
      C                   IF        S1ACTN = 'A' AND PMODE = 'M'
      C                   EXSR      SRAmend
      C                   ENDIF
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   IF        ActnErr = 'Y'
      C                   EVAL      *IN31 = *ON
      C                   UPDATE    SD000111S1
@@ -813,24 +817,24 @@
      C                   UPDATE    SD000111S1
      C                   ENDIF
      C                   READC     SD000111S1                             62
- 
+
      C                   ENDDO
      C                   EVAL      W1RSF = 'Y'
- 
+
      C                   ENDDO
- 
+
      C                   IF        ActnCnt > 0
      C                   EVAL      W1RSF = 'N'
      C                   ELSE
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        *IN09 = *ON AND PMODE = 'M'
- 
+
       ** User not authorised to action code
- 
+
      C                   IF        *IN19 = *OFF
      C                   EVAL      *IN40 = *ON
      C                   EVAL      W1RSF = 'Y'
@@ -838,20 +842,20 @@
      C                   EXSR      SRZasnms
      C                   GOTO      SRProcessE
      C                   ENDIF
- 
+
       ** Process Add
- 
+
      C                   EXSR      SRAdd
- 
+
      C                   IF        W#EROR3 = *BLANKS AND
      C                             *IN03 = *OFF AND
      C                             *IN10 = *OFF
      C                   EXSR      SRReload
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     SRProcessE    ENDSR
       *****************************************************************
       /EJECT
@@ -861,14 +865,14 @@
       *                                                               *
       *****************************************************************
      C     SREnquire     BEGSR
- 
+
      C                   EVAL      K1BRCH = S1BRCH
      C                   EVAL      K1TYPE = S1TYPE
      C                   EVAL      K1STPE = S1STPE
      C                   EVAL      K1CUSN = S1CUSN
      C                   EVAL      K1CURR = S1CURR
      C                   EVAL      K1PMLI = S1PMLI
- 
+
      C     REPIKY        CHAIN     SDRPIFL0
      C                   IF        NOT %FOUND
      C                   EVAL      *IN40 = *ON
@@ -877,40 +881,40 @@
      C                   EXSR      SRZasnms
      C                   GOTO      SREnquireE
      C                   ENDIF
- 
+
      C                   EXSR      SRScrn2Clr
      C                   EXSR      SrGetScrn2
- 
+
      C                   EVAL      W1RSF = 'N'
      C                   EVAL      *IN20 = *OFF
      C                   EVAL      *IN70 = *OFF
      C**********         MOVEA     '0000000000'  *IN(47)                                      CSW214
      C                   MOVEA     '0000000'     *IN(47)                                      CSW214
      C                   MOVEA     '00'          *IN(96)                                      CSW214
- 
+
      C                   EVAL      *IN11 = *OFF
      C                   IF        *IN14 = *ON
      C                   EVAL      *IN11 = *ON
      C                   ENDIF
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             W1RSF = 'N'
      C                             OR CAIN12 = *ON
- 
+
      C                   EVAL      CAIN12 = *OFF
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F3
- 
+
       ** If Enter key is pressed, go to detail screen 2
- 
+
      C                   IF        *IN03 = *OFF AND
      C                             *IN10 = *OFF
      C                   EXSR      SrEnqScr2
      C                   ENDIF
      C                   ENDDO
- 
+
      C     SrEnquireE    ENDSR
       *****************************************************************
       /EJECT
@@ -920,14 +924,14 @@
       *                                                               *
       *****************************************************************
      C     SREnqScr2     BEGSR
- 
+
      C                   EXSR      SRScrn3Clr
      C                   EXSR      SRGetScrn3
- 
+
      C                   EVAL      W1RD1 = 'N'
      C                   EVAL      *IN21 = *OFF
      C                   EVAL      *IN70 = *OFF
- 
+
      C                   MOVEA     '0000000000'  *IN(57)
      C**********         MOVEA     '000'         *IN(67)                                      CSW214
      C**********         MOVEA     '00000'       *IN(74)                                      CSW214
@@ -937,20 +941,20 @@
      C                   MOVEA     '00000000'    *IN(88)                                      CSW214
      C                   MOVEL     '0'           *IN67                                        CSW214
      C                   MOVEA     '000'         *IN(54)                                      CSW214
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             W1RD1 = 'N'
      C                             OR CAIN12A = *ON                                           CSW214
- 
+
      C                   EVAL      CAIN12A = *OFF                                             CSW214
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F4
- 
+
       ***If*Enter*key*is*pressed,*go*back*to*main*screen                                      CSW214
       ** If Enter key is pressed, go to detail screen 3                                       CSW214
- 
+
      C                   IF        *IN03 = *OFF AND *IN12 = *OFF
      C**********         EVAL      W1RD1 = 'Y'                                                CSW214
      C**********         EVAL      W1RSF = 'Y'                                                CSW214
@@ -960,15 +964,15 @@
      C                   IF        *IN03 = *ON                                                CSW214
      C                   EVAL      CAIN12 = *OFF                                              CSW214
      C                   ENDIF                                                                CSW214
- 
+
       ** If F12 is pressed, go back to detail screen 1
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      CAIN12 = *IN12
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1017,17 +1021,17 @@
       *                                                               *
       *****************************************************************
      C     SRAdd         BEGSR
- 
+
      C                   EVAL      S2BRCH = *BLANKS
      C                   EVAL      S2TYPE = *BLANKS
      C                   EVAL      S2STPE = *BLANKS
      C                   EVAL      S2CUSN = *BLANKS
      C                   EVAL      S2CURR = *BLANKS
      C                   EVAL      S2PMLI = *BLANKS
- 
+
      C                   EVAL      *IN20 = *ON
      C                   EVAL      *IN70 = *OFF
- 
+
      C                   DOW       *IN03 = *OFF AND *IN12 = *OFF AND
      C                             W1RSF = 'N' OR CAIN12 = *ON
      C                             OR WSEL = 'Y'
@@ -1035,23 +1039,23 @@
      C                   EVAL      CAIN12 = *OFF
      C                   EVAL      WSelFld = *BLANKS
      C                   EVAL      WSEL = *BLANKS
- 
+
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F2
- 
+
       ** Clear messages from program message queue
       ** and reset work fields
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      W#EROR = *BLANKS
      C                   MOVEA     '0000000'     *IN(40)
- 
+
       ** If exit not pressed, validate key fields screen first
       ** before displaying the second input screen
- 
+
      C                   IF        *IN03 = *OFF and *IN12 = *OFF
- 
+
      C                   EVAL       S3BRCH = *BLANKS
      C                   EVAL       S3BRDS = *BLANKS
      C                   EVAL       S3TYDS = *BLANKS
@@ -1064,28 +1068,28 @@
      C                   EVAL       S3CURR = *BLANKS
      C                   EVAL       S3CYDS = *BLANKS
      C                   EVAL       S3PMLI = *BLANKS
- 
+
      C                   EXSR      SRKeyScrnV
- 
+
      C                   IF        W#EROR = *BLANKS AND
      C                             *IN12 = *OFF AND
      C                             *IN03 = *OFF AND
      C                             WSEL = *BLANKS
      C                   EXSR      SRScrn2
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
      C                   IF        *IN03 = *ON OR *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1095,9 +1099,9 @@
       *                                                               *
       *****************************************************************
      C     SRKeyScrnV    BEGSR
- 
+
       ** Validate branch code
- 
+
      C                   IF        S2BRCH = *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN41 = *ON
@@ -1106,19 +1110,19 @@
      C                   EVAL      PZMsgID = 'USR0906'                                      MD021883
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   IF        W#EROR = *BLANKS AND
      C                             S2BRCH <> 'ALL'
- 
+
      C                   MOVEL     S2BRCH        WSelFld
      C                   EXSR      SRChkSel
- 
+
      C                   CALL      'AOBRCHR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    S2BRCH
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN41 = *ON
@@ -1129,14 +1133,14 @@
      C                   EVAL      S3BRCH = A8BRCD
      C                   EVAL      S3BRDS = A8BRNM
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      S3BRCH = 'ALL'
      C                   EVAL      S3BRDS = 'ALL BRANCHES'
      C                   ENDIF
- 
+
       ** Validate transaction type
- 
+
      C                   EVAL      *IN13 = *OFF                                             MD028088
      C                   EVAL      *IN14 = *OFF                                             MD028088
                                                                                             MD028088
@@ -1145,7 +1149,7 @@
      C                   Z-ADD     1             Y
      C     S2TYPE        LOOKUP    FXDLAr(X)                              13
      C     S2TYPE        LOOKUP    FRAIRSAr(Y)                            14
- 
+
      C                   IF        *IN13 = *OFF AND *IN14 = *OFF OR
      C                             *IN13 = *ON AND BGDLFX <> 'Y' OR
      C                             *IN14 = *ON AND BGFIIN <> 'Y'
@@ -1154,33 +1158,33 @@
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR0054'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
      C                   IF        *IN13 = *ON
      C                   EVAL      S3TYDS = FXDLDes(X)
      C                   ENDIF
- 
+
      C                   IF        *IN14 = *ON
      C                   EVAL      S3TYDS = FRAIRSDes(Y)
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate transaction sub-type
- 
+
      C                   IF        S2STPE <> *BLANKS
- 
+
      C                   MOVEL     S2STPE        WSelFld
      C                   EXSR      SRChkSel
- 
+
      C                   CALL      'AODLSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    S2STPE
      C     SDDLST        PARM      SDDLST        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN43 = *ON
@@ -1191,15 +1195,15 @@
      C                   EVAL      S3STDS = ASDSTN
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate transaction type/sub-type combination
- 
+
      C                   IF        S2STPE <> *BLANKS
- 
+
      C     DTSTKY        KLIST
      C                   KFLD                    S2TYPE
      C                   KFLD                    S2STPE
- 
+
      C     DTSTKY        CHAIN     FDDTSTL1
      C                   IF        NOT %FOUND(FDDTSTL1) OR
      C                             RCID11 = '*'
@@ -1211,24 +1215,24 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate counterparty (customer number/shortname)
- 
+
      C                   IF        S2CUSN <> *BLANKS
- 
+
      C                   MOVEL     S2CUSN        WSelFld
      C                   EXSR      SRChkSel
- 
+
      C                   EVAL      PCUST = S2CUSN
      C                   EXSR      SrGetCusDtl
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN44 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR0138'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   EVAL      S2CUSN = PCUST
      C                   EVAL      S3CUSN = BBCUST
@@ -1236,23 +1240,23 @@
      C                   EVAL      S3RPTN = BBCRTN
      C                   EVAL      S3SWID = BBCSID
      C                   EVAL      S3LEIC = CSLEIC
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate currency code
- 
+
      C                   IF        S2CURR <> *BLANKS
- 
+
      C                   MOVEL     S2CURR        WSelFld
      C                   EXSR      SRChkSel
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    S2CURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN45 = *ON
@@ -1265,9 +1269,9 @@
      C                   EVAL      S3CYDS = A6CYNM
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate precious metal indicator
- 
+
      C                   IF        S2PMLI <> *BLANKS AND
      C                             S2CURR <> *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -1275,7 +1279,7 @@
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR0155'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   IF        S2PMLI <> 'N' AND
      C                             S2PMLI <> 'Y' AND
@@ -1289,16 +1293,16 @@
      C                   EVAL      S3PMLI = S2PMLI
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check for duplicate keys
- 
+
      C                   EVAL      K1BRCH = S2BRCH
      C                   EVAL      K1TYPE = S2TYPE
      C                   EVAL      K1STPE = S2STPE
      C                   EVAL      K1CUSN = S2CUSN
      C                   EVAL      K1CURR = S2CURR
      C                   EVAL      K1PMLI = S2PMLI
- 
+
      C                   IF        WSel = *BLANKS
      C     REPIKY        SETLL     SDRPIFL0
      C                   IF        %EQUAL
@@ -1308,7 +1312,7 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1318,16 +1322,16 @@
       *                                                               *
       *****************************************************************
      C     SRAmend       BEGSR
- 
+
      C                   EVAL      W#EROR = *BLANKS
- 
+
      C                   EVAL      K1BRCH = S1BRCH
      C                   EVAL      K1TYPE = S1TYPE
      C                   EVAL      K1STPE = S1STPE
      C                   EVAL      K1CUSN = S1CUSN
      C                   EVAL      K1CURR = S1CURR
      C                   EVAL      K1PMLI = S1PMLI
- 
+
      C     REPIKY        CHAIN     SDRPIFL0
      C                   IF        NOT %FOUND
      C                   EVAL      W#EROR = 'Y'
@@ -1335,27 +1339,27 @@
      C                   EXSR      SRZasnms
      C                   GOTO      SrAmendE
      C                   ENDIF
- 
+
       ** Amend is not allowed for deleted records
- 
+
      C                   IF        RPRECI = '*'
      C**********         EVAL      PZMsgID = 'USR8703'                                      MD028258
      C**********         EXSR      SRZasnms                                                 MD028258
      C                   GOTO      SrAmendE
      C                   ENDIF
- 
+
       ** Retrieve detail screen 2 details
- 
+
      C                   EVAL      W1TMST = RPTMST
      C                   EXSR      SRScrn2Clr
      C                   EXSR      SRGetScrn2
- 
+
      C                   EXSR      SRScrn2
- 
+
      C                   IF        *IN03 = *ON OR *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C     SrAmendE      ENDSR
       *****************************************************************
       /EJECT
@@ -1365,16 +1369,16 @@
       *                                                               *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
      C                   EVAL      W#EROR3 = *BLANKS
- 
+
      C                   EVAL      K1BRCH = S1BRCH
      C                   EVAL      K1TYPE = S1TYPE
      C                   EVAL      K1STPE = S1STPE
      C                   EVAL      K1CUSN = S1CUSN
      C                   EVAL      K1CURR = S1CURR
      C                   EVAL      K1PMLI = S1PMLI
- 
+
      C     REPIKY        CHAIN     SDRPIFL0
      C                   IF        NOT %FOUND
      C                   EVAL      *IN40 = *ON
@@ -1383,48 +1387,48 @@
      C                   EXSR      SRZasnms
      C                   GOTO      SrDeleteE
      C                   ENDIF
- 
+
       ** Delete is not allowed for deleted records
- 
+
      C                   IF        RPRECI = '*'
      C**********         EVAL      PZMsgID = 'USR8703'                                      MD028258
      C**********         EXSR      SRZasnms                                                 MD028258
      C                   GOTO      SRDeleteE
      C                   ENDIF
- 
+
      C                   EVAL      W1TMST = RPTMST
      C                   EXSR      SRScrn2Clr
      C                   EXSR      SrGetScrn2
- 
+
      C                   EVAL      W1RSF = 'N'
      C                   EVAL      *IN20 = *OFF
      C                   EVAL      *IN70 = *ON
      C**********         MOVEA     '0000000000'  *IN(47)                                      CSW214
      C                   MOVEA     '0000000'     *IN(47)                                      CSW214
      C                   MOVEA     '00'          *IN(96)                                      CSW214
- 
+
      C                   EVAL      *IN11 = *OFF
      C                   IF        *IN14 = *ON
      C                   EVAL      *IN11 = *ON
      C                   ENDIF
- 
+
      C                   DOW       *IN03 = *OFF AND *IN12 = *OFF AND
      C                             W1RSF = 'N' OR CAIN12 = *ON OR
      C                             *IN10 = *ON AND W#EROR3 = 'Y'
- 
+
      C                   EVAL      CAIN12 = *OFF
      C                   EVAL      CAIN10 = *OFF
- 
+
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F3
- 
+
      C                   IF        *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             *IN10 = *OFF
      C                   EXSR      SrDelScr2
      C                   ENDIF
- 
+
      C                   IF        CAIN10 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ELSE
@@ -1435,10 +1439,10 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
- 
+
+
      C     SRDeleteE     ENDSR
       *****************************************************************
       /EJECT
@@ -1448,13 +1452,13 @@
       *                                                               *
       *****************************************************************
      C     SRDelScr2     BEGSR
- 
+
      C                   EXSR      SRScrn3Clr
      C                   EXSR      SRGetScrn3
- 
+
      C                   EVAL      *IN21 = *OFF
      C                   EVAL      *IN70 = *ON
- 
+
      C                   MOVEA     '0000000000'  *IN(57)
      C**********         MOVEA     '000'         *IN(67)                                      CSW214
      C**********         MOVEA     '00000'       *IN(74)                                      CSW214
@@ -1464,19 +1468,19 @@
      C                   MOVEA     '000'         *IN(54)                                      CSW214
      C                   MOVEA     '00000000'    *IN(88)                                      CSW214
      C                   MOVE      '0'           *IN67                                        CSW214
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             *IN10 = *OFF
      C                             OR CAIN12A = *ON                                           CSW214
      C                             OR *IN10 = *ON AND
      C                             W#EROR3 = 'Y'
- 
+
      C                   EVAL      CAIN12A = *OFF                                             CSW214
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F4
- 
+
       ** If Enter key is pressed, go to detail screen 3                                       CSW214
                                                                                               CSW214
      C                   IF        *IN12 = *OFF AND *IN03 = *OFF                              CSW214
@@ -1488,21 +1492,21 @@
      C                   EVAL      CAIN12 = *OFF                                              CSW214
      C                   ENDIF                                                                CSW214
       ** If F12 is pressed, go back to detail screen 1
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      CAIN12 = *IN12
      C                   ENDIF
- 
+
      C                   IF        *IN10 = *ON
      C                   EXSR      SrWrite
- 
+
       ** If no error during delete, go back to main screen
- 
+
      C                   IF        WriteErr = *BLANKS
      C                   EVAL      CAIN10 = *IN10
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
      C                   ENDSR
       *****************************************************************
@@ -1556,18 +1560,18 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2       BEGSR
- 
+
      C**********         MOVEA     '0000000000'  *IN(47)                                      CSW214
      C                   MOVEA     '0000000'     *IN(47)                                      CSW214
      C                   MOVEA     '00'          *IN(96)                                      CSW214
      C                   EVAL      *IN20 = *ON
      C                   EVAL      *IN70 = *OFF
- 
+
      C                   EVAL      *IN11 = *OFF
      C                   IF        *IN14 = *ON
      C                   EVAL      *IN11 = *ON
      C                   ENDIF
- 
+
      C                   IF        *IN09 = *ON
      C                   EVAL      S3TRID = *BLANKS
      C                   EVAL      S3TRNM = *BLANKS
@@ -1599,27 +1603,27 @@
      C**********         EVAL      S3EXVE = *BLANKS                                           CSW214
      C**********         EVAL      S3UPID = *BLANKS                                           CSW214
      C                   ENDIF
- 
+
      C                   EVAL      W1RKY = 'N'
      C                   EVAL      W#WARN = *BLANKS
      C                   EVAL      WARN = 0
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             W1RKY = 'N'
      C                             OR CAIN12 = *ON
      C                             OR WSEL = 'Y'
      C                             OR WARN = 1
- 
+
      C                   EVAL      CAIN12 = *OFF
      C                   EVAL      WSEL = *BLANKS
      C                   EVAL      WSelFld = *BLANKS
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F3
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN40 = *OFF
      C                   EVAL      W#EROR2 = *BLANKS
@@ -1627,42 +1631,42 @@
      C**********         MOVEA     '0000000000'  *IN(47)                                      CSW214
      C                   MOVEA     '0000000'     *IN(47)                                      CSW214
      C                   MOVEA     '00'          *IN(96)                                      CSW214
- 
+
       ** If Enter key is pressed, validate detail screen 2
- 
+
      C                   IF        *IN03 = *OFF AND *IN12 = *OFF
      C                   EXSR      SRScrn2v
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C                   IF        W#WARN = 'Y' AND
      C                             W#EROR2 = *BLANKS
      C                   ADD       1             WARN              1 0
      C                   ELSE
      C                   EVAL      WARN = 0
      C                   ENDIF
- 
+
      C                   IF        W#EROR2 = *BLANKS AND
      C                             *IN12 = *OFF AND
      C                             *IN03 = *OFF AND
      C                             WSEL = *BLANKS AND
      C                             WARN <> 1
- 
+
      C                   CALL      'ZA0250'
      C                   EXSR      SrScrn3
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** If F12 is pressed, go back to detail screen 1
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      CAIN12 = *IN12
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1672,7 +1676,7 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2Clr    BEGSR
- 
+
      C                   EVAL      S3BRCH = *BLANKS
      C                   EVAL      S3BRDS = *BLANKS
      C                   EVAL      S3TYDS = *BLANKS
@@ -1715,7 +1719,7 @@
      C                   EVAL      S3CBSW = *BLANKS                                           CSW214
      C                   EVAL      S3CBLC = *BLANKS                                           CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1725,9 +1729,9 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2v      BEGSR
- 
+
       ** Validate Trade Repository ID
- 
+
      C                   IF        S3TRID = *BLANKS
      C                   IF        S3SWID = *BLANKS
      C                   EVAL      S3TRID = CtpyNonSwift
@@ -1735,10 +1739,10 @@
      C                   EVAL      S3TRID = CtpySwift
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVEL     S3TRID        WSelFld
      C                   EXSR      SRChkSel
- 
+
      C                   IF        S3TRID <> *BLANKS                                        MD022288
      C                   EVAL      PCUST = S3TRID
      C                   EXSR      SrGetCusDtl
@@ -1760,9 +1764,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                              MD022288
- 
+
       ** Validate Central Counterparty Clearing House (CCP) ID
- 
+
      C                   IF        *IN13 = *ON OR
      C                             S2TYPE = *BLANKS
      C                   IF        S3CCPN <> *BLANKS
@@ -1784,9 +1788,9 @@
      C                   EVAL      S3CPLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate CCP House's Party ID
- 
+
      C                   IF        S3CCPA <> *BLANKS
      C                   IF        S3CCPN = *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -1808,9 +1812,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Exception Party
- 
+
      C                   IF        S3CCPP <> *BLANKS
      C                   MOVEL     S3CCPP        WSelFld
      C                   EXSR      SRChkSel
@@ -1830,9 +1834,9 @@
      C                   EVAL      S3CRLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Exception Party's Party ID
- 
+
      C                   IF        S3CRPA <> *BLANKS
      C                   IF        S3CCPP = *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -1853,9 +1857,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Broker ID Client Leg
- 
+
      C                   IF        S3CBCL <> *BLANKS
      C                   EVAL      FldChk = *BLANKS
      C                   MOVEL     S3CBCL        FldChk
@@ -1868,9 +1872,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Broker Identification CCP Leg
- 
+
      C                   IF        S3CCPL <> *BLANKS
      C                   EVAL      FldChk = *BLANKS
      C                   MOVEL     S3CCPL        FldChk
@@ -1883,7 +1887,7 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ***Validate*Cleared*Product*Identification                                              CSW214
       **********                                                                              CSW214
      C**********         IF        S3CPID <> *BLANKS                                          CSW214
@@ -1994,7 +1998,7 @@
                                                                                               CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2004,7 +2008,7 @@
       *                                                               *
       *****************************************************************
      C     SRScrn3       BEGSR
- 
+
      C                   MOVEA     '0000000000'  *IN(57)
      C**********         MOVEA     '000'         *IN(67)                                      CSW214
      C**********         MOVEA     '00000'       *IN(74)                                      CSW214
@@ -2016,21 +2020,21 @@
      C                   MOVE      '0'           *IN67                                        CSW214
      C                   EVAL      *IN21 = *ON
      C                   EVAL      *IN70 = *OFF
- 
+
      C                   IF        WSCR3 = 'N'                                                CSW214
      C                   EXSR      SRScrn3Clr
      C                   ENDIF                                                                CSW214
- 
+
      C                   IF        *IN09 = *OFF
      C                             AND WSCR3 = 'N'                                            CSW214
      C                   EXSR      SrGetScrn3
      C                   ENDIF
- 
+
      C                   EVAL      W1RD1 = 'N'
      C                   EVAL      W#AMT = *BLANKS
      C                   EVAL      WAMT = 0
      C                   EVAL      WARN = 0                                                 MD021923
- 
+
      C                   DOW       *IN03 = *OFF AND
      C                             *IN12 = *OFF AND
      C                             W1RD1 = 'N'
@@ -2038,16 +2042,16 @@
      C                             OR WSEL = 'Y'
      C                             OR WAMT = 1
      C                             OR WARN = 1                                              MD021923
- 
+
      C                   EVAL      CAIN12 = *OFF
      C                   EVAL      WSEL = *BLANKS
      C                   EVAL      WSelFld = *BLANKS
      C                   WRITE     SD000111C0
      C                   WRITE     SD000111F6
      C                   EXFMT     SD000111F4
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN40 = *OFF
      C                   EVAL      W#EROR3 = *BLANKS
@@ -2062,17 +2066,17 @@
      C                   MOVEA     '000'         *IN(54)                                      CSW214
      C                   MOVEA     '00000000'    *IN(88)                                      CSW214
      C                   MOVE      '0'           *IN67                                        CSW214
- 
+
       ** If Enter key is pressed, validate detail screen 2
- 
+
      C                   IF        *IN03 = *OFF AND *IN12 = *OFF
      C                   EXSR      SRScrn3v
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C                   IF        W#AMT = 'Y' AND
      C                             W#EROR3 = *BLANKS
      C                   ADD       1             WAMT              1 0
@@ -2086,7 +2090,7 @@
      C                   ELSE                                                               MD021923
      C                   EVAL      WARN = 0                                                 MD021923
      C                   ENDIF                                                              MD021923
- 
+
      C                   IF        W#EROR3 = *BLANKS AND
      C                             *IN12 = *OFF AND
      C                             *IN03 = *OFF AND
@@ -2094,23 +2098,23 @@
      C**********                   WAMT <> 1                                                MD021923
      C                             WAMT <> 1 AND WARN <> 1                                  MD021923
      C**********         EXSR      SRWrite                                                    CSW214
- 
+
      C                   EXSR      SRScrn4                                                    CSW214
      C**********         IF        WriteErr = *BLANKS                                         CSW214
      C**********         EVAL      W1RD1 = 'Y'                                                CSW214
      C**********         EVAL      W1RKY = 'Y'                                                CSW214
      C**********         EVAL      W1RSF = 'Y'                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      CAIN12 = *IN12
      C                   EVAL      WARN = 0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2120,7 +2124,7 @@
       *                                                               *
       *****************************************************************
      C     SRScrn3Clr    BEGSR
- 
+
      C                   EVAL      S4CPID = *BLANKS                                           CSW214
      C                   EVAL      S4EXVE = *BLANKS                                           CSW214
      C                   EVAL      S4UPID = *BLANKS                                           CSW214
@@ -2170,7 +2174,7 @@
      C                   EVAL      S4IGTI = *BLANKS                                           CSW214
      C                   EVAL      S4CTFI = *BLANKS                                           CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2226,9 +2230,9 @@
      C                   EXSR      SRZasnms                                                   CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
- 
+
       ** Validate Reporting Jurisdiction
- 
+
      C                   IF        S4RPJN <> *BLANKS
      C                   EVAL      FldChk = *BLANKS
      C                   MOVEL     S4RPJN        FldChk
@@ -2241,9 +2245,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Reporting Party
- 
+
      C                   IF        S4RPPY <> *BLANKS
      C                   IF        S4RPJN = *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -2251,7 +2255,7 @@
      C                   EVAL      W#EROR3 = 'Y'
      C                   EVAL      PZMsgID = 'USR0385'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   MOVEL     S4RPPY        WSelFld
      C                   EXSR      SRChkSel
@@ -2272,9 +2276,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Reporting Party's Party ID
- 
+
      C                   IF        S4RPAC <> *BLANKS
      C                   IF        S4RPPY = *BLANKS
       *
@@ -2287,10 +2291,10 @@
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    S3BRCH
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S4RPPY = A8BICN
- 
+
      C                   EVAL      PCUST = S4RPPY
      C                   EXSR      SrGetCusDtl
      C                   IF        PRTCD <> *BLANKS
@@ -2307,7 +2311,7 @@
      C                   EVAL      S4RPLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN59 = *ON
@@ -2315,7 +2319,7 @@
      C                   EVAL      PZMsgID = 'USR0495'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDIF                                                              MD027482
      C**********         ELSE                                                               MD027482
      C                   EVAL      FldChk = *BLANKS
@@ -2330,9 +2334,9 @@
      C                   ENDIF
      C**********         ENDIF                                                              MD027482
      C                   ENDIF
- 
+
       ** Validate Generate Transaction Identifier
- 
+
      C                   IF        S4GTID <> *BLANKS AND
      C                             S4GTID <> 'Y' AND
      C                             S4GTID <> 'N'
@@ -2341,7 +2345,7 @@
      C                   EVAL      W#EROR3 = 'Y'
      C                   EVAL      PZMsgID = 'USR0497'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   IF        S4GTID = 'Y' AND
      C                             S4RPJN = *BLANKS
@@ -2352,9 +2356,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Threshold Currency
- 
+
      C                   IF        S4CTCY = *BLANKS
      C                   IF        S4CTAM <> *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -2363,7 +2367,7 @@
      C                   EVAL      PZMsgID = 'USR0503'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ELSE
      C                   IF        S4CTAM = *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -2379,7 +2383,7 @@
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    S4CTCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN62 = *ON
@@ -2391,11 +2395,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Clearing Threshold Amount
- 
+
      C                   MOVE      S4CTAM        W4CTAM
- 
+
      C                   IF        CurrencyOK = 'Y'
      C                   IF        S4CTAM <> *BLANKS
      C                   EVAL      W4CTAM = S4CTAM
@@ -2405,7 +2409,7 @@
      C                   MOVE      S4CTAM        ALPH
      C                   MOVE      'Y'           MTID              1
      C                   MOVE      '.'           BNDCSP            1
- 
+
      C                   CALLB     'ZA0840'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM                    ALPH
@@ -2415,7 +2419,7 @@
      C                   PARM                    ERCD
      C                   PARM                    AMNT
      C                   PARM                    BNDCSP
- 
+
      C                   IF        ERCD = 0
      C                   MOVE      ALPH          S4CTAM
      C                   IF        W4CTAM <> S4CTAM
@@ -2431,9 +2435,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Allocation Indicator
- 
+
      C                   IF        S4ALIN <> *BLANKS AND
      C                             S4ALIN <> 'A' AND
      C                             S4ALIN <> 'P' AND
@@ -2444,9 +2448,9 @@
      C                   EVAL      PZMsgID = 'USR0527'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Validate Collateralisation Indicator
- 
+
      C                   IF        S4CLIN <> *BLANKS AND
      C                             S4CLIN <> 'F' AND
      C                             S4CLIN <> 'O' AND
@@ -2458,9 +2462,9 @@
      C                   EVAL      PZMsgID = 'USR0538'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Validate Non Standard Flag
- 
+
      C                   IF        S4NSFL <> *BLANKS AND
      C                             S4NSFL <> 'Y'
      C                   EVAL      *IN40 = *ON
@@ -2469,9 +2473,9 @@
      C                   EVAL      PZMsgID = 'USR0734'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Validate Execution Timestamp (Date/Time)
- 
+
      C                   IF        S4EXDE <> 'Y' AND
      C                             S4EXDE <> 'N' AND
      C                             S4EXDE <> *BLANKS
@@ -2481,7 +2485,7 @@
      C                   EVAL      PZMsgID = 'USR0642'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   IF        S4EXDE = *BLANKS AND
      C                             S4EXTC <> *BLANKS
      C                   EVAL      *IN40 = *ON
@@ -2490,9 +2494,9 @@
      C                   EVAL      PZMsgID = 'USR0643'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Validate Execution Timestamp (UTC)
- 
+
      C                   IF        S4EXTC <> 'Y' AND
      C                             S4EXTC <> 'N' AND
      C                             S4EXTC <> *BLANKS
@@ -2501,7 +2505,7 @@
      C                   EVAL      W#EROR3 = 'Y'
      C                   EVAL      PZMsgID = 'USR0649'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
      C                   IF        S4EXTC = 'Y' AND
      C                             S4EXDE = 'N'
@@ -2512,24 +2516,24 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate Additional Information
- 
+
      C**********         IF        AddlRepiDS = *BLANKS                                       CSW214
      C**********         IF        S4RPJN = 'OTHR'                                            CSW214
      C**********         EVAL      PZMsgID = 'USR0651'                                        CSW214
      C**********         EVAL      W#WARN = 'Y'                                      MD021923 CSW214
      C**********         EXSR      SRZasnms                                                   CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      EmbdBlanks = *BLANKS                                       CSW214
      C**********         EVAL      SWIFTChar = *BLANKS                                        CSW214
      C**********         EVAL      CodeWordCnt = 0                                  MD023614A CSW214
      C**********         EVAL      SlashCnt = 0                                     MD023614A CSW214
- 
+
       ***Additional*Information*1                                                             CSW214
- 
+
      C**********         IF        S4AD01 = *BLANKS                                           CSW214
      C**********         IF        S4AD02 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2537,7 +2541,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD01        FldChk                                       CSW214
@@ -2561,9 +2565,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*2                                                             CSW214
- 
+
      C**********         IF        S4AD02 = *BLANKS                                           CSW214
      C**********         IF        S4AD03 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2571,7 +2575,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD02        FldChk                                       CSW214
@@ -2596,9 +2600,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*3                                                             CSW214
- 
+
      C**********         IF        S4AD03 = *BLANKS                                           CSW214
      C**********         IF        S4AD04 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2606,7 +2610,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD03        FldChk                                       CSW214
@@ -2631,9 +2635,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*4                                                             CSW214
- 
+
      C**********         IF        S4AD04 = *BLANKS                                           CSW214
      C**********         IF        S4AD05 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2641,7 +2645,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD04        FldChk                                       CSW214
@@ -2666,9 +2670,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*5                                                             CSW214
- 
+
      C**********         IF        S4AD05 = *BLANKS                                           CSW214
      C**********         IF        S4AD06 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2676,7 +2680,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD05        FldChk                                       CSW214
@@ -2701,9 +2705,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*6                                                             CSW214
- 
+
      C**********         IF        S4AD06 = *BLANKS                                           CSW214
      C**********         IF        S4AD07 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2711,7 +2715,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD06        FldChk                                       CSW214
@@ -2736,9 +2740,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*7                                                             CSW214
- 
+
      C**********         IF        S4AD07 = *BLANKS                                           CSW214
      C**********         IF        S4AD08 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2746,7 +2750,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD07        FldChk                                       CSW214
@@ -2771,9 +2775,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*8                                                             CSW214
- 
+
      C**********         IF        S4AD08 = *BLANKS                                           CSW214
      C**********         IF        S4AD09 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2781,7 +2785,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD08        FldChk                                       CSW214
@@ -2806,9 +2810,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*9                                                             CSW214
- 
+
      C**********         IF        S4AD09 = *BLANKS                                           CSW214
      C**********         IF        S4AD10 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2817,7 +2821,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD09        FldChk                                       CSW214
@@ -2844,9 +2848,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*10                                                            CSW214
- 
+
      C**********         IF        S4AD10 = *BLANKS                                           CSW214
      C**********         IF        S4AD11 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2854,7 +2858,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD10        FldChk                                       CSW214
@@ -2879,9 +2883,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*11                                                            CSW214
- 
+
      C**********         IF        S4AD11 = *BLANKS                                           CSW214
      C**********         IF        S4AD12 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2889,7 +2893,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD11        FldChk                                       CSW214
@@ -2914,9 +2918,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*12                                                            CSW214
- 
+
      C**********         IF        S4AD12 = *BLANKS                                           CSW214
      C**********         IF        S4AD13 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2924,7 +2928,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD12        FldChk                                       CSW214
@@ -2949,9 +2953,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*13                                                            CSW214
- 
+
      C**********         IF        S4AD13 = *BLANKS                                           CSW214
      C**********         IF        S4AD14 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2959,7 +2963,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD13        FldChk                                       CSW214
@@ -2984,9 +2988,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*14                                                            CSW214
- 
+
      C**********         IF        S4AD14 = *BLANKS                                           CSW214
      C**********         IF        S4AD15 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -2994,7 +2998,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD14        FldChk                                       CSW214
@@ -3019,9 +3023,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*15                                                            CSW214
- 
+
      C**********         IF        S4AD15 = *BLANKS                                           CSW214
      C**********         IF        S4AD16 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -3029,7 +3033,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD15        FldChk                                       CSW214
@@ -3054,9 +3058,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*16                                                            CSW214
- 
+
      C**********         IF        S4AD16 = *BLANKS                                           CSW214
      C**********         IF        S4AD17 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -3064,7 +3068,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD16        FldChk                                       CSW214
@@ -3089,9 +3093,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*17                                                            CSW214
- 
+
      C**********         IF        S4AD17 = *BLANKS                                           CSW214
      C**********         IF        S4AD18 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -3099,7 +3103,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD17        FldChk                                       CSW214
@@ -3124,9 +3128,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*18                                                            CSW214
- 
+
      C**********         IF        S4AD18 = *BLANKS                                           CSW214
      C**********         IF        S4AD19 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -3134,7 +3138,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD18        FldChk                                       CSW214
@@ -3159,9 +3163,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*19                                                            CSW214
- 
+
      C**********         IF        S4AD19 = *BLANKS                                           CSW214
      C**********         IF        S4AD20 <> *BLANKS                                          CSW214
      C**********         EVAL      *IN40 = *ON                                                CSW214
@@ -3169,7 +3173,7 @@
      C**********         EVAL      W#EROR3 = 'Y'                                              CSW214
      C**********         EVAL      EmbdBlanks = 'Y'                                           CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         ELSE                                                                 CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD19        FldChk                                       CSW214
@@ -3194,9 +3198,9 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
       ***Additional*Information*20                                                            CSW214
- 
+
      C**********         IF        S4AD20 <> *BLANKS                                          CSW214
      C**********         EVAL      FldChk = *BLANKS                                           CSW214
      C**********         MOVEL     S4AD20        FldChk                                       CSW214
@@ -3221,7 +3225,7 @@
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         IF        EmbdBlanks = 'Y'                                         MD021931
      C**********         IF        EmbdBlanks = 'Y' OR                               MD021931 CSW214
      C**********                   CodeWordCnt > 0  AND                             MD023614A CSW214
@@ -3232,13 +3236,13 @@
      C**********         EVAL      PZMsgID = 'USR0675'                               MD021931 CSW214
      C**********         EXSR      SRZasnms                                                   CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C**********         IF        SWIFTChar = 'N'                                            CSW214
      C**********         EVAL      PZMsgID = 'USR0652'                                        CSW214
      C**********         EXSR      SRZasnms                                                   CSW214
      C**********         ENDIF                                                                CSW214
      C**********         ENDIF                                                                CSW214
- 
+
      C                   IF        CSW214 = 'Y'                                               CSW214
                                                                                               CSW214
       ** Validate Financial Nature of the Counterparty Indicator                              CSW214
@@ -3422,6 +3426,7 @@
                                                                                               CSW214
       ** Additional Information 1                                                             CSW214
                                                                                               CSW214
+     C                   EVAL      SWIFTChar = ' '                                          MD028928
      C                   IF        S7AD01 = *BLANKS                                           CSW214
      C                   IF        S7AD02 <> *BLANKS                                          CSW214
      C                   EVAL      *IN40 = *ON                                                CSW214
@@ -4196,11 +4201,11 @@
       *                                                               *
       *****************************************************************
      C     SRReload      BEGSR
- 
+
       ** Request subfile reload
- 
+
      C                   EVAL      W1RSF = 'Y'
- 
+
      C                   IF        *IN05 = *ON
      C                   EVAL      S1ACTN = *BLANKS
      C                   EVAL      S1BRCH = *BLANKS
@@ -4211,16 +4216,16 @@
      C                   EVAL      S1PMLI = *BLANKS
      C                   EVAL      S1RPNM = *BLANKS
      C                   EVAL      S1RPTN = *BLANKS
- 
+
      C                   EVAL      SEBRCH = *BLANKS
      C                   EVAL      SETYPE = *BLANKS
      C                   EVAL      SESTPE = *BLANKS
      C                   EVAL      SECURR = *BLANKS
      C                   EVAL      SEPMLI = *BLANKS
      C                   EVAL      SECUSN = *BLANKS                                         MD030328
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4230,9 +4235,9 @@
       *                                                               *
       *****************************************************************
      C     SRClrScrn     BEGSR
- 
+
       ** Initialise subfile record
- 
+
      C                   EVAL      S1ACTN = *BLANKS
      C                   EVAL      S1RECI = *BLANKS
      C                   EVAL      S1BRCH = *BLANKS
@@ -4243,7 +4248,7 @@
      C                   EVAL      S1PMLI = *BLANKS
      C                   EVAL      S1RPNM = *BLANKS
      C                   EVAL      S1RPTN = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4253,29 +4258,29 @@
       *                                                               *
       *****************************************************************
      C     SRMove        BEGSR
- 
+
      C                   IF        RPRECI = '*'
      C                   EVAL      S1RECI = RPRECI
      C                   ENDIF
- 
+
      C                   EVAL      S1BRCH = RPBRCH
      C                   EVAL      S1TYPE = RPTYPE
      C                   EVAL      S1STPE = RPSTPE
      C                   EVAL      S1CUSN = RPCUSN
      C                   EVAL      S1CURR = RPCURR
      C                   EVAL      S1PMLI = RPPMLI
- 
+
      C                   IF        S1CUSN <> *BLANKS
      C                   EVAL      PCUST = S1CUSN
      C                   EXSR      SrGetCusDtl
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S1RPNM = BBCRNM
      C                   EVAL      S1RPTN = BBCRTN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4285,13 +4290,13 @@
       *                                                               *
       *****************************************************************
      C     SRWrite       BEGSR
- 
+
       ** Clear error flag
- 
+
      C                   EVAL      WriteErr = *BLANKS
- 
+
       ** Insert new record
- 
+
      C                   IF        *IN09 = *ON
      C                   EXSR      SRMoveToFile
      C                   EVAL      RPTYLC = 'I'
@@ -4300,9 +4305,9 @@
      C                   EVAL      RPUSER = S1USER
      C                   WRITE     RPIFL1                               61
      C                   ENDIF
- 
+
       ** Amend existing record
- 
+
      C                   IF        S1ACTN = 'A'
      C     REPIKY        CHAIN     SDRPIFL1
      C                   IF        %FOUND
@@ -4321,9 +4326,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Delete an existing record
- 
+
      C                   IF        S1ACTN = 'D'
      C     REPIKY        CHAIN     SDRPIFL1
      C                   IF        %FOUND AND
@@ -4341,16 +4346,16 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Write/update error detected
- 
+
      C                   IF        *IN61 = *ON
      C                   EVAL      *IN40 = *ON
      C                   EVAL      WriteErr = 'Y'
      C                   EVAL      PZMsgID = 'USR0677'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4360,11 +4365,11 @@
       *                                                               *
       *****************************************************************
      C     SRZasnms      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM      'GBSDUSRMSG'  PZMsgFile
      C                   PARM                    PZMsgID
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4374,12 +4379,12 @@
       *                                                               *
       *****************************************************************
      C     SRZasnms2     BEGSR
- 
+
      C                   CALL      'ZA0350'
      C                   PARM      'GBSDUSRMSG'  PZMsgFile
      C                   PARM                    PZMsgID
      C                   PARM                    PZMsgData
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4389,65 +4394,65 @@
       *                                                               *
       *****************************************************************
      C     SRGetScrn2    BEGSR
- 
+
       ** Get Branch Details
- 
+
      C                   EVAL      S3BRCH = RPBRCH
- 
+
      C                   IF        S3BRCH = 'ALL'
      C                   EVAL      S3BRDS = 'ALL BRANCHES'
      C                   ELSE
- 
+
      C                   CALL      'AOBRCHR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    RPBRCH
      C     SDBRCH        PARM      SDBRCH        DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S3BRDS = A8BRNM
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get Transaction Type Details
- 
+
      C                   IF        RPTYPE <> *BLANKS
      C                   Z-ADD     1             X
      C                   Z-ADD     1             Y
      C     RPTYPE        LOOKUP    FXDLAr(X)                              13
      C     RPTYPE        LOOKUP    FRAIRSAr(Y)                            14
- 
+
      C                   IF        *IN13 = *ON
      C                   EVAL      S3TYDS = FXDLDes(X)
      C                   ENDIF
- 
+
      C                   IF        *IN14 = *ON
      C                   EVAL      S3TYDS = FRAIRSDes(Y)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Get Transaction Sub-type Details
- 
+
      C                   IF        RPSTPE <> *BLANKS
      C                   CALL      'AODLSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    RPSTPE
      C     SDDLST        PARM      SDDLST        DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S3STDS = ASDSTN
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get Counterparty Details
- 
+
      C                   EVAL      S3CUSN = RPCUSN
      C                   IF        RPCUSN <> *BLANKS
      C                   EVAL      PCUST = RPCUSN
      C                   EXSR      SrGetCusDtl
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S3RPNM = BBCRNM
      C                   EVAL      S3RPTN = BBCRTN
@@ -4455,9 +4460,9 @@
      C                   EVAL      S3LEIC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get Currency Details
- 
+
      C                   EVAL      S3CURR = RPCURR
      C                   IF        RPCURR <> *BLANKS
      C                   CALL      'AOCURRR0'
@@ -4465,18 +4470,18 @@
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    RPCURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S3CYDS = A6CYNM
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get Precious Metal Indicator
- 
+
      C                   EVAL      S3PMLI = RPPMLI
- 
+
       ** Get Trade Repository Details
- 
+
      C                   EVAL      S3TRID = RPTRID
      C                   IF        RPTRID <> *BLANKS
      C                   EVAL      PCUST = RPTRID
@@ -4487,9 +4492,9 @@
      C                   EVAL      S3TRSW = BBCSID
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get CCP House Details
- 
+
      C                   EVAL      S3CCPN = RPCCPN
      C                   EVAL      S3CCPA = RPCCPA
      C                   IF        RPCCPN <> *BLANKS
@@ -4502,9 +4507,9 @@
      C                   EVAL      S3CPLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get Clearing Exception Details
- 
+
      C                   EVAL      S3CCPP = RPCCPP
      C                   EVAL      S3CRPA = RPCRPA
      C                   IF        RPCCPP <> *BLANKS
@@ -4517,7 +4522,7 @@
      C                   EVAL      S3CRLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      S3CBCL = RPCBCL
      C                   EVAL      S3CCPL = RPCCPL
      C**********         EVAL      S3CPID = RPCPID                                            CSW214
@@ -4544,7 +4549,7 @@
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4554,7 +4559,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetScrn3    BEGSR
- 
+
      C                   EVAL      S4CPID = RPCPID                                            CSW214
      C                   EVAL      S4EXVE = RPEXVE                                            CSW214
      C                   EVAL      S4UPID = RPUPID                                            CSW214
@@ -4572,13 +4577,13 @@
      C                   EVAL      S4RPLC = CSLEIC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      S4GTID = RPGTID
- 
+
      C                   IF        RPCTAM <> 0
      C                   MOVEL     *BLANKS       ZField
      C                   MOVE      RPCTAM        ZField
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
@@ -4587,7 +4592,7 @@
      C                   IF        PRTCD = *BLANKS
      C                   Z-ADD     A6NBDP        ZDecimal
      C                   ENDIF
- 
+
      C                   CALL      'ZEDIT'
      C                   PARM                    ZField
      C                   PARM                    ZDecimal
@@ -4595,7 +4600,7 @@
      C                   ELSE
      C                   EVAL      S4CTAM = *BLANKS
      C                   ENDIF
- 
+
      C                   EVAL      S4CTCY = RPCTCY
      C                   EVAL      S4ALIN = RPALIN
      C                   EVAL      S4CLIN = RPCLIN
@@ -4633,7 +4638,7 @@
      C                   EVAL      S4IGTI = RPIGTI                                            CSW214
      C                   EVAL      S4CTFI = RPCTFI                                            CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4643,7 +4648,7 @@
       *                                                               *
       *****************************************************************
      C     SRMoveToFile  BEGSR
- 
+
      C                   IF        *IN09 = *ON
      C                   EVAL      RPRECI = 'D'
      C                   EVAL      RPBRCH = S2BRCH
@@ -4653,7 +4658,7 @@
      C                   EVAL      RPCURR = S2CURR
      C                   EVAL      RPPMLI = S2PMLI
      C                   ENDIF
- 
+
      C                   EVAL      RPTRID = S3TRID
      C                   EVAL      RPCCPN = S3CCPN
      C                   EVAL      RPCCPA = S3CCPA
@@ -4735,7 +4740,7 @@
      C                   EVAL      RPIGTI = S4IGTI                                            CSW214
      C                   EVAL      RPCTFI = S4CTFI                                            CSW214
      C                   ENDIF                                                                CSW214
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4745,21 +4750,21 @@
       *                                                               *
       *****************************************************************
      C     SRGetCusDtl   BEGSR
- 
+
      C                   CLEAR                   DSLDY
- 
+
      C                   CALL      'AOCSSWR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM                    PCUST
      C                   PARM                    PKYST
      C                   PARM                    DSLDY
- 
+
      C                   EVAL      WStr = %LEN(SDCUST) + 1
      C                   EVAL      WLen = %LEN(SDCSSW)
      C                   EVAL      SDCUST = DSLDY
      C                   EVAL      SDCSSW = %SUBST(DSLDY:WStr:WLen)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4769,10 +4774,10 @@
       *                                                               *
       *****************************************************************
      C     SRChkXSet     BEGSR
- 
+
      C                   EVAL      *IN99 = *OFF
      C     ISO           CHECK     FldChk                                 99
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4782,39 +4787,39 @@
       *                                                               *
       *****************************************************************
      C     SRCodeWord    BEGSR
- 
+
      C                   EVAL      CodeWordOK = *BLANKS
- 
+
       ** First character must be '/'
- 
+
      C                   MOVEL     CWordChk      WSlash
      C                   IF        WSlash <> '/'
      C                   EVAL      CodeWordOK = 'N'
      C                   ENDIF
- 
+
       ** Codeword must end with '/'
- 
+
      C     '/'           SCAN      CWordChk:2    WSlash2
      C                   IF        NOT %FOUND
      C                   EVAL      CodeWordOK = 'N'
      C                   ENDIF
- 
+
       ** Codeword should be 8 characters or fewer
- 
+
      C                   IF        WSlash2 > 10
      C                   EVAL      CodeWordOK = 'N'
      C                   ENDIF
- 
+
       ** First line must not start with '//'
- 
+
      C                   IF        Line1 = 'Y' AND
      C                             WSlash2 = 2
      C                   EVAL      CodeWordOK = 'N'
      C                   ENDIF
      C                   EVAL      Line1 = *BLANKS
- 
+
       ** Check for valid codewords
- 
+
      C                   IF        CodeWordOK <> 'N'
      C     Alpha         CHECK     CWordChk:2    CharPos                  99
      C                   IF        *IN99 = *ON AND
@@ -4822,7 +4827,7 @@
      C                   EVAL      CodeWordOK = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        CodeWordOK = 'N'                                        MD023614A
      C                   EVAL      CodeWordCnt += 1                                        MD023614A
      C                   ENDIF                                                             MD023614A
@@ -4833,7 +4838,7 @@
      C                   EVAL      SlashOK = 'N'
      C                   EVAL      SlashCnt += 1                                           MD023614A
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4843,22 +4848,22 @@
       *                                                               *
       *****************************************************************
      C     SRChkActn     BEGSR
- 
+
      C                   CALL      'ZVRAT'
      C                   PARM                    DBRN
      C                   PARM                    ZAction
      C                   PARM                    ZError
- 
+
      C                   IF        ZError = 0 AND
      C                             ZAction <> *BLANKS
      C                   MOVEA     ZAction       ActnCdAr
      C                   ENDIF
- 
+
      C     'A'           LOOKUP    ActnCdAr                               16
      C     'D'           LOOKUP    ActnCdAr                               17
      C     'E'           LOOKUP    ActnCdAr                               18
      C     'I'           LOOKUP    ActnCdAr                               19
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4868,11 +4873,11 @@
       *                                                               *
       *****************************************************************
      C     SRChkSel      BEGSR
- 
+
      C                   IF        WSelFld = '?'
      C                   EVAL      WSEL = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4882,13 +4887,13 @@
       *                                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** If selection mode and F3 has been pressed
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4898,36 +4903,36 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Retrieve entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PMODE
- 
+
       ** Define LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'SD000111'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBASE = 1
      C                   OUT       LDA
- 
+
      C     *DTAARA       DEFINE                  ZMUSER
      C                   IN        ZMUSER
- 
+
       ** Call Access Program for Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -4937,14 +4942,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call Access Program for Module Details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDMMODPD'
@@ -4954,9 +4959,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call access program for system values
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      SVAL1         P@OP01           20
@@ -4979,25 +4984,25 @@
      C                   PARM      *BLANKS       P@VL09          200
      C                   PARM      *BLANKS       P@OP10           20
      C                   PARM      *BLANKS       P@VL10          200
- 
+
      C                   EVAL      CtpyNonSwift = P@VL01
      C                   EVAL      CtpySwift = P@VL02
- 
+
      C                   Z-ADD     14            WSFPG
- 
+
       ** Initialise subfile control
- 
+
      C                   EVAL      #1PGMQ = PSProcName
      C                   EVAL      S1WSID = PSJobName
      C                   EVAL      S1USER = PSUser
- 
+
      C                   EVAL      SEBRCH = *BLANKS
      C                   EVAL      SETYPE = *BLANKS
      C                   EVAL      SESTPE = *BLANKS
      C                   EVAL      SECUSN = *BLANKS
      C                   EVAL      SECURR = *BLANKS
      C                   EVAL      SEPMLI = *BLANKS
- 
+
       ** Check if SWIFT Changes 2014 is installed                                             CSW214
                                                                                               CSW214
      C                   CALL      'SWIF2014'                                                 CSW214
@@ -5020,19 +5025,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

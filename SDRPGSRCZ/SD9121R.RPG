@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060045           Date 16Jun22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR552166           Date 26Sep23               *
+      *  Prev Amend No. MD060045           Date 16Jun22               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 AR996162           Date 20Nov12               *
       *                 CER059             Date 19Jul10               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR552166 - Zero Exchange Rate Tolerance is not accepted.     *
+      *             Amend validation routine.                         *
       *  MD060045 - Deals Historic Retention Period = 0 in ICD        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
@@ -761,6 +764,36 @@
       * ZALIGN Transmission Delay - Dealing Data  *
      C                     MOVE WUZASF    #DDPTS
       * End of CCM002
+      *                                                                                     AR552166
+      ** Exchange rate tolerance                                                            AR552166
+      *                                                                                     AR552166
+     C                     MOVE BNEXRT    WUZASF                                            AR552166
+      *                                                                                     AR552166
+      ** ZEDIT Screen Field - Standard Functions                                            AR552166
+      *                                                                                     AR552166
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi                  AR552166
+     C           WUZASF    PARM WUZASF    WQ0008 16        ZALIGN Screen F                  AR552166
+     C                     PARM 1         WQ0009  10       ZALIGN No Of De                  AR552166
+      *                                                                                     AR552166
+     C           *IN90     IFEQ '1'                                                         AR552166
+      *                                                                                     AR552166
+      ** Call to program ended in error                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' W0RTN                                             AR552166
+     C                     MOVEL*BLANKS   W0CLPG 10                                         AR552166
+     C                     MOVEL'ZEDIT'   W0CLPG                                            AR552166
+      *                                                                                     AR552166
+      ** Send message '*Error occured on CALL...'                                           AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' ZAMSID                                            AR552166
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            AR552166
+     C                     MOVELW0CLPG    ZAMSDA           Message data                     AR552166
+     C                     EXSR ZASNMS                                                      AR552166
+     C                     ENDIF                                                            AR552166
+      *                                                                                     AR552166
+      ** ZALIGN Exchange rate tolerance                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVE WUZASF    #1EXRT                                            AR552166
       * Start CDL002
       * Net FX Customer Limits
       * CASE: DTL.Net FX Customer Limits is blank
@@ -2571,14 +2604,127 @@
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     END                             FI
-      * Exchange Rate Tolerance required
-     C           #1EXRT    IFEQ *ZERO                      IF
-     C                     SETON                     9937  *
-      * Send message '*Value required'
-     C                     MOVEL'Y2U0001' ZAMSID
-     C                     MOVEL'Y2USRMSG'ZAMSGF
-     C                     EXSR ZASNMS
-     C                     END                             FI
+      **Exchange*Rate*Tolerance*required*******************************                     AR552166
+     C********** #1EXRT    IFEQ *ZERO                      IF                               AR552166
+     C**********           SETON                     9937  *                                AR552166
+      **Send*message*'*Value*required'*********************************                     AR552166
+     C**********           MOVEL'Y2U0001' ZAMSID                                            AR552166
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                            AR552166
+     C**********           EXSR ZASNMS                                                      AR552166
+     C**********           END                             FI                               AR552166
+      *                                                                                     AR552166
+      ** Exchange Rate Tolerance                                                            AR552166
+      *                                                                                     AR552166
+     C           #1EXRT    IFEQ *BLANK                     *IF                              AR552166
+      *                                                                                     AR552166
+      ** Setup message data for message                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVEL#1EXRT    ZA0012           Loan/depsts int                  AR552166
+      *                                                                                     AR552166
+      ** Send error message                                                                 AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'MMA0785' ZAMSID                                            AR552166
+     C                     MOVEL'GBDRSMM' ZAMSGF                                            AR552166
+     C                     EXSR ZASNMS                                                      AR552166
+     C                     SETON                     9937  *                                AR552166
+      *                                                                                     AR552166
+     C                     ELSE                                                             AR552166
+      *                                                                                     AR552166
+      ** CASE: *OTHERWISE                                                                   AR552166
+      *                                                                                     AR552166
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F                  AR552166
+     C                     MOVEL#1EXRT    WUZASF           ZALIGN Screen F                  AR552166
+      *                                                                                     AR552166
+      ** Call ZALIGN & ZEDIT                                                                AR552166
+      ** ZALIGN Screen Field - Standard Functions                                           AR552166
+      *                                                                                     AR552166
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F                  AR552166
+     C           W0RTN     PARM W0RTN     WQ0030  7        *Return code                     AR552166
+     C           WUZASF    PARM WUZASF    WQ0031 16        ZALIGN Screen F                  AR552166
+     C                     PARM 1         WQ0032  10       ZALIGN No Of De                  AR552166
+     C                     PARM 2         WQ0033  20       ZALIGN No Of Di                  AR552166
+     C           WUZAFF    PARM *BLANK    WQ0034 16        ZALIGN File Fie                  AR552166
+      *                                                                                     AR552166
+     C           *IN90     IFEQ '1'                                                         AR552166
+      *                                                                                     AR552166
+      ** Call to program ended in error                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' W0RTN                                             AR552166
+     C                     MOVEL*BLANKS   W0CLPG 10                                         AR552166
+     C                     MOVEL'ZALIGN'  W0CLPG                                            AR552166
+      *                                                                                     AR552166
+      ** Send message '*Error occured on CALL...'                                           AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' ZAMSID                                            AR552166
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            AR552166
+     C                     MOVELW0CLPG    ZAMSDA           Message data                     AR552166
+     C                     EXSR ZASNMS                                                      AR552166
+     C                     ENDIF                                                            AR552166
+      *                                                                                     AR552166
+      ** Error detected?                                                                    AR552166
+      *                                                                                     AR552166
+     C           W0RTN     IFNE *BLANK                                                      AR552166
+     C                     SETON                     99    *                                AR552166
+     C                     ENDIF                                                            AR552166
+      *                                                                                     AR552166
+      ** CASE: PGM.*Return code is Old Table Error                                          AR552166
+      *                                                                                     AR552166
+     C           W0RTN     IFEQ '*ERROR*'                  *IF                              AR552166
+     C                     MOVEL'Y'       WUERCD           Err Code                         AR552166
+     C                     ELSE                                                             AR552166
+      *                                                                                     AR552166
+      ** CASE: *OTHERWISE                                                                   AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'N'       WUERCD           Err Code                         AR552166
+      *                                                                                     AR552166
+      ** ZEDIT Screen Field - Standard Functions  *                                         AR552166
+      *                                                                                     AR552166
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi                  AR552166
+     C           WUZASF    PARM WUZASF    WQ0035 16        ZALIGN Screen F                  AR552166
+     C                     PARM 1         WQ0036  10       ZALIGN No Of De                  AR552166
+      *                                                                                     AR552166
+     C           *IN90     IFEQ '1'                                                         AR552166
+      *                                                                                     AR552166
+      ** Call to program ended in error                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' W0RTN                                             AR552166
+     C                     MOVEL*BLANKS   W0CLPG 10                                         AR552166
+     C                     MOVEL'ZEDIT'   W0CLPG                                            AR552166
+      *                                                                                     AR552166
+      ** Send message '*Error occured on CALL...'                                           AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'Y2U0032' ZAMSID                                            AR552166
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            AR552166
+     C                     MOVELW0CLPG    ZAMSDA           Message data                     AR552166
+     C                     EXSR ZASNMS                                                      AR552166
+     C                     ENDIF                                                            AR552166
+      *                                                                                     AR552166
+     C                     ENDIF                           *FI                              AR552166
+      *                                                                                     AR552166
+      ** CASE: WRK.Err Code is Error Found                                                  AR552166
+      *                                                                                     AR552166
+     C           WUERCD    IFEQ 'Y'                        *IF                              AR552166
+      *                                                                                     AR552166
+      ** Setup message data for message                                                     AR552166
+      *                                                                                     AR552166
+     C                     MOVEL#1EXRT    ZA0013           Loan/depsts int                  AR552166
+      *                                                                                     AR552166
+      ** Send message 'Invalid Exchange Rate entered.'                                      AR552166
+      *                                                                                     AR552166
+     C                     MOVEL'MMA0753' ZAMSID                                            AR552166
+     C                     MOVEL'GBDRSMM' ZAMSGF                                            AR552166
+     C                     EXSR ZASNMS                                                      AR552166
+     C                     SETON                     9937  *                                AR552166
+      *                                                                                     AR552166
+     C                     ELSE                                                             AR552166
+      *                                                                                     AR552166
+      ** CASE: *OTHERWISE                                                                   AR552166
+      ** ZALIGN Loan/Dep Int Rate - Dealing Data                                            AR552166
+      *                                                                                     AR552166
+     C                     MOVE WUZASF    #1EXRT                                            AR552166
+     C                     MOVE WUZAFF    #1EXRN           Loans/depsts in                  AR552166
+     C                     ENDIF                           *FI                              AR552166
+     C                     ENDIF                           *FI                              AR552166
       * Forward Reval. P&L A/c Cd required
      C/COPY WNCPYSRC,SD9121RC18
      C           #1FRPL    IFEQ *BLANK                     IF
@@ -2783,13 +2929,15 @@
      C                     Z-ADD*ZERO     #1LTMT           Last Transmissi
      C                     Z-ADD*ZERO     #1LCD            Last Change Dat
      C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1EXRN           Exchange Rate T                  AR552166
      C                     MOVEL*BLANK    #1CYCD           Currency Code
      C                     MOVEL*BLANK    #1CYDL           Base Currency f
      C                     Z-ADD*ZERO     #1DHRT           Deals Historic
      C                     MOVEL*BLANK    #1THSP           Thousand Separa
      C                     Z-ADD*ZERO     #1MBAM           Minimum Brokera
      C                     MOVEL*BLANK    #1DCSP           Decimal Separat
-     C                     Z-ADD*ZERO     #1EXRT           Exchange Rate T
+     C**********           Z-ADD*ZERO     #1EXRT           Exchange Rate T                  AR552166
+     C                     MOVEL*BLANK    #1EXRT           Exchange Rate T                  AR552166
      C                     MOVEL*BLANK    #DTXRT           Tax Rate : scre
      C                     Z-ADD*ZERO     #1HKTR           Hong Kong Tax R
      C                     MOVEL*BLANK    #1CUST           Customer Number
@@ -2866,7 +3014,8 @@
      C                     MOVELBNTHSP    #1THSP           Thousand Separa
      C                     Z-ADDBNMBAM    #1MBAM           Minimum Brokera
      C                     MOVELBNDCSP    #1DCSP           Decimal Separat
-     C                     Z-ADDBNEXRT    #1EXRT           Exchange Rate T
+     C**********           Z-ADDBNEXRT    #1EXRT           Exchange Rate T                  AR552166
+     C                     Z-ADDBNEXRT    #1EXRN           Exchange Rate T                  AR552166
      C                     Z-ADDBNHKTR    #1HKTR           Hong Kong Tax R
      C                     MOVELBNCUST    #1CUST           Customer Number
      C                     MOVELBNBCOP    #1BCOP           Book Code Optio
@@ -3209,7 +3358,8 @@
      C                     MOVEL#1FRDI    BNFRDI           Fwd Reval of De
      C                     Z-ADD#1MBAM    BNMBAM           Minimum Brokera
      C                     Z-ADD#1DHRT    BNDHRT           Deals Historic
-     C                     Z-ADD#1EXRT    BNEXRT           Exchange Rate T
+     C**********           Z-ADD#1EXRT    BNEXRT           Exchange Rate T                  AR552166
+     C                     Z-ADD#1EXRN    BNEXRT           Exchange Rate T                  AR552166
      C                     Z-ADD#1HKTR    BNHKTR           Hong Kong Tax R
      C                     MOVEL#1THSP    BNTHSP           Thousand Separa
      C                     MOVEL#1DCSP    BNDCSP           Decimal Separat

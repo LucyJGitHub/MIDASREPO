@@ -1,0 +1,184 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       V_CLACCT2  - Accounts identified in the Global Layer (GPTRAPPD)       */
+/*                   table and linked to SD                                    */
+/*                                                                             */
+/*       (c) Finastra International Limited 2023                               */
+/*                                                                             */
+/*       Last Amend No. MD043253 *CREATE   Date 14Aug23                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD043253 - Error retrieving an account if account code                */
+/*                  has no instrument code                                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (T_ZONE ,                                                                     :
+  T_ID ,                                                                        :
+  T_MOD ,                                                                       :
+  T_SMOD ,                                                                      :
+  T_SNAM ,                                                                      :
+  T_CNMA ,                                                                      :
+  T_CNUM ,                                                                      :
+  T_PTFR ,                                                                      :
+  T_BRCA ,                                                                      :
+  T_ACCY ,                                                                      :
+  T_ACOD ,                                                                      :
+  T_ACDN ,                                                                      :
+  T_ACSQ ,                                                                      :
+  T_ACSN ,                                                                      :
+  T_RCCY ,                                                                      :
+  BBCUST ,                                                                      :
+  BBCOLC ,                                                                      :
+  A5ACCD ,                                                                      :
+  A5INNR ,                                                                      :
+  PDINNR ,                                                                      :
+  A6CYCD ,                                                                      :
+  A6NBDP ,                                                                      :
+  A6SPRT ,                                                                      :
+  A6MDIN ,                                                                      :
+  A4CNCD ,                                                                      :
+  INSTWC ,                                                                      :
+  INSTPC ,                                                                      :
+  INSTYN ,                                                                      :
+  CURRWC ,                                                                      :
+  CURRPC ,                                                                      :
+  CURRYN ,                                                                      :
+  CTRYWC ,                                                                      :
+  CTRYPC)                                                                       :
+  AS                                                                            :
+  SELECT                                                                        :
+  T_ZONE                                                                        :
+  ,T_ID                                                                         :
+  ,T_MOD                                                                        :
+  ,T_SMOD                                                                       :
+  ,T_SNAM                                                                       :
+  ,T_CNMA                                                                       :
+  ,T_CNUM                                                                       :
+  ,T_PTFR                                                                       :
+  ,T_BRCA                                                                       :
+  ,T_ACCY                                                                       :
+  ,T_ACOD                                                                       :
+  ,T_ACDN                                                                       :
+  ,T_ACSQ                                                                       :
+  ,T_ACSN                                                                       :
+  ,T_RCCY                                                                       :
+  ,BBCUST                                                                       :
+  ,BBCOLC                                                                       :
+  ,A5ACCD                                                                       :
+  ,A5INNR                                                                       :
+  ,PDINNR                                                                       :
+  ,A6CYCD                                                                       :
+  ,A6NBDP                                                                       :
+  ,A6SPRT                                                                       :
+  ,A6MDIN                                                                       :
+  ,A4CNCD                                                                       :
+  ,INST.PDWEIG AS INSTWC                                                        :
+  ,CASE                                                                         :
+      WHEN INST.PDPERC IS NULL THEN '100'                                       :
+      ELSE INST.PDPERC                                                          :
+   END AS INSTPC                                                                 :
+  ,INST.PDCUML AS INSTYN                                                        :
+  ,CURR.PDWEIG AS CURRWC                                                        :
+  ,CASE                                                                         :
+      WHEN CURR.PDPERC IS NULL THEN '100'                                       :
+      ELSE CURR.PDPERC                                                          :  
+   END AS CURRPC                                                                :	  
+  ,CURR.PDCUML AS CURRYN                                                        :
+  ,CTRY.PDWEIG AS CTRYWC                                                        :
+  ,CASE                                                                         :
+      WHEN CTRY.PDPERC IS NULL THEN '100'                                       :
+      ELSE CTRY.PDPERC                                                          :  
+   END AS CTRYPC                                                                :	  
+  FROM                                                                          :
+  GPTRAPPD                                                                      : 
+  LEFT JOIN GZSDCURRPD ON T_RCCY = A6CYCD AND T_ZONE = A6ZONE                   :
+  LEFT JOIN GPWEIGPD as CURR ON CURR.PDWEIG = A6POWC,                           :
+  GZSDCUSTPD,                                                                   :
+  GZSDCTRYPD                                                                    :
+  LEFT JOIN GPWEIGPD as CTRY ON CTRY.PDWEIG = A4CTWC,                           :
+  GZSDACODPD                                                                    :
+  LEFT JOIN GZSDPLINPD AS PLIN ON PDINNR = A5INNR AND PDZONE = A5ZONE           :
+  LEFT JOIN GPWEIGPD as INST ON INST.PDWEIG = PLIN.PDWEIG                       :
+  WHERE                                                                         :
+  T_MOD = 'GL'                                                                  :
+  AND T_SMOD ='ACCT'                                                            :
+  AND T_ACOD = A5ACCD                                                           :
+  AND T_ZONE = A5ZONE                                                           :   
+  AND T_CNMA = BBCUST                                                           :
+  AND BBCOLC = A4CNCD                                                           :
+  AND T_ZONE = A4ZONE                                                           :
+  AND T_CUBR = BBBRCD;                                                          :
+                                                                                :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( T_ZONE IS 'Zone' ,                                                          :
+  T_ID IS 'Identifier' ,                                                        :
+  T_MOD IS 'Module' ,                                                           :
+  T_SMOD IS 'Sub-Module' ,                                                      :
+  T_SNAM IS 'Shortname' ,                                                       :
+  T_CNMA IS 'Customer Number (Alpha)' ,                                         :
+  T_CNUM IS 'Customer Number' ,                                                 :
+  T_PTFR IS 'Portfolio reference' ,                                             :
+  T_BRCA IS 'Booking Branch' ,                                                  :
+  T_ACCY IS 'Account Currency' ,                                                :
+  T_ACOD IS 'Account Code' ,                                                    :
+  T_ACDN IS 'Account Code (Numeric)' ,                                          :
+  T_ACSQ IS 'Account Sequence' ,                                                :
+  T_ACSN IS 'Account Sequence (Numeric)' ,                                      :
+  T_RCCY IS 'Risk Currency' ,                                                   :
+  BBCUST IS 'Customer Number' ,                                                 :
+  BBCOLC IS 'Country of Location' ,                                             :
+  A5INNR IS 'PM Instrument Code (Lndr)' ,                                       :
+  PDINNR IS 'Inst Type' ,                                                       :
+  A6CYCD IS 'Currency code' ,                                                   :
+  A6NBDP IS 'Number of Decimal Places' ,                                        :
+  A6SPRT IS 'Spot Rate' ,                                                       :
+  A6MDIN IS 'Multiply/Divide Indicator' ,                                       :
+  A4CNCD IS 'Country code' ) ;                                                  :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( T_ZONE TEXT IS 'Zone' ,                                                     :
+  T_ID TEXT IS 'Identifier' ,                                                   :
+  T_MOD TEXT IS 'Module' ,                                                      :
+  T_SMOD TEXT IS 'Sub-Module' ,                                                 :
+  T_SNAM TEXT IS 'Shortname' ,                                                  :
+  T_CNMA TEXT IS 'Customer Number (Alpha)' ,                                    :
+  T_CNUM TEXT IS 'Customer Number' ,                                            :
+  T_PTFR TEXT IS 'Portfolio reference' ,                                        :
+  T_BRCA TEXT IS 'Booking Branch' ,                                             :
+  T_ACCY TEXT IS 'Account Currency' ,                                           :
+  T_ACOD TEXT IS 'Account Code' ,                                               :
+  T_ACDN TEXT IS 'Account Code (Numeric)' ,                                     :
+  T_ACSQ TEXT IS 'Account Sequence' ,                                           :
+  T_ACSN TEXT IS 'Account Sequence (Numeric)' ,                                 :
+  T_RCCY TEXT IS 'Risk Currency' ,                                              :
+  BBCUST TEXT IS 'Customer Number' ,                                            :
+  BBCOLC TEXT IS 'Country of Location' ,                                        :
+  A5ACCD TEXT IS 'Account Code' ,                                               :
+  A5INNR TEXT IS 'PM Instrument Code (Lndr)' ,                                  :
+  PDINNR TEXT IS 'Instrument Type' ,                                            :
+  A6CYCD TEXT IS 'Currency Code' ,                                              :
+  A6NBDP TEXT IS 'Number of Decimal Places' ,                                   :
+  A6SPRT TEXT IS 'Spot Rate' ,                                                  :
+  A6MDIN TEXT IS 'Multiply/Divide Indicator' ,                                  :
+  A4CNCD TEXT IS 'Country Code' ,                                               :
+  INSTWC TEXT IS 'Weighting Code' ,                                             :
+  INSTPC TEXT IS 'Percentage' ,                                                 :
+  INSTYN TEXT IS 'Cumul Percent' ,                                              :
+  CURRWC TEXT IS 'Weighting Code' ,                                             :
+  CURRPC TEXT IS 'Percentage' ,                                                 :
+  CURRYN TEXT IS 'Cumul Percent' ,                                              :
+  CTRYWC TEXT IS 'Weighting Code' ,                                             :
+  CTRYPC TEXT IS 'Percentage' ) ;                                               :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GL Accounts in Global Layer                 ';                     :
+                                                                                :

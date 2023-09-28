@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022702           Date 04Oct13               *
+      *  Last Amend No. MD030985           Date 27Sep23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022702           Date 04Oct13               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030985 - Execution Venue field accepts any value with 11   *
+      *             chars that does not start with a numeric value    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022702 - Error encountered when previous entry was invalid.*
       *  CSW213 - SWIFT Changes 2013                                  *
@@ -188,7 +191,9 @@
      C                   PARM      *BLANKS       PKySt
      C     MEBICD        PARM      MEBICD        DSSDY
  
-     C                   IF        Rtcd <> *BLANKS
+     C**********         IF        Rtcd <> *BLANKS                                          MD030985
+     C                   IF        Rtcd = '*NOBIC' OR                                       MD030985
+     C                             PKySt = '*NRF'                                           MD030985
      C                   EVAL      ExecVenueOK = 'N'
      C                   ENDIF
  

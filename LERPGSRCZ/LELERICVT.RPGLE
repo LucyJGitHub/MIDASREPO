@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD054897           Date 23Sep23               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD034915           Date 26Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054897 - Incorrect display of new funding profit center    *
+      *             after change in rollover. Reverse fix BUG8145.    *
       *  CLE172 - LIBOR Deregulation - Lending                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
@@ -630,8 +633,9 @@
      C**********         MOVEL     NFPC          DDNFPCB                                      CAP084
      C                   MOVEL     NFSN          DDNFSN                                       CAP084
      C**********         MOVEL     NFPC          DDNFPC                               CAP084 BUG8145
-     C                   MOVEL     FPRC          DDNFPC                                      BUG8145
-     C                   MOVEL     FPRC          DDNFPCB                                     BUG8145
+     C**********         MOVEL     FPRC          DDNFPC                             BUG8145 MD054897
+     C**********         MOVEL     FPRC          DDNFPCB                            BUG8145 MD054987
+     C                   MOVEL     NFPC          DDNFPC                                     MD054897
      C                   ENDIF
                                                                                               BUG827
      C     CAS001        IFEQ      'Y'                                                        BUG827

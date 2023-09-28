@@ -277,7 +277,8 @@
 
       ** Key for chain to MMDEALLL
      D @DLKEY          S              6S 0
-     D CDL006          S              1A   IMPORT                               CDL006
+     D*CDL006***       S              1A   IMPORT                                   CDL006 MD061467A
+     D CDL006          S              1A                                                   MD061467A
 
      D PSysVal01       S             20A                                                      240942
      D PCurSet01       S            200A                                                      240942

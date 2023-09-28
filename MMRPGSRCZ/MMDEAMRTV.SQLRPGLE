@@ -18,8 +18,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+<<<<<<< HEAD
       *  Last Amend No. AR632107           Date 17Jul23               *
       *  Prev Amend No. MD056602           Date 04Sep20               *
+=======
+      *  Last Amend No. AR583254           Date 15Jul23               *
+      *  Prev Amend No. AR583273           Date 14Jul23               *
+      *                 MD056602           Date 04Sep20               *
+>>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
@@ -94,10 +100,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< HEAD
       *  AR632107 - MM Deal Amendments are going to repair queue.     *
       *             Allow the use of Deal Number and Associate Front  *
       *             Office Id in Deals Amendment via MQ/API.          *
       *             Enhanced fix for AR583254. (Child AR632108)       *
+=======
+      *  AR583254 - Sending a MMDEAM from API with a deal number ins- *
+      *             tead of an Associated FOID ended in error. Remove *
+      *             use of Associated Front Office ID as part of key  *
+      *             list for MMDEAMPD. Also remove cross checking of  *
+      *             FOASID to MMDEALLL file.                          *
+      *  AR583273 - Manually Open/Close file DEALSH to prevent the    *
+      *           locking on file MMDELULL. (Child: AR583274)         *
+>>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
@@ -229,6 +245,7 @@
      F                                     RENAME(MMDEAMP0:MMDEAMP4)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
      FDEALSH    IF   E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                           AR583273
      F                                     RENAME(DEALSDBF:DEALSHBF)
      F                                     RENAME(DEALSDCF:DEALSHCF)
      F                                     RENAME(DEALSDDF:DEALSHDF)
@@ -711,7 +728,8 @@
       *
       * ACCESS DEAL AMENDMENT WITH FRONT OFFICE TRANSACTION ID
       *
-     C                   MOVE      FOASID        OrigDealNo       20
+     C**********         MOVE      FOASID        OrigDealNo       20                        AR583254
+     C                   MOVE      *BLANKS       OrigDealNo       20                        AR583254
      C                   MOVE      FOTRID        UniqDeamID       20
 
       *                                                                                     AR632107
@@ -758,22 +776,23 @@
       *
      C                   MOVEL     HNDS38        DDDS38
      C                   END
-      *
-      * FRONT OFFICE ASSOCIATED TRANSACTION ID
-      * MUST POINT TO A MIDAS DEAL
-      *
-     C     FOASID        IFNE      *BLANKS                                                  MD021204
+      *****************************************************************                     AR583254
+      **FRONT*OFFICE*ASSOCIATED*TRANSACTION*ID*************************                     AR583254
+      **MUST*POINT*TO*A*MIDAS*DEAL*************************************                     AR583254
+      *****************************************************************                     AR583254
+     C*****FOASID        IFNE      *BLANKS                                         MD021204 AR583254
       *                                                                                     MD021204
-     C     FOASID        CHAIN     MMDELFOI                           99
-     C     *IN99         IFEQ      '1'                                                        256482
-     C                   MOVEL     FOASID        WDDLNO            6 0                        256482
-     C     WDDLNO        CHAIN     MMDEALLL                           99                      256482
-     C     *IN99         IFEQ      '1'
-     C                   MOVE      'N'           OKACTN
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'APM0104'     MsgIdArr(Ix)
+     C*****FOASID        CHAIN     MMDELFOI                           99                    AR583254
+     C******IN99         IFEQ      '1'                                               256482 AR583254
+     C**********         MOVEL     FOASID        WDDLNO            6 0               256482 AR583254
+     C*****WDDLNO        CHAIN     MMDEALLL                           99             256482 AR583254
+     C******IN99         IFEQ      '1'                                                      AR583254
+     C**********         MOVE      'N'           OKACTN                                     AR583254
+     C**********         ADD       1             Ix                                         AR583254
+     C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             AR583254
+     C**********         MOVEL     'APM0104'     MsgIdArr(Ix)                               AR583254
      C**********         MOVEL     FOASID        MsgDtaArr(Ix)                              MD000091
+<<<<<<< HEAD
      C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
      C**********         EVAL      BLen = %Len(%Trim(FOASID))                      MD000091 AR632107
      C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)           MD000091 AR632107
@@ -785,8 +804,20 @@
      C                   ELSE                                                                 256482
      C                   MOVEL     HKDN38        DDDLNO
      C                   ENDIF                                                                256482
+=======
+     C**********         EVAL      BLen = %Len(%Trim(FOASID))                       MD000091AR583254
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)            MD000091AR583254
+     C**********         GOTO      EVFRNT                                                   AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     H@DN38        DDDLNO                              256482 AR583254
+     C**********         END                                                                AR583254
+      *****************************************************************                     AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     HKDN38        DDDLNO                                     AR583254
+     C**********         ENDIF                                                       256482 AR583254
+>>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                                                                                     MD021204
-     C                   ENDIF                                                              MD021204
+     C**********         ENDIF                                                     MD021204 AR583254
       *
      C     EVFRNT        ENDSR
       *****************************************************************
@@ -1349,6 +1380,7 @@ E2   C                   ENDDO
      C** Check that the deal does not exist on
      C** DEALSH file else, it is an error
      C*
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65
      C*
      C** Record already exists in DEALSH file
@@ -1359,6 +1391,7 @@ E2   C                   ENDDO
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI
      C                   ELSE                                                    CSE006
      C*                                                                          CSE006
@@ -1371,8 +1404,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                              CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                  CSE006
      C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                    CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI                                        CSE006
      C                   END                                                     CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   END
      C*
      C** Check valid deal for key fields
@@ -1435,6 +1470,7 @@ E2   C                   ENDDO
       ** Check that the deal does not exist on                                              BUG16961
       ** DEALSH file else, it is an error                                                   BUG16961
       *                                                                                     BUG16961
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65                    BUG16961
       *                                                                                     BUG16961
       ** Record already exists in DEALSH file                                               BUG16961
@@ -1446,8 +1482,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                                         BUG16961
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                             BUG16961
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)                               BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAF                                                   BUG16961
      C                   ENDIF                                                              BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
       *                                                                                      BUG7537
       ** Remove the rest of processing below as this will be                                 BUG7537
       ** handled in main screen validation subr/VALACI.                                      BUG7537

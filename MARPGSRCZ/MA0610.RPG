@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD061834           Date 29Aug23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061834 - Back out BUG5869 as this causes issues with the   *
+      *             STORQM upload on a multi-zone environment.        *
+      *             Re-design AR573677 to use system value.           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,MAH00001                                 *
@@ -156,6 +160,7 @@
      I                                       49  53 RSEQNO                S01382
      I                                       54  63 PRTFNM                S01382
      I/COPY WNCPYSRC,MAH00002
+     I              'RptLvlEnttyInArchvPF'C         SVARCH                                  MD061834
       *
      C/EJECT
      C                     MOVEACPY@      BIS@   80
@@ -346,6 +351,52 @@
      C***********          WRITEMAOPTDD0                                  S01382
      C***********          CLOSEMAOPTDPD                                  S01382
      C***********          END                                            S01382
+      *                                                                                     MD061834
+      ** Access System Value to check if Report Level and Entity is included                MD061834
+      *                                                                                     MD061834
+     C                     CALL 'AOSVALR0'                                                  MD061834
+     C                     PARM *BLANKS   PRTCD   7                                         MD061834
+     C                     PARM SVARCH    PSV01  20                                         MD061834
+     C                     PARM           PCS01 200                                         MD061834
+     C                     PARM           PSV02  20                                         MD061834
+     C                     PARM           PCS02 200                                         MD061834
+     C                     PARM           PSV03  20                                         MD061834
+     C                     PARM           PCS03 200                                         MD061834
+     C                     PARM           PSV04  20                                         MD061834
+     C                     PARM           PCS04 200                                         MD061834
+     C                     PARM           PSV05  20                                         MD061834
+     C                     PARM           PCS05 200                                         MD061834
+     C                     PARM           PSV06  20                                         MD061834
+     C                     PARM           PCS06 200                                         MD061834
+     C                     PARM           PSV07  20                                         MD061834
+     C                     PARM           PCS07 200                                         MD061834
+     C                     PARM           PSV08  20                                         MD061834
+     C                     PARM           PCS08 200                                         MD061834
+     C                     PARM           PSV09  20                                         MD061834
+     C                     PARM           PCS09 200                                         MD061834
+     C                     PARM           PSV10  20                                         MD061834
+     C                     PARM           PCS10 200                                         MD061834
+      *                                                                                     MD061834
+     C                     MOVE 'N'       REMOVE  1                                         MD061834
+      *                                                                                     MD061834
+     C           PRTCD     IFEQ *BLANK                                                      MD061834
+     C                     MOVELPCS01     REMOVE                                            MD061834
+     C                     ELSE                                                             MD061834
+      *                                                                                     MD061834
+      ** Database Error (return code other than *NRF)                                       MD061834
+      *                                                                                     MD061834
+     C           PRTCD     IFNE '*NRF   '                                                   MD061834
+     C           *LOCK     IN   LDA                                                         MD061834
+     C                     MOVEL'SDSVALPD'DBFILE           ************                     MD061834
+     C                     MOVELPSV01     DBKEY            * DBERR 07 *                     MD061834
+     C                     Z-ADD7         DBASE            ************                     MD061834
+     C                     OUT  LDA                                                         MD061834
+     C                     MOVE *ON       *INU7                                             MD061834
+     C                     MOVE *ON       *INU8                                             MD061834
+     C                     MOVE *ON       *INLR                                             MD061834
+     C                     EXSR *PSSR                                                       MD061834
+     C                     ENDIF                                                            MD061834
+     C                     ENDIF                                                            MD061834
       *
      C                     ENDSR
      C/EJECT
@@ -414,6 +465,8 @@
      C                     MOVEL*BLANKS   RSEQNO                          S01382
      C                     MOVEL*BLANKS   PRTFNM                          S01382
      C/COPY WNCPYSRC,MAH00009
+      *                                                                                     MD061834
+     C           REMOVE    IFEQ 'N'                                                         MD061834
       *                                                                                      BUG5869
       ** Assign entity as held by RCF                                                        BUG5869
       *                                                                                      BUG5869
@@ -470,6 +523,8 @@
      C                     ENDIF                                                             BUG5869
      C                     ENDIF                                                             BUG5869
       *                                                                                      BUG5869
+     C                     ENDIF                                                            MD061834
+      *                                                                                     MD061834
      C                     CALL 'MA0640'                                  S01382
      C                     PARM           HEADER                          S01382
      C                     PARM           @ERROR                          S01382

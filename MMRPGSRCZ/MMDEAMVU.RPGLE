@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060284           Date 26Aug22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. 263630             Date 13Sep23               *
+      *  Prev Amend No. MD060284           Date 26Aug22               *
+      *                 MD059304           Date 11Nov21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD053472           Date 27Oct20               *
       *                 MD055318           Date 17Feb20               *
@@ -94,6 +95,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263630 -  Error in DEAMS for the new MQ API's processing.    *
+      *            Amended so that system can get the associated      *
+      *            front office ID from JAVA.                         *
       *  MD060284 - Deal amendment type "SC" is blocked by error      *
       *             45049106.                                         *
       *           - Make both settlement fields protected for deal    *
@@ -646,6 +650,8 @@
      D PDEAL#          S              6  0                                                  BUG10727
      D CDL011          S              1A                                                    MD044400
                                                                                               CSC024
+      ** Deal Associated Front Office ID                                                      263630
+     D DDAFID          S             20                                                       263630
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -686,6 +692,8 @@
      C                   MOVEL     Infdata500    Infdata
      C                   MOVEL     Extdata500    Extdata
                                                                                               CDL102
+     C                   EVAL      DDAFID = %SUBST(Buffer:202:20)                             263630
+     C                   EVAL      APFOASOCID = DDAFID                                        263630
       ** ExtData Buffer Pointer                                                               CDL102
      C                   Z-ADD     1             eBfp              4 0                        CDL102
                                                                                               CDL102
@@ -870,6 +878,7 @@
      C                                           + TranInCust                                 CER043
      C                                           + LONDEP                                     CER043
      C                                           + DDFOID                                     239400
+     C                                           + DDAFID                                     263630
      C                                           + InRecSttmt + InPaySttmt
      C**********                                 + InfData  + ExtData                         CDL102
      C                                           + InfData  + ExtData +                       CDL102

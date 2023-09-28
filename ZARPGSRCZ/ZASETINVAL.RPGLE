@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057916           Date 18May21               *
-      *  Prev Amend No. CSW221             Date 05Apr21               *
+      * Last Amend No.  264112             Date 15Mar10               *
+      * Prev Amend No.. MD057916           Date 18May21               *
+      *                 CSW221             Date 05Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051567           Date 26Sep20               *
       *                 MD056313           Date 21Sep20               *
@@ -147,6 +148,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  264112 - Incorrect validation of fields Pay Ordering Customer*
+      *           Receipt Ordering Customer thus removing error       *
+      *           messages ESM0803 and ESM0804.                       *
+      *           Upgrade fix 250097 from client's DBA 3.04 system    *
       *  MD057916 - No defaulting process should be performed during  *
       *             settlement details amendment.                     *
       *  CSW221   - SWIFT Changes 2021                                *
@@ -3003,16 +3008,16 @@
      C                   MOVE      'N'           DDRocnOK
      C                   GOTO      EVROCN
      C                   END
-      *
-      ** Ordering customer can't be a bank
-      *
-     C     @BANK         IFEQ      'Y'
-     C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = 'DDROCN'
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0803'
-     C                   MOVE      'N'           DDRocnOK
-     C                   GOTO      EVROCN
-     C                   END
+      *****************************************************************                       264112
+      ***Ordering*customer*can't*be*a*bank*****************************                       264112
+      *****************************************************************                       264112
+     C*****@BANK         IFEQ      'Y'                                                        264112
+     C**********         ADD       1             Idx                                          264112
+     C**********         EVAL      FldNameArr(Idx) = 'DDROCN'                                 264112
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0803'                                  264112
+     C**********         MOVE      'N'           DDRocnOK                                     264112
+     C**********         GOTO      EVROCN                                                     264112
+     C**********         END                                                                  264112
      C                   ENDIF                                                              AR641619
       *
       ** UPDATE OUTPUT FIELD
@@ -4868,16 +4873,16 @@
      C                   MOVE      'N'           DDPocnOK
      C                   GOTO      EVPOCN
      C                   END
-      *
-      ** Ordering customer can't be a bank
-      *
-     C     @BANK         IFEQ      'Y'
-     C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = 'DDPOCN'
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0804'
-     C                   MOVE      'N'           DDPocnOK
-     C                   GOTO      EVPOCN
-     C                   END
+      *****************************************************************                       264112
+      ***Ordering*customer*can't*be*a*bank*****************************                       264112
+      *****************************************************************                       264112
+     C*****@BANK         IFEQ      'Y'                                                        264112
+     C**********         ADD       1             Idx                                          264112
+     C**********         EVAL      FldNameArr(Idx) = 'DDPOCN'                                 264112
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0804'                                  264112
+     C**********         MOVE      'N'           DDPocnOK                                     264112
+     C**********         GOTO      EVPOCN                                                     264112
+     C**********         END                                                                  264112
      C                   ENDIF                                                              AR641619
       *
      C/COPY WNCPYSRC,ZASETINV04                                                               CUT009

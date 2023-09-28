@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. AR837844           Date 31Aug23               *
+      *  Prev Amend No. AR582535           Date 23Aug23               *
+      *                 MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 246192             Date 13May22               *
       *                 AR574541           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
@@ -170,6 +172,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR837844 - Call loan matures while parts sold attached to it *
+      *             is still live.  Default Maturity Date of the      *
+      *             related loan to call parts sold's MDAT.  If not   *
+      *             blank during insert of call parts sold, perform   *
+      *             more validation (Child: AR837845)                 *
+      *  AR582535 - Incorrect YTD interest shown in LE1050P1 due to   *
+      *             value of Interest accrued YTD (YILN) of CLOANCK.  *
+      *             Reset fields of CLOANCK with values from LEVCLIKPD*
+      *             to ensure that fields are properly initialised.   *
+      *             Patterned fix from AR952668. (Child: AR582536)    *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -4083,7 +4095,9 @@
      C                   BITOFF    '45'          CBLI
      C                   ENDIF
      C                   ENDIF
+     C                   MOVE      'N'           MDCHG                                      AR837844
      C     L_CLMDAT      IFNE      MDAT
+     C                   MOVE      'Y'           MDCHG             1                        AR837844
      C                   TESTB     '4'           CBLI                     87
      C     *IN87         IFEQ      '1'
      C                   BITON     '5'           CBLI
@@ -4944,7 +4958,8 @@
      C     L_CLNRPD      ANDLE     RLDT_M
      C                   Z-ADD     L_CLRAMT      ZAMTCI
      C                   EXSR      ZCONVZ1
-     C                   Z-ADD     ZAMTCO        NLRA
+     C**********         Z-ADD     ZAMTCO        NLRA                                       AR582535
+     C                   Z-ADD     ZAMTCO        NLRAK                                      AR582535
      C                   ENDIF
      C                   ENDIF
       *
@@ -8622,6 +8637,21 @@
      C                   MOVE      RPRFC         PSPRFC                                       241196
      C                   MOVE      RORBR         PSORBR                                       241196
      C                   MOVE      RPTFR         PSPTFR                                       241196
+      *                                                                                     AR837844
+      ** Default related loan's Maturity Date to that of the Call                           AR837844
+      ** Parts Sold, if it has been changed.                                                AR837844
+      *                                                                                     AR837844
+     C     MDCHG         IFEQ      'Y'                                                      AR837844
+     C     L_CLCHTP      ANDEQ     'A'                                                      AR837844
+     C     L_CLPTYP      IFEQ      61                                                       AR837844
+     C     L_CLPTYP      OREQ      68                                                       AR837844
+     C                   Z-ADD     L_CLMDAT      PSMDAT                                     AR837844
+     C                   IF        CER020 = 'Y'                                             AR837844
+     C                   Z-ADD     L_CLMDAT      PSFMDT                                     AR837844
+     C                   ENDIF                                                              AR837844
+     C                   ENDIF                                                              AR837844
+     C                   ENDIF                                                              AR837844
+      *                                                                                     AR837844
      C                   UPDATE    PSOLDF2                                                    241196
      C     RLNRF         READE     PSOLD                                  90                  241196
      C                   ENDDO                                                                241196

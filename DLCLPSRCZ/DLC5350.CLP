@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (C) Copyright Finastra International Limited 2004           */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 259376             Date 20Sep12              */
+/*       Last Amend No. AR746974           Date 11Sep23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      259376             Date 20Sep12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       AR746974 - Automatic rollover for Repo/Bond Borrowing       */
+/*                  on Securities side (Child: AR746975)             */
 /*       MD046248 - Finastra Rebranding                              */
 /*      259376 - Produce confirmations in Correspondence Manager    */
 /*               for auto-rollover deals.                           */
@@ -72,7 +75,7 @@
 /*/COPY WNCPYSRC,DLH00323                                            */
 /**/
      RTVDTAARA DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
- 
+
 /*  Start commitment control  */
              STRCMTCTL  LCKLVL(*CHG)
 /**/
@@ -139,9 +142,9 @@ TOMSGQ(MRUNQ)
              IF         COND(&CB0180DA *NE ' ') THEN(DO)
 /**/
              CHGVAR     VAR(&CCB009USR) VALUE(%SST(&CB0180DA 11 10)) +
- 
+
              CHGVAR     VAR(&CCB009NBR) VALUE(%SST(&CB0180DA 21 6)) +
- 
+
 /**/
 /*  Retrieve the most recent journal entry sequence number     */
 /*  for the specific job.                                      */
@@ -170,59 +173,88 @@ TOMSGQ(MRUNQ)
 /**/
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                           THEN(DO)
+ /********** RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) +  */                     /*AR746974*/
+ /**********              (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) + */                 /*AR746974*/
+ /**********              (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) + */                  /*AR746974*/
+ /**********              (DTRIXDD)) FROMENT(&START) TOENT(&FINISH) */           /*EFIXAR AR746974*/
              RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) +
                           (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) +
                           (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) +
-                          (DTRIXDD)) FROMENT(&START) TOENT(&FINISH) /*EFIXAR*/
+                          (DTRIXDD) (DPTMVD) (DPTMVDX1) (DPTMVDX2) +
+                          (UDEPPD) (DPTMVA) (UDEPPA)) +
+                          FROMENT(&START) TOENT(&FINISH)                                /*AR746974*/
              MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
- 
+
              ENDDO
              ENDDO
              ENDDO
- 
+
              ELSE       CMD(DO)
- 
+
      CHKOBJ OBJ(JRDLC5350) OBJTYPE(*JRNRCV)
      MONMSG MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRNRCV))
- 
+
      CHKOBJ OBJ(JDLC5350) OBJTYPE(*JRN)
      MONMSG MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRN))
- 
+
      RMVM FILE(MMDEAULL) MBR(MMDEAULL)
      MONMSG MSGID(CPF0000)
      RMVM FILE(DEALS) MBR(DEALS)
      MONMSG MSGID(CPF0000)
      RMVM FILE(SDTIX) MBR(SDTIX)
      MONMSG MSGID(CPF0000)
- 
+     RMVM FILE(DPTMVDL1) MBR(DPTMVDL1)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     RMVM FILE(DPTMVDY1) MBR(DPTMVDY1)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     RMVM FILE(DPTMVDY2) MBR(DPTMVDY2)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     RMVM FILE(UDEPP) MBR(UDEPP)                                                        /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+
      RMVJRNCHG JRN(JDLC5350) FILE((MMDELDPP) (MMDENSPP) (MMDENBPP))
      MONMSG MSGID(CPF7042 CPF7049)
- 
+
      RMVJRNCHG JRN(JDLC5350) FILE((DEALSDB) (DEALSDC) (DEALSDD) -
 (DEALSDE) (DEALSDF) (DEALSDG))
      MONMSG MSGID(CPF7042 CPF7049)
- 
+
      RMVJRNCHG JRN(JDLC5350) FILE((DTRIXHH) (DTRIXDD))
      MONMSG MSGID(CPF7042 CPF7049)
- 
+                                                                                        /*AR746974*/
+     RMVJRNCHG JRN(JDLC5350) FILE((DPTMVD) (DPTMVDX1) +
+                          (DPTMVDX2) (DPTMVA))                                          /*AR746974*/
+     MONMSG MSGID(CPF7042 CPF7049)                                                      /*AR746974*/
+                                                                                        /*AR746974*/
+     RMVJRNCHG JRN(JDLC5350) FILE((UDEPPD) (UDEPPA))                                    /*AR746974*/
+     MONMSG MSGID(CPF7042 CPF7049)                                                      /*AR746974*/
+
      ENDJRNPF FILE(*ALL) JRN(JDLC5350)
      MONMSG MSGID(CPF7032)
- 
+
      DLTJRN JRN(JDLC5350)
- 
+
      ADDLFM     FILE(MMDEAULL) MBR(MMDEAULL) SHARE(*YES)
      MONMSG MSGID(CPF0000)
      ADDLFM FILE(DEALS) MBR(DEALS)
      MONMSG MSGID(CPF0000)
      ADDLFM FILE(SDTIX) MBR(SDTIX)
      MONMSG MSGID(CPF0000)
- 
+     ADDLFM FILE(DPTMVDL1) MBR(DPTMVDL1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     ADDLFM FILE(DPTMVDY1) MBR(DPTMVDY1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     ADDLFM FILE(DPTMVDY2) MBR(DPTMVDY2)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+     ADDLFM FILE(UDEPP) MBR(UDEPP)                                                      /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+
 NOJRN: +
      CHGJOB INQMSGRPY(*DFT)
      DLTJRNRCV JRNRCV(JRDLC5350)
      CHGJOB INQMSGRPY(*RQD)
              ENDDO
- 
+
 NOJRNRCV: +
      CHGVAR     VAR(&STAT) VALUE('N')
      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
@@ -230,33 +262,41 @@ NOJRNRCV: +
      CHGVAR     VAR(&STAT) VALUE('Y')
       CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
      CHGVAR VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
- 
+
 /**/
 /* If Feature CCB009 is NOT 'on' (close of business journaling)  */
 /**/
- 
+
      IF        COND(&CCB009 *NE '       ') THEN(DO)
- 
+
      CRTJRNRCV JRNRCV(&JLIB/JRDLC5350)
      CRTJRN JRN(&JLIB/JDLC5350) JRNRCV(&JLIB/JRDLC5350)
- 
+
      STRJRNPF   FILE(MMDELDPP MMDENSPP MMDENBPP) +
                           JRN(JDLC5350) IMAGES(*BOTH)
      MONMSG   MSGID(CPF7030)
- 
+
      STRJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEALSDE DEALSDF +
                           DEALSDG) JRN(JDLC5350) IMAGES(*BOTH)
      MONMSG   MSGID(CPF7030)
- 
+
      STRJRNPF FILE(DTRIXHH DTRIXDD) JRN(JDLC5350) IMAGES(*BOTH)
      MONMSG   MSGID(CPF7030)
- 
+                                                                                        /*AR746974*/
+     STRJRNPF FILE(DPTMVD DPTMVDX1 DPTMVDX2 DPTMVA) +
+                          JRN(JDLC5350) IMAGES(*BOTH)                                   /*AR746974*/
+     MONMSG   MSGID(CPF7030)                                                            /*AR746974*/
+                                                                                        /*AR746974*/
+     STRJRNPF FILE(UDEPPD UDEPPA) JRN(JDLC5350) +
+                          IMAGES(*BOTH)                                                 /*AR746974*/
+     MONMSG   MSGID(CPF7030)                                                            /*AR746974*/
+
              ENDDO
- 
+
      CALL PGM(DL5350)
- 
+
      MONMSG MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
- 
+
 /**/                                                                                      /*259376*/
 /** User Defined Correspondence processing                         */                     /*259376*/
 /**/                                                                                      /*259376*/
@@ -318,22 +358,22 @@ NOJRNRCV: +
                 DLTJRNRCV  JRDLC5350
                 CHGJOB     INQMSGRPY(*RQD)
              ENDDO
- 
+
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ 'N')
- 
+
              ENDDO
- 
+
      IF COND(%SWITCH(XXXXXX1X)) THEN(DO)
- 
+
      RTVDTAARA DTAARA(LDA) RTNVAR(&LDA)
      CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
      SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) TOMSGQ(MOPERQ)
      GOTO CMDLBL(ABNOR)
- 
+
      ENDDO
- 
+
      IF COND(%SWITCH(XXXXXX01)) THEN(DO)
- 
+
 /**/
 /* If Feature CCB009 is 'on' (close of business journaling) */
 /**/
@@ -351,7 +391,7 @@ NOJRNRCV: +
                           TOENT(*FIRST) SEARCH(*DESCEND) +
                           JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
                           RTNSEQNBR(&START)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
              CHGVAR     VAR(&START) VALUE(0)
              ENDDO
@@ -363,7 +403,7 @@ NOJRNRCV: +
                           TOENT(*LAST) SEARCH(*ASCEND) +
                           JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
                           RTNSEQNBR(&FINISH)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
              CHGVAR     VAR(&FINISH) VALUE(0)
              ENDDO
@@ -372,58 +412,83 @@ NOJRNRCV: +
 /**/
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                           THEN(DO)
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) + */                      /*AR746974*/
+/**********               (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) */                   /*AR746974*/
+/**********               (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) + */                  /*AR746974*/
+/**********               (DTRIXDD) ) + */                                              /*AR746974*/
+/**********               FROMENT(&START) TOENT(&FINISH) */                             /*AR746974*/
              RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) +
                           (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) +
                           (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) +
-                          (DTRIXDD) ) +
-                          FROMENT(&START) TOENT(&FINISH)
+                          (DTRIXDD) (DPTMVD) (DPTMVDX1) (DPTMVDX2) +
+                          (UDEPPD) (DPTMVA) (UDEPPA)) +
+                          FROMENT(&START) TOENT(&FINISH)                                /*AR746974*/
              MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
- 
+
              ENDDO
              ENDDO
- 
+
              ELSE       CMD(DO)
- 
+
      SNDPGMMSG MSG('FILE CONTROLS OUT OF BALANCE') TOMSGQ(MOPERQ) -
 MSGTYPE(*INFO)
- 
+
      GOTO CMDLBL(ENDPGM)
      ENDDO
- 
+
      ENDJRNPF FILE(*ALL) JRN(JDLC5350)
- 
+
      DLTJRN JRN(JDLC5350)
      CHGJOB INQMSGRPY(*DFT)
- 
+
      DLTJRNRCV JRNRCV(JRDLC5350)
      CHGJOB INQMSGRPY(*RQD)
- 
+
              ENDDO
- 
+
      CHGVAR     VAR(&STAT) VALUE('N')
      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
      GOTO CMDLBL(ENDPGM)
- 
+
 ABNOR: +
      RMVM FILE(MMDEAULL) MBR(MMDEAULL)
      MONMSG MSGID(CPF0000)
- 
+
      RMVM FILE(DEALS) MBR(DEALS)
      MONMSG MSGID(CPF0000)
- 
+
      RMVM FILE(SDTIX) MBR(SDTIX)
      MONMSG MSGID(CPF0000)
- 
+                                                                                        /*AR746974*/
+     RMVM FILE(DPTMVDL1) MBR(DPTMVDL1)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     RMVM FILE(DPTMVDY1) MBR(DPTMVDY1)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     RMVM FILE(DPTMVDY2) MBR(DPTMVDY2)                                                  /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     RMVM FILE(UDEPP) MBR(UDEPP)                                                        /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+
      RMVJRNCHG JRN(JDLC5350) FILE((MMDELDPP) (MMDENSPP) (MMDENBPP))
      MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
      RMVJRNCHG JRN(JDLC5350) FILE((DEALSDB) (DEALSDC) (DEALSDD) -
                   (DEALSDE) (DEALSDF) (DEALSDG))
      MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
      RMVJRNCHG JRN(JDLC5350) FILE((DTRIXHH) (DTRIXDD))
      MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+                                                                                        /*AR746974*/
+     RMVJRNCHG JRN(JDLC5350) FILE((DPTMVD) (DPTMVDX1) +
+                          (DPTMVDX2) (DPTMVA))                                          /*AR746974*/
+     MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                          /*AR746974*/
+                                                                                        /*AR746974*/
+     RMVJRNCHG JRN(JDLC5350) FILE((UDEPPD) (UDEPPA))                                    /*AR746974*/
+     MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                          /*AR746974*/
+
      ADDLFM FILE(DEALS) MBR(DEALS)
      MONMSG MSGID(CPF0000)
                                                                                          /*BUG4122*/
@@ -432,7 +497,19 @@ ABNOR: +
                                                                                          /*BUG4122*/
      ADDLFM FILE(SDTIX) MBR(SDTIX)                                                       /*BUG4122*/
      MONMSG MSGID(CPF0000)                                                               /*BUG4122*/
- 
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDL1) MBR(DPTMVDL1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDY1) MBR(DPTMVDY1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDY2) MBR(DPTMVDY2)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(UDEPP) MBR(UDEPP)                                                      /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+
 /**/                                                                                      /*259376*/
 /** If Correspondence manager is switched on, delete overrides     */                     /*259376*/
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)                           /*259376*/
@@ -444,28 +521,40 @@ ABNOR: +
 /* If Feature CCB009 is NOT 'on' (close of business journaling) */
 /**/
              IF         COND(&CCB009 *NE '       ') THEN(DO)
- 
+
      ENDJRNPF FILE(*ALL) JRN(JDLC5350)
- 
+
      DLTJRN JRN(JDLC5350)
- 
+
      CHGJOB INQMSGRPY(*DFT)
- 
+
      DLTJRNRCV JRNRCV(JRDLC5350)
- 
+
      CHGJOB INQMSGRPY(*RQD)
- 
+
      ADDLFM     FILE(MMDEAULL) MBR(MMDEAULL) SHARE(*YES)
      MONMSG MSGID(CPF0000)
- 
+
      ADDLFM FILE(DEALS) MBR(DEALS)
      MONMSG MSGID(CPF0000)
- 
+
      ADDLFM FILE(SDTIX) MBR(SDTIX)
      MONMSG MSGID(CPF0000)
- 
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDL1) MBR(DPTMVDL1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDY1) MBR(DPTMVDY1)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(DPTMVDY2) MBR(DPTMVDY2)                                                /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+                                                                                        /*AR746974*/
+     ADDLFM FILE(UDEPP) MBR(UDEPP)                                                      /*AR746974*/
+     MONMSG MSGID(CPF0000)                                                              /*AR746974*/
+
              ENDDO
- 
+
              ELSE       CMD(DO)
 /**/
 /*  Retrieve attributes of current job */
@@ -480,7 +569,7 @@ ABNOR: +
                           TOENT(*FIRST) SEARCH(*DESCEND) +
                           JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
                           RTNSEQNBR(&START)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
              CHGVAR     VAR(&START) VALUE(0)
              ENDDO
@@ -492,7 +581,7 @@ ABNOR: +
                           TOENT(*LAST) SEARCH(*ASCEND) +
                           JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
                           RTNSEQNBR(&FINISH)
- 
+
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
              CHGVAR     VAR(&FINISH) VALUE(0)
              ENDDO
@@ -501,30 +590,36 @@ ABNOR: +
 /**/
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                           THEN(DO)
- 
+
 /**********  RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) +                        */ /*243473*/
 /**********               (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) +                   */ /*243473*/
 /**********               (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) +                    */ /*243473*/
 /**********               (DTRIXDD) ) +                                                */ /*243473*/
 /**********               FROMENT(&START) TOENT(&FINISH)                               */ /*243473*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) + */                      /*AR746974*/
+/**********               (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) + */                 /*AR746974*/
+/**********               (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) + */                  /*AR746974*/
+/**********               (DTRIXDD) ) + */                                              /*AR746974*/
+/**********               FROMENT(&START) TOENT(&FINISH) + */                           /*AR746974*/
+/**********               CMTBDY(*NO) */                                         /*243473 AR746974*/
              RMVJRNCHG  JRN(ICJRN) FILE((MMDELDPP) (MMDENSPP) +
                           (MMDENBPP) (DEALSDB) (DEALSDC) (DEALSDD) +
                           (DEALSDE) (DEALSDF) (DEALSDG) (DTRIXHH) +
-                          (DTRIXDD) ) +
-                          FROMENT(&START) TOENT(&FINISH) +
-                          CMTBDY(*NO)                                                     /*243473*/
+                          (DTRIXDD) (DPTMVD) (DPTMVDX1) (DPTMVDX2) +
+                          (UDEPPD) (DPTMVA) (UDEPPA)) CMTBDY(*NO) +
+                          FROMENT(&START) TOENT(&FINISH)                                /*AR746974*/
              MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
- 
+
 /*/COPY WNCPYSRC,DLH00325                                            */
              ENDDO
              ENDDO
- 
+
      CHGVAR     VAR(&STAT) VALUE('N')
      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 ENDPGM: +
      ENDPGM

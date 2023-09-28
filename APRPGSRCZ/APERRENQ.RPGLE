@@ -13,6 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. AR545177           Date 24Aug10               *
       *  Last Amend No. CSD101             Date 07Dec18               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -82,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR545177 - For MQ API, only Number of Records in Repair Queue*
+      *             is displayed. Display number of each invalid      *
+      *             transaction types.                                *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -177,7 +181,10 @@
       ** +--------------------------------------+
      FAPERRENQDFCF   E             WORKSTN
      F                                     SFILE(APERRENQS1:@@RRN)
- 
+
+     FAPMRPQZL2 IF   E           K DISK                                                     AR545177
+      ** Repair Queue by API name                                                           AR545177
+      *                                                                                     AR545177
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -189,64 +196,64 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULE DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP038
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP038
                                                                                 CAP038
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** Array of output lines
      D LIN             S             18A   DIM(100) ASCEND
- 
+
       ** Data structure for output line
      D LINEDS          DS            18
      D  MSGDNB                 1      7
      D  NO_RECS                8     17S 0
      D  HIGHLITE              18     18
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -267,16 +274,85 @@
      D CSD092          S              1A   INZ('N')                                           CSD092
      D CGL132          S              1A                                                      CGL132
      D CGL133          S              1A                                                      CGL133
- 
+
       ** Non-currency OTC Flag                                                                CAP166
      D CAP166          S              1A                                                      CAP166
      D/COPY WNCPYSRC,APH00005
                                                                                               CAP166
+     D NRecFXDL        S             10S 0                                                  AR545177
+     D NRecLDNI        S             10S 0                                                  AR545177
+     D NRecIPAY        S             10S 0                                                  AR545177
+     D NRecOPAY        S             10S 0                                                  AR545177
+     D NRecAMAD        S             10S 0                                                  AR545177
+     D NRecBITH        S             10S 0                                                  AR545177
+     D NRecBINH        S             10S 0                                                  AR545177
+     D NRecBITP        S             10S 0                                                  AR545177
+     D NRecBINP        S             10S 0                                                  AR545177
+     D NRecCUSD        S             10S 0                                                  AR545177
+     D NRecSECD        S             10S 0                                                  AR545177
+     D NRecPFDM        S             10S 0                                                  AR545177
+     D NRecDEAM        S             10S 0                                                  AR545177
+     D NRecFAMD        S             10S 0                                                  AR545177
+     D NRecCOLL        S             10S 0                                                  AR545177
+     D NRecCOLA        S             10S 0                                                  AR545177
+     D NRecFCIP        S             10S 0                                                  AR545177
+     D NRecCLIP        S             10S 0                                                  AR545177
+     D NRecLERI        S             10S 0                                                  AR545177
+     D NRecRPSC        S             10S 0                                                  AR545177
+     D NRecLOAM        S             10S 0                                                  AR545177
+     D NRecMAPY        S             10S 0                                                  AR545177
+     D NRecBSRT        S             10S 0                                                  AR545177
+     D NRecFEEM        S             10S 0                                                  AR545177
+     D NRecFEAD        S             10S 0                                                  AR545177
+     D NRecFEST        S             10S 0                                                  AR545177
+     D NRecFPRT        S             10S 0                                                  AR545177
+     D NRecASGN        S             10S 0                                                  AR545177
+     D NRecFRA         S             10S 0                                                  AR545177
+     D NRecSIRS        S             10S 0                                                  AR545177
+     D NRecCIRS        S             10S 0                                                  AR545177
+     D NRecSECS        S             10S 0                                                  AR545177
+     D NRecTRAD        S             10S 0                                                  AR545177
+     D NRecRFTD        S             10S 0                                                  AR545177
+     D NRecCCTD        S             10S 0                                                  AR545177
+     D NRecOTCC        S             10S 0                                                  AR545177
+     D NRecOTCO        S             10S 0                                                  AR545177
+     D NRecEXTR        S             10S 0                                                  AR545177
+     D NRecDPWI        S             10S 0                                                  AR545177
+     D NRecDPWO        S             10S 0                                                  AR545177
+     D NRecDPMV        S             10S 0                                                  AR545177
+     D NRecNASP        S             10S 0                                                  AR545177
+     D NRecNASS        S             10S 0                                                  AR545177
+     D NRecRODL        S             10S 0                                                  AR545177
+     D NRecCACF        S             10S 0                                                  AR545177
+     D NRecCLSP        S             10S 0                                                  AR545177
+     D NRecINTC        S             10S 0                                                  AR545177
+     D NRecFUND        S             10S 0                                                  AR545177
+     D NRecSPTR        S             10S 0                                                  AR545177
+     D NRecINTR        S             10S 0                                                  AR545177
+     D NRecSEDE        S             10S 0                                                  AR545177
+     D NRecPRCS        S             10S 0                                                  AR545177
+     D NRecFWRT        S             10S 0                                                  AR545177
+     D NRecBSRQ        S             10S 0                                                  AR545177
+     D NRecSETL        S             10S 0                                                  AR545177
+     D NRecDLFE        S             10S 0                                                  AR545177
+     D NRecHIER        S             10S 0                                                  AR545177
+     D NRecCOTY        S             10S 0                                                  AR545177
+     D NRecCNTY        S             10S 0                                                  AR545177
+     D NRecALNA        S             10S 0                                                  AR545177
+     D NRecAMUS        S             10S 0                                                  AR545177
+     D NRecNOSR        S             10S 0                                                  AR545177
+     D NRecYLCU        S             10S 0                                                  AR545177
+     D NRecYRAT        S             10S 0                                                  AR545177
+     D NRecRWAN        S             10S 0                                                  AR545177
+     D NRecBUYSELL     S             10S 0                                                  AR545177
+     D NRecREPO        S             10S 0                                                  AR545177
+     D NRecAIAJ        S             10S 0                                                  AR545177
+     D NRecAMAJ        S             10S 0                                                  AR545177
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2792,18 +2868,715 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
       * Repair Queue Table                                                                  BUG13553
       *****************************************************************                     BUG13553
      C     APRPRQ        BEGSR                                                              BUG13553
+      *                                                                                     AR545177
+      ** Read all invalid transactions. Count number of records per                         AR545177
+      ** transaction type.                                                                  AR545177
+      *                                                                                     AR545177
+     C     *LOVAL        SETLL     APMRPQZL2                                                AR545177
+     C                   READ      APMRPQZL2                              80                AR545177
+     C     *IN80         DOWEQ     '0'                                                      AR545177
+      *                                                                                     AR545177
+     C                   SELECT                                                             AR545177
+     C     MSWAPI        WHENEQ    'FXDL'                                                   AR545177
+     C                   ADD       1             NRecFXDL                                   AR545177
+     C     MSWAPI        WHENEQ    'LDNI'                                                   AR545177
+     C                   ADD       1             NRecLDNI                                   AR545177
+     C     MSWAPI        WHENEQ    'IPAY'                                                   AR545177
+     C                   ADD       1             NRecIPAY                                   AR545177
+     C     MSWAPI        WHENEQ    'OPAY'                                                   AR545177
+     C                   ADD       1             NRecOPAY                                   AR545177
+     C     MSWAPI        WHENEQ    'AMAD'                                                   AR545177
+     C     MSWAPI        OREQ      'ACMC'                                                   AR545177
+     C     MSWAPI        OREQ      'ACMI'                                                   AR545177
+     C     MSWAPI        OREQ      'ACMN'                                                   AR545177
+     C                   ADD       1             NRecAMAD                                   AR545177
+     C     MSWAPI        WHENEQ    'BITH'                                                   AR545177
+     C     MSWAPI        OREQ      'BINH'                                                   AR545177
+     C                   ADD       1             NRecBITH                                   AR545177
+     C     MSWAPI        WHENEQ    'BITP'                                                   AR545177
+     C     MSWAPI        OREQ      'BINP'                                                   AR545177
+     C                   ADD       1             NRecBITP                                   AR545177
+     C     MSWAPI        WHENEQ    'CUSD'                                                   AR545177
+     C     MSWAPI        OREQ      'CSDU'                                                   AR545177
+     C     MSWAPI        OREQ      'CSDV'                                                   AR545177
+     C     MSWAPI        OREQ      'CUWT'                                                   AR545177
+     C     MSWAPI        OREQ      'CUWU'                                                   AR545177
+     C                   ADD       1             NRecCUSD                                   AR545177
+     C     MSWAPI        WHENEQ    'SECD'                                                   AR545177
+     C                   ADD       1             NRecSECD                                   AR545177
+     C     MSWAPI        WHENEQ    'PFDM'                                                   AR545177
+     C                   ADD       1             NRecPFDM                                   AR545177
+     C     MSWAPI        WHENEQ    'DEAM'                                                   AR545177
+     C                   ADD       1             NRecDEAM                                   AR545177
+     C     MSWAPI        WHENEQ    'FAMD'                                                   AR545177
+     C                   ADD       1             NRecFAMD                                   AR545177
+     C     MSWAPI        WHENEQ    'COLL'                                                   AR545177
+     C                   ADD       1             NRecCOLL                                   AR545177
+     C     MSWAPI        WHENEQ    'COLA'                                                   AR545177
+     C                   ADD       1             NRecCOLA                                   AR545177
+     C     MSWAPI        WHENEQ    'FCIP'                                                   AR545177
+     C                   ADD       1             NRecFCIP                                   AR545177
+     C     MSWAPI        WHENEQ    'CLIP'                                                   AR545177
+     C                   ADD       1             NRecCLIP                                   AR545177
+     C     MSWAPI        WHENEQ    'LERI'                                                   AR545177
+     C                   ADD       1             NRecLERI                                   AR545177
+     C     MSWAPI        WHENEQ    'RPSC'                                                   AR545177
+     C                   ADD       1             NRecRPSC                                   AR545177
+     C     MSWAPI        WHENEQ    'LOAM'                                                   AR545177
+     C                   ADD       1             NRecLOAM                                   AR545177
+     C     MSWAPI        WHENEQ    'MAPY'                                                   AR545177
+     C                   ADD       1             NRecMAPY                                   AR545177
+     C     MSWAPI        WHENEQ    'BSRT'                                                   AR545177
+     C                   ADD       1             NRecBSRT                                   AR545177
+     C     MSWAPI        WHENEQ    'FEEM'                                                   AR545177
+     C                   ADD       1             NRecFEEM                                   AR545177
+     C     MSWAPI        WHENEQ    'FEAD'                                                   AR545177
+     C                   ADD       1             NRecFEAD                                   AR545177
+     C     MSWAPI        WHENEQ    'FEST'                                                   AR545177
+     C                   ADD       1             NRecFEST                                   AR545177
+     C     MSWAPI        WHENEQ    'FPRT'                                                   AR545177
+     C                   ADD       1             NRecFPRT                                   AR545177
+     C     MSWAPI        WHENEQ    'ASGN'                                                   AR545177
+     C                   ADD       1             NRecASGN                                   AR545177
+     C     MSWAPI        WHENEQ    'FRA'                                                    AR545177
+     C                   ADD       1             NRecFRA                                    AR545177
+     C     MSWAPI        WHENEQ    'SIRS'                                                   AR545177
+     C                   ADD       1             NRecSIRS                                   AR545177
+     C     MSWAPI        WHENEQ    'CIRS'                                                   AR545177
+     C                   ADD       1             NRecCIRS                                   AR545177
+     C     MSWAPI        WHENEQ    'SECS'                                                   AR545177
+     C                   ADD       1             NRecSECS                                   AR545177
+     C     MSWAPI        WHENEQ    'TRAD'                                                   AR545177
+     C                   ADD       1             NRecTRAD                                   AR545177
+     C     MSWAPI        WHENEQ    'RFTD'                                                   AR545177
+     C     MSWAPI        OREQ      'RFT2'                                                   AR545177
+     C                   ADD       1             NRecRFTD                                   AR545177
+     C     MSWAPI        WHENEQ    'CCTD'                                                   AR545177
+     C     MSWAPI        OREQ      'CCT2'                                                   AR545177
+     C                   ADD       1             NRecCCTD                                   AR545177
+     C     MSWAPI        WHENEQ    'OTCC'                                                   AR545177
+     C                   ADD       1             NRecOTCC                                   AR545177
+     C     MSWAPI        WHENEQ    'OTCO'                                                   AR545177
+     C                   ADD       1             NRecOTCO                                   AR545177
+     C     MSWAPI        WHENEQ    'EXTR'                                                   AR545177
+     C                   ADD       1             NRecEXTR                                   AR545177
+     C     MSWAPI        WHENEQ    'DPWI'                                                   AR545177
+     C                   ADD       1             NRecDPWI                                   AR545177
+     C     MSWAPI        WHENEQ    'DPWO'                                                   AR545177
+     C                   ADD       1             NRecDPWO                                   AR545177
+     C     MSWAPI        WHENEQ    'DPMV'                                                   AR545177
+     C                   ADD       1             NRecDPMV                                   AR545177
+     C     MSWAPI        WHENEQ    'NASP'                                                   AR545177
+     C                   ADD       1             NRecNASP                                   AR545177
+     C     MSWAPI        WHENEQ    'NASS'                                                   AR545177
+     C                   ADD       1             NRecNASS                                   AR545177
+     C     MSWAPI        WHENEQ    'RODL'                                                   AR545177
+     C                   ADD       1             NRecRODL                                   AR545177
+     C     MSWAPI        WHENEQ    'CACF'                                                   AR545177
+     C                   ADD       1             NRecCACF                                   AR545177
+     C     MSWAPI        WHENEQ    'CLSP'                                                   AR545177
+     C     MSWAPI        OREQ      'CLS2'                                                   AR545177
+     C                   ADD       1             NRecCLSP                                   AR545177
+     C     MSWAPI        WHENEQ    'INTC'                                                   AR545177
+     C                   ADD       1             NRecINTC                                   AR545177
+     C     MSWAPI        WHENEQ    'FUND'                                                   AR545177
+     C                   ADD       1             NRecFUND                                   AR545177
+     C     MSWAPI        WHENEQ    'SPTR'                                                   AR545177
+     C                   ADD       1             NRecSPTR                                   AR545177
+     C     MSWAPI        WHENEQ    'INTR'                                                   AR545177
+     C                   ADD       1             NRecINTR                                   AR545177
+     C     MSWAPI        WHENEQ    'SEDE'                                                   AR545177
+     C                   ADD       1             NRecSEDE                                   AR545177
+     C     MSWAPI        WHENEQ    'PRCS'                                                   AR545177
+     C                   ADD       1             NRecPRCS                                   AR545177
+     C     MSWAPI        WHENEQ    'FWRT'                                                   AR545177
+     C                   ADD       1             NRecFWRT                                   AR545177
+     C     MSWAPI        WHENEQ    'BSRQ'                                                   AR545177
+     C                   ADD       1             NRecBSRQ                                   AR545177
+     C     MSWAPI        WHENEQ    'SETL'                                                   AR545177
+     C                   ADD       1             NRecSETL                                   AR545177
+     C     MSWAPI        WHENEQ    'DLFE'                                                   AR545177
+     C                   ADD       1             NRecDLFE                                   AR545177
+     C     MSWAPI        WHENEQ    'HIER'                                                   AR545177
+     C                   ADD       1             NRecHIER                                   AR545177
+     C     MSWAPI        WHENEQ    'COTY'                                                   AR545177
+     C                   ADD       1             NRecCOTY                                   AR545177
+     C     MSWAPI        WHENEQ    'CNTY'                                                   AR545177
+     C                   ADD       1             NRecCNTY                                   AR545177
+     C     MSWAPI        WHENEQ    'ALNA'                                                   AR545177
+     C     MSWAPI        OREQ      'ALNU'                                                   AR545177
+     C                   ADD       1             NRecALNA                                   AR545177
+     C     MSWAPI        WHENEQ    'AMUS'                                                   AR545177
+     C                   ADD       1             NRecAMUS                                   AR545177
+     C     MSWAPI        WHENEQ    'NOSR'                                                   AR545177
+     C     MSWAPI        OREQ      'NOSU'                                                   AR545177
+     C                   ADD       1             NRecNOSR                                   AR545177
+     C     MSWAPI        WHENEQ    'YLCU'                                                   AR545177
+     C                   ADD       1             NRecYLCU                                   AR545177
+     C     MSWAPI        WHENEQ    'YRAT'                                                   AR545177
+     C                   ADD       1             NRecYRAT                                   AR545177
+     C     MSWAPI        WHENEQ    'RWAN'                                                   AR545177
+     C                   ADD       1             NRecRWAN                                   AR545177
+     C     MSWAPI        WHENEQ    'BUYSELL'                                                AR545177
+     C                   ADD       1             NRecBUYSELL                                AR545177
+     C     MSWAPI        WHENEQ    'REPO'                                                   AR545177
+     C                   ADD       1             NRecREPO                                   AR545177
+     C     MSWAPI        WHENEQ    'AIAJ'                                                   AR545177
+     C                   ADD       1             NRecAIAJ                                   AR545177
+     C     MSWAPI        WHENEQ    'AMAJ'                                                   AR545177
+     C                   ADD       1             NRecAMAJ                                   AR545177
+     C                   END                                                                AR545177
+      *                                                                                     AR545177
+     C                   READ      APMRPQZL2                              80                AR545177
+     C                   ENDDO                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFXDL > 0                                             AR545177
+     C                   MOVEL     'APA1004'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFXDL      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecLDNI > 0                                             AR545177
+     C                   MOVEL     'APA1006'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecLDNI      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecIPAY > 0                                             AR545177
+     C                   MOVEL     'APA1060'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecIPAY      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecOPAY > 0                                             AR545177
+     C                   MOVEL     'APA1029'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecOPAY      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecAMAD > 0                                             AR545177
+     C                   MOVEL     'APA1037'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecAMAD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecBITH > 0                                             AR545177
+     C                   MOVEL     'APA1137'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecBITH      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecBITP > 0                                             AR545177
+     C                   MOVEL     'APA1138'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecBITP      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCUSD > 0                                             AR545177
+     C                   MOVEL     'APA1139'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCUSD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSECD > 0                                             AR545177
+     C                   MOVEL     'APA1043'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSECD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecPFDM > 0                                             AR545177
+     C                   MOVEL     'APA1053'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecPFDM      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecDEAM > 0                                             AR545177
+     C                   MOVEL     'APA1012'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecDEAM      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFAMD > 0                                             AR545177
+     C                   MOVEL     'APA1129'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFAMD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCOLL > 0                                             AR545177
+     C                   MOVEL     'APA1140'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCOLL      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCOLA > 0                                             AR545177
+     C                   MOVEL     'APA1141'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCOLA      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFCIP > 0                                             AR545177
+     C                   MOVEL     'APA1117'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFCIP      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCLIP > 0                                             AR545177
+     C                   MOVEL     'APA1118'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCLIP      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecLERI > 0                                             AR545177
+     C                   MOVEL     'APA1120'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecLERI      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecRPSC > 0                                             AR545177
+     C                   MOVEL     'APA1142'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecRPSC      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecLOAM > 0                                             AR545177
+     C                   MOVEL     'APA1119'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecLOAM      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecMAPY > 0                                             AR545177
+     C                   MOVEL     'APA1121'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecMAPY      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecBSRT > 0                                             AR545177
+     C                   MOVEL     'APA1092'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecBSRT      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFEEM > 0                                             AR545177
+     C                   MOVEL     'APA1122'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFEEM      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFEAD > 0                                             AR545177
+     C                   MOVEL     'APA1131'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFEAD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFEST > 0                                             AR545177
+     C                   MOVEL     'APA1133'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFEST      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFPRT > 0                                             AR545177
+     C                   MOVEL     'APA1127'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFPRT      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecASGN > 0                                             AR545177
+     C                   MOVEL     'APA1123'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecASGN      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFRA  > 0                                             AR545177
+     C                   MOVEL     'APA1016'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFRA       NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSIRS > 0                                             AR545177
+     C                   MOVEL     'APA1018'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSIRS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCIRS > 0                                             AR545177
+     C                   MOVEL     'APA1020'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCIRS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSECS > 0                                             AR545177
+     C                   MOVEL     'APA1071'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSECS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecTRAD > 0                                             AR545177
+     C                   MOVEL     'APA1022'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecTRAD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecRFTD > 0                                             AR545177
+     C                   MOVEL     'APA1143'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecRFTD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCCTD > 0                                             AR545177
+     C                   MOVEL     'APA1144'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCCTD      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecOTCC > 0                                             AR545177
+     C                   MOVEL     'APA1027'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecOTCC      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecOTCO > 0                                             AR545177
+     C                   MOVEL     'APA1102'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecOTCO      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecEXTR > 0                                             AR545177
+     C                   MOVEL     'APA1026'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecEXTR      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecDPWI > 0                                             AR545177
+     C                   MOVEL     'APA1145'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecDPWI      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecDPWO > 0                                             AR545177
+     C                   MOVEL     'APA1150'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecDPWO      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecDPMV > 0                                             AR545177
+     C                   MOVEL     'APA1024'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecDPMV      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecNASP > 0                                             AR545177
+     C                   MOVEL     'APA1008'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecNASP      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecNASS > 0                                             AR545177
+     C                   MOVEL     'APA1010'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecNASS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecRODL > 0                                             AR545177
+     C                   MOVEL     'APA1165'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecRODL      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCACF > 0                                             AR545177
+     C                   MOVEL     'APA1115'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCACF      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCLSP > 0                                             AR545177
+     C                   MOVEL     'APA1166'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCLSP      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecINTC > 0                                             AR545177
+     C                   MOVEL     'APA1014'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecINTC      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFUND > 0                                             AR545177
+     C                   MOVEL     'APA1083'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFUND      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSPTR > 0                                             AR545177
+     C                   MOVEL     'APA1105'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSPTR      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecINTR > 0                                             AR545177
+     C                   MOVEL     'APA1100'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecINTR      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSEDE > 0                                             AR545177
+     C                   MOVEL     'APA1079'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSEDE      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecPRCS > 0                                             AR545177
+     C                   MOVEL     'APA1107'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecPRCS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecFWRT > 0                                             AR545177
+     C                   MOVEL     'APA1098'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecFWRT      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecBSRQ > 0                                             AR545177
+     C                   MOVEL     'APA1167'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecBSRQ      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecSETL > 0                                             AR545177
+     C                   MOVEL     'APA1168'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecSETL      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecDLFE > 0                                             AR545177
+     C                   MOVEL     'APA1135'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecDLFE      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecHIER > 0                                             AR545177
+     C                   MOVEL     'APA1155'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecHIER      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCOTY > 0                                             AR545177
+     C                   MOVEL     'APA1156'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCOTY      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecCNTY > 0                                             AR545177
+     C                   MOVEL     'APA1157'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecCNTY      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecALNA > 0                                             AR545177
+     C                   MOVEL     'APA1158'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecALNA      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecAMUS > 0                                             AR545177
+     C                   MOVEL     'APA1159'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecAMUS      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecNOSR > 0                                             AR545177
+     C                   MOVEL     'APA1160'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecNOSR      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecYLCU > 0                                             AR545177
+     C                   MOVEL     'APA1161'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecYLCU      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecYRAT > 0                                             AR545177
+     C                   MOVEL     'APA1108'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecYRAT      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecRWAN > 0                                             AR545177
+     C                   MOVEL     'APA1162'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecRWAN      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecBUYSELL > 0                                          AR545177
+     C                   MOVEL     'APA1093'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecBUYSELL   NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecREPO > 0                                             AR545177
+     C                   MOVEL     'APA1095'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecREPO      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecAIAJ > 0                                             AR545177
+     C                   MOVEL     'APA1163'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecAIAJ      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
+      *                                                                                     AR545177
+     C                   IF        NRecAMAJ > 0                                             AR545177
+     C                   MOVEL     'APA1164'     MSGDNB                                     AR545177
+     C                   Z-ADD     NRecAMAJ      NO_RECS                                    AR545177
+     C                   MOVEL     'N'           HIGHLITE                                   AR545177
+     C                   ADD       1             NO_LINES                                   AR545177
+     C                   MOVEL     LINEDS        LIN(NO_LINES)                              AR545177
+     C                   ENDIF                                                              AR545177
       *                                                                                     BUG13553
-      ** Invalid Fee details                                                                BUG13553
-     C                   MOVEL     'T_MSRPRQZ   'FileName                                   BUG13553
-     C                   CALLB     'ZARTVMBRD'   ZARTVMBRD                                  BUG13553
+      ***Invalid*Fee*details*******************************************            BUG13553 AR545177
+     C**********         MOVEL     'T_MSRPRQZ   'FileName                          BUG13553 AR545177
+     C**********         CALLB     'ZARTVMBRD'   ZARTVMBRD                         BUG13553 AR545177
       *                                                                                     BUG13553
-     C     RtvCurrRcd    IFGT      0                                                        BUG13553
-     C                   MOVEL     'APA1146'     MSGDNB                                     BUG13553
-     C                   Z-ADD     RtvCurrRcd    NO_RECS                                    BUG13553
-     C                   MOVEL     'N'           HIGHLITE                                   BUG13553
-     C                   ADD       1             NO_LINES                                   BUG13553
-     C                   MOVEL     LINEDS        LIN(NO_LINES)                              BUG13553
-     C                   ENDIF                                                              BUG13553
+     C*****RtvCurrRcd    IFGT      0                                               BUG13553 AR545177
+     C**********         MOVEL     'APA1146'     MSGDNB                            BUG13553 AR545177
+     C**********         Z-ADD     RtvCurrRcd    NO_RECS                           BUG13553 AR545177
+     C**********         MOVEL     'N'           HIGHLITE                          BUG13553 AR545177
+     C**********         ADD       1             NO_LINES                          BUG13553 AR545177
+     C**********         MOVEL     LINEDS        LIN(NO_LINES)                     BUG13553 AR545177
+     C**********         ENDIF                                                     BUG13553 AR545177
       *                                                                                     BUG13553
      C                   ENDSR                                                              BUG13553
       *****************************************************************                     BUG13553
@@ -3019,7 +3792,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   CALLB     'AOSARDR0'                                                 CAP060
      C                   PARM      *BLANKS       @RTCD                                        CAP038
      C                   PARM      '*VERIFY'     @OPTN                                        CAP038
@@ -3030,7 +3803,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP038
      C                   MOVEL     'N'           CAP038F                                      CAP038
      C                   END                                                                  CAP038
- 
+
      C                   CALLB     'AOSARDR0'                                                 CAP057
      C                   PARM      *BLANKS       @RTCD                                        CAP057
      C                   PARM      '*VERIFY'     @OPTN                                        CAP057
@@ -3041,7 +3814,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP057
      C                   MOVEL     'N'           CAP057F                                      CAP057
      C                   END                                                                  CAP057
- 
+
      C                   CALLB     'AOSARDR0'                                                 CAP058
      C                   PARM      *BLANKS       @RTCD                                        CAP058
      C                   PARM      '*VERIFY'     @OPTN                                        CAP058
@@ -3052,7 +3825,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP058
      C                   MOVEL     'N'           CAP058F                                      CAP058
      C                   END                                                                  CAP058
- 
+
      C                   CALLB     'AOSARDR0'                                                 CAP059
      C                   PARM      *BLANKS       @RTCD                                        CAP059
      C                   PARM      '*VERIFY'     @OPTN                                        CAP059
@@ -3063,7 +3836,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP059
      C                   MOVEL     'N'           CAP059F                                      CAP059
      C                   END                                                                  CAP059
- 
+
      C                   CALLB     'AOSARDR0'                                                 CAP060
      C                   PARM      *BLANKS       @RTCD                                        CAP060
      C                   PARM      '*VERIFY'     @OPTN                                        CAP060
@@ -3294,7 +4067,7 @@ HERE C                   MOVEL     'APA1137'     MSGDNB                         
      C                   ELSE                                                                 CAP190
      C                   MOVEL     'N'           CAP190                                       CAP190
      C                   ENDIF                                                                CAP190
- 
+
       ** Check if APIs for Document Management is installed                                   CSD093
       *                                                                                       CSD093
      C                   CALLB     'AOSARDR0'                                                 CSD093

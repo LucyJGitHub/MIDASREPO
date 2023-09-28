@@ -24,8 +24,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. 248698             Date 01Jun20               *
+      *  Last Amend No. AR375396           Date 01Sep23               *
+      *  Prev Amend No. MD061789           Date 01Aug23               *
+      *                 MD058285           Date 22Jun21               *
+      *                 248698             Date 01Jun20               *
       *                 MD050604           Date 21Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 226449             Date 24Jun15               *
@@ -76,6 +78,20 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR375396 - Address discrepancy in SE1140P1 report between    *
+      *             old release and Fusion Midas.                     *
+      *           - For securities with processing type 8, use        *
+      *             the computed average life date figures.           *
+      *           - Average life date of a security has been passed.  *
+      *             The program continues to amortize on SE1140P1.    *
+      *           - Amortisation figures for Processing type 8        *
+      *             securities should not be multiplied by the current*
+      *             factor.  Remove MASOUD fix.                       *
+      *  MD061789 - Add column Cost Basis (which is equal to Face     *
+      *             Value minus Amount To Amortise). Re-design GEMS   *
+      *             263899 to use System Value 'DspCostBasisAmortRpt'.*
+      *           - Remove condition BUDU ANDNE 0, since it prevents  *
+      *             printing of Securities bought at face value.      *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  248698 - Rounding discrepancies on some SE reports. Applied  *
       *           fix 228682.                                         *
@@ -231,6 +247,7 @@
      E/COPY ZSRSRC,ZPOWER8Z1
      E/COPY WNCPYSRC,SE1140E001
      I/EJECT
+     I              'DspCostBasisAmortRpt'C         SVCOBS                                  MD061789
       *
      I            DS
       ***  Definition of alphanumeric and signed branch fields.
@@ -357,6 +374,7 @@
      C                     CLEARTTDSC
      C                     CLEARTTDPFP
      C                     CLEARTTBUDU
+     C                     CLEARTTCOBS                                                      MD061789
      C/COPY WNCPYSRC,SE1140C011
       *
       ***  Change of Branch.
@@ -562,6 +580,7 @@
       ***  Subroutines.
       *
      C           BHSC      CHAINSECTY                83
+     C                     SETOF                     84                                     AR375396
       *
       ***  Database Error if not found.
       *
@@ -573,6 +592,16 @@
      C                     OUT  LDA
      C                     SETON                     U7U8LR
      C                     EXSR ERROR
+     C                     ELSE                                                             AR375396
+      *                                                                                     AR375396
+      ** Set on *IN84 if mortgaged backed and current factor = 0                            AR375396
+      ** or if security has matured                                                         AR375396
+      *                                                                                     AR375396
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           CFCT      ANDEQ0                                                           AR375396
+     C           RECI      ORNE 'D'                                                         AR375396
+     C                     SETON                     84                                     AR375396
+     C                     ENDIF                                                            AR375396
      C                     END
       *
       ** Save Security field.
@@ -584,24 +613,24 @@
       ***  Access Book Position file.
       *
      C           KLBKP     CHAINBKPOS                82
-     C*                                                                                       042704
-     C* SET ON *IN84 IF MORTGAGED BACKED AND CURRENT FACTOR = 0                               042704
-     C* OR IF SECURITY HAS MATURED                                                            042704
-     C*                                                                                       042704
-     C                     SETOF                     84                                       042704
-     C*                                                                                       042704
-     C           PROT      IFEQ '8'                                                           042704
-     C           CFCT      ANDEQ0                                                             042704
-     C           RECI      ORNE 'D'                                                           042704
-     C                     SETON                     84                                       042704
-     C                     END                                                                042704
+     C*****************************************************************              042704 AR375396
+     C**SET*ON**IN84*IF*MORTGAGED*BACKED*AND*CURRENT*FACTOR*=*0********              042704 AR375396
+     C**OR*IF*SECURITY*HAS*MATURED*************************************              042704 AR375396
+     C*****************************************************************              042704 AR375396
+     C**********           SETOF                     84                              042704 AR375396
+     C**********                                                                     042704 AR375396
+     C********** PROT      IFEQ '8'                                                  042704 AR375396
+     C********** CFCT      ANDEQ0                                                    042704 AR375396
+     C********** RECI      ORNE 'D'                                                  042704 AR375396
+     C**********           SETON                     84                              042704 AR375396
+     C**********           END                                                       042704 AR375396
       *
       ***  Note if a record has been found.
       *
      C           *IN82     IFEQ '0'
      C           *IN84     ANDNE'1'                                                           042704
      C           NPSN      ANDNE0                                                             042704
-     C           BUDU      ANDNE0                                                             042704
+     C********** BUDU      ANDNE0                                                    042704 MD061789
      C/COPY WNCPYSRC,SE1140C015
      C                     MOVE 'Y'       RCDDET
      C                     MOVE 'Y'       RPTDET
@@ -617,9 +646,21 @@
      C                     ADD  DSCAMT    TTDSC
       ***  Amount Amortised to Date.
      C***********          ADD  DPFP      TTDPFP                          091183
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           CFCT      ANDNE*ZERO                                                       AR375396
+     C                     ADD  DPFPX     TTDPFP                                            AR375396
+     C                     ADD  BUDUX     TTBUDU                                            AR375396
+     C                     ELSE                                                             AR375396
      C                     ADD  DPAP      TTDPFP                          091183
       ***  Amount to Amortise.
      C                     ADD  BUDU      TTBUDU
+     C                     ENDIF                                                            AR375396
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     ADD  COBS      TTCOBS                                            MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C018
      C                     END
       *
@@ -841,7 +882,10 @@
      C           *LIKE     DEFN APNC      DSCAMT
      C           *LIKE     DEFN LPSD      DAYS
      C           *LIKE     DEFN APNC      RATE
+     C           *LIKE     DEFN APNC      RATE1                                             AR375396
      C           *LIKE     DEFN A6NBDP    CDP
+     C           *LIKE     DEFN APNC      COBS                                              MD061789
+     C           *LIKE     DEFN COBS      TTCOBS                                            MD061789
      C           *LIKE     DEFN BSPL      TTBSPL                          CSE006
      C           *LIKE     DEFN BSAPL     TTBSAP                          CSE006
      C           *LIKE     DEFN BSOPL     TTBSOP                          CSE006
@@ -901,6 +945,57 @@
      C                     MOVEL'N'       CSE006                          CSE006
      C                     ENDIF                                          CSE006
      C/COPY WNCPYSRC,SE1140C039
+      *                                                                                     MD061789
+      ** Access System Value to check for display of Cost Basis                             MD061789
+      *                                                                                     MD061789
+     C                     CALL 'AOSVALR0'                                                  MD061789
+     C                     PARM *BLANKS   @RTCD                                             MD061789
+     C                     PARM SVCOBS    PSV01  20                                         MD061789
+     C                     PARM           PCS01 200                                         MD061789
+     C                     PARM           PSV02  20                                         MD061789
+     C                     PARM           PCS02 200                                         MD061789
+     C                     PARM           PSV03  20                                         MD061789
+     C                     PARM           PCS03 200                                         MD061789
+     C                     PARM           PSV04  20                                         MD061789
+     C                     PARM           PCS04 200                                         MD061789
+     C                     PARM           PSV05  20                                         MD061789
+     C                     PARM           PCS05 200                                         MD061789
+     C                     PARM           PSV06  20                                         MD061789
+     C                     PARM           PCS06 200                                         MD061789
+     C                     PARM           PSV07  20                                         MD061789
+     C                     PARM           PCS07 200                                         MD061789
+     C                     PARM           PSV08  20                                         MD061789
+     C                     PARM           PCS08 200                                         MD061789
+     C                     PARM           PSV09  20                                         MD061789
+     C                     PARM           PCS09 200                                         MD061789
+     C                     PARM           PSV10  20                                         MD061789
+     C                     PARM           PCS10 200                                         MD061789
+      *                                                                                     MD061789
+     C                     MOVE 'N'       DPCOBS  1                                         MD061789
+     C                     MOVE *OFF      *IN70                                             MD061789
+      *                                                                                     MD061789
+     C           @RTCD     IFEQ *BLANK                                                      MD061789
+     C                     MOVELPCS01     DPCOBS                                            MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     MOVE *ON       *IN70                                             MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
+     C                     ELSE                                                             MD061789
+      *                                                                                     MD061789
+      ** Database Error (return code other than *NRF)                                       MD061789
+      *                                                                                     MD061789
+     C           @RTCD     IFNE '*NRF   '                                                   MD061789
+     C           *LOCK     IN   LDA                                                         MD061789
+     C                     MOVEL'SDSVALPD'DBFILE           ************                     MD061789
+     C                     MOVELPSV01     DBKEY            * DBERR 07 *                     MD061789
+     C                     Z-ADD07        DBASE            ************                     MD061789
+     C                     OUT  LDA                                                         MD061789
+     C                     MOVE *ON       *INU7                                             MD061789
+     C                     MOVE *ON       *INU8                                             MD061789
+     C                     MOVE *ON       *INLR                                             MD061789
+     C                     RETRN                                                            MD061789
+     C                     ENDIF                                                            MD061789
+     C                     ENDIF                                                            MD061789
       *
      C                     ENDSR
       *
@@ -999,13 +1094,13 @@
       *
      C***********          Z-ADDDPFP      ZFLD15                          091183
      C/COPY WNCPYSRC,SE1140C035
-      *                                                                                       MASOUD
-      *  APPLY THE FACTOR TO THE AMOUNT AMORTIZED TO DATE                                     MASOUD
-      *                                                                                       MASOUD
-     C           PROT      IFEQ '8'                                                           MASOUD
-     C           CFCT      ANDNE0                                                             MASOUD
-     C                     MULT CFCT      DPAP                                                MASOUD
-     C                     ENDIF                                                              MASOUD
+      *****************************************************************              MASOUD AR375396
+      ***APPLY*THE*FACTOR*TO*THE*AMOUNT*AMORTIZED*TO*DATE**************              MASOUD AR375396
+      *****************************************************************              MASOUD AR375396
+     C********** PROT      IFEQ '8'                                                  MASOUD AR375396
+     C********** CFCT      ANDNE0                                                    MASOUD AR375396
+     C**********           MULT CFCT      DPAP                                       MASOUD AR375396
+     C**********           ENDIF                                                     MASOUD AR375396
      C                     Z-ADDDPAP      ZFLD15                          091183
      C/COPY WNCPYSRC,SE1140C036
      C                     EXSR ZSEDIT
@@ -1014,16 +1109,26 @@
       ***  Amount to Amortise.
       *
      C/COPY WNCPYSRC,SE1140C006
-      *                                                                                       MASOUD
-      *  APPLY THE FACTOR TO THE AMOUNT TO AOMORTIZE                                          MASOUD
-      *                                                                                       MASOUD
-     C           PROT      IFEQ '8'                                                           MASOUD
-     C           CFCT      ANDNE0                                                             MASOUD
-     C                     MULT CFCT      BUDU                                                MASOUD
-     C                     ENDIF                                                              MASOUD
+      *****************************************************************              MASOUD AR375396
+      ***APPLY*THE*FACTOR*TO*THE*AMOUNT*TO*AOMORTIZE*******************              MASOUD AR375396
+      *****************************************************************              MASOUD AR375396
+     C********** PROT      IFEQ '8'                                                  MASOUD AR375396
+     C********** CFCT      ANDNE0                                                    MASOUD AR375396
+     C**********           MULT CFCT      BUDU                                       MASOUD AR375396
+     C**********           ENDIF                                                     MASOUD AR375396
      C                     Z-ADDBUDU      ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    RBUDU
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+      *                                                                                     MD061789
+     C           NOMAMT    SUB  BUDU      COBS                                              MD061789
+     C                     Z-ADDCOBS      ZFLD15                                            MD061789
+     C                     EXSR ZSEDIT                                                      MD061789
+     C                     MOVE ZOUT21    RCOBS                                             MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C007
       *
       ***  Amortisation Rate.
@@ -1037,6 +1142,13 @@
       *
      C                     Z-ADDLPSD      ZSDATE
      C                     Z-ADDMATY      ZEDATE
+      *                                                                                     AR375396
+      ** For processing type 8, use Average Life Date                                       AR375396
+      *                                                                                     AR375396
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           ALDT      ANDNE0                                                           AR375396
+     C                     Z-ADDALDT      ZEDATE                                            AR375396
+     C                     ENDIF                                                            AR375396
      C                     MOVE 'N'       DADJN                           100017
      C                     Z-ADD0         NCD     50                      102506
      C                     EXSR ZDAYS
@@ -1064,7 +1176,71 @@
      C                     MOVEL*BLANKS   RRATE                                             BUG12676
      C                     MOVE 'N/A'     RRATE                                             BUG12676
      C                     ENDIF                                                            BUG12676
+      *                                                                                     AR375396
+      ** Calculate number of days between last position date and                            AR375396
+      ** run date.                                                                          AR375396
+      *                                                                                     AR375396
+     C           PROT      IFEQ '8'                                                         AR375396
+     C           CFCT      ANDNE*ZERO                                                       AR375396
+     C                     Z-ADDRUND      ZEDATE                                            AR375396
+     C                     EXSR ZDAYS                                                       AR375396
+     C                     Z-ADDZDDAYS    DAYS1   50                                        AR375396
+     C           ALDT      IFNE 0                                                           AR375396
+     C           ALDT      ANDLTRUND                                                        AR375396
+     C                     Z-ADD1         DAYS1                                             AR375396
+     C                     Z-ADD0         RATE1                                             AR375396
+     C                     Z-ADDDSCAMT    RATE      H                                       AR375396
+      *                                                                                     AR375396
+      ** Format Rate.                                                                       AR375396
+      *                                                                                     AR375396
+     C                     MOVE RATE1     ZFLD15                                            AR375396
+     C                     MOVE 'L'       ZECODE                                            AR375396
+     C                     EXSR ZSEDIT                                                      AR375396
+     C                     MOVE ZOUT21    RRATE                                             AR375396
+     C                     ENDIF                                                            AR375396
+      *                                                                                     AR375396
+     C                     MOVEL'J'       ZECODE                                            AR375396
+      ** Amount amortised to date                                                           AR375396
+      *                                                                                     AR375396
+     C           RATE      MULT DAYS1     DPFPX  130                                        AR375396
+     C                     Z-ADDDPFPX     ZFLD15                                            AR375396
+     C                     EXSR ZSEDIT                                                      AR375396
+     C                     MOVE ZOUT21    RDPFP                                             AR375396
+      *                                                                                     AR375396
+      ** Amount to amortise                                                                 AR375396
+      *                                                                                     AR375396
+     C           DSCAMT    SUB  DPFPX     BUDUX  130                                        AR375396
+     C           ALDT      IFNE 0                                                           AR375396
+     C           ALDT      ANDLTRUND                                                        AR375396
+     C                     Z-ADD*ZERO     BUDUX                                             AR375396
+     C                     ENDIF                                                            AR375396
+     C                     Z-ADDBUDUX     ZFLD15                                            AR375396
+     C                     EXSR ZSEDIT                                                      AR375396
+     C                     MOVE ZOUT21    RBUDU                                             AR375396
+      *                                                                                     AR375396
+      ** Cost basis                                                                         AR375396
+      *                                                                                     AR375396
+     C           NOMAMT    SUB  BUDUX     COBS                                              AR375396
+     C           ALDT      IFNE 0                                                           AR375396
+     C           ALDT      ANDLTRUND                                                        AR375396
+     C                     Z-ADDNOMAMT    COBS                                              AR375396
+     C                     ENDIF                                                            AR375396
+     C                     Z-ADDCOBS      ZFLD15                                            AR375396
+     C                     EXSR ZSEDIT                                                      AR375396
+     C                     MOVE ZOUT21    RCOBS                                             AR375396
+     C                     ENDIF                                                            AR375396
      C/COPY WNCPYSRC,SE1140C025
+      *                                                                                     MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+     C                     MOVE RBHBK     CRBHBK                                            MD061789
+     C                     MOVE RBHSC     CRBHSC                                            MD061789
+     C                     MOVE RBHMK     CRBHMK                                            MD061789
+     C                     MOVE RNOM      CRNOM                                             MD061789
+     C                     MOVE RDSC      CRDSC                                             MD061789
+     C                     MOVE RDPFP     CRDPFP                                            MD061789
+     C                     MOVE RRATE     CRRATE                                            MD061789
+     C                     MOVE RBUDU     CRBUDU                                            MD061789
+     C                     ENDIF                                                            MD061789
       *
       ***  Check for overflow.
       *
@@ -1630,6 +1806,20 @@
      C                     Z-ADDTTBUDU    ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    TBUDU
+      *                                                                                     MD061789
+      ** Cost Basis                                                                         MD061789
+     C           DPCOBS    IFEQ 'Y'                                                         MD061789
+      *                                                                                     MD061789
+     C                     Z-ADDTTCOBS    ZFLD15                                            MD061789
+     C                     EXSR ZSEDIT                                                      MD061789
+     C                     MOVE ZOUT21    TCOBS                                             MD061789
+      *                                                                                     MD061789
+     C                     MOVE TNOM      CTNOM                                             MD061789
+     C                     MOVE TDSC      CTDSC                                             MD061789
+     C                     MOVE TDPFP     CTDPFP                                            MD061789
+     C                     MOVE TBUDU     CTBUDU                                            MD061789
+     C                     ENDIF                                                            MD061789
+      *                                                                                     MD061789
      C/COPY WNCPYSRC,SE1140C030
       *
       ***  Check for overflow.

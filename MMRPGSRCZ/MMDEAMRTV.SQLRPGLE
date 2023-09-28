@@ -18,14 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-<<<<<<< HEAD
       *  Last Amend No. AR632107           Date 17Jul23               *
-      *  Prev Amend No. MD056602           Date 04Sep20               *
-=======
-      *  Last Amend No. AR583254           Date 15Jul23               *
-      *  Prev Amend No. AR583273           Date 14Jul23               *
+      *  Prev Amend No. AR583254           Date 15Jul23               *
+      *                 AR583273           Date 14Jul23               *
       *                 MD056602           Date 04Sep20               *
->>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
@@ -100,12 +96,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-<<<<<<< HEAD
       *  AR632107 - MM Deal Amendments are going to repair queue.     *
       *             Allow the use of Deal Number and Associate Front  *
       *             Office Id in Deals Amendment via MQ/API.          *
       *             Enhanced fix for AR583254. (Child AR632108)       *
-=======
       *  AR583254 - Sending a MMDEAM from API with a deal number ins- *
       *             tead of an Associated FOID ended in error. Remove *
       *             use of Associated Front Office ID as part of key  *
@@ -113,7 +107,6 @@
       *             FOASID to MMDEALLL file.                          *
       *  AR583273 - Manually Open/Close file DEALSH to prevent the    *
       *           locking on file MMDELULL. (Child: AR583274)         *
->>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
@@ -792,19 +785,6 @@
      C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             AR583254
      C**********         MOVEL     'APM0104'     MsgIdArr(Ix)                               AR583254
      C**********         MOVEL     FOASID        MsgDtaArr(Ix)                              MD000091
-<<<<<<< HEAD
-     C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
-     C**********         EVAL      BLen = %Len(%Trim(FOASID))                      MD000091 AR632107
-     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)           MD000091 AR632107
-     C                   GOTO      EVFRNT
-     C                   ELSE                                                                 256482
-     C                   MOVEL     H@DN38        DDDLNO                                       256482
-     C                   END
-      *
-     C                   ELSE                                                                 256482
-     C                   MOVEL     HKDN38        DDDLNO
-     C                   ENDIF                                                                256482
-=======
      C**********         EVAL      BLen = %Len(%Trim(FOASID))                       MD000091AR583254
      C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)            MD000091AR583254
      C**********         GOTO      EVFRNT                                                   AR583254
@@ -815,7 +795,6 @@
      C**********         ELSE                                                        256482 AR583254
      C**********         MOVEL     HKDN38        DDDLNO                                     AR583254
      C**********         ENDIF                                                       256482 AR583254
->>>>>>> branch 'bugfix/mdsc-40807' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *                                                                                     MD021204
      C**********         ENDIF                                                     MD021204 AR583254
       *

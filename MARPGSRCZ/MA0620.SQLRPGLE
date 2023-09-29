@@ -230,7 +230,7 @@
       ** Access System Value to check if Report Level and Entity is included                MD061834
       *                                                                                     MD061834
      C                   CALL      'AOSVALR0'                                               MD061834
-     C                   PARM      *BLANKS       PRTCD                                      MD061834
+     C                   PARM      *BLANKS       PRTCD             7                        MD061834
      C                   PARM      SVARCH        PSV01            20                        MD061834
      C                   PARM                    PCS01           200                        MD061834
      C                   PARM                    PSV02            20                        MD061834
@@ -269,7 +269,7 @@
      C                   MOVE      *ON           *INU7                                      MD061834
      C                   MOVE      *ON           *INU8                                      MD061834
      C                   MOVE      *ON           *INLR                                      MD061834
-     C                   EXSR      *PSSR                                                    MD061834
+     C                   RETURN                                                             MD061834
      C                   ENDIF                                                              MD061834
      C                   ENDIF                                                              MD061834
 

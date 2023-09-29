@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1005865          Date 24Jan23               *
-      *  Prev Amend No. MD060411           Date 20Sep22               *
+      *  Last Amend No. AR1074598          Date 12Sep23               *
+      *  Prev Amend No. AR1005865          Date 24Jan23               *
+      *                 MD060411           Date 20Sep22               *
       *                 MD060363           Date 19Aug22               *
       *                 AR988274           Date 10Aug22               *
       *                 249385             Date 01Aug22               *
@@ -318,6 +319,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1074598 - Full payment posted on suspense instead in nostro*
+      *              when inserted with adjustment on same day. Save  *
+      *              the settlement details on working fields then    *
+      *              used to populate back the settlement details     *
+      *              when generating account keys. (Child: AR1074599) *
+      *            - Applied for MD-61663.                            *
       *  AR1005865 - Missing value date on fee accrual posting.       *
       *              Initialise ATYP to prevent previous value to be  *
       *              used on the processing of next fee record with   *
@@ -3509,6 +3516,10 @@
       *
      C           FATYPE    IFEQ 'F'
      C                     MOVE 'F'       WATYPE                                              CLE134
+     C                     Z-ADDFAVDAT    WFVDAT  50                                       AR1074598
+     C                     Z-ADDFAMETH    WFMETH  20                                       AR1074598
+     C                     MOVELFAOURS    WFOURS 18                                        AR1074598
+     C                     MOVE FAOSBR    WFOSBR  3                                        AR1074598
       *                                                                                       CLE034
      C           FASTAL    IFEQ 'Y'                                                           CLE034
      C                     MOVE 'FSET'    WKTYPE                                              CLE034
@@ -4367,6 +4378,10 @@
       *
      C           *IN60     IFEQ '1'
      C                     Z-ADDWFASAD    FASADJ                                              204866
+     C                     Z-ADDWFVDAT    FAVDAT                                           AR1074598
+     C                     Z-ADDWFMETH    FAMETH                                           AR1074598
+     C                     MOVELWFOURS    FAOURS                                           AR1074598
+     C                     MOVE WFOSBR    FAOSBR                                           AR1074598
      C                     Z-ADDFASADJ    LKEAMT
      C                     Z-ADD0         LKREVI
      C                     MOVE '1'       *IN61
@@ -8034,6 +8049,13 @@
      C                     ENDIF                                                              CGL020
       *                                                                   CLE005
      C                     ENDIF                                          CLE005
+      *                                                                                    AR1074598
+     C           CLE005    IFEQ 'Y'                                                        AR1074598
+     C           *IN61     ANDEQ'0'                                                        AR1074598
+     C                     Z-ADD0         LKSETP                                           AR1074598
+     C                     MOVE *BLANKS   LKOSAC                                           AR1074598
+     C                     MOVE *BLANKS   LKOSBR                                           AR1074598
+     C                     ENDIF                                                           AR1074598
       *                                                                   127966
       ** Move the Profit Centre if Profit Centres are used.                                   247979
       *                                                                                       247979

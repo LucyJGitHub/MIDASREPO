@@ -16,10 +16,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD059367 *CREATE   Date 24Dec21               *
+      *  Last Amend No. MD061774           Date 25Aug23               *
+      *  Prev Amend No. MD059367 *CREATE   Date 24Dec21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
      F*                                                               *
      F*****************************************************************

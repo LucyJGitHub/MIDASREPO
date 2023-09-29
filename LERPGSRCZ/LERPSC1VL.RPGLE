@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059275           Date 23May22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD050176           Date 26Sep23               *
+      *  Prev Amend No. AR316158           Date 26Sep23               *
+      *                 MD059275           Date 23May22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD024459           Date 07Feb14               *
       *                 MD046248           Date 27Oct17               *
@@ -51,6 +53,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050176 - Enhance fix AR316158 such that it will not allow  *
+      *             reversal of Repayment Schedule if there is at     *
+      *             least one live manual repayment attached to it.   *
+      *           - Applied for MD-59193                              *
+      *  AR316158 - System allows the reversal of Repayment Schedule  *
+      *             even if there is a repayment referring to it.     *
+      *             Amended program such that the reversal of         *
+      *             Repayment Schedule will not be allowed if there   *
+      *             is a repayment referring to it.                   *
+      *           - Applied for MD-59193                              *
       *  MD059275 - Event code not found for RPSC value date warning  *
       *             message. Replace LES0615 with event code 45045853 *
       *             so warning that value date is equal to loan       *
@@ -312,6 +324,10 @@
      D  WPARM3                11     15                                                       CLE036
      D  WPARM4                16     20                                                       CLE036
      D WPARML          S             20A   INZ('LoanCustOriginPurch')                         240408
+      *                                                                                     AR316158
+     D WKLNRF          S              6A                                                    AR316158
+     D WKLSEQ          S              3  0                                                  AR316158
+     D WVDAYRS         S              5  0                                                  AR316158
       *
       ** +--------------------------------------+
       ** ¦ Rename fields                        ¦
@@ -416,6 +432,13 @@
       /COPY WNCPYSRC,LERPSCV112
      C                   EXSR      SRAUTO
       /COPY WNCPYSRC,LERPSCV113
+      *                                                                                     AR316158
+      ** Do not allow the reversal of Repayment Schedule                                    AR316158
+      ** if it has a Manual Repayment attached.                                             AR316158
+      *                                                                                     AR316158
+     C     DDACTN        IFEQ      'R'                                                      AR316158
+     C                   EXSR      VRPSC                                                    AR316158
+     C                   ENDIF                                                              AR316158
       *                                                                                       CLE154
       ***  Validate repayment type                                                            CLE154
       *                                                                                       CLE154
@@ -1816,6 +1839,44 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     AR316158
+      *  VRPSC - Validate rejection of Repayment Schedule.            *                     AR316158
+      *          Do not allow rejection if there is a Manual Repayment*                     AR316158
+      *          attached to the Repayment Schedule                   *                     AR316158
+      *****************************************************************                     AR316158
+     C     VRPSC         BEGSR                                                              AR316158
+     C                   MOVE      DDLNRF        WKLNRF                                     AR316158
+     C                   MOVE      DDSEQN        WKLSEQ                                     AR316158
+      *                                                                                     AR316158
+     C                   MOVE      DDVDAT        ZDATE                                      AR316158
+     C                   MOVE      BJDFIN        ZDATFM                                     AR316158
+     C                   CALL      'ZDATE1'                                                 AR316158
+     C                   PARM      *BLANKS       ZERR                                       AR316158
+     C                   PARM                    ZDATE                                      AR316158
+     C                   PARM                    ZDATFM                                     AR316158
+     C                   PARM                    ZDAYNO                                     AR316158
+     C                   Z-ADD     ZDAYNO        WVDAYRS                                    AR316158
+      *                                                                                     AR316158
+     C     DDACTN        IFEQ      'R'                                                      AR316158
+     C     WKLNRF        SETLL     LOAMSD                                                   AR316158
+     C     WKLNRF        READE     LOAMSD                                 99                AR316158
+     C     *IN99         DOWEQ     '0'                                                      AR316158
+     C     LO_RECI       IFEQ      'D'                                                      AR316158
+     C     LO_AMTP       ANDEQ     'MR'                                                     AR316158
+     C     WVDAYRS       ANDEQ     LO_XAVD                                                  AR316158
+     C     WKLSEQ        ANDEQ     LO_XASQ                                                  AR316158
+     C                   MOVE      'N'           DDACTNOK                                   AR316158
+     C                   ADD       1             Idx                                        AR316158
+     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                               AR316158
+     C                   MOVEL     'LES0618'     MsgIdArr(Idx)                              AR316158
+     C                   LEAVE                                                              MD050176
+     C                   ENDIF                                                              AR316158
+     C     WKLNRF        READE     LOAMSD                                 99                AR316158
+     C                   ENDDO                                                              AR316158
+     C                   ENDIF                                                              AR316158
+     C                   ENDSR                                                              AR316158
+      *****************************************************************                     AR316158
+      /EJECT                                                                                AR316158
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************

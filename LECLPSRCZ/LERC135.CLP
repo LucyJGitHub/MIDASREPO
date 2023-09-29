@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD053375           Date 10Oct19              */
-/*       Prev Amend No. MD026969           Date 23Oct19              */
+/*       Last Amend No. MD036081           Date 24Aug23              */
+/*       Prev Amend No. MD053375           Date 10Oct19              */
+/*                      MD026969           Date 23Oct19              */
 /*                      MD052216           Date 04Apr19              */
 /*                      MD020934           Date 11May19              */
 /*                      MD052961           Date 18Mar19              */
@@ -40,6 +41,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD036081 - Speficy the library for the extract file.        */
 /*       MD053375 - Incorrect fee settlement amount in LER170 report.*/
 /*                  Maintain security copy of LEFECPPD.              */
 /*       MD026969 - New Processing for Fee Settlement.               */
@@ -464,8 +466,10 @@
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                                /*CLE134*/
              CPYF       FROMFILE(LKEYFED) TOFILE(&EXTLIB/&LKEY1) +
                           MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CDL045*/
+ /********** MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(&LKEY1)) **/                                      /*CDL045 MD036081*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
-                          FILE(&LKEY1))                                                   /*CDL045*/
+                          FILE(&EXTLIB/&LKEY1))                                         /*MD036081*/
              ENDDO                                                                        /*CLE134*/
              ELSE       CMD(DO)                                                           /*CLE134*/
              CPYF       FROMFILE(LKEYFED) TOFILE(&EXTLIB/&LKEY1) +

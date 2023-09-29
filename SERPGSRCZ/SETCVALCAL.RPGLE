@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260909             Date 04Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR316724           Date 18Sep23               *
+      *  Prev Amend No. 260909             Date 04Apr19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR316724 - Include the current factor in computing the       *
+      *             consideration when processing type = 8 during     *
+      *             processing/COB as this current factor is already  *
+      *             considered during I/C of the trade. Applied fix   *
+      *             260909.                                           *
+      *           - Complete application of original 260909.          *
       *  260909 - Security Trade calculates wrong consideration on MBS*
       *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -55,7 +62,7 @@
       *****************************************************************
      FSECEO     IF   E           K DISK                                                       200459
      F                                     RENAME(SEDEVDF:SEDEVDO)                            200459
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -67,43 +74,43 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D*   Data structure for CTR
      D                 DS
      D  CTR                    1     21
@@ -114,10 +121,10 @@
                                                                                               233881
       ** Short Access Object Data Structure                                                   233881
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     233881
- 
+
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -149,16 +156,16 @@
      D PIDATE          S              5P 0                                      CSE023
      D PINARR          S             15A                                        CSE023
      D PIRATE          S              6P 4                                      CSE023
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -166,7 +173,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       * Initialize outputs
       *
@@ -191,7 +198,7 @@
      C     *IN44         IFEQ      '0'                                                        214694
      C     SDSN          ANDEQ     SESN                                                       214694
      C     SDET          ANDEQ     'MP'                                                       214694
-     C     RECI          ANDEQ     'D'                                                        214694
+     C*****RECI*         ANDEQ     'D'                                               214694 AR316724
      C     SDED          COMP      TDVD                                 4545                  214694
      C                   ENDIF                                                                214694
      C                   ENDDO                                                                214694
@@ -214,7 +221,7 @@
       ** Return
       *
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       * CVALCAL - Calculate Trade Countervalue                        *
@@ -270,9 +277,9 @@
      C                   ENDIF                                                  CSE023
       *                                                                         CSE023
      C                   Z-ADD     ZCTRVL        TCTR
- 
+
       * Exit if countervalue is zero
- 
+
      C     TCTR          CABEQ     *ZEROS        ECVALCAL
                                                                                               233881
       ** Subtract EU Tax if CGL031 is enabled.                                                233881
@@ -302,7 +309,7 @@
      C                   PARM      'J'           ZECODE            1
      C                   PARM      '*'           ZECHAR            1
      C                   PARM                    ZOUT21           21
- 
+
      C                   MOVE      ZOUT21        DDTCTR
       *
       * Left align screen countervalue
@@ -319,7 +326,7 @@
       *****************************************************************
       *
      C     CNTL          BEGSR
- 
+
      C                   Z-ADD     0             E                 2 0
      C                   Z-ADD     1             R                 2 0
      C                   MOVE      '*'           SPLAT             1
@@ -337,7 +344,7 @@
      C                   ADD       1             E
      C                   MOVEA     *ALL' '       CTR(E)
      C                   MOVEA     CTR           DDTCTR
- 
+
      C     ECNTL         ENDSR
       *****************************************************************
       /EJECT                                                                    CSE023
@@ -410,11 +417,11 @@
      C                   KFLD                    SDSN                                         200459
      C                   KFLD                    SDET                                         200459
      C                   KFLD                    SDED                                         200459
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       ** Trade details
      C                   PARM                    TDTP              2
      C                   PARM                    NOML             11 0
@@ -435,7 +442,7 @@
      C                   PARM                    TDMI              1
      C                   PARM                    SETC              3
      C                   PARM                    TDVD              5 0                        200459
- 
+
       ** Security details
      C                   PARM                    PROT              1
      C                   PARM                    SPBS              1
@@ -443,12 +450,12 @@
      C                   PARM                    NMCY              3
      C                   PARM                    NMDP              1 0
      C                   PARM                    SESN             10                          200459
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Customer classification
      C                   PARM                    CustClass         1
                                                                                 CSE023
@@ -463,9 +470,9 @@
                                                                                               233881
       ** EU Tax                                                                               233881
      C                   PARM                    PEUTX                                        233881
- 
+
       * OUTPUTS
- 
+
       * Trade consideration in nominal currency
       * Trade countervalue in nominal currency
       * Withholding tax                                                         CSE023
@@ -476,7 +483,7 @@
      C                   PARM                    WHTX                           CSE023
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWHTX                         CSE023
- 
+
       *                                                                         CSE023
       ** Check if enhancement 'Treaty withholding tax' is on.                   CSE023
       *                                                                         CSE023
@@ -523,15 +530,15 @@
      C                   ENDIF                                                                233881
                                                                                               233881
      C                   ENDIF                                                                233881
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

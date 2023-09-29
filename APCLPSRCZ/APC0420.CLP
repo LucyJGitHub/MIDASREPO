@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. AR566732           Date 12Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 262401             Date 03Jul23              */
+/*       Prev Amend No. AR566732           Date 12Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR925993           Date 13Jul16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG21873           Date 08Jan09              */
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       262401  - APCONFS not controlling LE pay/rec message job.   */
+/*                 Should be conditioned the same way as DL.         */
 /*       AR566732 - Confirmation for Lending transaction not produce.*/
 /*                  Change condition to also check LE Module is      */
 /*                  switched on, then produce confo on job LEC0212A. */
@@ -198,6 +201,9 @@
              ENDDO
  
 /* Submit Pay/Receive generation jobs */
+/* Submit Pay/Receive generation jobs only if Auto-generate P/R       */                  /*262401*/
+             IF         COND(&ENAPRG *EQ 'Y') THEN(DO)                                    /*262401*/
+                                                                                          /*262401*/
              SNDPGMMSG  MSG('MIDAS LE PAY/RECEIVE JOB') TOMSGQ(MSTATUS)
  
              SBMJOB     JOB(LEC0213) JOBD(MBATCH) USER(*JOBD) +
@@ -210,6 +216,8 @@
              SBMJOB     JOB(MIDASRMV) JOBD(MBATCH) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') +
                           INLLIBL(*JOBD) MSGQ(*NONE)
+                                                                                          /*262401*/
+             ENDDO                                                                        /*262401*/
  
 /**********LEEND:      ENDDO                                         */                 /*AR925993*/
                                                                                         /*AR925993*/

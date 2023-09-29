@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. 263440             Date 21Sep23               *
+      *  Prev Amend No. MD032852           Date 19Sep23               *
+      *                 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 MD059190           Date 08Nov21               *
       *                 MD057976           Date 20May21               *
       *                 CLE172             Date 01Oct20               *
@@ -246,6 +248,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  263440 - For Rollover, if no values for new funding details, *
+      *           default values to current funding details.          *
+      *           Incorporation of fix 258411.                        *
+      *         - Add fix MD034915 for LE0390 only.                   *
+      *  MD034915 - Added fix if NFSN is blank on rollover.           *
+      *  MD032852 - Loan early matured.  It was the maturity date     *
+      *             of a previous loan that was processed.            *
       *  249385 - POST INSTALL OF SP13 PGM LOOPS                      *
       *           Previous fixes using ZDAYNO as a marker rather      *
       *           than a work variable                                *
@@ -2667,6 +2676,26 @@
      C                     MOVE CHIN      NCHI                                              MD059190
      C                     ENDIF                                                            MD059190
      C/COPY WNCPYSRC,LE0390C001
+      *                                                                                       263440
+      ** If Analytical Accounting is on and new funding details are not present,              263440
+      ** default values to current funding details.                                           263440
+      *                                                                                       263440
+     C           BGN0ST    IFEQ 'Y'                                                           263440
+     C           NFSN      IFEQ *BLANK                                                      MD034915
+     C           NFRS      ANDEQ*ZERO                                                       MD034915
+     C                     MOVELFSGN      NFSN                                              MD034915
+     C                     ENDIF                                                            MD034915
+     C           NFRS      IFEQ *ZERO                                                         263440
+     C                     Z-ADDFSRP      NFRS                                                263440
+     C                     ENDIF                                                              263440
+     C********** NFSN      IFEQ *BLANK                                               263440 MD034915
+     C**********           MOVELFSGN      NFSN                                       263440 MD034915
+     C**********           ENDIF                                                     263440 MD034915
+     C           NFPC      IFEQ *BLANK                                                        263440
+     C                     MOVELFPRC      NFPC                                                263440
+     C                     ENDIF                                                              263440
+     C                     ENDIF                                                              263440
+      *                                                                                       263440
 0672 C* CHECK IF R/O DETAILS ARE PRESENT.(50=ON)
 0673 C           NCAC      COMP 0                    50  53
 0674 C***50***** NBRAL     COMP 0                    51                                       CSD103
@@ -5152,6 +5181,9 @@
 0920 C* MA REC WILL OUTPUT ON ONE OF 3 CONDITIONS.
 0921 C* FIRST MAT.CUST BILL SEND AGAIN INDIC ON.
 0922 C*
+      *                                                                                     MD032852
+     C                     Z-ADDMDAT      WMDAT                                             MD032852
+      *                                                                                     MD032852
 0923 C                     TESTB'5'       CBLI           80
 0924 C   80                SETON                         74
 0925 C  N80      MBSA      COMP Y                        80

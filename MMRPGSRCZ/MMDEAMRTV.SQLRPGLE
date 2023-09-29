@@ -18,8 +18,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 255626             Date 25Jul22               *      
+      *  Last Amend No. AR632107           Date 17Jul23               *
+      *  Prev Amend No. AR583254           Date 15Jul23               *
+      *                 AR583273           Date 14Jul23               *
+      *                 MD056602           Date 04Sep20               *
+      *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 AR806147           Date 21May18               *
@@ -93,12 +96,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR632107 - MM Deal Amendments are going to repair queue.     *
+      *             Allow the use of Deal Number and Associate Front  *
+      *             Office Id in Deals Amendment via MQ/API.          *
+      *             Enhanced fix for AR583254. (Child AR632108)       *
+      *  AR583254 - Sending a MMDEAM from API with a deal number ins- *
+      *             tead of an Associated FOID ended in error. Remove *
+      *             use of Associated Front Office ID as part of key  *
+      *             list for MMDEAMPD. Also remove cross checking of  *
+      *             FOASID to MMDEALLL file.                          *
+      *  AR583273 - Manually Open/Close file DEALSH to prevent the    *
+      *           locking on file MMDELULL. (Child: AR583274)         *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
       *           properly updated when a deal amendment is authorised*
       *           and related deal amendments with lower value or     *
-      *           sequence are authorised.                            *      
+      *           sequence are authorised.                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
@@ -224,6 +238,7 @@
      F                                     RENAME(MMDEAMP0:MMDEAMP4)
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
      FDEALSH    IF   E           K DISK    INFSR(*PSSR)
+     F                                     USROPN                                           AR583273
      F                                     RENAME(DEALSDBF:DEALSHBF)
      F                                     RENAME(DEALSDCF:DEALSHCF)
      F                                     RENAME(DEALSDDF:DEALSHDF)
@@ -688,13 +703,35 @@
      C**********         MOVEL     'APM0105'     MsgIdArr(Ix)                               MD021204
      C**********         GOTO      EVFRNT                                                   MD021204
      C**********         END                                                                MD021204
+      *                                                                                     AR632107
+      ** For LBBW-NYK, allow blank Associated Front Office Id.                              AR632107
+      ** However, deal number must be present.                                              AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFEQ      *BLANK                                                   AR632107
+     C     DDDLNO        ANDEQ     *BLANKS                                                  AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+      *                                                                                     AR632107
+      ** SUPPLY CORRECT MESSAGE ID.                                                         AR632107
+      *                                                                                     AR632107
+     C                   MOVEL     '       '     MsgIdArr(Ix)                               AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   END                                                                AR632107
       *
       * ACCESS DEAL AMENDMENT WITH FRONT OFFICE TRANSACTION ID
       *
-     C                   MOVE      FOASID        OrigDealNo       20
+     C**********         MOVE      FOASID        OrigDealNo       20                        AR583254
+     C                   MOVE      *BLANKS       OrigDealNo       20                        AR583254
      C                   MOVE      FOTRID        UniqDeamID       20
 
-     C     FrntOfKey     CHAIN     MMDEAMOI                           99
+      *                                                                                     AR632107
+      ** For LBBW-NYK, Associated Front Office Id is not always supplied.                   AR632107
+      ** Assumption here is that Front Office Id is a complete and unique key.              AR632107
+      *                                                                                     AR632107
+
+     C     UniqDeamID    CHAIN     MMDEAMOI                           99                    AR632107
+     C*****FrntOfKey     CHAIN     MMDEAMOI                           99                    AR632107
       *
       * IF INSERT
       *
@@ -732,34 +769,60 @@
       *
      C                   MOVEL     HNDS38        DDDS38
      C                   END
-      *
-      * FRONT OFFICE ASSOCIATED TRANSACTION ID
-      * MUST POINT TO A MIDAS DEAL
-      *
-     C     FOASID        IFNE      *BLANKS                                                  MD021204
+      *****************************************************************                     AR583254
+      **FRONT*OFFICE*ASSOCIATED*TRANSACTION*ID*************************                     AR583254
+      **MUST*POINT*TO*A*MIDAS*DEAL*************************************                     AR583254
+      *****************************************************************                     AR583254
+     C*****FOASID        IFNE      *BLANKS                                         MD021204 AR583254
       *                                                                                     MD021204
-     C     FOASID        CHAIN     MMDELFOI                           99
-     C     *IN99         IFEQ      '1'                                                        256482
-     C                   MOVEL     FOASID        WDDLNO            6 0                        256482
-     C     WDDLNO        CHAIN     MMDEALLL                           99                      256482
-     C     *IN99         IFEQ      '1'
-     C                   MOVE      'N'           OKACTN
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'APM0104'     MsgIdArr(Ix)
+     C*****FOASID        CHAIN     MMDELFOI                           99                    AR583254
+     C******IN99         IFEQ      '1'                                               256482 AR583254
+     C**********         MOVEL     FOASID        WDDLNO            6 0               256482 AR583254
+     C*****WDDLNO        CHAIN     MMDEALLL                           99             256482 AR583254
+     C******IN99         IFEQ      '1'                                                      AR583254
+     C**********         MOVE      'N'           OKACTN                                     AR583254
+     C**********         ADD       1             Ix                                         AR583254
+     C**********         MOVEL     'DDACTN'      FldNameArr(Ix)                             AR583254
+     C**********         MOVEL     'APM0104'     MsgIdArr(Ix)                               AR583254
      C**********         MOVEL     FOASID        MsgDtaArr(Ix)                              MD000091
-     C                   EVAL      BLen = %Len(%Trim(FOASID))                               MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)                    MD000091
-     C                   GOTO      EVFRNT
-     C                   ELSE                                                                 256482
-     C                   MOVEL     H@DN38        DDDLNO                                       256482
-     C                   END
-      *
-     C                   ELSE                                                                 256482
-     C                   MOVEL     HKDN38        DDDLNO
-     C                   ENDIF                                                                256482
+     C**********         EVAL      BLen = %Len(%Trim(FOASID))                       MD000091AR583254
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)            MD000091AR583254
+     C**********         GOTO      EVFRNT                                                   AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     H@DN38        DDDLNO                              256482 AR583254
+     C**********         END                                                                AR583254
+      *****************************************************************                     AR583254
+     C**********         ELSE                                                        256482 AR583254
+     C**********         MOVEL     HKDN38        DDDLNO                                     AR583254
+     C**********         ENDIF                                                       256482 AR583254
       *                                                                                     MD021204
-     C                   ENDIF                                                              MD021204
+     C**********         ENDIF                                                     MD021204 AR583254
+      *                                                                                     AR632107
+      ** Front Office Associated Transaction ID                                             AR632107
+      ** must point to a Midas Deal                                                         AR632107
+      *                                                                                     AR632107
+     C     FOASID        IFNE      *BLANKS                                                  AR632107
+      *                                                                                     AR632107
+     C     FOASID        CHAIN     MMDELFOI                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVEL     FOASID        WDDLNO            6 0                      AR632107
+     C     WDDLNO        CHAIN     MMDEALLL                           99                    AR632107
+     C     *IN99         IFEQ      '1'                                                      AR632107
+     C                   MOVE      'N'           OKACTN                                     AR632107
+     C                   ADD       1             Ix                                         AR632107
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                             AR632107
+     C                   MOVEL     'APM0104'     MsgIdArr(Ix)                               AR632107
+     C                   MOVEL     FOASID        MsgDtaArr(Ix)                              AR632107
+     C                   GOTO      EVFRNT                                                   AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     H@DN38        DDDLNO                                     AR632107
+     C                   END                                                                AR632107
+      *                                                                                     AR632107
+     C                   ELSE                                                               AR632107
+     C                   MOVEL     HKDN38        DDDLNO                                     AR632107
+     C                   ENDIF                                                              AR632107
+      *                                                                                     AR632107
+     C                   ENDIF                                                              AR632107
       *
      C     EVFRNT        ENDSR
       *****************************************************************
@@ -1040,7 +1103,7 @@
      C*
      C*****@DEAMK        SETLL     MMDEAMLL                           65                      191881
      C*****@DEAMK        READPE    MMDEAMLL                               65                  191881
-     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626     
+     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626
      C*****@@DLNO        SETLL     MMDEAMLL                           65               191881 255626
      C     @@DLNO        READPE    MMDEAMLL                               65                  191881
 B2   C     *IN65         DOWEQ     '0'
@@ -1322,6 +1385,7 @@ E2   C                   ENDDO
      C** Check that the deal does not exist on
      C** DEALSH file else, it is an error
      C*
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65
      C*
      C** Record already exists in DEALSH file
@@ -1332,6 +1396,7 @@ E2   C                   ENDDO
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI
      C                   ELSE                                                    CSE006
      C*                                                                          CSE006
@@ -1344,8 +1409,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                              CSE006
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                  CSE006
      C                   MOVEL     'MMA0793'     MsgIdArr(Ix)                    CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAI                                        CSE006
      C                   END                                                     CSE006
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   END
      C*
      C** Check valid deal for key fields
@@ -1408,6 +1475,7 @@ E2   C                   ENDDO
       ** Check that the deal does not exist on                                              BUG16961
       ** DEALSH file else, it is an error                                                   BUG16961
       *                                                                                     BUG16961
+     C                   OPEN      DEALSH                                                   AR583273
      C     @@DLNO        CHAIN     DEALSH                             65                    BUG16961
       *                                                                                     BUG16961
       ** Record already exists in DEALSH file                                               BUG16961
@@ -1419,8 +1487,10 @@ E2   C                   ENDDO
      C                   ADD       1             Ix                                         BUG16961
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)                             BUG16961
      C                   MOVEL     'MMM0150'     MsgIdArr(Ix)                               BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
      C                   GOTO      EVALAF                                                   BUG16961
      C                   ENDIF                                                              BUG16961
+     C                   CLOSE     DEALSH                                                   AR583273
       *                                                                                      BUG7537
       ** Remove the rest of processing below as this will be                                 BUG7537
       ** handled in main screen validation subr/VALACI.                                      BUG7537

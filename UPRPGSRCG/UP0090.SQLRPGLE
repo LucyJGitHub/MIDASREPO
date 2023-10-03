@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD061706             Date 01Aug23             *
-      *  Prev Amend No. MD061518             Date 23Jul23             *
+      *  Last Amend No. MD060918             Date 21Jan21             *
+      *  Prev Amend No. MD061706             Date 01Aug23             *
+      *                 MD061518             Date 23Jul23             *
       *                 MD061576             Date 23Jul23             *
       *                 MD061503             Date 23Jun23             *
       *                 MD061577             Date 18Jul23             *
@@ -111,6 +112,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
       *  MD061576 - Deliverable Data Split for T_GRMENU*              *
@@ -1373,6 +1375,11 @@
      C                             or ChkFile = 'RPASIXTD'                                  MD061503
      C                             or ChkFile = 'RPMSGXTD'                                  MD061503
      C                             or ChkFile = 'UPEXCXTD'                                  MD061706
+     C                             or ChkFile = 'MIAFXXTD'                                  MD060918
+     C                             or ChkFile = 'MIASFXTD'                                  MD060918
+     C                             or ChkFile = 'MIBEVXTD'                                  MD060918
+     C                             or ChkFile = 'MILNGXTD'                                  MD060918
+     C                             or ChkFile = 'MIPRMXTD'                                  MD060918
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1558,6 +1565,11 @@
      C                             or Member = 'UPADMCTD'                                   MD061576
      C                             or Member = 'ZZGBLCTD'                                   MD061518
      C                             or Member = 'UPEXCCTD'                                   MD061706
+     C                             or Member = 'MIAFXCTD'                                   MD060918
+     C                             or Member = 'MIASFCTD'                                   MD060918
+     C                             or Member = 'MIBEVCTD'                                   MD060918
+     C                             or Member = 'MILNGCTD'                                   MD060918
+     C                             or Member = 'MIPRMCTD'                                   MD060918
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264

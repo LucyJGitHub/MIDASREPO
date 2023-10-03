@@ -1132,7 +1132,6 @@
      C                   PARM      0             AHNODL            5 0                      MD061008
      C                   PARM      *BLANKS       ZRETRN           10                        MD061008
       *                                                                                     MD061008
-     C
 
      C**********         IF        NOT %FOUND(SDFCTLL0)                                     MD061008
      C     ZRETRN        IFNE      *BLANKS                                                  MD061008

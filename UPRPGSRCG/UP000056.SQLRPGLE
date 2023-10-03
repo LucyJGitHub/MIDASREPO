@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUP047               Date 27Aug23             *
-      *  Prev Amend No. MD060709             Date 08Nov22             *
+      *  Last Amend No. MD061912             Date 27Sep23             *
+      *  Prev Amend No. CUP047               Date 27Aug23             *
+      *                 MD060709             Date 08Nov22             *
       *                 MD059742             Date 23Mar22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061912 - DTAQ not upgraded with aDBU                       *
       *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
       *  MD060709 - Change in LF dynamic selection is omitted         *
       *             File is not deleted when both DTAARA and file     *
@@ -52,6 +54,16 @@
      D TotRow          S             13  0
      D SQLDynStmt      S            500A
 
+      * DS for DTAQ                                                                         MD061912
+     D                 DS                                                                   MD061912
+     D  DSOLD                  1     20                                                     MD061912
+     D  OLDDTQ                 1     10                                                     MD061912
+     D  OLDLIB                11     20                                                     MD061912
+     D                 DS                                                                   MD061912
+     D  DSNEW                  1     20                                                     MD061912
+     D  NEWDTQ                 1     10                                                     MD061912
+     D  NEWLIB                11     20                                                     MD061912
+                                                                                            MD061912
      D #SEQ            S             15  5
      D UPGDRV        E DS                  EXTNAME(UPGDRVTD)
      D UPGSCR        E DS                  EXTNAME(UPGSCRTD)
@@ -1358,10 +1370,19 @@
      C                   endif
 
      C                   eval      #SEQ = #SEQ + 1
-     C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
-     C                             %trimr(DRFILE) + ') FROMLIB(' + RefSys +
-     C                             %trimr(%subst(DRLIB:3:8)) + ') +
-     C                             OBJTYPE(*DTAQ) TOLIB(' + DRLIB + ')'
+      ** DTAQ cannot be duplicated with CRTDUPOBJ                                           MD061912
+     C**********         eval      SCCMD = 'CRTDUPOBJ OBJ(' +                               MD061912
+     C**********                   %trimr(DRFILE) + ') FROMLIB(' + RefSys +                 MD061912
+     C**********                   %trimr(%subst(DRLIB:3:8)) + ') +                         MD061912
+     C**********                   OBJTYPE(*DTAQ) TOLIB(' + DRLIB + ')'                     MD061912
+      ** instead call new program                                                           MD061912
+     C                   eval      OLDDTQ = DRFILE                                          MD061912
+     C                   eval      OLDLIB = RefSys + %trimr(%subst(DRLIB:3:8))              MD061912
+     C                   eval      NEWDTQ = DRFILE                                          MD061912
+     C                   eval      NEWLIB = DRLIB                                           MD061912
+     C                   eval      SCCMD = 'CALL PGM(UPC000084) PARM(' +                    MD061912
+     C                             '''' + DSOLD  + '''' + ' ' + '''' +                      MD061912
+     C                             DSNEW + '''' + ' ' + ''''  + '''' + ')'                  MD061912
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -1386,7 +1407,8 @@
      C+  ,:#SEQ
      C+  ,'  '
      C+  ,'CLP'
-     C+  ,'CRTDUPOBJ'
+     C*+**,'CRTDUPOBJ'                                                                      MD061912
+     C+  ,'CALL'                                                                            MD061912
      C+  ,' '
      C+  ,' '
      C+  ,:SCCMD

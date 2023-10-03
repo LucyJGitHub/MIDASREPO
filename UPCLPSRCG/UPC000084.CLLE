@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP aDBU DTAQ duplication')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000084 - aDBU DTAQ duplication                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061912 *CREATE   Date 27Sep23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061912 - DTAQ not upgraded with aDBU                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&REFDTAQ &NEWDTAQ &RTNFLAG)
+
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&REFDTAQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&NEWDTAQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MAXLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FORCE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SEQ) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&KEYLEN) TYPE(*CHAR) LEN(4) VALUE('*N')
+             DCL        VAR(&SENDRID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVRLEN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RCVR) TYPE(*CHAR) LEN(80)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2023')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/* Retrieve data queue attributes from Reference system */
+             CHGVAR     VAR(%BIN(&RCVRLEN 1 4)) VALUE(80)
+             CALL       PGM(QMHQRDQD) PARM(&RCVR &RCVRLEN RDQD0100 +
+                          &REFDTAQ)
+
+/* Set variables for CRTDTAQ parameters from the data queue */
+/* attributes from QMHQRDQD. */
+             CHGVAR     VAR(&MAXLEN) VALUE(%BIN(&RCVR 9 4))
+             CHGVAR     VAR(&SEQ) VALUE(*FIFO)
+             IF         COND(%SUBSTRING(&RCVR 17 1) *EQ 'K') +
+                          THEN(DO)
+             CHGVAR     VAR(&KEYLEN) VALUE(%BIN(&RCVR 13 4))
+             CHGVAR     VAR(&SEQ) VALUE(*KEYED)
+             ENDDO
+             IF         COND(%SUBSTRING(&RCVR 17 1) *EQ 'L') +
+                          THEN(DO)
+             CHGVAR     VAR(&SEQ) VALUE(*LIFO)
+             ENDDO
+
+             IF         COND(%SUBSTRING(&RCVR 18 1) *EQ 'N') +
+                          THEN(CHGVAR VAR(&SENDRID) VALUE(*NO))
+             ELSE       CMD(CHGVAR VAR(&SENDRID) VALUE(*YES))
+
+             IF         COND(%SUBSTRING(&RCVR 19 1) *EQ 'N') +
+                          THEN(CHGVAR VAR(&FORCE) VALUE(*NO))
+             ELSE       CMD(CHGVAR VAR(&FORCE) VALUE(*YES))
+
+             CHGVAR     VAR(&TEXT) VALUE(%SUBSTRING(&RCVR 20 50))
+
+/* Create the new data queue */
+             CRTDTAQ    DTAQ(%SUBSTRING(&NEWDTAQ 11 +
+                          10)/%SUBSTRING(&NEWDTAQ 1 10)) +
+                          MAXLEN(&MAXLEN) FORCE(&FORCE) SEQ(&SEQ) +
+                          KEYLEN(&KEYLEN) SENDERID(&SENDRID) +
+                          TEXT(&TEXT)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ENDPGM:
+             ENDPGM

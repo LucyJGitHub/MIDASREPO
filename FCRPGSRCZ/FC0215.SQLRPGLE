@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031966           Date 27Jul15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -63,6 +64,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
@@ -162,8 +164,8 @@
      FFCPREQL0  UF A E           K DISK
      F                                     COMMIT
      F                                     INFDS(INFDS)
-     FSDFCTLL0  UF   E           K DISK
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061008
+     F**********                           COMMIT                                           MD061008
      FFCRREQL9  UF   E           K DISK
      F                                     COMMIT
      FFCRREQL0  UF A E           K DISK
@@ -992,7 +994,21 @@
       **  Update file controls
       *
      C                   MOVEL     'FCPREQPD'    AHFLNM
-     C     AHFLNM        CHAIN     SDFCTLL0                           99
+     C*****AHFLNM        CHAIN     SDFCTLL0                           99                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       99                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       **  Database error if no record found for file
       *
@@ -1020,7 +1036,16 @@
       *
       **  Update file control record
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
      C     WURQSQ        IFNE      *BLANK
       *
@@ -1967,7 +1992,21 @@
       *
      C******************** MOVEL'PREQ'    AHFLNM                          LN0210
      C                   MOVEL     'FCPREQPD'    AHFLNM                                        LN021
-     C     AHFLNM        CHAIN     SDFCTLL0                           99
+     C*****AHFLNM        CHAIN     SDFCTLL0                           99                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       99                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       **  Database error if no record found for file
       *
@@ -1987,7 +2026,16 @@
       *
       **  Update file control record
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
      C                   EXSR      DELREQ
       *                                                                   LN0210

@@ -16,10 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CSD079             Date 05Feb07               *
+      *                 CSD079             Date 05Feb07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -99,7 +101,7 @@
      FSDWTCSL1  IF A E           K DISK    INFSR(*PsSR)
       *
       ** Control file retrieval index
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
       *
       ** Withholding tax customer details printer file - Audit
      FSD0372PM  O    E             PRINTER INFSR(*PsSR)
@@ -240,38 +242,38 @@
      D WOpen           S              1A   INZ('N')
      D WSHead          S              1A   INZ('Y')
      D WCount          S              1P 0 INZ(*ZERO)
- 
+
      D KCustNo         S              6A
- 
+
      D PRtcd           S              7A
      D PMode           S              1A
      D PSeqs           S              5A
      D PLevl           S              1A
      D PEnty           S              3A
- 
+
      D PSEnty          S              3A
      D PZSErr          S              1A
      D PZSNum          S              6P 0
      D PZSNumU         S              6P 0
- 
+
      D POptn           S              7A
      D PKeyC           S             10A
      D PKySt           S              7A
- 
+
      D WFName          S             10A   INZ('SDWTCSPD')
- 
+
      D PDateIn         S              5P 0
      D PDateOut        S              6P 0
      D PADateOut       S              7A
- 
+
      D RqdLn1          S              3P 0
      D DifLn1          S              3P 0
- 
+
      D OldCSNO         S              6A
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -282,7 +284,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -324,9 +326,9 @@
      C                   Z-ADD     0             RqdLn1
      C                   Z-ADD     0             DifLn1
      C                   Z-ADD     0             RCount
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -345,7 +347,7 @@
       ** Read first record from File.
       *
      C     *LOVAL        SETLL     SDWTCSL1
- 
+
      C                   EXSR      SRReadRec
       *
       ** If error reading file, write error message then exit.
@@ -438,9 +440,9 @@
       *
      C                   EXSR      SRReport
      C                   EXSR      SRWP1End
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -505,9 +507,9 @@
      C                   IF        Detail1 <> *Blanks                                         186000
      C                   EXSR      SRWP1Rec
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -549,9 +551,9 @@
       ** Write out Detail Record.
       *
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -589,9 +591,9 @@
      C                   EVAL      RCSSN = BBCSSN
      C                   EVAL      RCRNM = BBCRNM
      C                   EVAL      RCRTN = BBCRTN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -600,7 +602,7 @@
       *                                                               *
       *****************************************************************
      C     SRReadRec     BEGSR
- 
+
      C                   SELECT
      C                   WHEN      PMode = 'A'
      C                   DOU       WHLCD = BJRDNB OR EndOfFile = True
@@ -610,22 +612,22 @@
      C                   IF        EndOfFile = False
      C                   EVAL      RCount = RCount + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   OTHER
- 
+
      C                   READ      SDWTCSL1                             8889
       *
       ** Keep track of number of records being read.
      C                   IF        EndOfFile = False
      C                   EVAL      RCount = RCount + 1
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -634,19 +636,19 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDatI     BEGSR
- 
+
      C                   Z-ADD     WHLCD         PDateIn
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *Blanks       PADateOut
- 
+
      C                   EVAL      WHLCDT = PADateOut
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -671,9 +673,9 @@
       ** Write out Total Format.
       *
      C                   WRITE     TRAILP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -688,7 +690,21 @@
       *
       ** Check control details.
       *
-     C     WFName        CHAIN     SDFCTLL1                           55
+     C*****WFName        CHAIN     SDFCTLL1                           55                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFName        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       55                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        55                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       ** Database error.
       *
@@ -728,22 +744,22 @@
       *
       ** Write audit control details
      C                   WRITE     CONTROL
- 
+
      C                   ELSE
       *
       ** Or, if no records read, Output "No Details" message.
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** End Program and Return.
       *
      C                   EVAL      *INLR = True
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -773,9 +789,9 @@
      C                   EVAL      *INLR = True
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -790,7 +806,7 @@
       *                                                               *
       *****************************************************************
      C     *InzSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRtcd
      C                   PARM                    PMode
@@ -839,9 +855,9 @@
      C                   ELSE
      C                   EVAL      *IN20 = *Off
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *****************************************************************
@@ -874,9 +890,9 @@
      C                   EVAL      *INU8 = True
      C                   EVAL      *INLR = True
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *********************************************************************

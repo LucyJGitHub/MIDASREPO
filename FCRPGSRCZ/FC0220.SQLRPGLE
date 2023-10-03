@@ -12,8 +12,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                                  *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -86,8 +88,8 @@
      FMAARCPL0  O    E           K DISK                                         LN0210
      F                                     COMMIT                               LN0210
      F                                     INFDS(INFDSA)                        LN0210
-     FSDFCTLL0  UF   E           K DISK
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK                                                    MD061008
+     F**********                           COMMIT                                           MD061008
      F*QAOKDL01IF*E*****      K        DISK                                            043702 CAAA02
      FQAOKL01A  IF   E           K DISK
      F                                     IGNORE(WOSFMT01)                     043702
@@ -612,7 +614,21 @@
       **  Update file controls
       *
      C                   MOVEL     'FCMOUTPD'    AHFLNM
-     C     AHFLNM        CHAIN     SDFCTLL0                           99
+     C*****AHFLNM        CHAIN     SDFCTLL0                           99                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       99                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       **  Database error if no record found for file
       *
@@ -639,7 +655,16 @@
       *
       **  Update file control record
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *
       **     Issue Commit                                                 LN0210
       *                                                                   LN0210
@@ -1967,7 +1992,21 @@
       **  Update file controls
       *
      C                   MOVEL     'FCMOUTPD'    AHFLNM
-     C     AHFLNM        CHAIN     SDFCTLL0                           99
+     C*****AHFLNM        CHAIN     SDFCTLL0                           99                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM                    AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+      *                                                                                     MD061008
+     C                   SETOFF                                       99                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        99                    MD061008
+     C                   ENDIF                                                              MD061008
+      *                                                                                     MD061008
       *
       **  Database error if no record found for file
       *
@@ -1986,7 +2025,16 @@
       *
       **  Update file control record
       *
-     C                   UPDATE    @AHREAU
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
       *                                                                   LN0210
       **     Issue Commit                                                 LN0210
       *                                                                   LN0210

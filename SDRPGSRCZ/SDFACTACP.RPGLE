@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CLE134             Date 01Aug12               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance.                     *
       *           - Apply CLE138 original design of SDFACTX0 to store *
@@ -66,8 +68,8 @@
       ** +--------------------------------------+
 
       ** Midas SD Standing Data Control File
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
 
       ** Midas SD Facility Types
      FSDFACTL0  UF A E           K DISK    INFSR(*PSSR)
@@ -337,8 +339,17 @@
 
       ** ...check if file is existing in trailer file
 
-     C     c_File        CHAIN(e)  @AHREAU
-     C                   IF        Not %Found(SDFCTLL0)
+     C*****c_File        CHAIN(e)  @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      c_File        AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+     C**********         IF        Not %Found(SDFCTLL0)                                     MD061008
+     C                   IF        ZRETRN <> *blanks                                        MD061008
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDFCTLL0'
      C                   EVAL      DBKEY  =  c_File
@@ -349,7 +360,8 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
 
-     C                   ELSEIF    %Error
+     C**********         ELSEIF    %Error                                                   MD061008
+     C                   ELSEIF    ZRETRN <> *blanks                                        MD061008
      C                   ITER
      C                   ENDIF
 
@@ -362,8 +374,18 @@
      C                   ELSE
      C                   EVAL      AHNOAM = AHNOAM + 1
      C                   ENDIF
-     C                   UPDATE(e) @AHREAU
-     C                   IF        %Error
+     C**********         UPDATE(e) @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+     C**********         IF        %Error                                                   MD061008
+     C                   IF        ZRETRN <> *blanks                                        MD061008
      C                   ITER
      C                   ENDIF
 

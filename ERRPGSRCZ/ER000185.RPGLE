@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26779           Date 27Nov09               *
       *                 BUG26481           Date 19Oct09               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -71,7 +73,7 @@
      FERDETTL0  IF   E           K DISK    INFSR(*PSSR)
       *
       ** Midas SD Standing Data Controls
-     FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
+     F*SDFCTLL1* IF   E           K DISK    INFSR(*PSSR)                                    MD061008
       *
       ** Midas ER Transaction Type Decision Table - List
      FER000185P1O    E             PRINTER INFDS(SPOOL1)
@@ -365,17 +367,17 @@
      C                   WHEN      WNoRec = 0
      C                   WRITE     NODTLS
      C                   ENDSL
- 
+
       ** Close printer files.
- 
+
      C                   IF        %OPEN(ER000185AU)
      C                   CLOSE     ER000185AU
      C                   ENDIF
- 
+
      C                   IF        %OPEN(ER000185P1)
      C                   CLOSE     ER000185P1
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

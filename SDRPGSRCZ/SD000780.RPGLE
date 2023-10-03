@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD051054           Date 30May18               *
-      *  Prev Amend No. MD051053           Date 30May18               *
+      *  Last Amend No. MD061008           Date 31Dec21               *
+      *  Prev Amend No. MD051054           Date 30May18               *
+      *                 MD051053           Date 30May18               *
       *                 MD051052           Date 30May18               *
       *                 MD036195           Date 20Oct15               *
       *                 MD036194           Date 16Oct15               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061008 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD051054 - Incorrect error message                           *
       *  MD051053 - Incorrect error message                           *
       *  MD051052 - Incorrect error message                           *
@@ -169,25 +171,25 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSD000780DFCF   E             WORKSTN USROPN
      F                                     SFILE(SD000780S1:SRLRN)
      F                                     INFDS(INFDS#)
      F                                     INFSR(*PSSR)
- 
+
       ** Country of Tax Codes Update Index
      FSDCTTXL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     INFDS(CTTXL0)
      F                                     COMMIT
      F                                     RENAME(SDCTTXD0:@CTTXL0)
- 
+
       ** Country of Tax Codes Retrieval Index
      FSDCTTXL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     INFDS(CTTXL1)
      F                                     RENAME(SDCTTXD0:@CTTXL1)
- 
+
       ** Country of Tax Codes by Country of Residenc
      FSDCTTXL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCTTXD0:@CTTXL2)
@@ -203,14 +205,14 @@
       ** Country of Tax Codes with blank Country of Residence                               BUG26850
      FSDCTTXL7  IF   E           K DISK    INFSR(*PSSR)                                     BUG26850
      F                                     RENAME(SDCTTXD0:@CTTXL7)                         BUG26850
- 
+
       ** Control File Update Index
-     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
-     F                                     COMMIT
+     F*SDFCTLL0* UF   E           K DISK    INFSR(*PSSR)                                    MD061008
+     F**********                           COMMIT                                           MD061008
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -221,99 +223,99 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Review from fields
      D                 DS
      D  SPOSN                  1      5
      D WCTRTST         DS
      D  WTestF1                1      1A
      D  WTestF2                2      2A
- 
+
       ** File Information
      D CTTXL0          DS
      D  #CTTX0                 9      9
      D CTTXL1          DS
      D  #CTTX1                 9      9
- 
+
       ** Display file information data structure
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)
- 
+
       ** Rundate data area
      D RUNDAT          DS
      D  WSUC                  11     11
      D  WMBIN                 13     13
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Country Details
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
- 
+
       ** External data structure for Account Code Details
      D SDACOD        E DS                  EXTNAME(SDACODPD)
- 
+
       ** Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CER048
       ** External DS for SAR Details                                                          CER048
       *                                                                                       CER048
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER048
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D CAIN89          S              1
      D CPY2@           S             80
- 
+
       ** Database error workfields
      D PRTCD           S              7
      D POPTN           S              7
      D PCNCD           S              2
      D*PACOD*****      S              4                                                       CGL035
      D PACOD           S             10                                                       CGL035
- 
+
       ***Message*file*workfields***************************************                       236137
       ** Message file workfields - Parameters list for ZA0340 / ZA0350.                       236137
      D PZMsgFile       S             10A   INZ('GBSDUSRMSG')
@@ -322,7 +324,7 @@
       ** Message data fields used as substitution values.                                     236137
      D #2TTDPLabel     S             14    INZ('Total Discount')                              236137
      D #2YRDPLabel     S             15    INZ('Yearly Discount')                             236137
- 
+
       ** Parameters for AOTXBSR0
      D PIRTCD          S              7A
      D PIOPTN          S              7A
@@ -331,7 +333,7 @@
      D PIDATE          S              5P 0
      D PINARR          S             15A
      D PIRATE          S              6P 4
- 
+
       ** General workfields
      D CAIN81          S              1
      D PMODE           S              1
@@ -395,12 +397,12 @@
       ** Total and Yearly Discount percentages numeric values.                                236137
      D WWTTDP          S              6  3                                                    236137
      D WWYRDP          S              6  3                                                    236137
- 
+
       ** QDCXLATE workfields
      D WQA5N           S              5  0
      D WQB10X          S             10
      D WQC10X          S             10
- 
+
       ** QCLSCAN workfields
      D WQA3N           S              3  0
      D WQB3N           S              3  0
@@ -409,13 +411,13 @@
      D WQD1            S              1
      D WQE1            S              1
      D WQF1            S              1
- 
+
       ** Subfile workfields
      D WSkipRec        S              1
      D WKeyScrn        S              1
      D WDetScrn        S              1
      D WValid          S              1
- 
+
       ** Date workfields
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
@@ -481,7 +483,7 @@
      D #RDERR          S              9A                                                    BUG26850
      D #MNACCNT        S             10A                                                    BUG26850
      D #SCACCNT        S             10A                                                    BUG26850
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -489,52 +491,52 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Main Program
- 
+
      C                   DO        *HIVAL
- 
+
       ** Initialise and load subfile page
- 
+
      C                   EXSR      SRBuild
- 
+
      C                   EVAL      W1RSF = 'N'
- 
+
       ** Display screen until reload requested
- 
+
      C                   DOW       W1RSF = 'N'
- 
+
       ** Display screen
- 
+
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *IN03         CASEQ     *ON           SREnd
- 
+
      C     *IN05         CASEQ     *ON           SRReload
- 
+
      C     *IN27         CASEQ     *ON           SRLoad
- 
+
      C                   CAS                     SRProcess
      C                   ENDCS
      C                   IF        *IN03 = *ON
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDDO
       *****************************************************************
       /EJECT
@@ -544,9 +546,9 @@
       *                                                               *
       *****************************************************************
      C     SRBuild       BEGSR
- 
+
       ** Initialise & load subfile page
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000780C1
      C                   EVAL      *IN80 = *OFF
@@ -554,56 +556,56 @@
      C                   EVAL      WKeyScrn = 'N'
      C                   EVAL      WDetScrn = 'N'
      C                   EVAL      *IN79 = *OFF
- 
+
       ** Reset Number of Records in Subfile
- 
+
      C                   Z-ADD     0             WLRCD
- 
+
       ** If CHANGE mode, then position file
- 
- 
+
+
      C                   IF        W1PMD <> 'ADD'
      C                   EVAL      WPOSN = SPOSN
- 
+
       ** Setup key
- 
+
      C     #1POS1        SETLL     @CTTXL1                            82
- 
+
      C                   READ      @CTTXL1                                82
      C                   ELSE
      C                   EVAL      *IN82 = *OFF
      C                   ENDIF
- 
+
       ** Save previous selector values
- 
+
      C     *LIKE         DEFINE    #1POS1        WZCTRT
      C                   EVAL      WZCTRT = #1POS1
      C     *LIKE         DEFINE    #1POS2        WZCTNM
      C                   EVAL      WZCTNM = #1POS2
      C     *LIKE         DEFINE    #1POS3        WZCTRR
      C                   EVAL      WZCTRR = #1POS3
- 
+
       ** Translate search mask for text field
- 
+
      C     *LIKE         DEFINE    #1POS2        WQCTTR
- 
+
      C                   CALL      'QDCXLATE'
      C                   PARM      20            WQA5N
      C                   PARM      #1POS2        WQCTTR
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X
- 
+
       ** Load subfile page
- 
+
      C                   EXSR      SRLoad
- 
+
       ** If no records found, display error message
- 
+
      C                   IF        *IN82 = *ON and SRLRN = 0
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -613,36 +615,36 @@
       *                                                               *
       *****************************************************************
      C     SRLoad        BEGSR
- 
+
       ** Load subfile page but write empty page if add mode
- 
+
      C                   EVAL      *IN84 = *OFF
- 
+
       ** Re-establish fields in read-ahead record
- 
+
      C                   IF        W1PMD <> 'ADD' and *IN27 = *ON and
      C                             *IN82 = '0'
      C                   READP     @CTTXL1                                60
      C                   READ      @CTTXL1                                60
      C                   ENDIF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   Z-ADD     WLRCD         SRLRN
      C                   Z-ADD     1             WRCTR
- 
+
       ** Load next subfile page
- 
+
      C                   DOW       *IN82 = '0' and WRCTR <= WSFPG
- 
+
      C                   EVAL      WSkipRec = 'N'
      C                   ADD       1             SRLRN
      C                   MOVEA     '000000'      *IN(32)
- 
+
       ** Protect fields during Enquiry Mode
- 
+
       ** Get Country Name
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -660,18 +662,18 @@
      C                   ELSE
      C                   EVAL      #1CNNM = A4CNNM
      C                   ENDIF
- 
+
      C                   IF        (W1PMD <> 'ADD')
      C                   SELECT
- 
+
      C                   WHEN      #1POS1 <> *BLANK  AND  EWCTRT <> #1POS1
      C                   EVAL      WSkipRec = 'Y'
- 
+
      C                   WHEN      #1POS3 <> *BLANK  AND  EWCTRR <> #1POS3
      C                   EVAL      WSkipRec = 'Y'
- 
+
      C                   WHEN      #1POS2 <> *BLANKS
- 
+
      C                   CALL      'QCLSCAN'
      C                   PARM                    A4CNNM
      C                   PARM      20            WQA3N
@@ -682,58 +684,58 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
- 
+
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   IF        WSkipRec = 'N'
- 
+
       ** Clear subfile fields
- 
+
      C                   EXSR      SRClrScrn
- 
+
       ** If CHANGE mode, load subfile fields
- 
+
      C                   IF        W1PMD <> 'ADD'
      C                   EXSR      SRMove
- 
+
      C                   ENDIF
- 
+
       ** Output to subfile
- 
+
      C                   ADD       1             WRCTR                81
      C                   EVAL      *IN81 = *ON
- 
+
       ** If SFLRCD invalid, note that errors present
- 
+
      C                   IF        *IN83 = *ON and *IN40 = '0'
      C                   EVAL      *IN40 = *ON
      C                   ENDIF
- 
+
       ** Set screen conditioning indicators
- 
+
      C                   EXSR      SRProtect
- 
+
      C                   WRITE     SD000780S1
- 
+
      C                   ELSE
      C                   SUB       1             SRLRN
      C                   ENDIF
- 
+
       ** End of File
- 
+
      C                   IF        W1PMD <> 'ADD'
      C                   READ      @CTTXL1                                82
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   Z-ADD     SRLRN         WLRCD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -742,47 +744,47 @@
       *  SRDisplay - Display Subfile                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDisplay     BEGSR
- 
+
       ** Set screen conditioning indicators
- 
+
      C                   IF        W1PMD = 'ADD'
      C                   EVAL      *IN89 = *ON
      C                   ELSE
      C                   EVAL      *IN89 = *OFF
      C                   ENDIF
- 
+
       ** PUTOVR unless conditioned fields change
- 
+
      C                   IF        *IN89 <> CAIN89 OR *IN81 <> CAIN81
      C                   EVAL      *IN86 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      CAIN89 = *IN89
      C                   EVAL      CAIN81 = *IN81
- 
+
       ** Display appropriate Header depending upon Mode whether it is
       ** Enquiry or Maintenance
- 
+
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN31 = *ON
      C                   ENDIF
- 
+
       ** Display appropriate Header depending upon Mode whether it is
       ** Enquiry or Maintenance
- 
+
       ** Set cursor by *SET CURSOR data
- 
+
      C                   TIME                    #1TIME
      C                   WRITE     SD000780C2
      C                   WRITE     SD000780F1
      C                   EXFMT     SD000780C1
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -792,37 +794,37 @@
       *                                                               *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Change of position specified
- 
+
      C                   IF        W1PMD <> 'ADD' and WPOSN <> SPOSN
      C                             OR WZCTRT <> #1POS1  OR  WZCTNM <> #1POS2
      C                             OR WZCTRR <> #1POS3
      C                   EXSR      SRReload
      C                   ENDIF
- 
+
       ** Quit if reload requested
- 
+
      C                   IF        W1RSF <> 'Y'
- 
+
      C                   IF        *IN81 = *ON
      C                   EVAL      WKIPIN = 'N'
      C                   ENDIF
- 
+
       ** Process subfile records
- 
+
      C                   EXSR      SRProcRec
- 
- 
+
+
       ** Switch between *ADD/*CHANGE modes is allowed when no errors
       ** exists during update
- 
+
      C                   IF        *IN09 = *ON and *IN40 = *OFF
      C                   EXSR      SRMode
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -832,31 +834,31 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
       ** Initialise subfile reload flag
- 
+
      C                   IF        W1PMD = 'ADD'
      C                   EVAL      W1RSF = 'Y'
      C                   ELSE
      C                   EVAL      W1RSF = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SRDetail
- 
+
       ** Rollback any DBF changes if error occur
- 
+
      C                   IF        W#EROR <> *BLANKS
      C                   ROLBK
      C                   ELSE
      C                   COMMIT
      C                   ENDIF
- 
+
       ** Cancel reload if errors occur
- 
+
      C                   IF        *IN40 = *ON
      C                   EVAL      W1RSF = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -866,17 +868,17 @@
       *                                                               *
       *****************************************************************
      C     SRDetail      BEGSR
- 
+
       ** Set off error indicators
- 
+
      C                   MOVEA     '000000'      *IN(32)
      C                   EVAL      *IN83 = *OFF
- 
+
      C                   EXSR      SRWrite
      C                   IF        *IN83 = *ON and *IN40 = *OFF
      C                   EVAL      *IN40 = *ON
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -886,16 +888,16 @@
       *                                                               *
       *****************************************************************
      C     SRProcRec     BEGSR
- 
+
       ** Create Country Tax Code Details
- 
+
      C     WKYCTR        KLIST
      C                   KFLD                    #1CTRT
      C                   KFLD                    #1CTRR
      C     WKYCNR        KLIST
      C                   KFLD                    #1CNRT
      C                   KFLD                    #1CNRR
- 
+
      C                   EVAL      #1CNRT = *BLANKS
      C                   EVAL      #1CNRR = *BLANKS
      C                   EVAL      *IN38 = *ON
@@ -903,16 +905,16 @@
      C                   EVAL      *IN73 = *OFF
      C                   EVAL      *IN70 = *ON
      C                   EVAL      *IN89 = *ON
- 
+
       ** Process Amend/Delete Request
      C                   IF        W1PMD = 'CHG' and *IN09 <> *ON
- 
+
      C                   DOW       *IN03 = *OFF and *IN12 = *OFF
      C                             and W1RSF = 'N' and WLRCD <> *ZEROS
- 
+
       ** Check if Enquire
      C                   READC     SD000780S1                             62
- 
+
      C                   DOW       *IN62 = *OFF
       ** Invalid Action Code
      C                   IF        (#1ACTN <> 'E' and #1ACTN <> 'D' and
@@ -927,58 +929,58 @@
      C                   EVAL      *IN40 = *ON
      C                   LEAVE
      C                   ELSE
- 
+
      C                   IF        #1ACTN = 'E'
      C                   EXSR      SREnqReq
      C                   ENDIF
- 
+
       ** Check if Delete
      C                   IF        #1ACTN = 'D' and PMODE = 'M'
      C                   EXSR      SRDelReq
      C                   ENDIF
- 
+
       ** Check if Amend
      C                   IF        #1ACTN = 'A' and PMODE = 'M'
      C                   EXSR      SRAmdReq
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   READC     SD000780S1                             62
      C                   IF        *IN62 = *OFF
      C                   EVAL      W1RSF = 'N'
      C                   ENDIF
- 
+
      C                   ENDDO
      C                   EVAL      W1RSF = 'Y'
- 
+
      C                   ENDDO
- 
+
       ** If subfile is empty, resend message
- 
+
      C                   IF        WLRCD = *ZEROS
      C                   EVAL      PZMsgID = 'USR7590'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        *IN09 = *ON and PMODE = 'M'
- 
+
       ** Process Add Request
      C                   EXSR      SRAddReq
- 
+
       ** Update Database
      C                   IF        (W#EROR =*BLANKS) AND (WKIPIN = 'Y')
      C                             and *IN12 = *OFF and *IN03 = *OFF
      C                   EXSR      SRUpdate
      C                   ENDIF
- 
+
      C                   IF        W#EROR = *BLANKS and *IN12 = *OFF
      C                                              and *IN03 = *OFF
      C                   EVAL      W1PMD = 'ADD'
@@ -986,16 +988,16 @@
      C                   EXSR      SRReload
      C                   EVAL      *IN12 = *ON
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      *IN38 = *OFF
      C                   EVAL      *IN41 = *OFF
      C                   EVAL      *IN42 = *OFF
      C                   EVAL      *IN84 = *OFF
      C                   EVAL      *IN89 = *OFF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1005,28 +1007,28 @@
       *                                                               *
       *****************************************************************
      C     SREnqReq      BEGSR
- 
+
      C     WKYCNR        CHAIN     SDCTTXL0                           08
- 
+
      C                   IF        *IN08 = *ON
- 
+
       ** Error message if record is missing
      C                   EVAL      *IN40 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR7517'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
      C                   EXSR      SRScrn2Clr
- 
+
       ** Get Country Name for Country Tax
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      EWCTRT        PCNCD
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      W#EROR = 'Y'
@@ -1036,9 +1038,9 @@
      C                   EVAL      #1CNNM = A4CNNM
      C                   EVAL      #1CNRT = A4CNCD
      C                   ENDIF
- 
+
       ** Get Country Name for Country of Residence
- 
+
      C                   EVAL      WCTRN = *Blanks
      C                   IF        EWCTRR <> *BLANKS
      C                   CALL      'AOCTRYR0'
@@ -1046,7 +1048,7 @@
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      EWCTRR        PCNCD
      C     SDCTRY        PARM      SDCTRY        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      W#EROR = 'Y'
@@ -1062,7 +1064,7 @@
      C                   EVAL      #2CTRR = #1CNRR
      C                   EVAL      #2CTRN = WCTRN
      C                   EVAL      #2TXS1 = EWTXS1
- 
+
      C                   EVAL      ZDAYNO = EWEDT1
      C                   EXSR      ZDATE2
      C                   EVAL      #2EDT1 = *BLANKS
@@ -1211,7 +1213,7 @@
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN38 = *ON
      C                   ENDIF
- 
+
      C                   DOW       *IN03 = *OFF and *IN12 = *OFF and
      C                             W2RSF = 'N'
      C                   WRITE     SD000780C2
@@ -1221,13 +1223,13 @@
      C                   EVAL      W2RSF = 'Y'
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDIF
      C                   EVAL      W1RSF = 'N'
      C                   IF        PMODE = 'E'
      C                   EVAL      *IN38 = *OFF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1237,12 +1239,12 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2       BEGSR
- 
+
       ** Error detected
      C                   MOVEA     '0000'        *IN(43)
      C                   EVAL      *IN55 = *ON
      C                   EVAL      *IN76 = *ON
- 
+
      C                   IF        *IN09 = *ON
      C                   EXSR      SRScrn2Clr
      C                   EVAL      #2CTRT = #1CTRT
@@ -1250,15 +1252,15 @@
      C                   EVAL      #2CTRR = #1CTRR
      C                   EVAL      #2CTRN = WCTRN
      C                   ENDIF
- 
+
      C                   DOW       *IN03 = *OFF and *IN12 = *OFF and
      C                             W1RSF = 'N'
      C                   WRITE     SD000780C2
      C                   WRITE     SD000780F1
      C                   EXFMT     SD000780D2
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      *IN40 = *OFF
      C                   EVAL      *IN41 = *OFF
@@ -1280,16 +1282,16 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
- 
+
       ** If Exit not pressed, validate Input Screen 2
- 
+
      C                   IF        *IN03 = *OFF and *IN12 = *OFF and
      C                             *IN05 = *OFF
      C                   EXSR      SRScrn2v
      C                   ENDIF
- 
+
       ** If Refresh and Add action, clear fields
- 
+
      C                   IF        *IN05 = *ON and *IN09 = *ON
      C                   EXSR      SRScrn2Clr
      C                   EVAL      #2CTRT = #1CTRT
@@ -1297,9 +1299,9 @@
      C                   EVAL      #2CTRR = #1CTRR
      C                   EVAL      #2CTRN = WCTRN
      C                   ENDIF
- 
+
       ** If Refresh and Amend action, restore original contents
- 
+
      C                   IF        *IN05 = *ON and #1ACTN = 'A'
      C                   EVAL      #2TXS1 = P2TXS1
      C                   MOVEL     P2EDT1        #2EDT1
@@ -1337,7 +1339,7 @@
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   EVAL      W1PMD = 'CHG'
@@ -1349,9 +1351,9 @@
      C                   EVAL      W1RSF = 'Y'
      C                   EVAL      WKIPIN = 'Y'
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   EVAL      W1PMD = 'CHG'
@@ -1360,7 +1362,7 @@
      C                   ENDIF
      C                   EVAL      *IN55 = *OFF
      C                   EVAL      *IN76 = *OFF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1370,7 +1372,7 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2Clr    BEGSR
- 
+
      C                   EVAL      #2CTRT = *BLANKS
      C                   EVAL      #2CTNM = *BLANKS
      C                   EVAL      #2CTRR = *BLANKS
@@ -1421,7 +1423,7 @@
       *                                                               *
       *****************************************************************
      C     SRScrn2v      BEGSR
- 
+
      C                   EVAL      #RDCNT = *ZERO                                           BUG26850
      C                   EVAL      #MNACCNT = *BLANKS                                       BUG26850
      C                   EVAL      #SCACCNT = *BLANKS                                       BUG26850
@@ -1456,7 +1458,7 @@
      C                   ENDIF                                                              BUG26850
       *                                                                                     BUG26850
       ** Default Tax Status 1 can only be 'T'(Taxable), 'D'(Disclose), or 'E'(Exempt).
- 
+
      C                   IF        #2TXS1 <> 'T' and #2TXS1 <> 'D'
      C                                           and #2TXS1 <> 'E'
      C                                           and #2TXS1 <> 'Y'                          MD033960
@@ -1466,9 +1468,9 @@
      C                   EVAL      PZMsgID = 'USR4746'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Effective Date 1 should not be blank
- 
+
      C                   IF        #2EDT1 = *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN48 = *ON
@@ -1476,17 +1478,17 @@
      C                   EVAL      PZMsgID = 'USR4749'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Check valid date using the MOVE command
- 
+
      C                   IF        *IN48 = *OFF
      C**********         MOVE      #2EDT1        WDATEN                                     BUG22534
      C**********         MOVE      WDATEN        WDATEA                                     BUG22534
      C                   MOVE      #2EDT1        WDATEA                                     BUG22534
- 
+
       ** Valid date format
       **      Test if date is numeric
- 
+
      C                   Z-ADD     *ZEROS        WVEDT1
      C                   TESTN                   WDATEA               9798
      C                   CALLB     'ZDATE1'
@@ -1494,7 +1496,7 @@
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C                   IF        ErrorFlag = 'Y' or
      C                             (*IN97 = *OFF and *IN98 = *OFF)
@@ -1508,16 +1510,16 @@
      C                   EVAL      PZMsgID = 'USR4736'
      C                   ENDIF
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     ZDAYNO        WVEDT1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Transition Type 1 must be either  '1' or '2'
- 
+
      C                   IF        #2TRT1 = ' '
      C                   EVAL      #2TRT1 = '2'
      C                   ENDIF
@@ -1528,9 +1530,9 @@
      C                   EVAL      PZMsgID = 'USR4737'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Default Tax Status 2 can only be 'T'(Taxable) or 'D'(Disclose).
- 
+
      C                   IF        #2TXS2 <> 'T' and #2TXS2 <> 'D'
      C                                           and #2TXS2 <> ' '
      C                                           and #2TXS2 <> 'Y'                          MD033960
@@ -1540,9 +1542,9 @@
      C                   EVAL      PZMsgID = 'USR4738'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Tax Status should be entered if Effective Date is entered
- 
+
      C                   IF        #2TXS2 = *BLANKS AND #2EDT2 <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN50 = *ON
@@ -1550,9 +1552,9 @@
      C                   EVAL      PZMsgID = 'USR4735'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Effective Date should be entered if Tax Status is entered
- 
+
      C                   IF        #2EDT2 = *BLANKS AND #2TXS2 <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN50 = *ON
@@ -1560,26 +1562,26 @@
      C                   EVAL      PZMsgID = 'USR4741'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Effective Date 2 is optional
       ** Check valid date using the MOVE command
- 
+
      C                   Z-ADD     *ZEROS        WVEDT2
      C                   IF        #2EDT2 <> *BLANKS
      C**********         MOVE      #2EDT2        WDATEN                                     BUG22534
      C**********         MOVE      WDATEN        WDATEA                                     BUG22534
      C                   MOVE      #2EDT2        WDATEA                                     BUG22534
- 
+
       ** Valid date format
       **      Test if date is numeric
- 
+
      C                   TESTN                   WDATEA               9798
      C                   CALLB     'ZDATE1'
      C                   PARM                    WDATEA
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C                   IF        ErrorFlag = 'Y' or
      C                             (*IN97 = *OFF and *IN98 = *OFF)
@@ -1592,15 +1594,15 @@
      C                   EVAL      PZMsgID = 'USR4740'
      C                   ENDIF
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
      C                   Z-ADD     ZDAYNO        WVEDT2
      C                   ENDIF
- 
+
       ** Effective Date 2  must be later than effective date for default tax
       ** status 1.
- 
+
      C                   IF        *IN51 = *OFF and WVEDT2 <= WVEDT1
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN51 = *ON
@@ -1609,9 +1611,9 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Transition Type 2 must be either  '1' or '2'
- 
+
      C                   IF        #2TRT2 = ' ' AND #2EDT2 <> *BLANKS
      C                             AND #2TXS2 <> *BLANKS
      C                   EVAL      #2TRT2 = '2'
@@ -1624,9 +1626,9 @@
      C                   EVAL      PZMsgID = 'USR4743'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
       ** Tax Basket should be input if country of residence is input.
- 
+
      C                   IF        #2TXBS = *BLANKS and #1CTRR <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN53 = *ON
@@ -1647,11 +1649,11 @@
      C                   EVAL      #2TXBS = PITXBS                                          AR795958
      C                   ENDIF                                                              AR795958
      C                   ENDIF                                                              AR795958
- 
+
       ** It should exist from the Tax Basket File.
- 
+
      C                   IF        *IN53 = *OFF and #2TXBS <> *BLANKS
- 
+
      C                   IF        *IN53 = *OFF
      C                   EVAL      WCTRTST = #2TXBS
      C                   CALL      'AOTXBSR0'
@@ -1664,7 +1666,7 @@
      C                   PARM      99999         PIDATE                                       233082
      C                   PARM      *BLANKS       PINARR
      C                   PARM      *ZEROS        PIRATE
- 
+
      C                   IF        PIRTCD <> *BLANKS
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN53 = *ON
@@ -1674,32 +1676,32 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Withholding Tax Account Code is optional
- 
+
      C                   IF        #2WTAC <> *BLANKS
- 
+
      C                   IF        *IN54 = *OFF
- 
+
      C                   CALL      'AOACODR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      #2WTAC        PACOD
      C     SDACOD        PARM      SDACOD        DSSDY
- 
+
       ** Record not found
- 
+
      C                   IF        PRTCD = '*NRF   '
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN54 = *ON
      C                   EVAL      W#EROR2 = 'Y'
      C                   EVAL      PZMsgID = 'USR0173'
      C                   EXSR      SRZasnms
- 
+
      C                   ELSE
- 
+
       ** Cannot be a title only account code
- 
+
      C                   IF        A5TOIN = 'Y' and *IN54 = *OFF
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN54 = *ON
@@ -1709,12 +1711,12 @@
      C                   ENDIF
      C                   EVAL      #2WTAC = A5ACCD
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                              BUG26850
- 
+
       ** Tax Account Code should be the same for all country of residence
- 
+
      C*****#2CTRR        CHAIN     SDCTTXL2                                                   233696
                                                                                               234037
       ***Initialise*EWWTAC*to*blanks*before*read.**********************              234037 BUG26850
@@ -1728,7 +1730,7 @@
      C**********                   NOT %EOF(SDCTTXL2)                                233696 BUG26850
      C*****#2CTRR        READE     SDCTTXL2                                          233696 BUG26850
      C**********         ENDDO                                                       233696 BUG26850
- 
+
      C**********         IF        %FOUND(SDCTTXL2)                                           233696
       *                                                                                     BUG26850
      C                   EVAL      #RDERR = *BLANKS                                         BUG26850
@@ -1815,7 +1817,7 @@
      C                   ENDIF
      C**********         ENDIF                                                              BUG26850
      C**********         ENDIF                                                                233696
- 
+
      C**********         ENDIF                                                              BUG26850
                                                                                               236137
       ** De Minimis Rule Applicable indicator can only be 'Y' (Yes) or 'N' (No).              236137
@@ -2892,9 +2894,9 @@
       ** before displaying the second Input screen
 
      C                   IF        *IN03 = *OFF and *IN12 = *OFF
- 
+
       ** Country of Tax is mandatory
- 
+
      C                   IF        #1CTRT = *Blanks
      C                   EVAL      *IN40 = *ON
      C                   EVAL      *IN41 = *ON
@@ -2902,7 +2904,7 @@
      C                   EVAL      PZMsgID = 'USR4720'
      C                   EXSR      SRZasnms
      C                   ENDIF
- 
+
      C                   IF        W#EROR = *Blanks
      C                   EVAL      WCTRTST = #1CTRT
      C                   IF        WTestF1 = ' ' and WTestF2 <> '?' or
@@ -2914,9 +2916,9 @@
      C                   EXSR      SRZasnms
      C                   END
      C                   END
- 
+
       ** Country of Tax should exist from Country File
- 
+
      C                   IF        W#EROR = *Blanks
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
@@ -2937,10 +2939,10 @@
      C                   ENDIF
      C                   ENDIF
      C                   END
- 
+
       ** Country of residence is optional
- 
- 
+
+
      C                   IF        #1CTRR <> *BLANKS
      C                   EVAL      WCTRTST = #1CTRR
      C                   IF        WTestF1 = ' ' and WTestF2 <> '?' or
@@ -2952,9 +2954,9 @@
      C                   EXSR      SRZasnms
      C                   END
      C                   END
- 
+
       ** Country of Residence should exist from Country File
- 
+
      C                   IF        *IN42 = *OFF and #1CTRR <> *BLANKS
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
@@ -2978,9 +2980,9 @@
      C                   IF        #1CTRR = *BLANKS
      C                   EVAL      WCTRN = *BLANKS
      C                   ENDIF
- 
+
       ** Check if code already existing on file
- 
+
      C                   IF        W#EROR = *Blanks
      C     WKYCTR        CHAIN     SDCTTXL0                           10
      C                   IF        *IN10 = *OFF
@@ -2990,24 +2992,24 @@
      C                   EXSR      SRZasnms
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        W#EROR = *Blanks and
      C                             *IN12 = *OFF and *IN03 = *OFF
      C                   EXSR      SRScrn2
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** Clear messages from program message queue
      C                   CALL      'ZA0250'
- 
+
      C                   IF        *IN03 = *ON or *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   EVAL      W1PMD = 'ADD'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3017,32 +3019,32 @@
       *                                                               *
       *****************************************************************
      C     SRDelReq      BEGSR
- 
+
       ** Delete Country of Tax Details
- 
+
      C                   EXSR      SRDelete
- 
+
      C                   IF        W#EROR <> *BLANKS
- 
+
       ** Delete unsuccessful
- 
+
      C                   MOVEA     '1111'        *IN(32)
      C                   MOVEA     '11'          *IN(83)
      C                   EXSR      SRMove
      C                   ELSE
- 
+
       ** Blank out record and protect from entry
- 
+
      C                   EXSR      SRTrailer
      C                   EXSR      SRClrScrn
      C                   EVAL      *IN84 = *OFF
- 
+
       ** Reload subfile
- 
+
      C                   EVAL      W1RSF = 'Y'
      C                   EVAL      #1POS1 = *Blanks
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3051,29 +3053,29 @@
       * SRAmdReq - Process Update Request                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAmdReq      BEGSR
- 
+
       ** Amend Country of Tax Details
- 
+
      C                   EXSR      SRAmend
- 
+
      C                   IF        W#EROR <> *BLANKS or *IN03 = *ON or
      C                             *IN12 = *ON
      C                   MOVEA     '1111'        *IN(32)
      C                   MOVEA     '11'          *IN(83)
- 
+
       ** Reset subfile record if changed record
- 
+
      C                   EXSR      SRMove
      C                   ELSE
- 
+
       ** Enable entry
- 
+
      C                   EVAL      *IN84 = *OFF
      C                   EXSR      SRTrailer
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3083,10 +3085,23 @@
       *                                                               *
       *****************************************************************
      C     SRTrailer     BEGSR
- 
+
      C                   MOVEL     'SDCTTXPD'    WFNAM
-     C     WFNAM         CHAIN     SDFCTLL0                           60
- 
+     C*****WFNAM         CHAIN     SDFCTLL0                           60                    MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*RTV'        ZMODE             4                        MD061008
+     C                   PARM      WFNAM         AHFLNM           10                        MD061008
+     C                   PARM      0             AHNORC            5 0                      MD061008
+     C                   PARM      0             AHNOIN            5 0                      MD061008
+     C                   PARM      0             AHNOAM            5 0                      MD061008
+     C                   PARM      0             AHNODL            5 0                      MD061008
+     C                   PARM      *BLANKS       ZRETRN           10                        MD061008
+                                                                                            MD061008
+     C                   SETOFF                                       60                    MD061008
+     C     ZRETRN        IFNE      *BLANKS                                                  MD061008
+     C                   SETON                                        60                    MD061008
+     C                   ENDIF                                                              MD061008
+
      C                   IF        *IN60 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDFCTLPA'
@@ -3095,9 +3110,9 @@
      C                   EVAL      DBASE = 3
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      W1PMD = 'ADD'
      C                   ADD       1             AHNORC
@@ -3108,13 +3123,22 @@
      C                   WHEN      WCTRT = 'Y'
      C                   ADD       1             AHNOAM
      C                   ENDSL
- 
+
      C                   ENDIF
- 
-     C                   UPDATE    @AHREAU
- 
+
+     C**********         UPDATE    @AHREAU                                                  MD061008
+     C                   CALL      'SD000119'                                               MD061008
+     C                   PARM      '*UPD'        ZMODE                                      MD061008
+     C                   PARM                    AHFLNM                                     MD061008
+     C                   PARM                    AHNORC                                     MD061008
+     C                   PARM                    AHNOIN                                     MD061008
+     C                   PARM                    AHNOAM                                     MD061008
+     C                   PARM                    AHNODL                                     MD061008
+     C                   PARM      *BLANKS       ZRETRN                                     MD061008
+                                                                                            MD061008
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3124,19 +3148,19 @@
       *                                                               *
       *****************************************************************
      C     SRMode        BEGSR
- 
+
       ** Switch between *ADD/*CHANGE modes
- 
+
      C                   IF        W1PMD <> 'ADD'
      C                   EVAL      W1PMD = 'ADD'
      C                   ELSE
      C                   EVAL      W1PMD = 'CHG'
      C                   ENDIF
- 
+
      C                   EVAL      SPOSN = *BLANKS
- 
+
      C                   EXSR      SRReload
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3146,11 +3170,11 @@
       *                                                               *
       *****************************************************************
      C     SRReload      BEGSR
- 
+
       ** Request subfile reload
- 
+
      C                   EVAL      W1RSF = 'Y'
- 
+
      C                   IF        *IN05 = *ON
      C                   EVAL      SPOSN = *BLANKS
      C                   EVAL      #1ACTN = *BLANKS
@@ -3158,7 +3182,7 @@
      C                   EVAL      #1POS2 = *Blanks
      C                   EVAL      #1POS3 = *Blanks
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3168,25 +3192,25 @@
       *                                                               *
       *****************************************************************
      C     SRProtect     BEGSR
- 
+
      C                   IF        W1PMD = 'ADD'
      C                   EVAL      *IN89 = *ON
      C                   ELSE
      C                   EVAL      *IN89 = *OFF
      C                   ENDIF
- 
+
       ** Protect keys if change mode or updated record
- 
+
      C                   IF        *IN89 = *ON
      C                   EVAL      *IN79 = *ON
      C                   ENDIF
- 
+
      C                   IF        W1PMD = 'CHG'
      C                   EVAL      *IN78 = *ON
      C                   ENDIF
- 
+
       ** Protect fields during Selection Mode
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3196,14 +3220,14 @@
       *                                                               *
       *****************************************************************
      C     SRClrScrn     BEGSR
- 
+
       ** Initialise subfile record
- 
+
      C                   EVAL      #1ACTN = *BLANKS
      C                   EVAL      #1CNRT = *BLANKS
      C                   EVAL      #1CNNM = *BLANKS
      C                   EVAL      #1CNRR = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3213,13 +3237,13 @@
       *                                                               *
       *****************************************************************
      C     SRMove        BEGSR
- 
+
       ** Move SDCTTXL0 fields to subfile
- 
+
      C                   EVAL      #1CNRT = EWCTRT
      C                   EVAL      #1CNNM = A4CNNM
      C                   EVAL      #1CNRR = EWCTRR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3229,11 +3253,11 @@
       *                                                               *
       *****************************************************************
      C     SRWrite       BEGSR
- 
+
      C                   EVAL      W#EROR = *BLANKS
- 
+
       ** Create Country of Tax Details
- 
+
      C                   EVAL      EWCTRT = #2CTRT
      C                   EVAL      EWCTRR = #2CTRR
      C                   EVAL      EWTXS1 = #2TXS1
@@ -3287,30 +3311,30 @@
      C                   EVAL      EWRPDT = #2RPDT                                            CGL157
      C                   Z-ADD     WWEFDT        EWEFDT                                     MD036195
      C                   ENDIF                                                                CGL157
- 
+
       ** Check for duplicate primary key
- 
+
      C     WKYCTR        SETLL     @CTTXL0                                60
- 
+
      C                   IF        *IN60 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR0017'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
      C                   WRITE     @CTTXL0                              61
- 
+
       ** Write error detected
- 
+
      C                   IF        *IN61 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      *IN03 = *ON
      C                   ELSE
      C                   EXSR      SRGenRec
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3320,9 +3344,9 @@
       *                                                               *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
       ** Deletion not allowed when system setup is complete
- 
+
      C                   EVAL      W#EROR = *BLANKS
      C                   IF        WSUC <> 'N'
      C                   EVAL      *IN40 = *ON
@@ -3330,23 +3354,23 @@
      C                   EVAL      PZMsgID = 'USR4745'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
      C     WKYCNR        CHAIN     SDCTTXL0                           63
- 
+
       ** Record already deleted
- 
+
      C                   IF        *IN63 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR7602'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
      C                   DELETE    SDCTTXL0
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3356,27 +3380,27 @@
       *                                                               *
       *****************************************************************
      C     SRAmend       BEGSR
- 
+
       ** Change Country of Tax Details
- 
+
      C                   EVAL      W#EROR = *BLANKS
      C                   EVAL      #1CTRR = #1CNRR
      C                   EVAL      #1CTRT = #1CNRT
- 
+
      C                   EXSR      SRScrn2Clr
- 
+
      C     WKYCNR        CHAIN     @CTTXL0                            63
- 
+
       ** Record not found
- 
+
      C                   IF        *IN63 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR7605'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ** Move to display file fields
- 
+
      C                   EVAL      #2CTRT = EWCTRT
      C                   EVAL      #2CTRR = EWCTRR
      C                   EVAL      #2TXS1 = EWTXS1
@@ -3490,7 +3514,7 @@
      C                   MOVEL     ZDATE         #2EFDT                                       CGL157
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
- 
+
       ** Put original contents aside in case of Refresh action
      C                   EVAL      P2TXS1 = #2TXS1
      C                   MOVEL     #2EDT1        P2EDT1
@@ -3542,9 +3566,9 @@
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
      C                   ENDIF
- 
+
       ** Country of Tax should exist from Country File
- 
+
      C                   EVAL      #2CTNM = *BLANKS
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
@@ -3559,12 +3583,12 @@
      C                   ELSE
      C                   EVAL      #2CTNM = A4CNNM
      C                   ENDIF
- 
+
       ** Country of residence is optional
- 
+
      C                   EVAL      #2CTRN = *BLANKS
      C                   IF        #2CTRR <> *BLANKS
- 
+
      C                   CALL      'AOCTRYR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -3579,34 +3603,34 @@
      C                   EVAL      #2CTRN = A4CNNM
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if code already existing on file
- 
+
      C                   EXSR      SRScrn2
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
       ** Set record data changed flag
- 
+
      C                   EVAL      WCTRT = 'N'
- 
+
      C                   IF        W#EROR = *Blanks and *IN12 <> *ON and
      C                             *IN03 <> *ON
      C     WKYCNR        CHAIN     @CTTXL0                            63
- 
+
       ** Record not found
- 
+
      C                   IF        *IN63 = *ON
      C                   EVAL      W#EROR = 'Y'
      C                   EVAL      PZMsgID = 'USR7605'
      C                   EXSR      SRZasnms
      C                   ELSE
- 
+
       ***Populate*screen*fields****************************************                       236137
       ** Populate file fields.                                                                236137
- 
+
      C                   EVAL      EWCTRT = #2CTRT
      C                   EVAL      EWCTRR = #2CTRR
      C                   EVAL      EWTXS1 = #2TXS1
@@ -3671,11 +3695,11 @@
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON or *IN12 = *ON
      C                   EVAL      W1RSF = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************                     BUG26850
       /EJECT                                                                                BUG26850
@@ -3705,11 +3729,11 @@
       *                                                               *
       *****************************************************************
      C     SRZasnms      BEGSR
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PZMsgFile
      C                   PARM                    PZMsgID
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3742,18 +3766,18 @@
       *                                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Rollback any uncommitted DBF changes
- 
+
      C                   ROLBK                                          60
- 
+
       ** If selection mode and F3 has been pressed
       ** Terminate program
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3764,15 +3788,15 @@
       *                                                               *
       *****************************************************************
      C     SRGenRec      BEGSR
- 
+
       ** Generate records in SDACTXPD for the new Country of Tax defined
- 
+
      C                   CALL      'SD000778'
- 
+
       ** Generate records in SDNHTXPD for the new Country of Tax defined
- 
+
      C                   CALL      'SD000779'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3796,16 +3820,16 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRTCD
      C                   PARM                    PMODE
- 
+
       ** Define LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'SD000780'
@@ -3813,18 +3837,18 @@
      C                   EVAL      DBKEY =  *BLANKS
      C                   EVAL      DBASE = 1
      C                   OUT       LDA
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Obtain default message file
- 
+
       ** Call Access Program for Bank Details
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -3834,7 +3858,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Open files for update
      C                   OPEN      SD000780DF
      C                   IF        #CTTX0 <> '1'
@@ -3843,7 +3867,7 @@
      C                   IF        #CTTX1 <> '1'
      C                   OPEN      SDCTTXL1
      C                   ENDIF
- 
+
                                                                                               CGL157
       ** Check if enhancement CGL157 (CRS Reporting) is on                                    CGL157
                                                                                               CGL157
@@ -3869,17 +3893,17 @@
      C                   ENDIF                                                                CGL157
                                                                                               CGL157
      C                   Z-ADD     14            WSFPG
- 
+
       ** Set to *CHANGE mode
      C                   EVAL      W1PMD = 'CHG'
- 
+
       ** Initialise subfile control
      C                   EVAL      SPOSN = *BLANKS
      C                   EVAL      #1RUNA = BJMRDT
      C                   EVAL      #1PGMQ = PSProcName
      C                   EVAL      #1WSID = PSJobName
      C                   EVAL      #1USER = PSUser
- 
+
       * Initialise subfile control
      C                   MOVEL     *BLANK        #1POS1
      C                   MOVEL     *BLANK        #1POS2
@@ -3932,9 +3956,9 @@
      C                   OUT       LDA                                                        CER054
      C                   EXSR      *PSSR                                                      CER054
      C                   ENDIF                                                                CER054
- 
+
      C                   ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -3942,13 +3966,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3958,19 +3982,19 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

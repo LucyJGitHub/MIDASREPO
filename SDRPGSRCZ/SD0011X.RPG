@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047469A          Date 04Oct23               *
+      *  Prev Amend No. AR732662           Date 04Oct23               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042652           Date 06Feb17               *
       *                 CER071             Date 01Aug16               *
       *                 MD037870           Date 25May16               *
@@ -76,6 +78,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047469A (Reopen) - SSI Housekeeping                        *
+      *  AR732662 - Unable to delete extended settlement instructions.*
+      *             Amended program to include SDEXSHPD in the vali-  *
+      *             dations of customer deleting/closing.             *
+      *             (Child:AR732663)                                  *
+      *           - Applied for MD047469.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042652 - FFC0800 FAILED IN COB.Dont allow deletion when    *
@@ -310,6 +318,15 @@
      F                                              KINFSR *PSSR                            MD042652
       ** RTV:  FF Cust/broker positions                                                     MD042652
       *
+     F***SDEXSHL2IF  E           K        DISK                           UC       AR732662 MD047469A
+     F**********                                    KINFSR *PSSR                  AR732662 MD047469A
+      **RTV*:*Midas*SD*Extended*settlements*by customer*(shadow)                  AR732662 MD047469A
+     FSDEXSHL3IF  E           K        DISK                           UC                   MD047469A
+     F                                              KINFSR *PSSR                           MD047469A
+      * RTV : Midas SD Extended settlements by customer (shadow)                           MD047469A
+     FSDEXSHL4IF  E           K        DISK                                                MD047469A
+     F                                              KINFSR *PSSR                           MD047469A
+      * RTV : Midas SD Extended settlements by customer (shadow)                           MD047469A
       *
      F/COPY WNCPYSRC,SD0011XF01
      E* Description     : Copyright notice for inclusion in all programs
@@ -323,6 +340,11 @@
      E                    QCMD2   1   1 80                                                   BUG8616
      E                    QCMD3   1   1 80                                                   BUG8616
      E                    QCMD4   1   1 80                                                   BUG8616
+     E                    QCMD5   1   1 80                                                 MD047469A
+     E                    QCMD6   1   1 80                                                 MD047469A
+     E                    QCMD7   1   1 80                                                 MD047469A
+     E                    QCMD8   1   1 80                                                 MD047469A
+     E                    QCMD9   1   1 80                                                 MD047469A
       /EJECT
       * Data structures:
      IPGMDS     ESDSY2PGDSP
@@ -1457,6 +1479,12 @@
      C           P1CUST    CHAINSDEXSTLB             91                                      BUG8616
      C           *IN91     IFEQ *OFF                                                         BUG8616
      C                     MOVELP1CUST    WUCUST                                             BUG8616
+     C                     ELSE                                                             AR732662
+     C********** P1CUST    CHAINSDEXSHL2             91                           AR732662 MD047469A
+     C           P1CUST    CHAINSDEXSHL3             91                                    MD047469A
+     C           *IN91     IFEQ *OFF                                                        AR732662
+     C                     MOVELP1CUST    WUCUST                                            AR732662
+     C                     ENDIF                                                            AR732662
      C                     ENDIF                                                             BUG8616
      C**********           CLEARPARC                                                         BUG8616
      C**********           CALL 'SDC0400'              90  Check for Custo                   BUG8616
@@ -3309,6 +3337,7 @@
      C                     PARM           ZZFQL  21        LIBRARY/FILE
       * Open files first time only
      C           W0OPN     IFEQ *BLANK
+     C                     OPEN SDEXSHL3                                                   MD047469A
       *                                                                                      BUG8616
       * Create Extended Settlement Extract file                                              BUG8616
      C                     EXSR EXTSET                                                       BUG8616
@@ -3336,6 +3365,7 @@
      C                     OPEN SDBRCHL9                                                     BUG7195
      C                     OPEN SDEXSTLB                                                     BUG8616
      C                     OPEN POSTND                                                      MD042652
+     C**********           OPEN SDEXSHL2                                          AR732662 MD047469A
      C/COPY WNCPYSRC,SD0011XC07
       * Signal that files are now open
      C                     MOVE 'Y'       W0OPN   1
@@ -3391,6 +3421,50 @@
       * Override to extract file                                                             BUG8616
      C                     MOVEAQCMD4     CMDSTR                                             BUG8616
      C                     EXSR QCMDSR                                                       BUG8616
+      *                                                                                    MD047469A
+      ** Create extract file, then copy from two logicals                                  MD047469A
+      ** (all formats) SDEXSHL3 & SDEXSHL4 to populate                                     MD047469A
+      *                                                                                    MD047469A
+     C                     READ SDEXSHL3                 91                                MD047469A
+      ** If SDEXSHL3 has record(s)                                                         MD047469A
+     C           *IN91     IFEQ '0'                                                        MD047469A
+     C                     MOVEAQCMD5     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     MOVEAQCMD6     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     MOVEAQCMD7     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+      *                                                                                    MD047469A
+      ** Override to extract file                                                          MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     CLOSESDEXSHL3                                                   MD047469A
+     C                     MOVEAQCMD9     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+     C                     OPEN SDEXSHL3                                                   MD047469A
+      *                                                                                    MD047469A
+     C                     ELSE                                                            MD047469A
+     C                     READ SDEXSHL4                 91                                MD047469A
+      ** If SDEXSHL4 has record(s)                                                         MD047469A
+     C           *IN91     IFEQ '0'                                                        MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     MOVEAQCMD8     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     MOVEAQCMD7     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+      ** Override to extract file                                                          MD047469A
+     C                     CLEARCMDSTR                                                     MD047469A
+     C                     CLOSESDEXSHL3                                                   MD047469A
+     C                     MOVEAQCMD9     CMDSTR                                           MD047469A
+     C                     EXSR QCMDSR                                                     MD047469A
+     C                     OPEN SDEXSHL3                                                   MD047469A
+     C                     ENDIF                                                           MD047469A
+      *                                                                                    MD047469A
+     C                     ENDIF                                                           MD047469A
+      *                                                                                    MD047469A
+      *                                                                                    MD047469A
      C                     ENDSR                                                             BUG8616
       *                                                                                      BUG8616
      C           QCMDSR    BEGSR                                                             BUG8616
@@ -3411,3 +3485,13 @@ CPYF SDEXSTLB QTEMP/SDEXSTEXT MBROPT(*REPLACE) RCDFMT(*ALL) FMTOPT(*NOCHK)
 CPYF SDEXSTLC QTEMP/SDEXSTEXT MBROPT(*REPLACE) RCDFMT(*ALL) FMTOPT(*NOCHK)
 ** QCMD4                                                                                     BUG8616
 OVRDBF SDEXSTLB QTEMP/SDEXSTEXT
+** QCMD5                                                                                   MD047469A
+CPYF SDEXSHL3 QTEMP/SDEXSHEXT CRTFILE(*YES) MBROPT(*REPLACE) RCDFMT(SDEXSH3A)
+** QCMD6                                                                                   MD047469A
+CPYF SDEXSHL3 QTEMP/SDEXSHEXT MBROPT(*REPLACE) RCDFMT(*ALL) FMTOPT(*NOCHK)
+** QCMD7                                                                                   MD047469A
+CPYF SDEXSHL4 QTEMP/SDEXSHEXT MBROPT(*ADD) RCDFMT(*ALL) FMTOPT(*NOCHK)
+** QCMD8                                                                                   MD047469A
+CPYF SDEXSHL4 QTEMP/SDEXSHEXT CRTFILE(*YES) MBROPT(*REPLACE) RCDFMT(SDEXSH3A)
+** QCMD9                                                                                   MD047469A
+OVRDBF SDEXSHL3 QTEMP/SDEXSHEXT

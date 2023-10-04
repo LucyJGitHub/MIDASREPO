@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD020456           Date 23May13               *
-      *  Prev Amend No. MD018386C          Date 23Apr13               *
+      *  Last Amend No. MD060918           Date 21Jan21               *
+      *  Prev Amend No. MD020456           Date 23May13               *
+      *                 MD018386C          Date 23Apr13               *
       *                 AR1081696 *CREATE  Date 12Feb13               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD020456 - BF Upload menu option UPLD doesn t upload         *
       *             entitlements to BFTB tables                       *
       *  MD018386C - Update for BFP3.1 patch changes                  *
@@ -125,7 +127,8 @@
                     , :GroupId
                   from ( select distinct MIINDX from GZSFMENUPD
                           where MIAPI1 <> '' ) as A
-                  left join MITB_PERMM B
+         //*******left join MITB_PERMM B                                                  //MD060918
+                  left join MIPRMJW0   B                                                  //MD060918
                          on A.MIINDX = B.PMINDX
                   left join BFTB_RESOURCEPERM C
                          on B.PMARTF = C.BFRESOURCEID

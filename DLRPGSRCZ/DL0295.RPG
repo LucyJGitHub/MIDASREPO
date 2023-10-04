@@ -10,8 +10,11 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. ETA032             Date 31Aug12               *      
-      *  Prev Amend No. 257937             Date 28Nov08               *
+      *  Last Amend No. MD060773           Date 03Aug23               *
+      *  Prev Amend No. MD060094           Date 03Aug23               *
+      *                 MD059248           Date 03Aug23               *
+      *                 ETA032             Date 31Aug12               *      
+      *                 257937             Date 28Nov08               *
       *                 MD056278           Date 12Aug20               *
       *                 MD055673           Date 20Jul20               *
       *                 MD053762           Date 16Jun19               *
@@ -193,6 +196,24 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060773 - DL Trading Imbalance for FX Deal                  *
+      *             Initialized ACOD and PREF fields in order not to  *
+      *             pick up the previous values that is causing un-   *
+      *             wanted postings for missing or deleted Account    *
+      *             keys.                                             *
+      *           - Applied for MD-61609.                             * 
+      *  MD060094 - SP2021.D Missing retail postings on RSACMTPD after*
+      *             1st COB.                                          *
+      *             Introduced a work variable fields to avoid clashes*
+      *             of usage of indicators resulting to skipping of   *
+      *             postings processing.                              *
+      *           - Applied for MD-61609.                             * 
+      *  MD059248 - FM2021A/A1 FX Netting: Unexpected projections for *
+      *             netted FX deals. This is due to MD055401 code in  *
+      *             FX0920. Fix is to reverse MD055401 in FX0920 and  *
+      *             add changes in DL0295 to disregard the checking of*
+      *             posting reference 2.                              *
+      *           - Applied for MD-61609.                             *
       *  ETA032 - Allow Dealing postings to blocked accounts.         *      
       *  257937 - Incorrect postings for withholding tax in foreign   *
       *           currency. Debit the tax from the settlement account *
@@ -1384,6 +1405,7 @@
      I                                       10  10 EVSUB                 S01103
      I                                       11  11 POS11                 CPB005
      I                                        9  10 WKSTAT                                    232543
+     I                                        9  10 AMCOD                                   MD059248
      I/COPY WNCPYSRC,DL0295I001
 0466 I*                                                                   SO5452
 0466 I*    TO EXTRACT DTYP FROM A/C KEY                                   SO5452
@@ -2489,6 +2511,12 @@
 0513 C*
 0514 C*    SETOF THE NEW YORK STATE PROCESSING INDICATOR
 0515 C                     SETOF                     89
+      *                                                                                     MD060094
+      ** Initialize work variables for FX Netting                                           MD060094
+      *                                                                                     MD060094
+     C                     MOVE 'N'       WFXDL   1                                         MD060094
+     C                     MOVE 'N'       WBUYND  1                                         MD060094
+     C                     MOVE 'N'       WSELND  1                                         MD060094
 0516 C*
 0517 C*    INCREMENT COUNT OF RECORDS READ
 0518 C***********NREC      ADD  1         NREC    50                      AUS007
@@ -2769,6 +2797,14 @@
 0534 C*********************MOVELAKEY      AKKEY  12                S01094 CDL038
 0534 C                     MOVELAKEY      AKKEY  14                       CDL038
 0535 C           AKKEY     CHAINACKEY                30                   S01094
+      *                                                                                     MD060773
+     C           *IN30     IFEQ *ON                                                         MD060773
+     C           *IN30     OREQ *OFF                                                        MD060773
+     C           *IN04     ANDEQ*OFF                                                        MD060773
+     C                     MOVE *ALL'0'   ACODA                                             MD060773
+     C                     CLEARPREF                                                        MD060773
+     C                     ENDIF                                                            MD060773
+      *                                                                                     MD060773
      C/COPY WNCPYSRC,DL0295C087
       *                                                                                       CER049
       ** Set sequence numbers to '01' if they are blank                                       CER049
@@ -2919,7 +2955,14 @@
 0544 C** 31                SETON                     U4                   S01094
 0545 C   31                Z-ADDEDAT      ZDAYNO
 0546 C   31                EXSR ZDATE2
-0547 C   31                GOTO END
+0547 C***31****            GOTO END                                                         MD059248
+      *                                                                                     MD059248
+      ** If missing accout key, check if FX deal is netted                                  MD059248
+      ** If yes, generate deal in Netting ICD account                                       MD059248
+      *                                                                                     MD059248
+     C           *IN31     IFEQ '1'                                                         MD059248
+     C                     GOTO CHKNET                                                      MD059248
+     C                     ENDIF                                                            MD059248
       *                                                                   CAC001
       **  Perform summary accruals processing only if Analytical          CAC001
       **  Accounting is not installed; or if Analytical Accounting        CAC001
@@ -3034,6 +3077,8 @@
 0558 C**N10******          GOTO ERROR                              S01117 E36918
 0556 C***********          MOVE BCT,IX    BBCI                     S01117 E36918
      C***********          END                                     S01117 E36918
+      *                                                                                     MD059248
+     C           CHKNET    TAG                                                              MD059248
       *                                                                   E11609
       ** If account code blank set to 0.                                  E11609
      C           ACODA     IFEQ *BLANKS                                   E11609
@@ -3046,6 +3091,15 @@
      C           *IN07     IFEQ '1'                                       CDL002
       ** SETOF NET INDICATOR again to set default of NET NO               CDL002
      C                     MOVE '0'       *IN07                           CDL002
+      *                                                                                     MD060094
+      ** Set WFXDL to 'Y' for deal that is FX and netted. Then, set                         MD060094
+      ** buy and sell work variables (WBUYND and WSELND) to 'N'.                            MD060094
+      *                                                                                     MD060094
+     C                     MOVE 'Y'       WFXDL                                             MD060094
+     C**********           MOVE '0'       *IN59                                    MD059248 MD060094
+     C**********           MOVE '0'       *IN72                                    MD059248 MD060094
+     C                     MOVE 'N'       WBUYND                                            MD060094
+     C                     MOVE 'N'       WSELND                                            MD060094
      C           DLNO      CHAINDEALS                40                   CDL002
      C           *IN40     IFEQ '0'                                       CDL002
      C** Preparation for getting FX Net Reference Depending on B/S                          MD048346
@@ -3061,6 +3115,11 @@
      C           NETBY     IFEQ 'Y'                                                         MD049950
      C           NETBR     ANDNE*BLANKS                                                     MD049950
      C                     MOVE '1'       *IN07                                             MD049950
+      *                                                                                     MD060094
+      ** Set WBUYND to 'Y' for buy side netting settlement.                                 MD060094
+      *                                                                                     MD060094
+     C**********           MOVE '1'       *IN59                                    MD059248 MD060094
+     C                     MOVE 'Y'       WBUYND                                            MD060094
      C                     ENDIF                                                            MD049950
      C           SVBRCA    IFEQ *BLANKS                                                     MD048346
      C                     MOVE NETBR     FXNETR                                            MD048346
@@ -3073,6 +3132,11 @@
      C           NETSL     IFEQ 'Y'                                                         MD049950
      C           NETSR     ANDNE*BLANKS                                                     MD049950
      C                     MOVE '1'       *IN07                                             MD049950
+      *                                                                                     MD060094
+      ** Set WSELND to 'Y' for sell side netting settlement.                                MD060094
+      *                                                                                     MD060094
+     C**********           MOVE '1'       *IN72                                    MD059248 MD060094
+     C                     MOVE 'Y'       WSELND                                            MD060094
      C                     ENDIF                                                            MD049950
      C           SVBRCA    IFEQ *BLANKS                                                     MD048346
      C                     MOVE NETSR     FXNETR                                            MD048346
@@ -3097,6 +3161,69 @@
      C                     END                                            CDL002
      C                     END                                            CDL002
      C                     END                                            CDL002
+      *                                                                                     MD059248
+      ** If FX deal is netted, check account key if on Value Date                           MD059248
+      ** and amount code is for Purchase or Sale as below:                                  MD059248
+      **    FB - Purchase Amount - Foreign currency                                         MD059248
+      **    BB - Purchase Amount - Base currency                                            MD059248
+      **    FC - Sale Amount - Foreign currency                                             MD059248
+      **    FC - Sale Amount - Base currency                                                MD059248
+      ** If yes, generate posting in Netting ICD                                            MD059248
+      ** Even missing account key, generate posting in Netting ICD                          MD059248
+      *                                                                                     MD059248
+      *                                                                                     MD059248
+     C           EVCOD     IFEQ 'V'                                                         MD059248
+     C           AMCOD     ANDEQ'FB'                                                        MD059248
+     C********** *IN59     ANDEQ'1'                                                MD059248 MD060094
+     C           WBUYND    ANDEQ'Y'                                                         MD060094
+     C           EVCOD     OREQ 'V'                                                         MD059248
+     C           AMCOD     ANDEQ'BB'                                                        MD059248
+     C********** *IN59     ANDEQ'1'                                                MD059248 MD060094
+     C           WBUYND    ANDEQ'Y'                                                         MD060094
+     C           EVCOD     OREQ 'V'                                                         MD059248
+     C           AMCOD     ANDEQ'FC'                                                        MD059248
+     C********** *IN72     ANDEQ'1'                                                MD059248 MD060094
+     C           WSELND    ANDEQ'Y'                                                         MD060094
+     C           EVCOD     OREQ 'V'                                                         MD059248
+     C           AMCOD     ANDEQ'BC'                                                        MD059248
+     C********** *IN72     ANDEQ'1'                                                MD059248 MD060094
+     C           WSELND    ANDEQ'Y'                                                         MD060094
+      *                                                                                     MD059248
+      ** Set 01 as narrative code for missing account key                                   MD059248
+      ** to avoid DB error 108                                                              MD059248
+      *                                                                                     MD059248
+     C           *IN31     IFEQ '1'                                                         MD059248
+     C                     MOVE '01'      NCDN                                              MD059248
+      *                                                                                     MD059248
+      ** Retrieve client details - same procedure in NARRA for 01 code                      MD059248
+      *                                                                                     MD059248
+     C                     MOVELCNUM      @KEY1                                             MD059248
+     C                     CALL 'AOCUSTR1'                                                  MD059248
+     C                     PARM '*MSG   ' @RTCD                                             MD059248
+     C                     PARM '*KEY   ' @OPTN                                             MD059248
+     C                     PARM           @KEY1                                             MD059248
+     C                     PARM *BLANKS   @KYST                                             MD059248
+     C           SDCUST    PARM SDCUST    DSLDY                                             MD059248
+     C           @RTCD     IFNE *BLANK                                                      MD059248
+     C           BBCLST    ANDNE'Y'                                                         MD059248
+     C           @KYST     ORNE '*CNUM'                                                     MD059248
+     C                     MOVE 'SDCUSTPD'DBFILE                                            MD059248
+     C                     MOVE '012'     DBASE                                             MD059248
+     C                     MOVEL@OPTN     DBOPTN                                            MD059248
+     C                     MOVEL@KEY1     DBKEY                                             MD059248
+     C                     GOTO END                                                         MD059248
+     C                     END                                                              MD059248
+      *                                                                                     MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+     C                     EXSR POSTNE                                                      MD059248
+      *                                                                                     MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** No further processing for missing account key                                      MD059248
+     C           *IN31     IFEQ '1'                                                         MD059248
+     C                     GOTO END                                                         MD059248
+     C                     ENDIF                                                            MD059248
      C                     END                                            CDL002
 0559 C*
 0560 C*    LOOP TO ACCESS A/C CODES FROM A/C KEY RECORD
@@ -3265,9 +3392,23 @@
      C                     ENDIF                                                              257937
       *                                                                                       257937
 0611 C*    ADDITIONAL PROCESSING FOR POSTING REFERENCE 2.
+     C********** *IN59     IFEQ '0'                                                MD059248 MD060094
+     C********** *IN72     ANDEQ'0'                                                MD059248 MD060094
+     C           WFXDL     IFEQ 'N'                                                         MD060094
+     C           WFXDL     OREQ 'Y'                                                         MD060094
+     C           WBUYND    ANDEQ'N'                                                         MD060094
+     C           WSELND    ANDEQ'N'                                                         MD060094
 0612 C   35                EXSR PREF2
      C   70 35             EXSR EXTRA
      C  N10 70 35          GOTO ERROR
+      *                                                                                     MD059248
+     C                     ELSE                                                             MD059248
+      ** If FX deal is netted, skip the processing for posting ref 2                        MD059248
+     C           *IN35     IFEQ '1'                                                         MD059248
+     C                     GOTO NEXT                                                        MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+     C                     ENDIF                                                            MD059248
      C                     SETOF                     10
 0613 C**
 0614 C**   ADDITIONAL PROCESSING FOR POSTING REFERENCE 3.
@@ -5718,6 +5859,102 @@
      C/COPY WNCPYSRC,DL0295C063
      C*                                                                   CEU003
      C                     ENDSR                                          CEU003
+      *****************************************************************                     MD059248
+      *                                                               *                     MD059248
+      *   POSTNE - This subroutine is patterned after NETPST          *                     MD059248
+      *            This is to generate posting in Netting ICD         *                     MD059248
+      *            when FX deal is netted.                            *                     MD059248
+      *                                                               *                     MD059248
+      *****************************************************************                     MD059248
+     C           POSTNE    BEGSR                                                            MD059248
+      *                                                                                     MD059248
+     C                     MOVE '0'       NETFLG                                            MD059248
+     C                     MOVEA'010'     *IN,34                                            MD059248
+     C                     MOVE *BLANKS   DLREF                                             MD059248
+      *                                                                                     MD059248
+      ** Set SWIFT COMMON REFERENCE equal to NET REFERENCE                                  MD059248
+     C                     MOVE '0'       *IN78                                             MD059248
+     C                     MOVE RANETR    ZCMREF                                            MD059248
+      *                                                                                     MD059248
+      ** SET DEBIT/CREDIT IND BASED ON BUY/SELL IND                                         MD059248
+     C           RABSIN    IFEQ 'S'                                                         MD059248
+     C                     MOVE '1'       *IN39                                             MD059248
+     C                     MOVE '1'       *IN69                                             MD059248
+     C                     ELSE                                                             MD059248
+     C                     MOVE '0'       *IN39                                             MD059248
+     C                     MOVE '0'       *IN69                                             MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** Postings should be treated as PREF 2                                               MD059248
+     C                     EXSR PREF2                                                       MD059248
+     C   70                EXSR EXTRA                                                       MD059248
+     C           *IN70     IFEQ *ON                                                         MD059248
+     C           *IN10     ANDEQ*OFF                                                        MD059248
+     C                     EXSR *PSSR                                                       MD059248
+     C                     ENDIF                                                            MD059248
+     C           *IN10     IFEQ *ON                                                         MD059248
+     C                     MOVE *OFF      *IN10                                             MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** If CRE009 is ON and pgm is running is Shadow Post,                                 MD059248
+      ** set the Posting Date as Value Date.                                                MD059248
+      ** If deal is back valued set Posting Date as Run Date.                               MD059248
+      *                                                                                     MD059248
+     C           CRE009    IFEQ 'Y'                                                         MD059248
+     C           *INU1     ANDEQ*OFF                                                        MD059248
+      *                                                                                     MD059248
+     C                     MOVE *IN40     SAV40   1                                         MD059248
+     C           DLNO      CHAINDEALSDBF             40                                     MD059248
+     C           *IN40     IFEQ *OFF                                                        MD059248
+     C                     Z-ADDVDAT      @EDAT   50                                        MD059248
+     C                     ELSE                                                             MD059248
+     C                     Z-ADDEDAT      @EDAT                                             MD059248
+     C                     ENDIF                                                            MD059248
+     C                     MOVE SAV40     *IN40                                             MD059248
+      *                                                                                     MD059248
+     C           @EDAT     IFLT BJRDNB                                                      MD059248
+     C                     Z-ADDBJRDNB    WDATE   50                                        MD059248
+     C                     ELSE                                                             MD059248
+     C                     Z-ADD@EDAT     WDATE                                             MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+     C                     ELSE                                                             MD059248
+     C                     Z-ADDBJRDNB    WDATE                                             MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** Increment count of POSTINGS generated                                              MD059248
+     C           NRIT      ADD  1         NRIT    50                                        MD059248
+     C   70 35   NRIT      ADD  2         NRIT                                              MD059248
+      *                                                                                     MD059248
+      ** Determine Posting Narrative:                                                       MD059248
+     C                     EXSR SRGENT                                                      MD059248
+      *                                                                                     MD059248
+      ** If a generated entry, output:                                                      MD059248
+     C           *IN11     IFEQ *OFF                                                        MD059248
+     C                     EXCPTGENENT                                                      MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** Maintain DR,CR totals for BRANCH/CCY (EXCL.INTERBRANCH ITEMS)                      MD059248
+     C           *IN39     IFEQ '1'                                                         MD059248
+     C                     ADD  EAMT      CRTOT                                             MD059248
+     C                     ELSE                                                             MD059248
+     C                     ADD  EAMT      DRTOT                                             MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+      ** Add POSTING amount to HASH total                                                   MD059248
+     C           EAMT      DIV  1000      ZAMT                                              MD059248
+     C                     Z-ADDZAMT      ZZAMT                                             MD059248
+     C                     Z-ADD2         S                                                 MD059248
+     C                     Z-ADD1         Z                                                 MD059248
+     C           *IN70     IFEQ '1'                                                         MD059248
+     C           *IN35     ANDEQ'1'                                                         MD059248
+     C                     ADD  2         Z                                                 MD059248
+     C                     ENDIF                                                            MD059248
+     C                     EXSR HASH                                                        MD059248
+     C                     SETOF                     122933                                 MD059248
+     C                     SETOF                     37                                     MD059248
+     C                     SETOF                     70                                     MD059248
+     C                     ENDSR                                                            MD059248
      C*****************************************************************   S01103
      C**                                                                  CDL002
      C*     Level break 2 total time routine to set up and write          CDL002

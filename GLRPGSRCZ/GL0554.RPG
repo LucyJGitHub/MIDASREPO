@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055401           Date 25Oct20               *
-      *  Prev Amend No. MD055652           Date 13Jul20               *
+      *  Last Amend No. MD059248           Date 03Aug23               *
+      *  Prev Amend No. MD055401           Date 25Oct20               *
+      *                 MD055652           Date 13Jul20               *
       *                 MD053950           Date 16Jul19               *
       *                 MD052216           Date 04Apr19               *
       *                 MD051925           Date 18Sep18               *
@@ -137,6 +138,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059248 - FM2021A/A1 FX Netting: Unexpected projections for *
+      *             netted FX dealsNo posting in Netting ICD account. *
+      *             Reverse MD055401 partially as fix impacted the    *
+      *             projection in Netting ICD account.                *
+      *           - Applied for MD-61609.                             * 
       *  MD055401 - FX Netting / incorrect projected movement on      *
       *             nostro for Nets inserted at D-1. Fix is to        *
       *             suppress projection for netted FX deal.           *
@@ -2115,6 +2121,70 @@
       ***Switch*on**IN65*to*ensure*writing*to*file.********************           MD036589A MD055401
      C**********           MOVE '1'       *IN65                                   MD036589A MD055401
      C**********           ENDIF                                                  MD036589A MD055401
+      *                                                                                     MD059248
+      ** Get the netting ICD account.                                                       MD059248
+      *                                                                                     MD059248
+     C                     EXSR SRNET                                                       MD059248
+      *                                                                                     MD059248
+      ** Update PF/NOSEXED fields.                                                          MD059248
+      *                                                                                     MD059248
+     C           NETNOS    IFNE *BLANKS                                                     MD059248
+     C                     MOVE A8BICN    CNUM                                              MD059248
+     C                     MOVE BRCD      OSBR                                              MD059248
+     C                     MOVE '08'      SETP                                              MD059248
+     C                     MOVE NETNOS    OSAC1                                             MD059248
+     C                     MOVE *BLANKS   OSACQQ                                            MD059248
+     C                     MOVE BBPCNB    CPAR                                              MD059248
+     C           BBPAIN    IFEQ 'P'                                                         MD059248
+     C                     Z-ADD1         PARI                                              MD059248
+     C                     ELSE                                                             MD059248
+     C                     Z-ADD0         PARI                                              MD059248
+     C                     ENDIF                                                            MD059248
+     C                     MOVE BBCRNM    CRNM                                              MD059248
+     C                     MOVE BBCRTN    CTWN                                              MD059248
+     C                     MOVE BBCASC    CASK                                              MD059248
+     C                     MOVE BBCNCZ    CCTZ                                              MD059248
+     C                     MOVE BBCOLC    CLOC                                              MD059248
+     C                     CALL 'AOCTRYR0'                                                  MD059248
+     C                     PARM '*MSG   ' @RTCD                                             MD059248
+     C                     PARM '*KEY   ' @OPTN                                             MD059248
+     C                     PARM BBCNCZ    @CCTZ   2                                         MD059248
+     C           SDCTRY    PARM SDCTRY    DSFDY                                             MD059248
+     C           @RTCD     IFNE *BLANK                                                      MD059248
+     C                     MOVEL'19'      DBASE                                             MD059248
+     C                     MOVEL'SDCTRYPD'DBFILE                                            MD059248
+     C                     MOVELBBCNCZ    DBKEY                                             MD059248
+     C                     EXSR *PSSR                                                       MD059248
+     C                     ELSE                                                             MD059248
+     C                     MOVE A4RGCD    REGC                                              MD059248
+     C                     ENDIF                                                            MD059248
+      *                                                                                     MD059248
+     C                     MOVE *BLANKS   PRNM                                              MD059248
+     C                     MOVE *BLANKS   PTWN                                              MD059248
+     C                     MOVE *BLANKS   PASK                                              MD059248
+     C           BBPCNB    IFNE *BLANKS                                                     MD059248
+     C                     MOVE BBPCNB    PCNUM                                             MD059248
+     C                     CALL 'AOCUSTR0'                                                  MD059248
+     C                     PARM *BLANKS   PRTCD                                             MD059248
+     C                     PARM '*KEY   ' POPTN                                             MD059248
+     C                     PARM           PCNUM                                             MD059248
+     C                     PARM           PSTAT                                             MD059248
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD059248
+     C           PRTCD     IFNE *BLANKS                                                     MD059248
+     C                     MOVEL'06'      DBASE                                             MD059248
+     C                     MOVEL'SDCUSTPD'DBFILE                                            MD059248
+     C                     MOVELPCNUM     DBKEY                                             MD059248
+     C                     EXSR *PSSR                                                       MD059248
+     C                     ELSE                                                             MD059248
+     C                     MOVE BBCRNM    PRNM                                              MD059248
+     C                     MOVE BBCRTN    PTWN                                              MD059248
+     C                     MOVE BBCASC    PASK                                              MD059248
+     C                     ENDIF                                                            MD059248
+     C                     ENDIF                                                            MD059248
+     C                     MOVELWNETR     ZZ0296                                            MD059248
+      ** Switch on *IN65 to ensure writing to file.                                         MD059248
+     C                     MOVE '1'       *IN65                                             MD059248
+     C                     ENDIF                                                            MD059248
      C                     ENDIF                                                           MD036589A
      C*
      C  N65                GOTO END

@@ -22,7 +22,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD061361 - Correct package name when calling PGM             *
-      *             Applied for Md061816.                             *
+      *             Applied for MD061816.                             *
       *  MD060396 - Only X should be used to select layers            *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *

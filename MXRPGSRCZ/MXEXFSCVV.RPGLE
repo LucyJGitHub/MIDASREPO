@@ -14,18 +14,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR898711           Date 06Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CMX001  *CREATE    Data 01Jan00               *
+      *                 CMX001  *CREATE    Data 01Jan00               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR898711 - Allow selection of date fields in the format      *
+      *             yyyymmdd. (Child: AR898712)                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CMX001 - Meridian Export                                     *
       *                                                               *
@@ -111,6 +114,13 @@
      C                   MOVEL     'INVDAT '     I#RTCD
      C                   ENDIF
  
+     C                   ELSE                                                               AR898711
+     C     DDSCPV        IFEQ      '*CURRUNYMD'                                             AR898711
+                                                                                            AR898711
+     C     WHFLDD        IFNE      8                                                        AR898711
+     C                   MOVEL     'INVDAT '     I#RTCD                                     AR898711
+     C                   ENDIF                                                              AR898711
+                                                                                            AR898711
      C                   ELSE
       *
       * Check that there are as many characters input as there are digits,
@@ -143,6 +153,7 @@
      C                   MOVEL     'INVNUM '     I#RTCD
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              AR898711
  
      C                   ENDSR
       *****************************************************************

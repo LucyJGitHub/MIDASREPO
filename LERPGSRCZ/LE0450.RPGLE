@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061774           Date 25Aug23               *
-      *  Prev Amend No. MD023220           Date 15Aug23               *
+      *  Last Amend No. AR835056           Date 02Oct23               *
+      *  Prev Amend No. MD061774           Date 25Aug23               *
+      *                 MD023220           Date 15Aug23               *
       *                 BA6048             Date 01Mar23               *
       *                 AR924081           Date 23Mar23               *
       *                 AR981899           Date 27Feb23               *
@@ -442,6 +443,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR835056 - Loan activity enquiry shows abnormal interest     *
+      *             amount. Process blank PDDI like PDDI = 'M'.       *
+      *             Align LOAC fix with COB process. (Child: AR835057)*
       *  MD061774 - Deal Accrual Posting Difference for Deals with    *
       *           - Value Date 28th Feb.                              *
       *           - Recompile due to changes in ZINTDYZ2LE.           *
@@ -14769,9 +14773,10 @@ L118 I                             P   72   77 7RTSPL
      C***********PDDI      WHEQ 'N'                                CLE005 133913
      C***********PDDI      OREQ *BLANK                             CLE005 133913
      C     WPDDI         WHENEQ    'N'                                                         13391
-     C     WPDDI         OREQ      *BLANK                                                      13391
+     C*****WPDDI         OREQ      *BLANK                                            133913 AR835056
      C                   EXSR      ZFWDT                                                       CLE00
      C     WPDDI         WHENEQ    'M'                                                         14408
+     C     WPDDI         OREQ      *BLANK                                                   AR835056
      C                   EXSR      ZDATE2                                                      14408
      C     *IN98         IFEQ      *OFF                                                        14408
      C                   MOVE(P)   ZDATE         MMYY              4 0                         14408

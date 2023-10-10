@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060424           Date 22Feb23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD061261           Date 05Oct23               *
+      *  Prev Amend No. MD060424           Date 22Feb23               *
+      *                 249385             Date 01Aug22               *
       *                 MD058815           Date 28Sep21               *
       *                 MD059190           Date 08Nov21               *
       *                 MD057976           Date 20May21               *
@@ -247,6 +248,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD061261 - Base rate was not retrieved properly for roll-    *
+      *             over transactions of NCCR/SARR                    *
+      *             Retrieve the latest NCCR/SARR rate from LELIBEPD  *
+      *             with interest date less than or equal             *
+      *             to rollover date.                                 *
       *  MD060424 - Incorrect interest rate in LE1120P1. Override the *
       *             base rate of pending rollover based on existing   *
       *             highest record in LELIBEPD.                       *
@@ -3211,6 +3217,8 @@
      C                     Z-ADDLDCART    BRTE                                              MD060424
      C                     ENDSL                                                            MD060424
      C                     ENDIF                                                            MD060424
+     C                     ELSE                                                             MD061261
+     C                     EXSR SRNSAR                                                      MD061261
      C                     ENDIF                                                            MD060424
      C                     MOVE WIN30     *IN30                                             MD060424
      C                     ENDIF                                                            MD060424
@@ -7622,6 +7630,37 @@
      C                     ENDSR                                                              239076
       /EJECT                                                                                  239076
       *                                                                                       239076
+      *****************************************************************                     MD061261
+      *                                                               *                     MD061261
+      *  SRNSAR - Subroutine to retrieve rates for NCCR and SARR      *                     MD061261
+      *           calculation method.                                 *                     MD061261
+      *                                                               *                     MD061261
+      *  Called By : Subroutine COP.                                  *                     MD061261
+      *                                                               *                     MD061261
+      *****************************************************************                     MD061261
+      *                                                                                     MD061261
+     C           SRNSAR    BEGSR                                                            MD061261
+     C           KLELI     KLIST                                                            MD061261
+     C                     KFLD           LNRF                                              MD061261
+     C                     KFLD           RLDT                                              MD061261
+     C           CALM      IFEQ 'NCCR'                                                      MD061261
+     C           BLRT      ANDEQ'Y'                                                         MD061261
+     C           CALM      OREQ 'SARR'                                                      MD061261
+     C           BLRT      ANDEQ'Y'                                                         MD061261
+     C           KLELI     SETGTLELIBEL0                                                    MD061261
+     C           LNRF      REDPELELIBEL0                 30                                 MD061261
+     C           *IN30     IFEQ '0'                                                         MD061261
+     C           LDFLAG    ANDEQ'Y'                                                         MD061261
+     C                     SELEC                                                            MD061261
+     C           *IN52     WHEQ '1'                                                         MD061261
+     C                     Z-ADDLDCART    NBRT                                              MD061261
+     C           *IN56     WHEQ '1'                                                         MD061261
+     C                     Z-ADDLDCART    BRTE                                              MD061261
+     C                     ENDSL                                                            MD061261
+     C                     ENDIF                                                            MD061261
+     C                     ENDIF                                                            MD061261
+     C                     ENDSR                                                            MD061261
+      *
 1902 C********************************************************************
      C*                                                                   S01117
      C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117

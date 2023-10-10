@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. AR819780           Date 05Oct23               *
       *  Last Amend No. MD049123           Date 25May23               *
-      *  Prev Amend No. 252024             Date 03Feb22               *
+      *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
@@ -121,6 +122,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR819780 - Multiple deletion from SOAP of same Front Office. *
+      *             (Child: AR819781)                                 *
       *  MD049123 - Added process for Customer Number formatting.     *
       *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -1014,6 +1017,22 @@
       * The deal in file format from the FX database is retrieved as well.
 
      C                   RESET                   ReturnCode
+      *                                                                                     AR819780
+      ** If coming from Front Office via SOAP                                               AR819780
+      *                                                                                     AR819780
+     C                   IF        DDFOID <> *BLANKS                                        AR819780
+     C                   EVAL      ModeofOp = *BLANKS                                       AR819780
+      *                                                                                     AR819780
+     C                   SELECT                                                             AR819780
+     C                   WHEN      DDACTN = 'I'                                             AR819780
+     C                   EVAL      DDDLNO = *BLANKS                                         AR819780
+     C                   WHEN      DDACTN = 'D'                                             AR819780
+     C                   EVAL      APFOTranID = DDFOID                                      AR819780
+     C                   OTHER                                                              AR819780
+     C                   ENDSL                                                              AR819780
+      *                                                                                     AR819780
+     C                   ENDIF                                                              AR819780
+      *                                                                                     AR819780
      C                   CALLB     'FXFXDLRTV'
 
       * INPUTS

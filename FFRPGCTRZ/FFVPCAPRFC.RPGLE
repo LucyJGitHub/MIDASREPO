@@ -21,7 +21,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR800613           Date 09Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR800613 - Wrong defaulting in BOOK PC and TRANS PC fields.  *
+      *             Also, TRANS PC has defaulted value even customer  *
+      *             is not entered. (Child: AR800614)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -53,15 +57,15 @@
       *  CAP004 - APIs phase 3.                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFOPCC     IF   E           K DISK                                         S01117
      FFOPCK     IF   E           K DISK                                         S01117
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -73,19 +77,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -93,40 +97,40 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** External data structure for customer details file                                    179732
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  179732
                                                                                               179732
      D @DSFDY        E DS                  EXTNAME(DSFDY)
       *  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** External data structure for access programs (long)                                   179732
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     179732
                                                                                               179732
@@ -134,36 +138,36 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Transaction broker
      D*BOCO*****       S              6S 0                                                    CSD027
      D BOCO            S              6A                                                      CSD027
       ** Transaction customer
      D*CUSC*****       S              6S 0                                                    CSD027
      D CUSC            S              6A                                                      CSD027
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error fields
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
@@ -172,48 +176,49 @@
       ** It therefore requires ERR_ARRAYS and STD_D_SPEC.
      C/COPY ZACPYSRC,FVAL_RESET
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Book position profit centre              |
       ** +------------------------------------------+
- 
+
       * Default Book Position Profit Centre
- 
+
      C                   EXSR      DEF_BPRFC
- 
+
       * Validate Book Position Profit Centre
- 
+
      C                   EXSR      VAL_BPRFC
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Transaction profit centre                |
       ** +------------------------------------------+
- 
+
       * Transaction profit centre only required for customer trades
- 
-     C     CUSC          IFNE      *ZERO
- 
+
+     C*****CUSC*         IFNE      *ZERO                                                    AR800613
+     C     CUSC          IFNE      *BLANK                                                   AR800613
+
       * Default Transaction Profit Centre
- 
+
      C                   EXSR      DEF_TPRFC
- 
+
       * Validate Transaction Profit Centre
- 
+
      C                   EXSR      VAL_TPRFC
- 
+
      C                   ELSE
      C                   MOVE      *BLANK        STPRC
      C                   ENDIF
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
@@ -226,13 +231,13 @@
       * Book profit centre cannot be blank
       *
      C     SBPRC         IFEQ      *BLANKS
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx +1
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0707'
      C                   EVAL      FldNamXArr(XIdx) = 'SBPRC'
      C                   EVAL      OKBPRC = 'N'
- 
+
      C                   ELSE
      C                   MOVE      SBPRC         @PCCD
      C                   EXSR      VPRFC
@@ -263,13 +268,13 @@
       * Transaction profit centre cannot be blank
       *
      C     STPRC         IFEQ      *BLANKS
- 
+
      C                   EVAL      ErrorFound = 'Y'
      C                   EVAL      XIdx = XIdx +1
      C                   EVAL      MsgIDXArr(XIdx) = 'MMA0709'
      C                   EVAL      FldNamXArr(XIdx) = 'STPRC'
      C                   EVAL      OKTPRC = 'N'
- 
+
      C                   ELSE
      C                   MOVE      STPRC         @PCCD
      C                   EXSR      VPRFC
@@ -429,7 +434,8 @@
      C                   CALL      'AOPRFMR0'
      C                   PARM      *BLANKS       @RTCD1            1
      C                   PARM      SBOKC         @BKCD             2
-     C                   PARM      *BLANKS       @TRTY             5
+     C**********         PARM      *BLANKS       @TRTY             5                        AR800613
+     C                   PARM      SISTT         @TRTY             5                        AR800613
      C                   PARM      *BLANKS       @SBTY             2
      C                   PARM      SBRCD         @BRCD             3
      C                   PARM      DPPT          @DPCD             3
@@ -457,9 +463,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Outputs from this procedure
       ** ---------------------------
@@ -499,7 +505,7 @@
      C                   PARM                    BKPCDU            1
       ** Reconcile trade/book position profit centre
      C                   PARM                    BXTBRC            1
- 
+
       *
       **   LF/FOPCK
       *
@@ -515,15 +521,15 @@
      C**********         KFLD                    KCBCDO            6 0                        CSD027
      C                   KFLD                    KCBCDO            6                          CSD027
      C                   KFLD                    KISTTO            5
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

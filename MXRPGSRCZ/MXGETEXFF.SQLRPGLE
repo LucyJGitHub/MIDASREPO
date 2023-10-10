@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR898711           Date 06Oct23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR898711 - Allow selection of date fields in the format      *
+      *             yyyymmdd. (Child: AR898712)                       *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface (Recompile)    *
@@ -70,6 +73,11 @@
      D/COPY MXCPYSRC,MXGTFF
 
 
+      ** External DS for BANK details                                                       AR898711
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                AR898711
+      ** Midas GP Dummy data structure                                                      AR898711
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   AR898711
+                                                                                            AR898711
      D MXEXPCTL      E DS                  EXTNAME(MXEXPCTL)
       * Extract Control Data
 
@@ -249,6 +257,9 @@
      C     ESSCPV        WHENEQ    '*PRVRUN   '
      C                   MOVEL     *BLANK        ESSCPV
      C                   MOVEL     PRVRUN        ESSCPV
+     C     ESSCPV        WHENEQ    '*CURRUNYMD'                                             AR898711
+     C                   MOVEL     *BLANK        ESSCPV                                     AR898711
+     C                   MOVEL     CURYMD        ESSCPV                                     AR898711
      C                   ENDSL
      C                   ENDSR
       ********************************************************************
@@ -263,6 +274,24 @@
      C     MXEXFFK       KLIST
      C                   KFLD                    EXFILE
      C                   KFLD                    EXFSQN
+                                                                                            AR898711
+      ** Access Bank Details                                                                AR898711
+                                                                                            AR898711
+     C                   CALL      'AOBANKR0'                                               AR898711
+     C                   PARM      '*DBERR  '    @RTCD             7                        AR898711
+     C                   PARM      '*FIRST  '    @OPTN             7                        AR898711
+     C     SDBANK        PARM      SDBANK        DSFDY                                      AR898711
+                                                                                            AR898711
+     C                   CALL      'ZDATE2'                                                 AR898711
+     C                   PARM      BJRDNB        ZDAYNO            5 0                      AR898711
+     C                   PARM      'D'           ZZDFIN            1                        AR898711
+     C                   PARM      *ZERO         ZNUM6P            6 0                      AR898711
+     C                   PARM      *BLANKS       ZDATE7            7                        AR898711
+     C                   MOVE      ZNUM6P        ZNUM6A            6                        AR898711
+     C                   MOVE      *BLANKS       CURYMD            8                        AR898711
+     C                   EVAL      CURYMD = '20' + %subst(ZNUM6A: 5:2)                      AR898711
+     C                                     + %subst(ZNUM6A: 3:2)                            AR898711
+     C                                     + %subst(ZNUM6A: 1:2)                            AR898711
 
      C                   ENDSR
       ********************************************************************

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061156           Date 19May23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. MD061532           Date 05Oct23               *
+      *  Prev Amend No. MD061156           Date 19May23               *
+      *                 249385             Date 01Aug22               *
       *                 MD058815           Date 28Sep21               *
       *                 CIR020             Date 02Aug21               *
       *                 MD056644A          Date 26Jul21               *
@@ -59,6 +60,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061532 - Did not generate SETTLE record in DLDOISPD if     *
+      *             Value date, Int Payt date and/or Maturity date    *
+      *             falls on different month. Fix is to include       *
+      *             generation of SETTLE once the Interest Payment    *
+      *             Date falles on different month.                   *
       *  MD061156 - Ensure that SETTLE record will be generated with  *
       *             Maturity falling on holiday and the current ANWD  *
       *             is 1.                                             *
@@ -684,6 +690,17 @@
      C                   ADD       1             WDAYS                                        221119
      C     WDAYS         DOWLT     BJDNWD                                                     221119
      C     WDAYS         ANDLE     WEVCD                                                    MD056644
+      *                                                                                     MD061532
+      ** Include checking of Interest Payment Date and Maturity                             MD061532
+      ** greater than event control date.                                                   MD061532
+     C     WDAYS         ORLT      BJDNWD                                                   MD061532
+     C     WDAYS         ANDGT     WEVCD                                                    MD061532
+     C     UNIPD         ANDLT     BJDNWD                                                   MD061532
+     C     WOTIN         ANDEQ     'OUR'                                                    MD061532
+     C     WDAYS         ORLT      BJDNWD                                                   MD061532
+     C     WDAYS         ANDGT     WEVCD                                                    MD061532
+     C     TNIPD         ANDLT     BJDNWD                                                   MD061532
+     C     WOTIN         ANDEQ     'THEIR'                                                  MD061532
      C                   CALLB     'ZCHKH'                                                    221119
      C                   PARM      WDAYS         @DATE             5 0                        221119
      C                   PARM                    @CCY              3                          221119

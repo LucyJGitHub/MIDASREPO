@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD051746           Date 03May19              */
-/*       Prev Amend No. AR740400           Date 03May19              */
+/*       Last Amend No. MD061832           Date 20Sep23              */
+/*       Prev Amend No. MD051746           Date 03May19              */
+/*                      AR740400           Date 03May19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD045731           Date 27Sep17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061832 - RSTOBJ failed due to IASP.                       */
+/*                - Added check on IASPInstallation                  */
 /*       MD051746 - Added COB Start Date in validating MT941/MT942   */
 /*                   requests                                        */
 /*       AR740400 - MT94x Message Generation schedules expire due to */
@@ -53,6 +56,8 @@
              DCL        VAR(&COBDTE) TYPE(*CHAR) LEN(5)
              DCL        VAR(&DILIB)  TYPE(*CHAR) LEN(7)
              DCL        VAR(&DMLIB)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                /*MD061832*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                         /*MD061832*/
              DCLF       FILE(SDBANKPD)
 
 
@@ -75,6 +80,17 @@
              CHGVAR     VAR(&DPLIB) VALUE(&LIBR *TCAT 'DPLIB')                          /*AR740400*/
              CHGVAR     VAR(&DILIB) VALUE(&LIBR *TCAT 'DILIB')                          /*MD051746*/
              CHGVAR     VAR(&DMLIB) VALUE(&LIBR *TCAT 'DMLIB')                          /*MD051746*/
+                                                                                        /*MD061832*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                        'IASPinstallation' &SVAL1 +
+                        &SVALK2 &SVAL2 &SVALK3 +
+                        &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                        &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                        &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)                         /*MD061832*/
+                                                                                        /*MD061832*/
+/** Check whether system is in IASP environment. */                                     /*MD061832*/
+             CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                           /*MD061832*/
+                                                                                        /*MD061832*/
              CHKOBJ     OBJ(&DPLIB/CBSTART) OBJTYPE(*DTAARA)                            /*AR740400*/
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTCB))                         /*AR740400*/
              DLTDTAARA  DTAARA(&DPLIB/CBSTART)                                          /*AR740400*/
@@ -82,9 +98,16 @@
  CRTCB:      CRTDUPOBJ  OBJ(CBSTAT) FROMLIB(&DPLIB) OBJTYPE(*DTAARA) +
                         TOLIB(&DPLIB) NEWOBJ(CBSTART)                                   /*AR740400*/
 
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                 /*MD061832*/
+             RSTOBJ     OBJ(SDBANKPD) SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/DBICDM) RSTLIB(QTEMP) RSTASP(1)                   /*MD061832*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061832*/
+             ENDDO                                                                      /*MD061832*/
+             ELSE       CMD(DO)                                                         /*MD061832*/
              RSTOBJ     OBJ(SDBANKPD) SAVLIB(&DMLIB)  DEV(*SAVF) +
                          SAVF(&DILIB/DBICDM) RSTLIB(QTEMP)                              /*MD051746*/
              MONMSG     MSGID(CPF0000)
+             ENDDO                                                                      /*MD061832*/
              OVRDBF     FILE(SDBANKPD) TOFILE(QTEMP/SDBANKPD)
              RCVF       RCDFMT(SDBANKD0)
              CHGVAR     VAR(&COBDTE) VALUE(&BJRDNB)

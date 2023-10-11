@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055694*CREATE    Date 09Mar20               *
+      *  Last Amend No. MD058385           Date 28Sep23               *
+      *  Prev Amend No. MD055694*CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058385 - DLC0210A dumps with database error in MD001003.   *
+      *             Remove database error in accessing SDACUSPD file  *
+      *             when empty, so that standard adress will be       *
+      *             displayed.                                        *
       *  MD055694 - SWIFT Changes 2021                                *
       *                                                               *
       *                                                               *
@@ -330,9 +335,10 @@
      C     SDACUS        PARM      SDACUS        DSLDY
 
      C                   IF        PRtnCde2 <> *BLANKS
-     C                   EVAL      DBKEY = 'SDACUSPD'
-     C                   EVAL      DBASE  = 06
-     C                   EXSR      *PSSR
+     C**********         EVAL      DBKEY = 'SDACUSPD'                                       MD058385
+     C**********         EVAL      DBASE  = 06                                              MD058385
+     C**********         EXSR      *PSSR                                                    MD058385
+     C                   CLEAR                   SDACUS                                     MD058385
      C                   ENDIF
       *
      C                   ENDIF

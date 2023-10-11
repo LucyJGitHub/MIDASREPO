@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049123           Date 25May23               *
-      *  Prev Amend No. 252024             Date 03Feb22               *
+      *  Last Amend No. AR854800           Date 10Oct23               *      
+      *  Prev Amend No. MD049123           Date 25May23               *
+      *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
@@ -121,6 +122,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR854800 - Unable to authorise FX deal. Only auto authorise  *
+      *             when Front Office ID is not blank.                *
+      *             (Child: AR854801)                                 *      
       *  MD049123 - Added process for Customer Number formatting.     *
       *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -828,6 +832,7 @@
       ** Set Auto Authorise flag for transactions from TI                                    BUG2789
      C                   If        BGN3ST = 'Y'                                              BUG2789
      C                             AND DDDLST = TIDLST                                       BUG2789
+     C                             AND DDFOID <> *BLANKS                                    AR854800
      C                   Eval      IF_AUTH = 'Y'                                             BUG2789
      C                   Eval      F3AUTH = IF_AUTH                                          BUG2930
      C                   EndIf                                                               BUG2789

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054915           Date 23Sep23               *
-      *  Prev Amend No. MD054897           Date 23Sep23               *
+      *  Last Amend No. AR866295           Date 06Dec11               *
+      *  Prev Amend No. MD054915           Date 23Sep23               *
+      *                 MD054897           Date 23Sep23               *
       *                 MD035417           Date 22Aug23               *
       *                 AR1076352          Date 15Jun23               *
       *                 MD053935           Date 08Jun23               *
@@ -133,6 +134,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR866295 - Loan reminder with final maturity                 *
+      *             Validation on loan rollover for field 'New inte-  *
+      *             rest payment date' should be less than maturity   *
+      *             date of the loan (Child: AR866296)                *
       *  MD054915 - Serious midas error occurred when reversing new   *
       *             spread. Use the old rate of the loan to calculate *
       *             the effective interest when reversing the new     *
@@ -4569,9 +4574,11 @@
       *
       **  Must not be later than the maturity date.
       *
-     C     ZDAYNO        WHENGT    MDAT
+     C*****ZDAYNO        WHENGT    MDAT                                                     AR866295
+     C     ZDAYNO        WHENGE    MDAT                                                     AR866295
      C     MDAT          ANDNE     0
-     C     ZDAYNO        ANDGT     WNMDT
+     C*****ZDAYNO        ANDGT     WNMDT                                                    AR866295
+     C     ZDAYNO        ANDGE     WNMDT                                                    AR866295
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDNIPDB'
      C                   EVAL      MsgIDArr(Idx) = 'LEV0607'

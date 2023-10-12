@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD059426           Date 20Jan22               *
-      *  Prev Amend No. 251863             Date 22May20               *
+      *  Last Amend No. MD054983           Date 12Oct23               *
+      *  Prev Amend No. MD059426           Date 20Jan22               *
+      *                 251863             Date 22May20               *
       *                 248024             Date 22May20               *
       *                 MD057657           Date 09Mar21               *
       *                 MD046248           Date 27Oct17               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054983 - Incorrect calculation of rate with margin points. *
       *  MD059426 - Exchange rate and amounts do not agree.           *
       *  248024 - Change in processing to determine 'Normally Quoted  *
       *           Decimal Places' for Forward Points. Applied fix     *
@@ -1047,6 +1049,8 @@
       *
      C     W@MDIN        IFNE      'M'
      C     W@MDIN        ANDNE     'D'
+     C     W@MDIN        OREQ      'M'                                                      MD054983
+     C     @@MGPT        ANDNE     0                                                        MD054983
      C                   MOVE      'X'           W@MDIN
      C                   END
       *

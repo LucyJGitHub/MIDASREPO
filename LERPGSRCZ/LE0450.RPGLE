@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 230214             Date 03Jul23               *
-      *  Prev Amend No. AR987344           Date 18Sep23               *
+      *  Prev Amend No. AR316457           Date 30Mar10               *
+      *  Prev Amend No. 230214             Date 03Jul23               *
+      *                 AR987344           Date 18Sep23               *
       *                 MD015646           Date 18Sep23               *
       *                 AR947177           Date 18Sep23               *
       *                 249385             Date 01Aug22               *
@@ -440,6 +441,11 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR316457 - Next interest payment date does not consider      *
+      *             holidays.                                         *
+      *             Move value of SCCYA or PSCYA to ZCCY only when    *
+      *             it has values to prevent incorrect computation of *
+      *             the next interest payment date.                   *
       *  230214 - Reset CBLI and TLXI in RPDTUP and INDTUP regardless *
       *           of the rundate as long as the event is actioned     *
       *           within the day.                                     *
@@ -18072,9 +18078,17 @@ C    C                   ENDIF                                                  
      C     PTYP          ANDNE     67
      C     PTYP          ANDNE     69
      C     PTYP          ANDNE     72
+      *                                                                                     AR316457
+     C     SCCYA         IFNE      *BLANKS                                                  AR316457
      C                   MOVE      SCCYA         ZCCY
+     C                   ENDIF                                                              AR316457
+      *                                                                                     AR316457
      C                   ELSE
+      *                                                                                     AR316457
+     C     PSCYA         IFNE      *BLANKS                                                  AR316457
      C                   MOVE      PSCYA         ZCCY
+     C                   ENDIF                                                              AR316457
+      *                                                                                     AR316457
      C                   ENDIF
      C                   ENDIF
       *                                                                   S01195

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR923246           Date 15Mar12               *      
-      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. AR923246           Date 15Mar12               *
+      *                 MD034915           Date 26Aug20               *
       *                 MD055322           Date 15May20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD056223           Date 15Jul20               *
@@ -428,6 +429,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
       *             Prevent data corruption for MLNR field on MCLONCL *
       *             when written. (Child: AR923248)                   *      

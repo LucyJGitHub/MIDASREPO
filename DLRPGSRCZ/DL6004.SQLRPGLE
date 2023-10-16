@@ -17,8 +17,9 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD055146           Date 04Feb20               *
       *                 MD054544           Date 04Oct19               *
       *                 MD054479           Date 27Sep19               *
       *                 MD054107           Date 11Sep19               *
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *

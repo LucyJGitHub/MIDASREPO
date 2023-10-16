@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051713           Date 08Sep18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD051713           Date 08Sep18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -48,6 +49,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD051713 - Incorrect rates are displayed on OIS Compounding  *
       *             Interest Rate Enquiry screen.                     *
       *  MD046248 - Finastra Rebranding                               *

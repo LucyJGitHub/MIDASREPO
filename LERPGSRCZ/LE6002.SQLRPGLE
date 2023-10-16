@@ -10,12 +10,17 @@
       *                                                               *
       *  (c)Finastra International Limited 2016                       *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD054017           Date 04Sep19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD054017           Date 04Sep19               *
       *                 CER050  *CREATE    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *

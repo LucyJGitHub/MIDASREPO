@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -69,6 +70,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *

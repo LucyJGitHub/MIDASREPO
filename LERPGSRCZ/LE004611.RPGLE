@@ -19,8 +19,9 @@
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD056838           Date 01Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -48,6 +49,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -272,6 +277,9 @@
      D ZZBEG           S              5  0
      D ZZEND           S              5  0
      D ZZCALC          S              1A
+     D INT6DY          S             15P 9 INZ(0)                                           MD058815
+     D ZZNLEAP         S              5P 0 INZ(0)                                           MD058815
+     D ZZLEAP          S              5P 0 INZ(0)                                           MD058815
                                                                                               262600
       ** Parameters for calling GLINTC                                                        262600
      D pZIBEG          S              5  0                                                    262600
@@ -2178,6 +2186,9 @@
      C                   PARM                    ZZBEG
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
+     C                   PARM      *ZERO         INT6DY                                     MD058815
+     C                   PARM      *ZERO         ZZNLEAP                                    MD058815
+     C                   PARM      *ZERO         ZZLEAP                                     MD058815
 
      C                   ENDSR
       *****************************************************************

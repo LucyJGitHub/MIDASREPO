@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 224410             Date 10Mar20               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. 224410             Date 10Mar20               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR996895           Date 25Nov12               *
       *                 263666             Date 01Feb10               *
@@ -54,6 +55,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  224410 - When gap rate is back valued before the last rework *
       *           date, the intial date is not being accrued.         *
       *         - Applied for MD-55379.                               *
@@ -753,17 +758,25 @@
      C***                     No. of Days in Year * 100
      C*
      C           ZZCALC    IFEQ '6'                                       163136
-     C           GHCURB    MULT INT6DY    WSTOP                           163136
+     C********** GHCURB    MULT INT6DY    WSTOP                                      163136 MD058815
+     C           GHCURB    MULT NLEAP     WSTOP1 309                                        MD058815
+     C                     MULT WSCBSR    WSTOP1                                            MD058815
+     C           WSTOP     DIV  36500     WSINT1 309                                        MD058815
+     C           GHCURB    MULT LEAP50    WSTOP2 309                                        MD058815
+     C                     MULT WSCBSR    WSTOP2                                            MD058815
+     C           WSTOP     DIV  36600     WSINT2 309                                        MD058815
+     C           WSINT1    ADD  WSINT2    WSINT     H                                       MD058815
      C                     ELSE                                           163136
       *                                                                   163136
      C           GHCURB    MULT ZZINDY    WSTOP  309
       *                                                                   163136
-     C                     END                                            163136
+     C**********           END                                                       163136 MD058815
       *                                                                   163136
      C                     MULT WSCBSR    WSTOP
      C*
      C           @@DAYO    MULT 100       WSBOT   50
      C           WSTOP     DIV  WSBOT     WSINT     H
+     C                     ENDIF                                                            MD058815
      C*
      C**  Accumulate Interest and set next Start Date
      C*

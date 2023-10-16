@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060244           Date 11Jul22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD037922           Date 18Aug16               *
+      *  Prev Amend No. MD060244           Date 11Jul22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037922 - During reject action, system validates the values *
+      *             of the facility transactions. Removed validation  *
+      *             during reject action.                             *
       *  MD060244 - Missing LEFCIPVU module delivery (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -867,6 +871,7 @@
      C**********                                 + InfData + RegData + InfData       CER001 BUG10093
      C**********                                 + FCIPNotes + InfData             BUG10093 BUG13174
      C                                           + FCIPNotes + DDPATH                       BUG13174
+     C                                           + @ACTRV                                   MD037922
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
      C                                           + InfData                                  BUG13174
@@ -1419,7 +1424,8 @@
       *                                                                                       CER001
       ** Validate extended details                                                            CER001
       *                                                                                       CER001
-     C                   IF        ULX004  = 'Y'                                              CER001
+     C**********         IF        ULX004  = 'Y'                                     CER001 MD037922
+     C                   IF        ULX004  = 'Y' and @ACTRV <> 'Y'                          MD037922
      C                   EXSR      ValidateLUX                                                CER001
       *                                                                                       CER001
       ** If error in validation, fail this input                                              CER001

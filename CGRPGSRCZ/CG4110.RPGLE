@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD051554           Date 28Sep18               *
-      *  Prev Amend No. MD057008           Date 27Oct20               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 MD057008           Date 27Oct20               *
       *                 MD056543           Date 15Sep20               *
       *                 260405             Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
@@ -191,6 +192,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD051554 - Leap Year Fix for interest calculation basis to   *
       *             be used for 1st Jan should not be present in      *
       *             FRA/IRS module                                    *

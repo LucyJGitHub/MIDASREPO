@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR850735           Date 12Oct23               *
-      *  Prev Amend No. MD060620           Date 25May23               *
+      *  Last Amend No. AR1083284          Date 16Oct23               *
+      *  Prev Amend No. AR850735           Date 12Oct23               *
+      *                 MD060620           Date 25May23               *
       *                 MD059368           Date 17Dec21               *
       *                 MD057917           Date 02Jul21               *
       *                 CLE172             Date 01Oct20               *
@@ -138,6 +139,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1083284 - Include N as valid negative indicator.           *
+      *              (Child: AR1083285)                               *
       *  AR850735 - Incorrect validation treatment of withholding tax *
       *             on repayment type 3. Prevent input of invalid     *
       *             values for repayment type. Pattern after part of  *
@@ -2711,8 +2714,10 @@
       *
      C     DDNEGV        IFNE      *BLANK
      C     DDNEGV        ANDNE     'Y'
+     C     DDNEGV        ANDNE     'N'                                                     AR1083284
      C     DDMARG        OREQ      *BLANKS
      C     DDNEGV        ANDNE     *BLANK
+     C     DDNEGV        ANDNE     'N'                                                     AR1083284
      C                   MOVE      'N'           DDNEGVOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDMARG'      FldNamXAr(Idx)

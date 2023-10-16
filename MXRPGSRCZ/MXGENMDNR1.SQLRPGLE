@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061841           Date 04Oct23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061841 - Export a Format to Meridian function is failing   *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CMX001 - Meridian Export                                     *
@@ -225,7 +227,8 @@
      C/END-EXEC                                                                             MD056612
                                                                                             MD056612
      C/EXEC SQL                                                                             MD056612
-     C+ fetch prior from FCursor into :MXEXFF                                               MD056612
+     C***+*fetch prior from FCursor into :MXEXFF                                   MD056612 MD061841
+     C+ fetch next from FCursor into :MXEXFF                                                MD061841
      C/END-EXEC                                                                             MD056612
      C**********         IF        %Error                                                   MD056612
      C                   IF        SQLCODE < 0                                              MD056612
@@ -298,7 +301,8 @@
       * Get next record
      C*****MXEXFFK       READE(E)  MXEXFFPD                                     *           MD056612
      C/EXEC SQL                                                                             MD056612
-     C+ fetch prior from FCursor into :MXEXFF                                               MD056612
+     C***+*fetch prior from FCursor into :MXEXFF                                   MD056612 MD061841
+     C+ fetch next from FCursor into :MXEXFF                                                MD061841
      C/END-EXEC                                                                             MD056612
      C**********         IF        %Error                                                   MD056612
      C                   IF        SQLCODE < 0                                              MD056612

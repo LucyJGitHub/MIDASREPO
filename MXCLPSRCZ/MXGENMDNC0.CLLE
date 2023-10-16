@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD061841           Date 04Oct23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*      Prev Amend No. BUG2617  *CREATE    Date 20May04              */
+/*                     BUG2617  *CREATE    Date 20May04              */
 /*                                         Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD061841 - Export a Format to Meridian function is failing  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG2617- Conversion of MXGENMDN to comply with webfacing.   */
 /*                                                                   */
@@ -35,7 +37,8 @@
              DCL        VAR(&DATE) TYPE(*DEC) LEN(6 0)
              DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GENTYPE) TYPE(*CHAR) LEN(11)
-             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7) VALUE(COMMAND)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(7) VALUE(COMMAND) */                 /*MD061841*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10) VALUE(COMMAND)                   /*MD061841*/
              DCL        VAR(&TOSTRMFILE) TYPE(*CHAR) LEN(5000)
              DCL        VAR(&RETURNMSG) TYPE(*CHAR) LEN(75)
              DCLF       FILE(MXGENMDNDF)
@@ -73,23 +76,27 @@
              CHGVAR     VAR(&TOSTRMFILE) VALUE(&STRMFL)
              CHGVAR     VAR(&IN91) VALUE('0')
              CHGVAR     VAR(&IN92) VALUE('0')
+             CHGVAR     VAR(&RETURNMSG) VALUE(' ')
  
              CALL       PGM(MXGENMDN_V) PARM(&FORMAT &MDNNAM +
                             &TOSTRMFILE &PREFLD &SUBMSG &MODE +
                             &TYPMTC &RETURNMSG)
  
-             IF         COND(&RETURNMSG *NE *BLANK) THEN(DO)
+/**********  IF         COND(&RETURNMSG *NE *BLANK) THEN(DO)         */                 /*MD061841*/
+             IF         COND(&RETURNMSG *NE ' ') THEN(DO)                               /*MD061841*/
                CHGVAR     VAR(&ERRMSG) VALUE(&RETURNMSG)
                CHGVAR     VAR(&IN91) VALUE('1')
                CHGVAR     VAR(&IN92) VALUE('1')
                GOTO       CMDLBL(MAIN)
              ENDDO
  
-               CALL  PGM(MXGENMDNC1) PARM(&FORMAT &MDNNAM +
-                        &TOSTRMFILE &PREFLD &GENTYPE &MODE +
-                        &TYPMTC)
- 
-             IF         COND(&RETURNMSG *NE *BLANK) THEN(DO)
+/**********    CALL  PGM(MXGENMDNC1) PARM(&FORMAT &MDNNAM +          */                 /*MD061841*/
+/**********               &TOSTRMFILE &PREFLD &GENTYPE &MODE &TYPMTC)*/                 /*MD061841*/
+               CALL  PGM(MXGENMDN) PARM(&FORMAT &MDNNAM +
+                          &TOSTRMFILE &PREFLD &GENTYPE &MODE &TYPMTC +
+                          &RETURNMSG)                                                   /*MD061841*/
+/**********  IF         COND(&RETURNMSG *NE *BLANK) THEN(DO)         */                 /*MD061841*/
+             IF         COND(&RETURNMSG *NE ' ') THEN(DO)                               /*MD061841*/
                CHGVAR     VAR(&ERRMSG) VALUE(&RETURNMSG)
                CHGVAR     VAR(&IN92) VALUE('1')
                GOTO       CMDLBL(MAIN)

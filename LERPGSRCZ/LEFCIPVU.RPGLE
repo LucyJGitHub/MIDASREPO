@@ -27,7 +27,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD037922           Date 18Aug16               *
+      *  Last Amend No. MD037922           Date 16Oct23               *
       *  Prev Amend No. MD060244           Date 11Jul22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
@@ -871,7 +871,6 @@
      C**********                                 + InfData + RegData + InfData       CER001 BUG10093
      C**********                                 + FCIPNotes + InfData             BUG10093 BUG13174
      C                                           + FCIPNotes + DDPATH                       BUG13174
-     C                                           + @ACTRV                                   MD037922
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
      C                                           + InfData                                  BUG13174

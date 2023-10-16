@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055891           Date 01Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061538           Date 26Sep23               *
+      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR674247           Date 18Dec14               *
       *                 CSC051             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD061538 - Call new program to validate user defined run     *
+      *             conditions                                        *
+      *           - Applied for MD-61562                              *
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR674247 - Introduce calendar year end run condition 81.     *
@@ -207,24 +211,42 @@
       ***        ANRUNC    CASEQ'xx'      RCONxx
      C     ANRUNC        CASEQ     '80'          RCON80
      C     ANRUNC        CASEQ     '81'          RCON81
-     C     ANRUNC        CASEQ     '82'          RCON82
-     C     ANRUNC        CASEQ     '83'          RCON83
-     C     ANRUNC        CASEQ     '84'          RCON84
-     C     ANRUNC        CASEQ     '85'          RCON85
-     C     ANRUNC        CASEQ     '86'          RCON86
-     C     ANRUNC        CASEQ     '87'          RCON87
-     C     ANRUNC        CASEQ     '88'          RCON88
-     C     ANRUNC        CASEQ     '89'          RCON89
-     C     ANRUNC        CASEQ     '90'          RCON90
-     C     ANRUNC        CASEQ     '91'          RCON91
-     C     ANRUNC        CASEQ     '92'          RCON92
-     C     ANRUNC        CASEQ     '93'          RCON93
-     C     ANRUNC        CASEQ     '94'          RCON94
-     C     ANRUNC        CASEQ     '95'          RCON95
-     C     ANRUNC        CASEQ     '96'          RCON96
-     C     ANRUNC        CASEQ     '97'          RCON97
-     C     ANRUNC        CASEQ     '98'          RCON98
-     C     ANRUNC        CASEQ     '99'          RCON99
+     C*****ANRUNC        CASEQ     '82'          RCON82                                     MD061538
+     C     ANRUNC        CASEQ     '82'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '83'          RCON83                                     MD061538
+     C     ANRUNC        CASEQ     '83'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '84'          RCON84                                     MD061538
+     C     ANRUNC        CASEQ     '84'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '85'          RCON85                                     MD061538
+     C     ANRUNC        CASEQ     '85'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '86'          RCON86                                     MD061538
+     C     ANRUNC        CASEQ     '86'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '87'          RCON87                                     MD061538
+     C     ANRUNC        CASEQ     '87'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '88'          RCON88                                     MD061538
+     C     ANRUNC        CASEQ     '88'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '89'          RCON89                                     MD061538
+     C     ANRUNC        CASEQ     '89'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '90'          RCON90                                     MD061538
+     C     ANRUNC        CASEQ     '90'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '91'          RCON91                                     MD061538
+     C     ANRUNC        CASEQ     '91'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '92'          RCON92                                     MD061538
+     C     ANRUNC        CASEQ     '92'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '93'          RCON93                                     MD061538
+     C     ANRUNC        CASEQ     '93'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '94'          RCON94                                     MD061538
+     C     ANRUNC        CASEQ     '94'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '95'          RCON95                                     MD061538
+     C     ANRUNC        CASEQ     '95'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '96'          RCON96                                     MD061538
+     C     ANRUNC        CASEQ     '96'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '97'          RCON97                                     MD061538
+     C     ANRUNC        CASEQ     '97'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '98'          RCON98                                     MD061538
+     C     ANRUNC        CASEQ     '98'          RCON8299                                   MD061538
+     C*****ANRUNC        CASEQ     '99'          RCON99                                     MD061538
+     C     ANRUNC        CASEQ     '99'          RCON8299                                   MD061538
      C                   ENDCS
      C**********         READ      CBRUNCL1                               90                MD055891
      C/EXEC SQL                                                                             MD055891
@@ -705,76 +727,207 @@
      C                   ENDIF
      C                   ENDSR
       *
-     C     RCON82        BEGSR
-      /COPY CBCPYSRC,CB0800C82
-     C                   ENDSR
-      *
-     C     RCON83        BEGSR
-      /COPY CBCPYSRC,CB0800C83
-     C                   ENDSR
-      *
-     C     RCON84        BEGSR
-      /COPY CBCPYSRC,CB0800C84
-     C                   ENDSR
-      *
-     C     RCON85        BEGSR
-      /COPY CBCPYSRC,CB0800C85
-     C                   ENDSR
-      *
-     C     RCON86        BEGSR
-      /COPY CBCPYSRC,CB0800C86
-     C                   ENDSR
-      *
-     C     RCON87        BEGSR
-      /COPY CBCPYSRC,CB0800C87
-     C                   ENDSR
-      *
-     C     RCON88        BEGSR
-      /COPY CBCPYSRC,CB0800C88
-     C                   ENDSR
-      *
-     C     RCON89        BEGSR
-      /COPY CBCPYSRC,CB0800C89
-     C                   ENDSR
-      *
-     C     RCON90        BEGSR
-      /COPY CBCPYSRC,CB0800C90
-     C                   ENDSR
-      *
-     C     RCON91        BEGSR
-      /COPY CBCPYSRC,CB0800C91
-     C                   ENDSR
-      *
-     C     RCON92        BEGSR
-      /COPY CBCPYSRC,CB0800C92
-     C                   ENDSR
-      *
-     C     RCON93        BEGSR
-      /COPY CBCPYSRC,CB0800C93
-     C                   ENDSR
-      *
-     C     RCON94        BEGSR
-      /COPY CBCPYSRC,CB0800C94
-     C                   ENDSR
-      *
-     C     RCON95        BEGSR
-      /COPY CBCPYSRC,CB0800C95
-     C                   ENDSR
-      *
-     C     RCON96        BEGSR
-      /COPY CBCPYSRC,CB0800C96
-     C                   ENDSR
-      *
-     C     RCON97        BEGSR
-      /COPY CBCPYSRC,CB0800C97
-     C                   ENDSR
-      *
-     C     RCON98        BEGSR
-      /COPY CBCPYSRC,CB0800C98
-     C                   ENDSR
-      *
-     C     RCON99        BEGSR
-      /COPY CBCPYSRC,CB0800C99
-     C                   ENDSR
+      /EJECT                                                                                MD061538
+      *******************************************************************                   MD061538
+      *                                                                 *                   MD061538
+      * RCON8299  - Process run conditions 82 to 99                     *                   MD061538
+      * Calls     : None                                                *                   MD061538
+      * Called by : Main                                                *                   MD061538
+      *                                                                 *                   MD061538
+      *******************************************************************                   MD061538
+     C     RCON8299      BEGSR                                                              MD061538
+                                                                                            MD061538
+     C                   CALL      'UTCHKOBJ'                                               MD061538
+     C                   PARM      *BLANK        RtnCode          10                        MD061538
+     C                   PARM      'XXRCON8299'  OBjName          10                        MD061538
+     C                   PARM      '*LIBL'       ObjLib           10                        MD061538
+     C                   PARM      '*PGM   '     ObjType           7                        MD061538
+     C                   PARM                    ChkMbr           10                        MD061538
+                                                                                            MD061538
+      ** Only call program if it does exist in the librry list                              MD061538
+     C                   IF        RtnCode = 'Exist'                                        MD061538
+                                                                                            MD061538
+     C                   CALL      'XXRCON8299'                                             MD061538
+     C                   PARM                    ANRUNC                                     MD061538
+     C                   PARM      *BLANKS       RUN                                        MD061538
+     C                   PARM      'F'           RTN                                        MD061538
+                                                                                            MD061538
+     C     RTN           IFEQ      'F'                                                      MD061538
+     C     *LOCK         IN        LDA                                                      MD061538
+     C                   MOVEL     'RCON8299'    DBFILE                                     MD061538
+     C                   Z-ADD     99            DBASE                                      MD061538
+     C                   MOVEL     'CALL'        DBKEY                                      MD061538
+     C                   OUT       LDA                                                      MD061538
+     C                   EXSR      *PSSR                                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C                   SELECT                                                             MD061538
+     C     ANRUNC        WHENEQ    '82'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(82)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '83'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(83)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '84'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(84)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '85'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(85)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '86'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(86)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '87'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(87)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '88'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(88)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '89'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(89)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '90'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(90)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '91'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(91)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '92'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(92)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '93'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(93)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '94'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(94)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '95'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(95)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '96'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(96)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '97'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(97)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '98'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(98)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C     ANRUNC        WHENEQ    '99'                                                     MD061538
+     C     RUN           IFEQ      'Y'                                                      MD061538
+     C                   MOVEA     'Y'           FRQ(99)                                    MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C                   ENDSL                                                              MD061538
+                                                                                            MD061538
+     C                   ENDIF                                                              MD061538
+                                                                                            MD061538
+     C                   ENDSR                                                              MD061538
+      *******************************************************************                   MD061538
+     C*****RCON82        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C82                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON83        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C83                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON84        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C84                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON85        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C85                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON86        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C86                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON87        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C87                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON88        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C88                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON89        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C89                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON90        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C90                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON91        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C91                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON92        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C92                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON93        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C93                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON94        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C94                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON95        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C95                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON96        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C96                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON97        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C97                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON98        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C98                                                              MD061538
+     C**********         ENDSR                                                              MD061538
+      **********                                                                            MD061538
+     C*****RCON99        BEGSR                                                              MD061538
+      *COPY*CBCPYSRC,CB0800C99                                                              MD061538
+     C**********         ENDSR                                                              MD061538
 **  CPY@
 (c) Finastra International Limited 2001

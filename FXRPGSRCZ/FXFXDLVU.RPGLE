@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR854800           Date 10Oct23               *      
-      *  Prev Amend No. MD049123           Date 25May23               *
+      *  Last Amend No. AR852765           Date 17Oct23               *      
+      *  Prev Amend No. AR854800           Date 10Oct23               *      
+      *                 MD049123           Date 25May23               *
       *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
@@ -122,6 +123,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR852765 - Delay getting deal number for the second leg of   *
+      *             Swap Deal. (Child: AR852766)                      *      
       *  AR854800 - Unable to authorise FX deal. Only auto authorise  *
       *             when Front Office ID is not blank.                *
       *             (Child: AR854801)                                 *      
@@ -376,6 +379,16 @@
       * Array to hold Commitment Job Names                                                    CSC022
      D CmtJobNArr      S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
+      ** Array to hold dlyjob command                                                       AR852765
+     D CmdDlyJob       S             13A                                                    AR852765
+                                                                                            AR852765
+      ** Swap Flags                                                                         AR852765
+     D @SwapFlag62     S              2A                                                    AR852765
+     D @SwapFlag72     S              2A                                                    AR852765
+     D @SwapFlag82     S              2A                                                    AR852765
+     D @SwapFlag92     S              2A                                                    AR852765
+     D @Length         S             15  5                                                  AR852765
+                                                                                            AR852765
       ** Commitment Control Data Area                                                         CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  wComitJob              4    103                                                       CSC022
@@ -1756,6 +1769,26 @@
      C                             OR DDDLNO = *zeros
 
      C                   RESET                   ReturnCode
+      *                                                                                     AR852765
+      ** If second leg of Swap put a delay so that it gets                                  AR852765
+      ** the higher midas Deal number                                                       AR852765
+      *                                                                                     AR852765
+     C                   EVAL      @SwapFlag62 = %SUBST(DDFOID:6:2)                         AR852765
+     C                   EVAL      @SwapFlag72 = %SUBST(DDFOID:7:2)                         AR852765
+     C                   EVAL      @SwapFlag82 = %SUBST(DDFOID:8:2)                         AR852765
+     C                   EVAL      @SwapFlag92 = %SUBST(DDFOID:9:2)                         AR852765
+     C                   EVAL      @length = 13                                             AR852765
+      *                                                                                     AR852765
+     C     @SwapFlag62   IFEQ      'SW'                                                     AR852765
+     C     @SwapFlag72   OREQ      'SW'                                                     AR852765
+     C     @SwapFlag82   OREQ      'SW'                                                     AR852765
+     C     @SwapFlag92   OREQ      'SW'                                                     AR852765
+     C                   EVAL      CmdDlyJob = 'DLYJOB DLY(5)'                              AR852765
+     C                   CALL      'QCMDEXC'                                                AR852765
+     C                   PARM                    CmdDlyJob                                  AR852765
+     C                   PARM                    @Length                                    AR852765
+     C                   ENDIF                                                              AR852765
+      *
      C                   CALLB     'CAGETNXTDL'
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1

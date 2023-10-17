@@ -12,7 +12,7 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Prev Amend No. AR316457           Date 16Oct23               *
+      *  Last Amend No. AR316457           Date 16Oct23               *
       *  Prev Amend No. 230214             Date 03Jul23               *
       *                 AR987344           Date 18Sep23               *
       *                 MD015646           Date 18Sep23               *

@@ -18,8 +18,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD021112           Date 27Apr22               *
-      *  Prev Amend No. AR929296           Date 25Apr22               *
+      *  Last Amend No. AR834072           Date 10Oct23               *
+      *  Prev Amend No. MD021112           Date 27Apr22               *
+      *                 AR929296           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD055146           Date 04Feb20               *
@@ -84,6 +85,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR834072 - Incorrect interest on loan principal transfer     *
+      *             confirmation. Reformat details & compute interest *
+      *             from transfer date to NIDT or to MDAT if no NIDT. *
+      *             (Child: AR834073)                                 *
       *  MD021112 - LE1160P1 is being generated even if there are no  *
       *             PI events. Correct the usage of indicators to     *
       *             avoid incorrect generation of LE1160P1.           *
@@ -272,6 +277,7 @@
      F*     61        INDICATOR FOR GUARANTEES ISSUED IS SWITCHED ON
      F*     62        PRTF LE1160P1 open                                  119889
      F*     63        PRTF LE1160P2 open                                  119889
+     F*     64        Zero end date                                                         AR834072
      F*     70        BRANCH NAMES TO BE PRINTED
      F*     71        DIFFERENCE IN FILE CONTROLS
      F*     72        AT LEAST ONE TELEX GENERATED
@@ -302,6 +308,7 @@
      E                    #NSS      200 13 0             Nostro Sorted                      CLE075BO
      E                    #NSK      200  5               Nostro Cache Key                   CLE075BO
       /COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDATE9Z1                                                                 AR834072
      L/EJECT
      L*LE1160P1*42FL*42OL***                                              100663
      I/EJECT
@@ -324,6 +331,7 @@
      I                                       25  260PRSQ
      I                                       27  28 BRTT
      I                                    P  29  340RTSP
+     I                                    P  29  347RTSP1                                   AR834072
      I                                       35  37 CCY
      I                                    P  38  440PRAM
      I                                    P  45  510INTA
@@ -350,6 +358,7 @@
      I                                       85 208 INSTR
      I                                      209 209 LAIN
      I                                    P 210 2150BRTE
+     I                                    P 210 2157BRTE1                                   AR834072
      I                                      216 216 SPIN
      I                                      217 2170CALC
      I                                      218 218 WTIN
@@ -460,7 +469,10 @@
      I**********                            437 4420COCUCL                                    CSD027
      I**********                            443 4480RECECL                                    CSD027
      I                                       12  17 CNUMCL                                    CSD027
+     I                                    P  31  330MDAT                                    AR834072
+     I                                      206 206 RDFC                                    AR834072
      I                                      290 295 OLNOCL                                    CSD027
+     I                                    P 306 3080NIDT                                    AR834072
      I                                      437 442 COCUCL                                    CSD027
      I                                      443 448 RECECL                                    CSD027
      I                                      877 911 BTB1                  088913
@@ -636,6 +648,11 @@
      I                                       70  75 O@NWRK                119889
      I                                       76  76 O@MGSG                119889
      I                                       77  80 O@MGST                119889
+      *                                                                                     AR834072
+     I/COPY ZSRSRC,ZDATE9Z2                                                                 AR834072
+     I/COPY ZSRSRC,ZINTDYZ1                                                                 AR834072
+     I/COPY ZSRSRC,ZDAT10Z1                                                                 AR834072
+      *                                                                                     AR834072
      C/EJECT
      C                     MOVEACPY@      BIS@   80
      C*
@@ -2882,6 +2899,7 @@
      C                     ENDSR                                          CEU004
      C** Copy member ZDATE2Z4 for the date conversion subroutine
      C/COPY ZSRSRC,ZDATE2Z4
+     C/COPY ZSRSRC,GLINTCZ1                                                                 AR834072
      C/EJECT
      C*****************************************************************
      C*  *PSSR    - Handles abnormal error conditions                 *
@@ -2917,15 +2935,57 @@
       ** Calculate effective interest rate                                157056
       *                                                                   157056
      C                     Z-ADD0         W#RATE                          157056
+     C                     Z-ADD0         W#INTR 117                                        AR834072
      C                     SELEC                                          157056
      C           SPIN      WHEQ 'A'                                       157056
      C           BRTE      ADD  RTSP      W#RATE 110                      157056
+     C           BRTE1     ADD  RTSP1     W#INTR                                            AR834072
      C           SPIN      WHEQ 'S'                                       157056
      C           BRTE      SUB  RTSP      W#RATE                          157056
+     C           BRTE1     SUB  RTSP1     W#INTR                                            AR834072
      C           SPIN      WHEQ 'P'                                       157056
      C           RTSP      DIV  100       WRK132 132                      157056
      C           WRK132    MULT BRTE      W#RATE    H                     157056
+     C           RTSP1     DIV  100       WRK133 132                                        AR834072
+     C           WRK133    MULT BRTE1     W#INTR    H                                       AR834072
      C                     ENDSL                                          157056
+      *                                                                                     AR834072
+      ** Calculate interest amount                                                          AR834072
+      *                                                                                     AR834072
+     C                     Z-ADD0         WINTO  130                                        AR834072
+     C                     SETOF                     64                                     AR834072
+     C           AMTP      IFEQ 'PF'                                                        AR834072
+      *                                                                                     AR834072
+     C                     MOVELROLN      CLKEY3  7                                         AR834072
+     C                     MOVE 'A'       CLKEY3                                            AR834072
+     C           CLKEY3    CHAINCLOAN                99                                     AR834072
+      *                                                                                     AR834072
+     C                     Z-ADDVDAT      ZIBEG                                             AR834072
+     C                     Z-ADDCALC      ZICALC                                            AR834072
+     C                     Z-ADDPRAM      ZIAMT                                             AR834072
+     C                     Z-ADDW#INTR    ZIRATE                                            AR834072
+      *                                                                                     AR834072
+     C           NIDT      IFNE 0                                                           AR834072
+     C                     Z-ADDNIDT      ZIEND                                             AR834072
+     C                     ELSE                                                             AR834072
+     C                     Z-ADDMDAT      ZIEND                                             AR834072
+     C                     ENDIF                                                            AR834072
+      *                                                                                     AR834072
+     C           ZIEND     IFEQ 0                                                           AR834072
+     C                     SETON                     64                                     AR834072
+     C                     ENDIF                                                            AR834072
+      *                                                                                     AR834072
+     C           *IN64     IFEQ '0'                                                         AR834072
+     C                     EXSR GLINTC                                                      AR834072
+      *                                                                                     AR834072
+     C           RDFC      IFEQ 'Y'                                                         AR834072
+     C                     Z-ADDZINTR     WINTO                                             AR834072
+     C                     ELSE                                                             AR834072
+     C                     Z-ADDZINTR     WINTO     H                                       AR834072
+     C                     ENDIF                                                            AR834072
+     C                     ENDIF                                                            AR834072
+      *                                                                                     AR834072
+     C                     ENDIF                                                            AR834072
       *                                                                   119889
       ** Processing type if 'PF'                                          119889
       *                                                                   119889
@@ -3261,6 +3321,9 @@
      C                     ENDSR                                                            CLE075BO
       /EJECT                                                                                  CLE031
      C/COPY ZSRSRC,ZCONVZ1                                                                    CLE031
+     C/COPY ZSRSRC,ZINTDYZ2                                                                 AR834072
+     C/COPY ZSRSRC,ZDATE9Z3                                                                 AR834072
+     C/COPY ZSRSRC,ZDAT10Z2                                                                 AR834072
      O/EJECT
      OLENXTAA D        U4 01
      O                                    1 'H'
@@ -3742,14 +3805,23 @@
      O        D 11     13 16                                              119889
      O       OR 11     13 17                                              119889
      O                                   26 'WE CONFIRM TRANSFER OF '     119889
-     O                    17             45 'PRINCIPAL FROM LOAN'         119889
-     O                    16             43 'PRINCIPAL TO LOAN'           119889
-     O                    17   LNRF      52                               119889
-     O                    16   LNRF      50                               119889
-     O                    17             76 'WITH THE FOLLOWING DETA'     119889
-     O                    17             80 'ILS:'                        119889
-     O                    16             74 'WITH THE FOLLOWING DETA'     119889
-     O                    16             78 'ILS:'                        119889
+     O**********          17             45 'PRINCIPAL FROM LOAN'                    119889 AR834072
+     O**********          16             43 'PRINCIPAL TO LOAN'                      119889 AR834072
+     O**********          17   LNRF      52                                          119889 AR834072
+     O**********          16   LNRF      50                                          119889 AR834072
+     O**********          17             76 'WITH THE FOLLOWING DETA'                119889 AR834072
+     O**********          17             80 'ILS:'                                   119889 AR834072
+     O**********          16             74 'WITH THE FOLLOWING DETA'                119889 AR834072
+     O**********          16             78 'ILS:'                                   119889 AR834072
+      *                                                                                     AR834072
+     O                    17             43 'PRINCIPAL TO LOAN'                             AR834072
+     O                    16             45 'PRINCIPAL FROM LOAN'                           AR834072
+     O                    17   ROLN      50                                                 AR834072
+     O                    16   ROLN      52                                                 AR834072
+     O                    17             74 'WITH THE FOLLOWING DETA'                       AR834072
+     O                    17             78 'ILS:'                                          AR834072
+     O                    16             76 'WITH THE FOLLOWING DETA'                       AR834072
+     O                    16             80 'ILS:'                                          AR834072
      O        D 11     13 16                                              119889
      O       OR 11     13 17                                              119889
      O***********                         8 'CCY'                  119889 157056
@@ -3758,15 +3830,26 @@
      O***********                        58 'INTEREST RATE'        119889 157056
      O***********      17N14             80 'RECEIVING CUSTOMER'   119889 157056
      O***********      16N14             82 'ORIGINATING CUSTOMER' 119889 157056
-     O                                    5 'CCY'                         157056
-     O                                   19 'PRINCIPAL'                   157056
-     O                                   37 'INTEREST'                    157056
-     O                                   51 'DUE DATE'                    157056
-     O                                   66 'INTEREST RATE'               157056
+     O**********                          5 'CCY'                                    157056 AR834072
+     O**********                         19 'PRINCIPAL'                              157056 AR834072
+     O**********                         37 'INTEREST'                               157056 AR834072
+     O**********                         51 'DUE DATE'                               157056 AR834072
+     O**********                         66 'INTEREST RATE'                          157056 AR834072
      O**********       17N14             86 'RECEIVING CUSTOMER'          157056              205248
      O**********       16N14             88 'ORIGINATING CUSTOMER'        157056              205248
-     O                 17                88 'RCVING LOAN/CUSTOMER'                            205248
-     O                 16                88 'ORGTNG LOAN/CUSTOMER'                            205248
+     O**********       17                88 'RCVING LOAN/CUSTOMER'                   205248 AR834072
+     O**********       16                88 'ORGTNG LOAN/CUSTOMER'                   205248 AR834072
+      *                                                                                     AR834072
+     O                 17                24 'RCVING LOAN/CUSTOMER'                          AR834072
+     O                 16                24 'ORGTNG LOAN/CUSTOMER'                          AR834072
+     O                                   28 'CCY'                                           AR834072
+     O                                   42 'PRINCIPAL'                                     AR834072
+     O                 17N64             60 'INTEREST'                                      AR834072
+     O                 17N64             74 'DUE DATE'                                      AR834072
+     O                 16                56 'DUE DATE'                                      AR834072
+     O                 17 64             56 'DUE DATE'                                      AR834072
+     O                 17N64             89 'INTEREST RATE'                                 AR834072
+     O                 17 64             71 'INTEREST RATE'                                 AR834072
      O        D  3     13 16                                              119889
      O       OR  3     13 17                                              119889
      O***********              CCY        8                        119889 157056
@@ -3778,29 +3861,48 @@
      O***********              RTSP      57 '  * .       -'        119889 157056
      O***********      17N14   RORC      73                        119889 157056
      O***********      16N14   RORC      75                        119889 157056
-     O                         CCY        5                               157056
+     O**********               CCY        5                                          157056 AR834072
      O/COPY WNCPYSRC,LE1160O007
-     O                    40   PRAM      23 ' ,   ,   ,   ,*  '           157056
-     O                    41   PRAM      23 '   ,   ,   , * . '           157056
-     O                    42   PRAM      23 '  ,   ,   , * .  '           157056
-     O                    43   PRAM      23 ' ,   ,   , * .   '           157056
+     O**********          40   PRAM      23 ' ,   ,   ,   ,*  '                      157056 AR834072
+     O**********          41   PRAM      23 '   ,   ,   , * . '                      157056 AR834072
+     O**********          42   PRAM      23 '  ,   ,   , * .  '                      157056 AR834072
+     O**********          43   PRAM      23 ' ,   ,   , * .   '                      157056 AR834072
      O/COPY WNCPYSRC,LE1160O008
      O**********          40   INTA      42 ' ,   ,   ,   ,*  '                      157056 AR833482
      O**********          41   INTA      42 '   ,   ,   , * . '                      157056 AR833482
      O**********          42   INTA      42 '  ,   ,   , * .  '                      157056 AR833482
      O**********          43   INTA      42 ' ,   ,   , * .   '                      157056 AR833482
-     O                    40   INTA      43 ' ,   ,   ,   ,*  -'                            AR833482
-     O                    41   INTA      43 '   ,   ,   , * . -'                            AR833482
-     O                    42   INTA      43 '  ,   ,   , * .  -'                            AR833482
-     O                    43   INTA      43 ' ,   ,   , * .   -'                            AR833482
-     O                         OVDAT     51                               157056
-     O                         W#RATE    67 '  * .       -'               157056
+     O**********          40   INTA      43 ' ,   ,   ,   ,*  -'                   AR833482 AR834072
+     O**********          41   INTA      43 '   ,   ,   , * . -'                   AR833482 AR834072
+     O**********          42   INTA      43 '  ,   ,   , * .  -'                   AR833482 AR834072
+     O**********          43   INTA      43 ' ,   ,   , * .   -'                   AR833482 AR834072
+     O**********               OVDAT     51                                          157056 AR834072
+     O**********               W#RATE    67 '  * .       -'                          157056 AR834072
      O**********       17N14   RORC      79                               157056              205248
      O**********       16N14   RORC      81                               157056              205248
-     O                 17      ROLN      79                                                   205248
-     O                 17      RORC      87                                                   205248
-     O                 16      ROLN      79                                                   205248
-     O                 16      RORC      87                                                   205248
+     O**********       17      ROLN      79                                          205248 AR834072
+     O**********       17      RORC      87                                          205248 AR834072
+     O**********       16      ROLN      79                                          205248 AR834072
+     O**********       16      RORC      87                                          205248 AR834072
+      *                                                                                     AR834072
+     O                 17      ROLN      15                                                 AR834072
+     O                 17      RORC      23                                                 AR834072
+     O                 16      ROLN      15                                                 AR834072
+     O                 16      RORC      23                                                 AR834072
+     O                         CCY       28                                                 AR834072
+     O                    40   PRAM      46 ' ,   ,   ,   ,*  '                             AR834072
+     O                    41   PRAM      46 '   ,   ,   , * . '                             AR834072
+     O                    42   PRAM      46 '  ,   ,   , * .  '                             AR834072
+     O                    43   PRAM      46 ' ,   ,   , * .   '                             AR834072
+     O                 17N64 40WINTO     65 ' ,   ,   ,   ,*  -'                            AR834072
+     O                 17N64 41WINTO     65 '   ,   ,   , * . -'                            AR834072
+     O                 17N64 42WINTO     65 '  ,   ,   , * .  -'                            AR834072
+     O                 17N64 43WINTO     65 ' ,   ,   , * .   -'                            AR834072
+     O                 17N64   OVDAT     74                                                 AR834072
+     O                 16      OVDAT     56                                                 AR834072
+     O                 17 64   OVDAT     56                                                 AR834072
+     O                 17N64   W#RATE    90 '  * .       -'                                 AR834072
+     O                 17 64   W#RATE    72 '  * .       -'                                 AR834072
       *                                                                   119889
 0896  *  FOR SETTLEMENT INSTRUCTIONS. FIRST *** RECEIPTS ***              119889
 0897 O        D 1      32 13                                              119889
@@ -4087,3 +4189,7 @@ Settlement09Postings                                                            
 000031059090120151181212243273304334365
 **   ZMNM  -  MONTHS SHORTNAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  Used by SR. ZDATE9 - Years, in days, cumulative in 4 Year span                      AR834072
+00366007310109601461                                                                        AR834072
+** @MD  Used by SR. ZDATE9 - Months in days, cumulative through year                        AR834072
+00000000310005900090001200015100181002120024300273003040033400365                           AR834072

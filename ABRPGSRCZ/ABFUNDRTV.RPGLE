@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. AR756458           Date 09Oct23               *      
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -66,6 +67,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR756458 - Associate deal is not properly retrieved causing  *
+      *             the deal not to be authorised. Initialize wkDlNum *
+      *             and wkDlAso. (Child: AR756459)                    *      
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -1235,7 +1239,9 @@
      C                   EVAL      OKACTN = 'Y'
      C                   EVAL      OKDLNO = 'Y'
      C                   EVAL      OKBRC1 = 'Y'
-
+     C                   EVAL      wkDlNum = 0                                              AR756458
+     C                   EVAL      wkDlAso = 0                                              AR756458
+ 
      C                   ENDSR
       ********************************************************************
       /EJECT

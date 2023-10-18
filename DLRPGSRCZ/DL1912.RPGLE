@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD038929           Date 19Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD038929           Date 19Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 245692             Date 09Dec13               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -49,6 +50,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD038929 - Recompile for DL1912DF changes                    *
       *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *

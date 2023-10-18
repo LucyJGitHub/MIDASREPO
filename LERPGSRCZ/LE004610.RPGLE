@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -224,6 +229,8 @@
      D MESOVR          S             56A
      D PFECD           S              2  0
      D INT6DY          S             15  9                                                    242286
+     D ZZNLEAP         S              5  0 INZ(0)                                           MD058815
+     D ZZLEAP          S              5  0 INZ(0)                                           MD058815
                                                                                               CLE134
      D WFEAUT          S              1A                                                      CLE134
      D CLE134          S              1A                                                      CLE134
@@ -1127,6 +1134,8 @@
      C                   PARM                    ZZEND
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       242286
+     C                   PARM      *ZERO         ZZNLEAP                                    MD058815
+     C                   PARM      *ZERO         ZZLEAP                                     MD058815
      C                   ENDSR
       *****************************************************************
       /EJECT

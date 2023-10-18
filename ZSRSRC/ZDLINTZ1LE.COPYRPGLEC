@@ -13,15 +13,20 @@
       *                                                               *
       *  Output: ZDLOUT (13,0) Interest Amount                        *
       *                                                               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CIR013             Date 07Apr05               *
-      *  Prev Amend No. CAAA02  *CREATE    Date 06Sep03               *
+      *  Prev Amend No. CIR013             Date 07Apr05               *
+      *                 CAAA02  *CREATE    Date 06Sep03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
       *  CAAA02 - WebFacing (Convert from OPM to ILE)                 *
       *                                                               *
@@ -57,14 +62,27 @@
      C     ZCBCBS        IFEQ      6                                                           18237
      C     ZCBCBS        OREQ      9                                            CIR013
      C     #29FEB        ANDEQ     'Y'                                          CIR013
+     C     ZCBCBS        IFEQ      6                                                        MD058815
+     C     ZDLAMT        MULT      WNLEAP        ZDLTP1           30 9                      MD058815
+     C                   MULT      ZDLRAT        ZDLTP1                                     MD058815
+     C     ZDLTP1        DIV       36500         ZDLOU1           30 9                      MD058815
+     C     ZDLAMT        MULT      WLEAP         ZDLTP2           30 9                      MD058815
+     C                   MULT      ZDLRAT        ZDLTP2                                     MD058815
+     C     ZDLTP2        DIV       36600         ZDLOU2           30 9                      MD058815
+     C     ZDLOU1        ADD(H)    ZDLOU2        ZDLOUT                                     MD058815
+     C                   ELSE                                                               MD058815
      C     ZDLAMT        MULT      ZINT6         ZDLTOP                                        18237
+     C                   ENDIF                                                              MD058815
+      *                                                                                     MD058815
      C                   ELSE                                                                  18237
      C     ZDLAMT        MULT      ZCBDAY        ZDLTOP           30 9
      C                   ENDIF                                                                 18237
       *                                                                   182370
+     C     ZCBCBS        IFNE      6                                                        MD058815
      C                   MULT      ZDLRAT        ZDLTOP
      C     ZCBDIV        MULT      100           ZDLBOT            5 0
      C     ZDLTOP        DIV(H)    ZDLBOT        ZDLOUT
+     C                   ENDIF                                                              MD058815
      C                   END
       *
      C                   ENDSR

@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058204           Date 18May22               *
-      *  Prev Amend No. MD057078           Date 03Mar21               *
+      *  Last Amend No. MD060411           Date 19Jun23               *
+      *  Prev Amend No. MD058815           Date 19Jun23               *
+      *                 MD058204           Date 18May22               *
+      *                 MD057078           Date 03Mar21               *
       *                 MD057082           Date 16Dec20               *
       *                 MD057048           Date 24Nov20               *
       *                 MD053375           Date 11Oct19               *
@@ -304,6 +306,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060411 - Correct the calculation of fee amount using       *
+      *             calculation basis 6. Correction to MD058815       *
+      *             Applied for MD061152.                             *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152. (Recompile)                 *
       *  MD058204 - Parts Sold loan fee causes LEC06A 10014 failure.  *
       *             Amend to populate LKOLNO with OLNO from CLOANCL   *
       *             Applied for MD059912                              *
@@ -5016,6 +5025,17 @@
      C                     MOVE FECALC    ZZCALC                          CLE013
      C                     EXSR ZINTDY                                    CLE013
      C           FECALC    IFEQ 6                                                             212048
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
+     C           FECALT    IFEQ '01'                                                        MD060411
+     C           FECALT    OREQ '02'                                                        MD060411
+     C           FECALT    OREQ '03'                                                        MD060411
+     C           FECALT    OREQ '11'                                                        MD060411
+     C           FECALT    OREQ '12'                                                        MD060411
+     C           FECALT    OREQ '13'                                                        MD060411
+     C           FECALT    OREQ '21'                                                        MD060411
+     C                     Z-ADDNLEAP     WNLEAP  50                                        MD060411
+     C                     Z-ADDLEAP50    WLEAP5  50                                        MD060411
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                               212048
      C                     ELSE                                                               212048
      C                     Z-ADDZZINDY    WDAYS                           CLE013
@@ -5370,6 +5390,7 @@
       *                                                                                     MD023855
      C                     EXSR ZINTDY                                                      MD023855
      C           FECALC    IFEQ 6                                                           MD023855
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                             MD023855
      C                     ELSE                                                             MD023855
      C                     Z-ADDZZINDY    NDAYS                                             MD023855
@@ -5763,6 +5784,7 @@
       *                                                                                      BUG8762
      C                     EXSR ZINTDY                                                      MD054703
      C           FECALC    IFEQ 6                                                           MD054703
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                             MD054703
      C                     ELSE                                                             MD054703
      C                     Z-ADDZZINDY    NDAYS                                             MD054703
@@ -5960,6 +5982,7 @@
      C                     MOVE FECALC    ZZCALC                          CLE013
      C                     EXSR ZINTDY                                    CLE013
      C           FECALC    IFEQ 6                                                             212048
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               212048
      C                     ELSE                                                               212048
      C                     Z-ADDZZINDY    NDAYS                           CLE013
@@ -6051,6 +6074,18 @@
      C                     Z-ADD1         RPT
      C                     EXSR REPDTL
      C                     MOVELFEPIND    WKPIND                                              CLE071
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           FECALT    IFEQ '01'                                                        MD060411
+     C           FECALT    OREQ '02'                                                        MD060411
+     C           FECALT    OREQ '03'                                                        MD060411
+     C           FECALT    OREQ '11'                                                        MD060411
+     C           FECALT    OREQ '12'                                                        MD060411
+     C           FECALT    OREQ '13'                                                        MD060411
+     C           FECALT    OREQ '21'                                                        MD060411
+     C                     Z-ADDWNLEAP    NLEAP                                             MD060411
+     C                     Z-ADDWLEAP5    LEAP50                                            MD060411
+     C                     ENDIF                                                            MD060411
+     C                     ENDIF                                                            MD060411
      C                     EXSR ACCRUE
      C                     Z-ADDWTOT      WFEE
       *
@@ -6288,8 +6323,16 @@
      C********** WRK15     MULT WDAYS     WTOTRP 130                                 BH3504 MD046351
      C**********           DIV  WCBS      WTOTRP    H                                BH3504 MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WRK15     MULT NLEAP     ZWK30A 309                                        MD060411
+     C           WRK15     MULT LEAP50    ZWK30B 309                                        MD060411
+     C           ZWK30A    DIV  36500     WTOTT1 309                                        MD060411
+     C           ZWK30B    DIV  36600     WTOTT2 309                                        MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WRK15     MULT WDAYS     ZWK309 309                                        MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOTRP 130H                                       MD046351
       *
       ** Set up report details if final payment accrual processing.
@@ -6361,8 +6404,16 @@
      C********** WRK15     MULT WDAYS     WTOTRP 130                                 BH3504 MD046351
      C**********           DIV  WCBS      WTOTRP    H                                BH3504 MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WRK15     MULT NLEAP     ZWK30A                                            MD060411
+     C           WRK15     MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WRK15     MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOTRP    H                                       MD046351
       *
       ** Set up report details if final payment accrual processing.
@@ -6395,8 +6446,16 @@
      C**********           MULT WDAYS     WTOT                                       BH3504 MD046351
      C**********           DIV  WCBS      WTOT      H                                BH3504 MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WTOT      MULT NLEAP     ZWK30A                                            MD060411
+     C           WTOT      MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WTOT      MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C/COPY WNCPYSRC,LER135C015
       *
@@ -6443,8 +6502,16 @@
      C********** WAMT      MULT WDAYS     WTOT                                              MD046351
      C**********           DIV  WCBS      WTOT      H                                       MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WAMT      MULT NLEAP     ZWK30A                                            MD060411
+     C           WAMT      MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WAMT      MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
      C/COPY WNCPYSRC,LER135C016
       *
@@ -6473,8 +6540,16 @@
      C                     MULT FRT,X     WAMT
      C                     END
       *
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WAMT      MULT NLEAP     ZWK30A                                            MD060411
+     C           WAMT      MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WAMT      MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     DIV  100       ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *
@@ -6512,9 +6587,19 @@
      C           CALT      OREQ 21
      C           CALT      OREQ 22
       *
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           WAMT      MULT FRT,1     ZWK30A                                            MD060411
+     C           WAMT      MULT FRT,1     ZWK30B                                            MD060411
+     C                     MULT NLEAP     ZWK30A                                            MD060411
+     C                     MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
      C           WAMT      MULT FRT,1     ZWK309                                            MD046351
      C                     MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *                                                                                     MD046351
      C********** WAMT      MULT FRT,1     WTOT                                              MD046351
@@ -11351,6 +11436,17 @@
      C                     MOVE FECALC    ZZCALC                                             BUG8762
      C                     EXSR ZINTDY                                                       BUG8762
      C           FECALC    IFEQ 6                                                             212048
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
+     C           FECALT    IFEQ '01'                                                        MD060411
+     C           FECALT    OREQ '02'                                                        MD060411
+     C           FECALT    OREQ '03'                                                        MD060411
+     C           FECALT    OREQ '11'                                                        MD060411
+     C           FECALT    OREQ '12'                                                        MD060411
+     C           FECALT    OREQ '13'                                                        MD060411
+     C           FECALT    OREQ '21'                                                        MD060411
+     C                     Z-ADDNLEAP     WNLEAP                                            MD060411
+     C                     Z-ADDLEAP50    WLEAP5                                            MD060411
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                               212048
      C                     ELSE                                                               212048
      C                     Z-ADDZZINDY    WDAYS                                              BUG8762
@@ -11502,6 +11598,7 @@
      C                     MOVE FECALC    ZZCALC                          CLE013
      C                     EXSR ZINTDY                                    CLE013
      C           FECALC    IFEQ 6                                                             212048
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               212048
      C                     ELSE                                                               212048
      C                     Z-ADDZZINDY    NDAYS                           CLE013
@@ -11549,6 +11646,10 @@
      C*                                                                   CLE005
      C                     ENDDO                                          CLE005
      C           *IN70     IFEQ '0'                                       CLE005
+     C           FECALC    IFEQ 6                                                           MD060411
+     C                     Z-ADDWNLEAP    NLEAP                                             MD060411
+     C                     Z-ADDWLEAP5    LEAP50                                            MD060411
+     C                     ENDIF                                                            MD060411
      C                     EXSR ACCRUE                                    CLE005
      C**********           Z-ADDWTOT      WFEE                                        CLE005 BUG8762
      C                     ADD  WTOT      WFEE                                               BUG8762
@@ -12469,6 +12570,7 @@
       *                                                                                       CLE073
      C                     EXSR ZINTDY                                                      MD054703
      C           FECALC    IFEQ 6                                                           MD054703
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                             MD054703
      C                     ELSE                                                             MD054703
      C                     Z-ADDZZINDY    NDAYS                                             MD054703
@@ -12858,6 +12960,7 @@
       *                                                                                     MD031473
      C                     EXSR ZINTDY                                                      MD054703
      C           FECALC    IFEQ 6                                                           MD054703
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                             MD054703
      C                     ELSE                                                             MD054703
      C                     Z-ADDZZINDY    NDAYS                                             MD054703
@@ -12994,6 +13097,7 @@
      C                     MOVE FECALC    ZZCALC                                              CLE073
      C                     EXSR ZINTDY                                                        CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               CLE073
      C                     ELSE                                                               CLE073
      C                     Z-ADDZZINDY    NDAYS                                               CLE073
@@ -13188,6 +13292,7 @@
      C**********           Z-ADD1         WDAYS9                                  AR1078443 MD020212
      C**********           ENDIF                                                  AR1078443 MD020212
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    WDAYS9                                              CLE073
      C                     ELSE                                                               CLE073
      C**********           Z-ADDZZINDY    WDAYS9  50                                 CLE073 MD031473
@@ -13209,6 +13314,19 @@
      C**********           DIV  WDAYS9    WTOT      H                                CLE073 MD046351
      C**********           ENDIF                                                     CLE073 MD046351
       *                                                                                     MD046351
+     C           FECALC    IFEQ 6                                                           MD060411
+     C           FECALT    IFNE '99'                                                        MD060411
+     C           FECALT    ANDNE'90'                                                        MD060411
+     C           WRK15     MULT NLEAP     ZWK30A                                            MD060411
+     C           WRK15     MULT LEAP50    ZWK30B                                            MD060411
+     C           ZWK30A    DIV  36500     WTOTT1                                            MD060411
+     C           ZWK30B    DIV  36600     WTOTT2                                            MD060411
+     C           WTOTT1    ADD  WTOTT2    ZWK309    H                                       MD060411
+     C                     ELSE                                                             MD060411
+     C           WRK15     MULT WDAYS     ZWK309                                            MD060411
+     C                     DIV  WDAYS9    ZWK309    H                                       MD046351
+     C                     ENDIF                                                            MD060411
+     C                     ELSE                                                             MD060411
      C           WRK15     MULT WDAYS     ZWK309                                            MD046351
      C           FECALT    IFNE '99'                                                        MD046351
      C           FECALT    ANDNE'90'                                                        MD046351
@@ -13216,6 +13334,7 @@
      C                     ELSE                                                             MD046351
      C                     DIV  WDAYS9    ZWK309    H                                       MD046351
      C                     ENDIF                                                            MD046351
+     C                     ENDIF                                                            MD060411
      C                     Z-ADDZWK309    WTOTRP    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
       *                                                                                       CLE073
@@ -14031,6 +14150,7 @@
      C                     MOVE FECALC    ZZCALC                                            MD031473
      C                     EXSR ZINTDY                                                      MD031473
      C           FECALC    IFEQ 6                                                           MD031473
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                             MD031473
      C                     ELSE                                                             MD031473
      C                     Z-ADDZZINDY    WDAYS                                             MD031473
@@ -14148,6 +14268,7 @@
      C                     MOVE FECALC    ZZCALC                                              CLE073
      C                     EXSR ZINTDY                                                        CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    WDAYS                                               CLE073
      C                     ELSE                                                               CLE073
      C                     Z-ADDZZINDY    WDAYS                                               CLE073
@@ -14281,6 +14402,7 @@
      C                     MOVE FECALC    ZZCALC                                              CLE073
      C                     EXSR ZINTDY                                                        CLE073
      C           FECALC    IFEQ 6                                                             CLE073
+     C           NLEAP     ADD  LEAP50    INT6DY                                            MD060411
      C                     Z-ADDINT6DY    NDAYS                                               CLE073
      C                     ELSE                                                               CLE073
      C                     Z-ADDZZINDY    NDAYS                                               CLE073

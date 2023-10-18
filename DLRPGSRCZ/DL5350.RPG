@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. 261960             Date 26Apr13               *      
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. 261960             Date 26Apr13               *
+      *                 MD055446           Date 04Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -76,6 +77,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  261960 - Use correct interest rate HKINTR instead of HKIIRT. *      
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
@@ -1648,18 +1653,31 @@
       **
       *    FOR CALCULATION METHODS 3,4 OR 5.
       **
-     C           @@CALC    IFEQ '3'
-     C           @@CALC    OREQ '4'
-     C           @@CALC    OREQ '5'
-     C           @@CALC    OREQ '0'                                                          CER016A
-      *
-     C                     Z-ADD@@BEG     @@DAYN  50
-     C                     EXSR ZA0710
-     C                     Z-ADD@@VDT     @@DATA
-      *
-     C                     Z-ADD@@END     @@DAYN
-     C                     EXSR ZA0710
-     C                     Z-ADD@@VDT     @@DATB
+     C********** @@CALC    IFEQ '3'                                                         MD058815
+     C********** @@CALC    OREQ '4'                                                         MD058815
+     C********** @@CALC    OREQ '5'                                                         MD058815
+     C********** @@CALC    OREQ '0'                                                 CER016A MD058815
+      **********                                                                            MD058815
+     C**********           Z-ADD@@BEG     @@DAYN  50                                        MD058815
+     C**********           EXSR ZA0710                                                      MD058815
+     C**********           Z-ADD@@VDT     @@DATA                                            MD058815
+      **********                                                                            MD058815
+     C**********           Z-ADD@@END     @@DAYN                                            MD058815
+     C**********           EXSR ZA0710                                                      MD058815
+     C**********           Z-ADD@@VDT     @@DATB                                            MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD@@BEG     @@DAYN  50                                        MD058815
+     C                     EXSR ZA0710                                                      MD058815
+     C                     Z-ADD@@VDT     @@DATA                                            MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD@@END     @@DAYN                                            MD058815
+     C                     EXSR ZA0710                                                      MD058815
+     C                     Z-ADD@@VDT     @@DATB                                            MD058815
+      *                                                                                     MD058815
+     C           @@CALC    IFEQ '3'                                                         MD058815
+     C           @@CALC    OREQ '4'                                                         MD058815
+     C           @@CALC    OREQ '5'                                                         MD058815
+     C           @@CALC    OREQ '0'                                                         MD058815
       *  IF IN SAME MONTH
      C           @@YY1     IFEQ @@YY2
      C           @@MM1     IFEQ @@MM2
@@ -1670,9 +1688,103 @@
       *
      C                     ELSE
       * IF NOT 3,4 OR 5    ****
-      * EXIT PROCESSING
+      **EXIT*PROCESSING************************************************                     MD058815
+     C           @@CALC    IFEQ '6'                        B1                               MD058815
+      *                                                                                     MD058815
+      * Perform no. of days calculation for method 6                                        MD058815
+      * Find the number of leap year and non-leap year days in the                          MD058815
+      * interest period. The non-leap year days are then adjusted by a                      MD058815
+      * factor of 366/365 to allow for the divisor of 366 in GLINTC.                        MD058815
+      * This figure is then added to the actual leap year days to give                      MD058815
+      * a factored number of days in the interest period.                                   MD058815
+      *                                                                                     MD058815
+     C                     Z-ADD0         LEAP50  50                                        MD058815
+     C                     Z-ADD0         NLEAP   50                                        MD058815
+      *                                                                                     MD058815
+      * If start and end date are in the same year, check if the                            MD058815
+      * year is a leap year and add no. of interest days to the                             MD058815
+      * relevant total                                                                      MD058815
+     C           @@YY1     IFEQ @@YY2                      B2                               MD058815
+     C           @@YY1     DIV  4         @@WN5                                             MD058815
+     C                     MVR            @@WN5                                             MD058815
+     C           @@WN5     IFNE 0                          B3                               MD058815
+     C                     ADD  @@WDAT    NLEAP                                             MD058815
+     C                     ELSE                            X3                               MD058815
+     C                     ADD  @@WDAT    LEAP50                                            MD058815
+     C                     ENDIF                           E3                               MD058815
+      *                                                                                     MD058815
+      * else must break down the interest period into leap years                            MD058815
+      * and non-leap years                                                                  MD058815
+     C                     ELSE                            X2                               MD058815
+      *                                                                                     MD058815
+      * Save end date year value                                                            MD058815
+     C                     Z-ADD@@YY2     YY2SAV  40                                        MD058815
+      *                                                                                     MD058815
+      * Add 1 to starting year number                                                       MD058815
+     C           @@YY1     ADD  1         @@YY2                                             MD058815
+      *                                                                                     MD058815
+      * Get Midas day number for 1st Jan of year after start date                           MD058815
+     C                     MOVE '01'      @@MM2                                             MD058815
+     C                     MOVE '01'      @@DD2                                             MD058815
+     C                     MOVE @@DATB    @@DTIN                                            MD058815
+     C                     EXSR ZA0680                                                      MD058815
+     C                     Z-ADD@@MDNO    @@ENDW  50                                        MD058815
+     C           @@ENDW    SUB  @@BEG     @@WDAT                                            MD058815
+      *                                                                                     MD058815
+      * Check if current year is a leap year                                                MD058815
+     C           @@YY1     DIV  4         @@WN5                                             MD058815
+     C                     MVR            @@WN5                                             MD058815
+     C           @@WN5     IFNE 0                          B3                               MD058815
+     C                     ADD  @@WDAT    NLEAP                                             MD058815
+     C                     ELSE                            X3                               MD058815
+     C                     ADD  @@WDAT    LEAP50                                            MD058815
+     C                     ENDIF                           E3                               MD058815
+      *                                                                                     MD058815
+      * Accumulate leap year and non-leap year days for complete                            MD058815
+      * years in the interest period                                                        MD058815
+     C           @@YY2     DOWLTYY2SAV                     B3                               MD058815
+      *                                                                                     MD058815
+      * Check if current year is a leap year                                                MD058815
+     C           @@YY2     DIV  4         @@WN5                                             MD058815
+     C                     MVR            @@WN5                                             MD058815
+     C           @@WN5     IFNE 0                          B4                               MD058815
+     C                     ADD  365       NLEAP                                             MD058815
+     C                     ELSE                            X4                               MD058815
+     C                     ADD  366       LEAP50                                            MD058815
+     C                     ENDIF                           E4                               MD058815
+      *                                                                                     MD058815
+      * Add 1 to year number                                                                MD058815
+     C                     ADD  1         @@YY2                                             MD058815
+     C                     ENDDO                           E3                               MD058815
+      *                                                                                     MD058815
+      * Finally calculate the days for the last part-year up                                MD058815
+      * to the end date                                                                     MD058815
+      *                                                                                     MD058815
+      * Get Midas day number for 1st Jan of current year                                    MD058815
+     C                     MOVE '01'      @@MM2                                             MD058815
+     C                     MOVE '01'      @@DD2                                             MD058815
+     C                     MOVE @@DATB    @@DTIN                                            MD058815
+     C                     EXSR ZA0680                                                      MD058815
+     C                     Z-ADD@@MDNO    @@BEG                                             MD058815
+     C           @@END     SUB  @@BEG     @@WDAT                                            MD058815
+      *                                                                                     MD058815
+      * Check if year is a leap year                                                        MD058815
+     C           @@YY2     DIV  4         @@WN5                                             MD058815
+     C                     MVR            @@WN5                                             MD058815
+     C           @@WN5     IFNE 0                          B3                               MD058815
+     C                     ADD  @@WDAT    NLEAP                                             MD058815
+     C                     ELSE                            X3                               MD058815
+     C                     ADD  @@WDAT    LEAP50                                            MD058815
+     C                     ENDIF                           E3                               MD058815
+      *                                                                                     MD058815
+     C                     ENDIF                           E2                               MD058815
+      *                                                                                     MD058815
+     C*                                                                                     MD058815
+     C                     ELSE                                                             MD058815
+      *                                                                                     MD058815
      C                     Z-ADD@@WDAT    @@INDY  50
      C                     GOTO M10099
+     C                     ENDIF                                                            MD058815
      C                     END
       *
      C           @@CALC    IFEQ '3'
@@ -1860,8 +1972,16 @@
       ** Multiply principal amount to rate then to the number of days
       *
      C           @@AMT     MULT @@RATE    ZZWRK1 309
+     C           @@CALC    IFEQ '6'                                                         MD058815
+     C           NLEAP     MULT ZZWRK1    ZZWK2                                             MD058815
+     C           LEAP50    MULT ZZWRK1    ZZWK3  309                                        MD058815
+     C           ZZWK2     DIV  36500     ZZWK2                                             MD058815
+     C           ZZWK3     DIV  36600     ZZWK3                                             MD058815
+     C           ZZWK2     ADD  ZZWK3     @@INTR    H                                       MD058815
+     C                     ELSE                                                             MD058815
      C           ZZWRK1    MULT @@INDY    ZZWK2  309
      C           ZZWK2     DIV  @@YEAR    @@INTR 150H
+     C                     ENDIF                                                            MD058815
       *
      C           M10309    ENDSR
       *****************************************************************

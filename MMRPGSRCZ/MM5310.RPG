@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054957           Date 11Dec19               *
-      *  Prev Amend No. 261960             Date 26Apr13               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD054957           Date 11Dec19               *
+      *                 261960             Date 26Apr13               *
       *                 MD049268           Date 02Aug18               *
       *                 260405             Date 04Apr20               *
       *                 MD053295           Date 13Apr19               *
@@ -140,6 +141,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  261960 - Remove update of input interest rate (HKIIRT).      *
       *  MD049268 - Enhanced interest calculation to be similar to    *
@@ -2696,7 +2701,16 @@
      C           ZZCALC    OREQ '9'                                                           CDL093
      C           #29FEB    ANDEQ'Y'                                                           CDL093
      C********** INT6DY    MULT @@RATE    @@W157                                     163136 MD049268
+      *                                                                                     MD058815
+     C           ZZCALC    IFEQ '6'                                                         MD058815
+     C           ZIWRK1    MULT NLEAP     ZIWRK2                                            MD058815
+     C           ZIWRK1    MULT LEAP50    ZIWRK3 309                                        MD058815
+     C           ZIWRK2    DIV  36500     ZIWRK2                                            MD058815
+     C           ZIWRK3    DIV  36600     ZIWRK3                                            MD058815
+     C                     ELSE                                                             MD058815
      C           INT6DY    MULT ZIWRK1    ZIWRK2 309                                        MD049268
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
      C                     ELSE                                           163136
       *                                                                   163136
      C********** ZZINDY    MULT @@RATE    @@W157 157                                 056095 MD049268
@@ -2708,6 +2722,14 @@
      C*                                                                   S01434
      C**  ROUND DOWN IF ROUND DOWN INDICATOR IS 'Y'                       S01434
      C*                                                                   S01434
+     C           ZZCALC    IFEQ '6'                                                         MD058815
+     C           @@RDFC    IFEQ 'Y'                                                         MD058815
+     C           ZIWRK2    ADD  ZIWRK3    @@INTR                                            MD058815
+     C                     ELSE                                                             MD058815
+     C           ZIWRK2    ADD  ZIWRK3    @@INTR    H                                       MD058815
+     C                     ENDIF                                                            MD058815
+     C                     ELSE                                                             MD058815
+      *                                                                                     MD058815
      C           @@RDFC    IFEQ 'Y'                                       S01434
      C********** @@W210    DIV  @@YEAR    @@INTR                                     S01434 MD049268
      C           ZIWRK2    DIV  @@YEAR    @@INTR                                            MD049268
@@ -2715,6 +2737,7 @@
      C********** @@W210    DIV  @@YEAR    @@INTR 150H                                S01434 MD049268
      C           ZIWRK2    DIV  @@YEAR    @@INTR 150H                                       MD049268
      C                     END                                            S01434
+     C                     ENDIF                                                            MD058815
      C/COPY WNCPYSRC,MM5310C002
       * Interest has been calculated                                                          CDL093
      C           INTCLC    TAG                                                                CDL093

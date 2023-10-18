@@ -4,8 +4,9 @@
       *                                                               *
       *  MM1008C - C-specs for MM1008 subroutine                      *
       *                                                               *
-      *  Last Amend No. 262653             Date 16Jun19               *
-      *  Prev Amend No. CDL069             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. 262653             Date 16Jun19               *
+      *                 CDL069             Date 16Jun19               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -19,6 +20,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  262653 - Calculation method not used.                        *
       *  CDL069 - True Discount for Negotiable Assets.                *
       *  242286 - Enhance calculation of interest for calc basis 6.   *
@@ -127,6 +132,8 @@
      C                   PARM                    ZZCALC
      C**********         PARM                    INT6DY           15 7                 191870 242286
      C                   PARM                    INT6DY           15 9                        242286
+     C                   PARM      *ZERO         ZZNLEAP           5 0                      MD058815
+     C                   PARM      *ZERO         ZZLEAP            5 0                      MD058815
  
      C     ZZCALC        IFEQ      '6'                                                        191870
      C**********         Z-ADD     INT6DY        @@DTM6           15 7                 191870 242286
@@ -252,6 +259,8 @@
       ** Calculation method (1A, from caller)
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       191870
+     C                   PARM      *ZERO         ZZNLEAP           5 0                      MD058815
+     C                   PARM      *ZERO         ZZLEAP            5 0                      MD058815
  
      C     ZZCALC        IFEQ      '6'                                                        191870
      C**********         Z-ADD     INT6DY        @@LDNO6          15 7                 191870 242286
@@ -346,6 +355,8 @@
       ** Calculation method (1A, from caller)
      C                   PARM                    ZZCALC
      C                   PARM                    INT6DY                                       191870
+     C                   PARM      *ZERO         ZZNLEAP           5 0                      MD058815
+     C                   PARM      *ZERO         ZZLEAP            5 0                      MD058815
  
      C     ZZCALC        IFEQ      '6'                                                        191870
      C**********         Z-ADD     INT6DY        @@DAYS6          15 7                 191870 242286
@@ -401,6 +412,8 @@
       ** Calculation method (1A, from caller)                                   140931
      C                   PARM                    ZZCALC                         140931
      C                   PARM                    INT6DY                                       191870
+     C                   PARM      *ZERO         ZZNLEAP           5 0                      MD058815
+     C                   PARM      *ZERO         ZZLEAP            5 0                      MD058815
  
      C                   CALLB     'MM1030'
       *         Input field ZZBEG - Start date of period
@@ -474,6 +487,8 @@
       ** Calculation method (1A, from caller)                                   140931
      C                   PARM                    ZZCALC                         140931
      C                   PARM                    INT6DY                                       191870
+     C                   PARM      *ZERO         ZZNLEAP           5 0                      MD058815
+     C                   PARM      *ZERO         ZZLEAP            5 0                      MD058815
  
      C                   CALLB     'MM1030'
       *         Input field ZZBEG - Start date of period
@@ -517,12 +532,22 @@
       **  MULTIPLY YIELD RATE BY INTEREST DAYS
       *                                                                                       191870
      C     ZZCALC        IFEQ      '6'                                                        191870
-     C     @@DRAT        MULT      @@DAYS6       @@W159                                       191870
+     C*****@@DRAT        MULT      @@DAYS6       @@W159                              191870 MD058815
+     C     @@DRAT        MULT      ZZNLEAP       @@NLEAP          15 9                      MD058815
+     C     @@DRAT        MULT      ZZNLEAP       @@LEAP           15 9                      MD058815
      C                   ELSE                                                                 191870
      C     @@DRAT        MULT      @@DAYS        @@W159           15 9
      C                   END                                                                  191870
+     C     ZZCALC        IFEQ      '6'                                                      MD058815
+     C                   DIV       36500         @@NLEAP                                    MD058815
+     C                   ADD       1             @@NLEAP                                    MD058815
+     C                   DIV       36600         @@LEAP                                     MD058815
+     C                   ADD       1             @@LEAP                                     MD058815
+     C     @@NLEAP       ADD(H)    @@LEAP        @@W159                                     MD058815
+     C                   ELSE                                                               MD058815
      C                   DIV(H)    @@DAY1        @@W159
      C                   ADD       1             @@W159
+     C                   ENDIF                                                              MD058815
       *
       **  DIVIDE PRINCIPAL BY WORK FIELD
      C                   DIV(H)    @@W159        @@PRIN

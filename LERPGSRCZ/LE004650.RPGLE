@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD056838           Date 01Oct20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
@@ -74,6 +75,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -439,6 +444,8 @@
      D PZCALC          S              1A
      D***PINT6DY*      S             15P 7                                                    242286
      D PINT6DY         S             15P 9                                                    242286
+     D ZZNLEAP         S              5  0                                                  MD058815
+     D ZZLEAP          S              5  0                                                  MD058815
 
       ** ZDate2 parameters
      D ZDAYNO          S              5  0
@@ -2642,6 +2649,8 @@
      C                   PARM                    PZEND
      C                   PARM                    PZCALC
      C                   PARM                    PINT6DY
+     C                   PARM      *ZERO         ZZNLEAP                                    MD058815
+     C                   PARM      *ZERO         ZZLEAP                                     MD058815
 
      C                   ENDSR
       *****************************************************************

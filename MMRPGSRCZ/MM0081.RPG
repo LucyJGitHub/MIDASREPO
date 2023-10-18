@@ -14,8 +14,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD058815           Date 19Jun23               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -176,6 +177,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD058815 - Dealing interest Calculation type 6 have different*
+      *             interest amount for Calculation type 1 for non-   *
+      *             leap year interest period with same parameters.   *
+      *             Applied for MD061152.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
@@ -6375,16 +6380,20 @@
      C                     Z-ADD36600     @@YEAR                          S01392
      C                     END                              *** E 1       S01392
      C*                                                                   S01392
+     C           @@AMT     MULT @@RATE    ZIWRK1 309                                        MD058815
      C           ZZCALC    IFEQ '6'                                       163136
-     C           INT6DY    MULT @@RATE    @@W157                          163136
+     C********** INT6DY    MULT @@RATE    @@W157                                     163136 MD058815
+     C           NLEAP     MULT ZIWRK1    ZIWRK2 309                                        MD058815
+     C           LEAP50    MULT ZIWRK1    ZIWRK3 309                                        MD058815
      C                     ELSE                                           163136
       *                                                                   163136
      C***********@@WDIV    MULT @@RATE    @@W155 155               S01392 056121
-     C           ZZINDY    MULT @@RATE    @@W157 157                      056121
+     C********** ZZINDY    MULT @@RATE    @@W157 157                                 056121 MD058815
+     C           ZZINDY    MULT ZIWRK1    ZIWRK2                                            MD058815
       *                                                                   163136
      C                     END                                            163136
       *                                                                   163136
-     C           @@W157    MULT @@AMT     @@W210 210H                     056121
+     C********** @@W157    MULT @@AMT     @@W210 210H                                056121 MD058815
      C*                                                                   S01392
      C*MULTIPLY*@@WDIV*BY*@@YEAR*TO*GET*ORIGINALAMOUNT.THE*RESULT**S01392 056121
      C****COULD*DIFFER*FROM*THE*ORIGINAL*DUE*TO*ROUNDING*ERROR*ON**S01392 056121
@@ -6405,15 +6414,28 @@
      C****(ROUNDING*DOWN*IF*ROUND*DOWN*INDICATOR*IS*'Y'************S01392 056121
      C*                                                                   S01392
      C**  ROUND DOWN IF ROUND DOWN INDICATOR IS 'Y'.                      056121
+     C           ZZCALC    IFEQ '6'                                                         MD058815
+     C           ZIWRK2    DIV  36500     ZIWRK2                                            MD058815
+     C           ZIWRK3    DIV  36600     ZIWRK3                                            MD058815
+     C           @@RDFC    IFEQ 'Y'                                                         MD058815
+     C           ZIWRK2    ADD  ZIWRK3    @@INTR                                            MD058815
+     C                     ELSE                                                             MD058815
+     C           ZIWRK2    ADD  ZIWRK3    @@INTR    H                                       MD058815
+     C                     ENDIF                                                            MD058815
+      *                                                                                     MD058815
+     C                     ELSE                                                             MD058815
      C           @@RDFC    IFEQ 'Y'                                       S01392
      C***********@@W155    MULT @@INDY    @@INTR                    S01392056095
      C***********@@W155    MULT ZZINDY    @@INTR                   056095 056121
-     C           @@W210    DIV  @@YEAR    @@INTR                          056121
+     C********** @@W210    DIV  @@YEAR    @@INTR                                     056121 MD058815
+     C           ZIWRK2    DIV  @@YEAR    @@INTR                                            MD058815
      C                     ELSE                                           S01392
      C***********@@W155    MULT @@INDY    @@INTR 150H               S01392056095
      C***********@@W155    MULT ZZINDY    @@INTR 150H              056095 056121
-     C           @@W210    DIV  @@YEAR    @@INTR 150H                     056121
+     C********** @@W210    DIV  @@YEAR    @@INTR 150H                                056121 MD058815
+     C           ZIWRK2    DIV  @@YEAR    @@INTR 150H                                       MD058815
      C                     END                                            S01392
+     C                     ENDIF                                                            MD058815
      C/COPY WNCPYSRC,MM0081C015
      C*                                                                   S01392
      C           M10309    ENDSR                                          S01392

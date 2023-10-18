@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058556           Date 16Aug21               *
-      *  Prev Amend No. MD049387           Date 19Jan18               *
+      *  Last Amend No. MD058803           Date 26Sep23               *
+      *  Prev Amend No. MD058556           Date 16Aug21               *
+      *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
       *                 AR933170           Date 07Jun13               *
       *                 MD056546           Date 16Sep20               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058803 - Incorrect CNI for Value Date Settlement details   *
+      *             Applied for MD061801.                             *
       *  MD058556 - SP25_FRA/IRS: API: Unexpected change of APFOTRANID*
       *             behavior.                                         *
       *           - Recompile all objects affected by AR933170.       *
@@ -1099,6 +1102,9 @@
      C                   EVAL      DBFraSttmt = CIRSFraIns
      C                   MOVE      RXAGVC        FLAGVC
 
+     C                   EVAL      InRCCY = STCUCY                                          MD058803
+     C                   EVAL      InPCCY = SUCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
 
      C                   EVAL      InPaySttmt = CrPayStmt
@@ -1111,6 +1117,9 @@
      C                   EVAL      DBRecSttmt = ExRValDat
      C                   EVAL      DBPaySttmt = ExPValDat
 
+     C                   EVAL      InRCCY = SUCUCY                                          MD058803
+     C                   EVAL      InPCCY = STCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
 
      C                   EVAL      InPayStmtV = CrPayStmt
@@ -1120,6 +1129,9 @@
      C                   EVAL      DBRecSttmt = ExRMatDat
      C                   EVAL      DBPaySttmt = ExPMatDat
 
+     C                   EVAL      InRCCY = STCUCY                                          MD058803
+     C                   EVAL      InPCCY = SUCUCY                                          MD058803
+                                                                                            MD058803
      C                   EXSR      SrSETINCVT
 
      C                   EVAL      InPayStmtM = CrPayStmt
@@ -1151,8 +1163,10 @@
      C                   PARM                    CrRecStmt
       ** Screen FRA/IRS settlement instruction
      C                   PARM                    CrFRAStmt
-     C                   PARM      STCUCY        InRCCY                                      CSF011A
-     C                   PARM      SUCUCY        InPCCY                                      CSF011A
+     C**********         PARM      STCUCY        InRCCY                             CSF011A MD058803
+     C**********         PARM      SUCUCY        InPCCY                             CSF011A MD058803
+     C                   PARM                    InRCCY                                     MD058803
+     C                   PARM                    InPCCY                                     MD058803
 
      C                   ENDSR
       *****************************************************************

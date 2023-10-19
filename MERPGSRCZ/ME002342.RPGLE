@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. MD061938           Date 18Oct23               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR870148           Date 24Nov11               *
       *                 MD023237           Date 05Nov13               *
@@ -35,6 +36,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061938 - FM2021.F BA6026 - wrong warning message.          *
+      *             Introduced new Message ID ME21885 in order to     *
+      *             display the correct Warning message when valida-  *
+      *             ting Structure Field 86: of MT940 Details Account *
+      *             Miantenance.                                      *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *           Include GSH026 and GSH041.                          *
       *  GSH041 - GSH026 Field 86 Address Change                      *
@@ -420,7 +426,12 @@
       *                                                                                       BA6026
      C                   If        F20F86 = 'N'                                               BA6026
      C                             And A6Fld86AddChg = 'Y' and SrWArn <> 'Y'                  BA6026
-     C                   Move      'ME00096'     ZAMSID                                       BA6026
+     C**********         Move      'ME00096'     ZAMSID                              BA6026 MD061938
+      *                                                                                     MD061938
+      ** Issue warning message "Warning: Unstructured Field 86: will be                     MD061938
+      ** used for statements for this account."                                             MD061938
+      *                                                                                     MD061938
+     C                   Move      'ME21885'     ZAMSID                                     MD061938
      C                   Move      *On           *IN51                                        BA6026
       *                                                                                       BA6026
       ** Send warning message                                                                 BA6026

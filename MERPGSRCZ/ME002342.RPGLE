@@ -40,7 +40,7 @@
       *             Introduced new Message ID ME21885 in order to     *
       *             display the correct Warning message when valida-  *
       *             ting Structure Field 86: of MT940 Details Account *
-      *             Miantenance.                                      *
+      *             Maintenance.                                      *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *           Include GSH026 and GSH041.                          *
       *  GSH041 - GSH026 Field 86 Address Change                      *

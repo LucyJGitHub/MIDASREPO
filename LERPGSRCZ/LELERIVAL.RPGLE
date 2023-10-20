@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD061221           Date 29Mar23               *
-      *  Prev Amend No. MD061196           Date 17Mar23               *
+      *  Last Amend No. MD061931           Date 12Oct23               *
+      *  Prev Amend No. MD061221           Date 29Mar23               *
+      *                 MD061196           Date 17Mar23               *
       *                 MD061195           Date 16Mar23               *
       *                 MD060441           Date 01Feb23               *
       *                 MD060620           Date 14Nov22               *
@@ -131,6 +132,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061931 - Cannot remove rollover date to mature a loan.     *
+      *             Do not execute SR/SRCC9BR when removing the       *
+      *             rollover date using asterisk (*).                 *
       *  MD061221 - No validation on rollover value date when         *
       *             interest date falls on holiday.                   *
       *             Set wNxtIntPayDat to maturity date when next      *
@@ -1112,6 +1116,7 @@
       ** Perform LIBOR CC9 Business Rules                                                   MD060441
       *                                                                                     MD060441
      C                   IF        CLE172 = 'Y'                                             MD060441
+     C                             AND WRLDT1 <> '*'                                        MD061931
      C                   EXSR      SRCC9BR                                                  MD060441
      C                   ENDIF                                                              MD060441
 

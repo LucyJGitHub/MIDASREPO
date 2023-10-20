@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD057490           Date 22Feb21               *
+      *  Last Amend No. AR825181           Date 11Oct23               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD057490           Date 22Feb21               *
       *                 MD052485           Date 02Apr19               *
       *                 MD051910           Date 02Apr19               *
       *                 CSW218             Date 19Mar18               *
@@ -97,6 +98,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR825181 - Add a few more feedback status.                   *
+      *             (Child: AR825182)                                 *
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD057490 - MT202 Incorrect Bank Name in 57 field.            *
       *           - Use the correct message sequence in file MGOEXTPD *
@@ -365,8 +368,10 @@
      D***********         VERFY   1   6  6               verify field     098075              212173
      D VERFY           S              6    DIM(7) CTDATA PERRCD(1)              verify field
      D/COPY WNCPYSRC,ME0600E002
-     D TAB1            S              2  0 DIM(10) CTDATA PERRCD(1)             Match status textS01
-     D TAB2            S             15    DIM(10) ALT(TAB1)
+     D***TAB1            S              2  0 DIM(10) CTDATA PERRCD(1)  Match status textS01 AR825181
+     D***TAB2            S             15    DIM(10) ALT(TAB1)                              AR825181
+     D TAB1            S              2  0 DIM(18) CTDATA PERRCD(1)                         AR825181
+     D TAB2            S             15    DIM(18) ALT(TAB1)                                AR825181
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
      D/COPY WNCPYSRC,ME0600E003
      D FLA             S              1    DIM(50)                              format field
@@ -3972,5 +3977,13 @@ TCNAComplete not accounted yet                                            CMT001
 54PROPOSED INVEST
 97NONE EXPECTED
 99PAIRED NO ERROR
+03SPLIT                                                                                     AR825181
+04MARKED TIME OUT                                                                           AR825181
+55DUPLICATE ERROR                                                                           AR825181
+57SYS DUPLICATE                                                                             AR825181
+91CONFO CORRECTED                                                                           AR825181
+92CONFO COMPLETED                                                                           AR825181
+93CONFO CANC/AMND                                                                           AR825181
+98PAIRED BY USER                                                                            AR825181
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Finastra International Limited 2001

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058079           Date 11May21              */
-/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*       Last Amend No. AR575337           Date 17Oct23              */
+/*       Prev Amend No. MD058079           Date 11May21              */
+/*                      MD055891           Date 01Sep20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD023005           Date 23Oct13              */
 /*                      MD022112           Date 05Sep13              */
@@ -56,6 +57,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR575337 - COB - Job switches are not turned on when Job    */
+/*                  ends abnormally due to incorrect CCSID. If       */
+/*                  abnormal termination,  set on switches 7 and 8.  */
 /*       MD058079 - Deliverable Data Split for sundry files          */
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
@@ -1054,8 +1058,13 @@ AUDREP:      RTVDTAARA  DTAARA(CBSTAT) RTNVAR(&CBSTAT)
 /**/
 /* ABNORMAL TERMINATION PROCESSING */
 /**/
- ABNORMAL:   DMPCLPGM
-             MONMSG     MSGID(CPF0000 MCH0000)
+/**ABNORMAL:   DMPCLPGM */                                                              /*AR575337*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000) */                                       /*AR575337*/
+ABNORMAL:                                                                               /*AR575337*/
+             CHGJOB     SWS(XXXXXX11)                                                   /*AR575337*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*AR575337*/
+             DMPCLPGM                                                                   /*AR575337*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*AR575337*/
 /**/
              ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(*CLS)
              MONMSG     MSGID(CPF0000 MCH0000)

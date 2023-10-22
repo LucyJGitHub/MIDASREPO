@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR835056           Date 02Oct23               *
-      *  Prev Amend No. MD061774           Date 25Aug23               *
+      *  Last Amend No. 254159             Date 21Oct23               *
+      *  Prev Amend No. AR835056           Date 02Oct23               *
+      *                 MD061774           Date 25Aug23               *
       *                 MD023220           Date 15Aug23               *
       *                 BA6048             Date 01Mar23               *
       *                 AR924081           Date 23Mar23               *
@@ -443,6 +444,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254159 - Write Header if the last page prints 'End of        *
+      *           Report'.                                            *
+      *         - Applied for AR964375. (Child: AR964376)             *
       *  AR835056 - Loan activity enquiry shows abnormal interest     *
       *             amount. Process blank PDDI like PDDI = 'M'.       *
       *             Align LOAC fix with COB process. (Child: AR835057)*
@@ -4827,6 +4831,8 @@ L118 I                             P   72   77 7RTSPL
      C/COPY WNCPYSRC,LE0450CP15                                           S01408
      CL1   NORKR         COMP      0                                      07                   S0111
      CL1   NORPRT        COMP      0                                      08                   S0111
+     CLR OF                                                                                   254159
+     CANN09              EXCEPT    OVFLW                                                      254159
 0594 C**
 0595 C**   LAST RECORD PROCESSING
 0596 C**
@@ -21500,6 +21506,8 @@ C    C                   ENDIF                                                  
 3249 O                     60                   131 'K VAL.'
 3250 O                     61                   125 'FOR ACCRUAL REPORT - MAN'
 3251 O                     61                   131 '. ADJ.'
+     O          EF   LRN09   OVFLW                                                            254159
+     O                                           10 '       '                                 254159
      O**********E            NODTL            03                                       S01117 CFC006
      O          E    59      NODTL            03                                              CFC006
 3216 O                                           24 'REFERENCE LE0450P1'        S01117

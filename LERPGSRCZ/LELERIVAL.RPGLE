@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR866295           Date 12Oct23               *
-      *  Prev Amend No. MD054915           Date 23Sep23               *
+      *  Last Amend No. AR819060           Date 20Oct23               *      
+      *  Prev Amend No. AR866295           Date 12Oct23               *
+      *                 MD054915           Date 23Sep23               *
       *                 MD054897           Date 23Sep23               *
       *                 MD035417           Date 22Aug23               *
       *                 AR1076352          Date 15Jun23               *
@@ -134,6 +135,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR819060 - Warning not issued for new maturity date and new  *
+      *             interest payment date when it is a holiday. Added *
+      *             validation patterned after LECLIPEVL.             *
+      *             (Child: AR819061)                                 *      
       *  AR866295 - Loan reminder with final maturity                 *
       *             Validation on loan rollover for field 'New inte-  *
       *             rest payment date' should be less than maturity   *
@@ -465,6 +470,10 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
 
+     D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                AR819060
+     D QQACCD1       E                     EXTFLD(QQACCD)                                   AR819060
+      ** EXTERNAL DS FOR NOSTRO DETAILS                                                     AR819060
+                                                                                            AR819060
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
 
@@ -756,6 +765,19 @@
      D CLE036          S              1                                                      BUG9655
      D CLE106          S              1                                                       CLE106
                                                                                               CLE106
+     D                 DS                                                                   AR819060
+     D  WOURS                  1     18                                                     AR819060
+     D  SSIX                   1      6                                                     AR819060
+     D  SACD                   7     16                                                     AR819060
+     D  SASQ                  17     18                                                     AR819060
+     D  WSNOS                  1      2                                                     AR819060
+     D  ANMKEY                 1     10                                                     AR819060
+      ** Used for AONOSTR0                                                                  AR819060
+      *                                                                                     AR819060
+     D PACCD           S             10A                                                    AR819060
+     D WNOST           S              2  0 DIM(5) CTDATA PERRCD(5)                          AR819060
+      ** Settlements through nostros                                                        AR819060
+      *                                                                                     AR819060                                                                                              
      D CLE172          S              1                                                       CLE172
      D ASTRK           S              1                                                       CLE172
      D CRE073          S              1                                                       CRE073
@@ -4596,6 +4618,63 @@
       *
       * If no errors
       *
+      *                                                                                     AR819060
+      **  If New Interest payment date was entered, send                                    AR819060
+      **  warning message if holiday in currency involved.                                  AR819060
+      *                                                                                     AR819060
+     C     DDNipdOK      IfNe      'N'                                                      AR819060
+     C                   Z-ADD     ZDAYNO        PDateIn                                    AR819060
+     C                   EXSR      DETSTMT                                                  AR819060
+     C     WSTMT         IfEq      1                                                        AR819060
+     C     WSTMT         OrEq      7                                                        AR819060
+     C     WSTMT         OrEq      8                                                        AR819060
+     C                   MOVE      '1'           *IN97                                      AR819060
+      *                                                                                     AR819060
+     C     CLE031        IfNE      'Y'                                                      AR819060
+     C     CEU004        IfEq      'Y'                                                      AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          ZCCY                                       AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      DDCURR        ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+      *                                                                                     AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      DDCURR        ZCCY                                       AR819060
+      *                                                                                     AR819060
+     C     LTYPE         IfEq      'PTSO'                                                   AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+     C     LTYPE         IfNe      'PTSO'                                                   AR819060
+     C     SCCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      SCCY          ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   EXSR      SRGLOC                                                   AR819060
+     C                   MOVE      ZCCY          PCurrency                                  AR819060
+     C                   MOVE      W@MDSL        PLocation                                  AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      '0'           *IN97                                      AR819060
+     C                   MOVE      BJLCCY        PCurrency                                  AR819060
+     C                   MOVE      BJSLCD        PLocation                                  AR819060
+     C                   EndIf                                                              AR819060
+     C                   EXSR      ZCHKH                                                    AR819060
+      *                                                                                     AR819060
+     C     PHolInd       IFEQ      'H'                                                      AR819060
+     C                   ADD       1             WIdx                                       AR819060
+     C                   EVAL      WFldNamArr(WIdx) = 'DDNIPDB'                             AR819060
+     C     *IN97         IfEq      *ON                                                      AR819060
+     C     CEU004        IfEq      'Y'                                                      AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0499'                              AR819060
+     C                   Else                                                               AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0073'                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   Else                                                               AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0074'                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   MOVE      'W'           DDNipdOK                                   AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
      C     DDNchiOK      IFNE      'N'
      C     DDACTN        IFEQ      'A'
      C                   MOVE      DDNIPDB       DDNIPDB
@@ -4794,6 +4873,63 @@
       **********                                                                       CAS019 262581
      C**********         ENDIF                                                         CAS019 262581
      C**********         ENDIF                                                         CAS019 262581
+      *                                                                                     AR819060
+      **  If New Maturity date was entered, send                                            AR819060
+      **  warning message if holiday in currency involved.                                  AR819060
+      *                                                                                     AR819060
+     C     DDNmdtOK      IfNe      'N'                                                      AR819060
+     C                   Z-ADD     ZDAYNO        PDateIn                                    AR819060
+     C                   EXSR      DETSTMT                                                  AR819060
+     C     WSTMT         IfEq      1                                                        AR819060
+     C     WSTMT         OrEq      7                                                        AR819060
+     C     WSTMT         OrEq      8                                                        AR819060
+     C                   MOVE      '1'           *IN97                                      AR819060
+      *                                                                                     AR819060
+     C     CLE031        IfNE      'Y'                                                      AR819060
+     C     CEU004        IfEq      'Y'                                                      AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          ZCCY                                       AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      DDCURR        ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+      *                                                                                     AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      DDCURR        ZCCY                                       AR819060
+      *                                                                                     AR819060
+     C     LTYPE         IfEq      'PTSO'                                                   AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+     C     LTYPE         IfNe      'PTSO'                                                   AR819060
+     C     SCCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      SCCY          ZCCY                                       AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   EXSR      SRGLOC                                                   AR819060
+     C                   MOVE      ZCCY          PCurrency                                  AR819060
+     C                   MOVE      W@MDSL        PLocation                                  AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      '0'           *IN97                                      AR819060
+     C                   MOVE      BJLCCY        PCurrency                                  AR819060
+     C                   MOVE      BJSLCD        PLocation                                  AR819060
+     C                   EndIf                                                              AR819060
+     C                   EXSR      ZCHKH                                                    AR819060
+      *                                                                                     AR819060
+     C     PHolInd       IfEq      'H'                                                      AR819060
+     C                   ADD       1             WIdx                                       AR819060
+     C                   EVAL      WFldNamArr(WIdx) = 'DDNMDTB'                             AR819060
+     C     *IN97         IfEq      *ON                                                      AR819060
+     C     CEU004        IfEq      'Y'                                                      AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0502'                              AR819060
+     C                   Else                                                               AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0070'                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   Else                                                               AR819060
+     C                   EVAL      WMsgIDArr(WIdx) = 'LEL0071'                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   MOVE      'W'           DDNmdtOK                                   AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060     
       *
       * If no errors
       *
@@ -9390,12 +9526,121 @@
      C                   CALLB     'ZCHKH'
      C                   PARM                    PDateIn
      C                   PARM                    PCurrency
-     C                   PARM      *BLANKS       PLocation
+     C**********         PARM      *BLANKS       PLocation                                  AR819060
+     C                   PARM                    PLocation                                  AR819060
      C                   PARM                    PHolInd
      C*
      C**  If PHolInd = 'H' then the date is a holiday.
      C*
      C                   ENDSR
+      *****************************************************************                     AR819060
+      /EJECT                                                                                AR819060
+      *****************************************************************                     AR819060
+      *                                                               *                     AR819060
+      * DETSTMT - Determine if pay or receipt settlement              *                     AR819060
+      *                                                               *                     AR819060
+      *****************************************************************                     AR819060
+     C     DETSTMT       BEGSR                                                              AR819060
+      *                                                                                     AR819060
+      ** If Part Sold, use Receipt settlement, else use Pay settlement                      AR819060
+      *                                                                                     AR819060
+     C                   EXSR      DETPTSO                                                  AR819060
+     C                   MOVE      *BLANKS       WSTMT             2 0                      AR819060
+     C                   MOVE      *BLANKS       WOMDA            18 0                      AR819060
+     C     LTYPE         IfEq      'PTSO'                                                   AR819060
+     C                   MOVE      PSTM          WSTMT                                      AR819060
+     C                   MOVE      PONS          WOMDA                                      AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      RSTM          WSTMT                                      AR819060
+     C                   MOVE      RONS          WOMDA                                      AR819060
+     C                   EndIf                                                              AR819060
+     C                   ENDSR                                                              AR819060
+      *****************************************************************                     AR819060
+      /EJECT                                                                                AR819060
+      *****************************************************************                     AR819060
+      *                                                               *                     AR819060
+      * SRGLOC - Get start and maturity date settlement               *                     AR819060
+      *                                                               *                     AR819060
+      *****************************************************************                     AR819060
+     C     SRGLOC        BEGSR                                                              AR819060
+      *                                                                                     AR819060
+      ** For type 01,02,07,08 or 12, settlement location is determined                      AR819060
+      ** by the nostro branch                                                               AR819060
+      *                                                                                     AR819060
+     C                   MOVE      *BLANKS       W@MDSL            3                        AR819060
+      *                                                                                     AR819060
+      ** Get maturity settlement location                                                   AR819060
+      *                                                                                     AR819060
+     C     WSTMT         LOOKUP    WNOST                                  98                AR819060
+     C     *IN98         IfEq      '1'                                                      AR819060
+     C                   MOVE      WOMDA         WOURS                                      AR819060
+     C                   MOVE      WSNOS         PNONB                                      AR819060
+      *                                                                                     AR819060
+     C     CLE031        IfNe      'Y'                                                      AR819060
+     C     CEU004        IfEq      'Y'                                                      AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          PCURR                                      AR819060
+     C                   ELSE                                                               AR819060
+     C                   MOVE      DDCURR        PCURR                                      AR819060
+     C                   ENDIF                                                              AR819060
+      *                                                                                     AR819060
+     C                   Else                                                               AR819060
+      *                                                                                     AR819060
+     C                   MOVE      DDCURR        PCURR                                      AR819060
+      *                                                                                     AR819060
+     C     LTYPE         IfEq      'PTSO'                                                   AR819060
+     C     PSCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      PSCY          PCURR                                      AR819060
+     C                   EndIf                                                              AR819060
+     C     LTYPE         IfNe      'PTSO'                                                   AR819060
+     C     SCCY          AndNE     *BLANKS                                                  AR819060
+     C                   MOVE      SCCY          PCURR                                      AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
+      *                                                                                     AR819060
+     C                   CALLB     'AONOSTR0'                                               AR819060
+     C                   PARM      *BLANKS       PRTCD             7                        AR819060
+     C                   PARM      '*KEY   '     POPTN             7                        AR819060
+     C                   PARM                    PCUSN             6                        AR819060
+     C                   PARM                    PCURR             3                        AR819060
+     C                   PARM                    PACCD                                      AR819060
+     C                   PARM                    PACSN             2                        AR819060
+     C                   PARM                    PNONB             2                        AR819060
+     C                   PARM                    PBRCA             3                        AR819060
+     C                   PARM                    PCSSN            10                        AR819060
+     C                   PARM                    PPNOI             1                        AR819060
+     C     SDNOST        PARM      SDNOST        DSFDY                                      AR819060
+     C     WSNOS         IfEq      '?'                                                      AR819060
+     C     PRTCD         IfEq      *BLANKS                                                  AR819060
+     C                   MOVE      A7NOSN        W@MDSL                                     AR819060
+     C                   MOVEL     PNONB         WSNOS                                      AR819060
+     C                   EndIf                                                              AR819060
+     C                   Else                                                               AR819060
+     C     PRTCD         IFEQ      *BLANKS                                                  AR819060
+     C                   MOVE      A7NOSN        W@MDSL                                     AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
+     C                   EndIf                                                              AR819060
+      *                                                                                     AR819060
+     C                   ENDSR                                                              AR819060
+      *****************************************************************                     AR819060
+      /EJECT                                                                                AR819060
+      *****************************************************************                     AR819060
+      *                                                               *                     AR819060
+      * DETPTSO - Determine if Processing Type is Parts Sold          *                     AR819060
+      *                                                               *                     AR819060
+      *****************************************************************                     AR819060
+     C     DETPTSO       BEGSR                                                              AR819060
+     C                   Move      *BLANKS       LTYPE             4                        AR819060
+     C     PTYP          IfEq      66                                                       AR819060
+     C     PTYP          OrEq      67                                                       AR819060
+     C     PTYP          OrEq      69                                                       AR819060
+     C     PTYP          OrEq      72                                                       AR819060
+     C                   MOVE      'PTSO'        LTYPE                                      AR819060
+     C                   Else                                                               AR819060
+     C                   MOVE      'NPSO'        LTYPE                                      AR819060
+     C                   EndIf                                                              AR819060
+     C                   ENDSR                                                              AR819060     
       *****************************************************************                       CRE073
       /EJECT                                                                                  CRE073
       *****************************************************************                       CRE073
@@ -10277,3 +10522,5 @@ DWFMTQ45X789VEYCIJNU                                                            
 0010000                                                                                       CLE031
 0100000                                                                                       CLE031
 1000000                                                                                       CLE031
+**  WNOST - Table of settlements through nostros                                            AR819060
+0102070812                                                                                  AR819060

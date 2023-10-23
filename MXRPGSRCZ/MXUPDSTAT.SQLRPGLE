@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061902           Date 20Oct23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061902 - Midas Export next export date & extract           *
+      *             statistics not updated.                           *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR702741 - Include location as parameter in ZFREQB to        *
@@ -326,7 +329,11 @@
      C/exec SQL                                                                             MD056612
      C+ update MXCMDXTD set                                                                 MD056612
      C+   CDXCTL = :CDXCTL, CDLDTT = :CDLDTT, CDLSTT = :CDLSTT,                             MD056612
-     C+   CDLETT = :CDLETT, CDNOTT = :CDNOTT, CDNTST = :CDNTST                              MD056612
+     C***+***CDLETT = :CDLETT, CDNOTT = :CDNOTT, CDNTST = :CDNTST                  MD056612 MD061902
+     C+   CDLETT = :CDLETT, CDNOTT = :CDNOTT, CDNTST = :CDNTST,                             MD061902
+     C+   CDLDTX = :CDLDTX, CDLSTX = :CDLSTX, CDLETX = :CDLETX,                             MD061902
+     C+   CDNOTX = :CDNOTX, CDNTSX = :CDNTSX,                                               MD061902
+     C+   CDEXND = :CDEXND                                                                  MD061902
      C+ where CDCOMI = :I#COMI and CDEXTT = :I#EXTT                                         MD056612
      C/end-exec                                                                             MD056612
 
@@ -437,7 +444,11 @@
      C/exec SQL                                                                             MD056612
      C+ update MXEXDXTD set                                                                 MD056612
      C+   EXXCTL = :EXXCTL, EXLDTT = :EXLDTT, EXLSTT = :EXLSTT,                             MD056612
-     C+   EXLETT = :EXLETT, EXNOTT = :EXNOTT, EXNTST = :EXNTST                              MD056612
+     C***+***EXLETT = :EXLETT, EXNOTT = :EXNOTT, EXNTST = :EXNTST                  MD056612 MD061902
+     C+   EXLETT = :EXLETT, EXNOTT = :EXNOTT, EXNTST = :EXNTST,                             MD061902
+     C+   EXLDTX = :EXLDTX, EXLSTX = :EXLSTX, EXLETX = :EXLETX,                             MD061902
+     C+   EXNOTX = :EXNOTX, EXNTSX = :EXNTSX,                                               MD061902
+     C+   EXEXND = :EXEXND                                                                  MD061902
      C+ where EXFMT  = :I#FMT                                                               MD056612
      C/end-exec                                                                             MD056612
 

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060110           Date 10Oct23               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057597           Date 19Feb21               *
       *                 MD057498           Date 26Jan21               *
       *                 254841B            Date 14May20               *
@@ -109,6 +110,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060110 - Payments can be amended and authorised by the     *
+      *             same user. Use the MSWINPUSER value from T_MSWIP  *
+      *             to populate Input Officer 1 and Input Officer 2.  *
+      *           - Applied for MD061506.                             *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -2829,11 +2834,21 @@
 
       * Input Officer
      C                   Eval      @USRID   = WUSRID                                          CAP084
+     C                   IF        SACTION = 'I'                                            MD060110
      C                   IF        InputUser = *BLANKS                                      MD042042
      C                   Eval      OTINUSR1 = @USRID
      C                   ELSE                                                               MD042042
      C                   EVAL      OTINUSR1 = InputUser                                     MD042042
+     C                   ENDIF                                                              MD060110
      C                   ENDIF                                                              MD042042
+                                                                                            MD060110
+     C                   IF        SACTION = 'A'                                            MD060110
+     C                   IF        InputUser = *BLANKS                                      MD060110
+     C                   EVAL      OTINUSR2 = @USRID                                        MD060110
+     C                   ELSE                                                               MD060110
+     C                   EVAL      OTINUSR2 = InputUser                                     MD060110
+     C                   ENDIF                                                              MD060110
+     C                   ENDIF                                                              MD060110
 
      C                   If        SACTION = 'I'
       * Setup Original Entry date

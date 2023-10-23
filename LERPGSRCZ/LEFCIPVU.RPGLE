@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060244           Date 11Jul22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR1051966          Date 20Oct23               *
+      *  Prev Amend No. MD060244           Date 11Jul22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD039655           Date 03Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
@@ -85,6 +86,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1051966 - Authorising user is being replaced with AUTOAUTH *
+      *              when rejected in WIP. Passed REJECT button and   *
+      *              prevent replacing of original authorising user   *
+      *              when REJECT button is click. Patterned from      *
+      *              GEMS262766. (Child: AR1051967)                   *
       *  MD060244 - Missing LEFCIPVU module delivery (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1974,7 +1980,8 @@
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
-
+     C                   PARM                    @ACTRV                                    AR1051966
+ 
      C                   END
       *
       * IF THERE WERE ANY ERRORS IN THE UPDATE FUNCTIONS, ROLLBACK ANY

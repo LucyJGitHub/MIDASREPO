@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE138             Date 02Nov21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR1051966          Date 20Oct23               *
+      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -40,6 +41,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1051966 - Authorising user is being replaced with AUTOAUTH *
+      *              when rejected in WIP. Passed REJECT button and   *
+      *              prevent replacing of original authorising user   *
+      *              when REJECT button is click. Patterned from      *
+      *              GEMS262766. (Child: AR1051967)                   *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -338,6 +344,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
+     C                   PARM                    @ACTRV                                    AR1051966
 
       /COPY WNCPYSRC,LEFCIPU007
 

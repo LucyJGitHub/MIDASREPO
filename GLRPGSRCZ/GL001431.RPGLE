@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *      
+      *  Last Amend No. MD061033           Date 27Sep23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
       *                 MD049134           Date 27Jul20               *
       *                 CMG008             Date 20Feb20               *
       *                 AR401845           Date 12Mar20               *
@@ -47,6 +48,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061033 - GLC001430 went to MSGW.                           *
+      *           - Reset next page number to 0 if current page       *
+      *             number is 99999.                                  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *      
@@ -534,7 +538,12 @@
      C                   ENDIF
      C                   EVAL      MGACNO = ACNO                                Retail account numbe
      C                   EVAL      MGIBAN = IBAN                                IBAN
+     C                   IF        NA5LSN < 99999                                           MD061033
      C                   EVAL      MGSTNO = NA5LSN + 1                          Last Statement Page
+     C                   ELSE                                                               MD061033
+     C                   EVAL      MGSTNO = 1                                               MD061033
+     C                   ENDIF                                                              MD061033
+      *                                                                                     MD061033
      C                   EVAL      MGLSDT = NA5LSD                              Last Statement Date
      C                   EVAL      MGIOBL = NA5LCB                              Initial Opening Bala
      C                   EVAL      MGFCBL = NA5LCB + WkBalance                  Final Closing Balanc
@@ -659,7 +668,12 @@
      C                   EVAL      UpNA5LSD = BJRDNB                            Last Statement Date
      C/COPY OFCPYSRCZ,CGL146_084                                                             CGL146A
      C                   TIME                    UpNA5LST                       Last Statement Time
+     C                   IF        NA5LSN < 99999                                           MD061033
      C                   EVAL      UpNA5LSN = NA5LSN + 1                        Last Statement Page
+     C                   ELSE                                                               MD061033
+     C                   EVAL      UpNA5LSN = 1                                             MD061033
+     C                   ENDIF                                                              MD061033
+      *                                                                                     MD061033
      C                   EVAL      UpNA5LCB = NA5LCB + WkBalance                Final Closing Balanc
      C                   IF        NA5NSD < BJDNWD                              Not a demand
      C/COPY OFCPYSRCZ,CGL146_083                                                             CGL146A

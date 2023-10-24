@@ -39,6 +39,8 @@
       *                                                               *
       *  MD061852 - UDC_PRTGEN failed i/o operation was applied to    *
       *             closed file CGUXMLL0 in FusionMidas.              *
+      *           - Open and close file CGUXMLL0 when #@ARCH <> 'A'.  *
+      *           - Fix is for BA6020.                                *
 /*    *  BA6020 - Add specific header field to CM XML output          *
       *  255619 - Applied fix 252870.                                 *
       *  252870 - Zero-byte file transferred by CM.                   *

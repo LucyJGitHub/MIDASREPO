@@ -16,11 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 241919             Date 22Dec06               *
+      *                 241919             Date 22Dec06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG8233            Date 23Aug05               *
       *                 BUG8141            Date 11Aug05               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Added new parameter for FDFWRTAMD and FDFWRTDFT.    *
+      *           Applied fix 241363.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  241919 - Recompiled due to changes done to FDVFWRTPD.        *
       *  BUG8233- Error in Forward Rates upload via File Adapter API  *
@@ -53,19 +56,19 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FFDIFWRTL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FDIFWRTD0:FDIFWRTX0)
      FFDIFWRTL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FDFWRTR001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -77,51 +80,51 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the FD standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
+
       ** Array of Fields in error, temporary store
      D TmpFldNmAr      S             10A   DIM(ArrayMax)
       ** Array of error message IDs, temporary store
@@ -130,56 +133,56 @@
       ** Commitment Control Job Array                                                        BUG1056
      D WJobs           S             10A   Dim(10)                                           BUG1056
       **                                                                                     BUG1056
- 
+
       * Current Forward Rates Transaction in File Format
      D CrTrFilFmt    E DS                  EXTNAME(FWDRTFE)
      D                                     PREFIX(C_)
- 
+
      D PrvFRFilFmt   E DS                  EXTNAME(FDVFWRTPD)
      D                                     PREFIX(P_)
       ** Previous Forward Rates Detail in File Format
- 
+
       * Current Forward Rates Transaction in Screen Format
      D CurTrScrn     E DS                  EXTNAME(FDFWRTPD)
      D                                     PREFIX(@)
- 
+
       * New Forward Rates Transaction in File Format
      D NwTrFilFmt    E DS                  EXTNAME(FDVFWRTPD)
- 
+
       * New Forward Rates Transaction in Screen Format
      D NewTrScrn     E DS                  EXTNAME(FDFWRTPD)
- 
+
      D CurFRExtDta   E DS                  EXTNAME(FDIREXPD)
       ** Current forward Rates Extra Data
- 
+
       * Previous Forward Rates Transaction in Screen Format
      D PrvTrScrn     E DS                  EXTNAME(FDFWRTPD)
      D                                     PREFIX(@P)
- 
- 
+
+
       * Error indicators
      D OKTrFWRT      E DS                  EXTNAME(FDEFWRTPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -192,46 +195,46 @@
       **                                                                                     BUG1056
       ** Changed Party Names Array
      D ChgNamArr       S              1    DIM(5)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Update Y/N?                                                                          238595
      D UpdateYN        S              1A   INZ(*BLANK)                                        238595
                                                                                               238595
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
      D FormatA         S             10A   INZ('FDFWRTPD')
- 
+
      D Field1          S             10A   INZ('DDFLD1')
- 
+
      D FieldA          S             10A   INZ('DDCCY')
- 
+
      D FldOffsetA      S              5P 0
- 
+
      D FieldNo         S              5P 0
- 
+
       ** End of fields for getting starting field number
- 
+
       ** -------------------------------------------------------------------
- 
+
      D WKCCY           S                   LIKE(DDCCY)
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepFWRT         S              1A   inz('N')
       ** -------------------------------------------------------------------
- 
+
       ** Fields defined for Enhancement CSC011                                                CSC011
                                                                                               CSC011
      D CSC011          S              1A                                                      CSC011
@@ -253,14 +256,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FDFWRTR002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -332,10 +335,10 @@
      C     @SCRN         IFEQ      'T'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FDFWRTR013
- 
+
       /EJECT
       *****************************************************************
       * SCRN@I - BROWSE INVALID TRANSACTIONS
@@ -499,9 +502,9 @@
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIdArr
      C                   MOVEL     *BLANK        MsgDtaArr
- 
+
       ** Reset warning fields
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
@@ -561,25 +564,25 @@
       *
      C     C_CCY         IFNE      *BLANK
      C     DDACTN        ANDEQ     'A'
- 
+
       * Data Substitution - Transaction Details
- 
+
      C     GHSUBS        ifne      *blank
- 
+
      C     GHSUBS        SCAN      NewTrScrn                              99
      C                   if        *in99
      C                   eval      RepFWRT = 'Y'
      C                   endif
- 
+
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
      C                   if        (RepFWRT = 'Y')
      C                   EXSR      TDtDtaSubs
      C                   endif
- 
+
      C                   END
- 
- 
+
+
      C                   END
       *
       * If action code, or Transaction reference were NOT OK
@@ -595,7 +598,7 @@
       *
      C                   EXSR      SNDM@A
      C                   MOVE      'A'           @SCRN
- 
+
       * ELSE IF NO INVALID Transaction READ FROM SUBFILE
       *
      C                   ELSE
@@ -612,7 +615,7 @@
       * SNDM@A - SEND A MESSAGE TO DETAILS SCREEN
       *****************************************************************
      C     SNDM@A        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -652,13 +655,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    FormatA
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -671,7 +674,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
       *
@@ -705,7 +708,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       * Update 'previous' screen
      C                   MOVEL     NewTrScrn     PrvTrScrn
       *
@@ -725,7 +728,7 @@
       *
       * Fields in error
      C                   PARM                    OKTrFwrt
- 
+
       * ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -771,7 +774,7 @@
       * Validate input to screen
      C                   CAS                     VAL@A
      C                   ENDCS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -798,7 +801,7 @@
      C                   GOTO      ENDVAL@A
      C                   ENDIF
      C                   ENDIF
- 
+
       *----------------------------------------------------------------
       * IF DELETE
       *
@@ -819,13 +822,14 @@
      C                   Z-ADD     *ZERO         Idx               3 0
      C                   MOVE      *ALL'Y'       OKTrFWRT
      C                   CLEAR                   NwTrFilFmt
- 
+
      C                   IF         DDACTN = 'A' OR DDACTN = 'I'
- 
+
      C                   CALLB     'FDFWRTAMD'
      C                   PARM                    RetCodeIn
      C                   PARM                    PRVTRSCRN
      C                   PARM                    NEWTRSCRN
+     C                   PARM                    BJCYCD                                       259866
      C                   PARM                    OKTRFWRT
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -833,11 +837,11 @@
      C                   PARM                    Idx
      C                   PARM                    AmendOk           1
      C                   PARM      'Y'           ResetErrs         1
- 
+
      C     Idx           IFNE      *ZERO
      C                   GOTO      ENDVAL@A
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       * Validate Forward Rates Transaction details
@@ -845,20 +849,20 @@
      C                   CALLB     'FDFWRTVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       ** Transaction Primary Details
      C                   PARM                    NewTrScrn
      C                   PARM                    CurFRExtDta
      C                   PARM                    PrvFRFilFmt
- 
+
       * OUTPUTS :
- 
+
       ** Transaction Primary Details OK inds
      C                   PARM                    OKTrFWRT
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -906,9 +910,9 @@
       *                                                               *
       *****************************************************************
      C     SrDFT         BEGSR
- 
+
       ** Call Retrieve Module
- 
+
      C                   CALLB     'FDFWRTDFT'
       * Return Code
      C                   PARM                    RetCodeIn
@@ -919,6 +923,9 @@
       ** First Rate
      C                   PARM                    WKRTE1           14
       * OUTPUTS
+                                                                                              259866
+      ** First Days number                                                                    259866
+     C                   PARM                    DDDYS1                                       259866
       *
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKTrFWRT
@@ -933,7 +940,7 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
- 
+
      C                   EVAL      DDRTE1 = WKRTE1
      C                   ENDSR
       *****************************************************************
@@ -976,7 +983,7 @@
       *
       * OK - Transaction Reference
      C                   PARM      *BLANK        DDCCYOK
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1005,7 +1012,7 @@
       * OUTPUTS
       * Transaction - screen formats
      C                   PARM                    NewTrScrn
- 
+
       *
       * Update 'Current' Transaction with Transaction in Screen Format
       *
@@ -1147,19 +1154,19 @@
       * TDtDtaSubs - Transaction Details Data Substitution            *
       *                                                               *
       *****************************************************************
- 
+
      C     TDtDtaSubs    BEGSR
- 
+
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   if        RepFWRT = 'Y'
- 
+
      C                   RESET                   ReturnCode
      C                   clear                   IncData
      C                   clear                   CurData
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode       10
       * Substitution character
@@ -1168,12 +1175,12 @@
      C                   PARM      NewTrScrn     IncDATA        2000
       * Current Data
      C                   PARM      CurTrScrn     CurDATA        2000
- 
+
      C                   MOVEL     IncDATA       NewTrScrn
- 
+
      C                   endif
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       *****************************************************************
@@ -1294,8 +1301,8 @@
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                                   CSC011
      C                   KFLD                    KTimeStamp                                   CSC011
- 
- 
+
+
       ** Get the field number for the action code field; the primary
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -1304,7 +1311,7 @@
      C                   PARM                    FormatA
      C                   PARM                    FieldA
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetA = FieldNo - 1
      C                   ENDIF
@@ -1313,10 +1320,10 @@
       *
      C                   MOVEL     'I'           @SCRN             1
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FDFWRTR014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

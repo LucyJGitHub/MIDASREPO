@@ -1973,7 +1973,7 @@
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
-     C                   PARM                    @ACTRV                                    AR1051966
+     C                   PARM      *BLANK        @ACTRV                                    AR1051966
 
      C                   END
       *

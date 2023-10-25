@@ -949,7 +949,7 @@
       * Facility sequence assigned
 
      C**********         PARM                    A_FCNO            2                          222373
-     C                   PARM                    @ACTRV                                    AR1051966
+     C                   PARM      *BLANK        @ACTRV                                    AR1051966
       *
      C                   ENDSR
       *****************************************************************

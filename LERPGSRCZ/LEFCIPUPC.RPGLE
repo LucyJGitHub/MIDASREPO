@@ -344,7 +344,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
-     C                   PARM                    @ACTRV                                    AR1051966
+     C                   PARM      *BLANK        @ACTRV                                    AR1051966
 
       /COPY WNCPYSRC,LEFCIPU007
 

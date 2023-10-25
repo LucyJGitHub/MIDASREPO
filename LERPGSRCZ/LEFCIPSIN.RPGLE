@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. AR1051966          Date 20Oct23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD039655           Date 03Sep19               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
@@ -47,6 +48,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1051966 - Authorising user is being replaced with AUTOAUTH *
+      *              when rejected in WIP. Passed REJECT button and   *
+      *              prevent replacing of original authorising user   *
+      *              when REJECT button is click. Patterned from      *
+      *              GEMS262766. (Child: AR1051967)                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD039655 - Facility cannot be rejected.                      *
@@ -1967,6 +1973,7 @@
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
+     C                   PARM      *BLANK        @ACTRV                                    AR1051966
 
      C                   END
       *

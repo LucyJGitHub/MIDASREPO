@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD035399           Date 18Oct23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSE039             Date 06Mar03              */
+/*                      CSE039             Date 06Mar03              */
 /*                      CSE041             Date 27Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
@@ -36,6 +37,8 @@
 /*                                                                 */
 /*-----------------------------------------------------------------*/
 /*                                                                 */
+/*       MD035399 - SEC0302 in message wait due to locked SEACKD.    */
+/*                  Fail SEC0302 if SEACKD is locked.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSE039 - Automatic Settlements of Trades                    */
 /*       CSE041 - DVP/RVP Processing                                 */
@@ -75,6 +78,7 @@
 /**/
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)              */ /*S01117*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*S01117*/
+             DCL        VAR(&MEM2) TYPE(*CHAR) LEN(100)                                 /*MD035399*/
              DCL        VAR(&FKEY) TYPE(*CHAR) LEN(4)                 /*S01117*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(60)
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                 /*CSE023*/
@@ -574,13 +578,28 @@
              ELSE       CMD(IF COND(&PRM01 *EQ 'SE4710  ' *AND +
                           &CSE041 *EQ 'Y') THEN(CALL PGM(&PRM01) +
                           PARM('L' &RSEQ &RLEV &RENT))) /*CSE041*/
- 
+
              ELSE       IF COND(&PRM01 *EQ 'SE4300  ' *AND +
                           &CSE039 *EQ 'Y') THEN(DO)                   /*CSE039*/
              CALL       PGM(&PRM01) PARM('L' &RSEQ &RLEV &RENT +
                           &TRADE &DEPMV &ALL) /*CSE039*/
                           ENDDO                                       /*CSE039*/
- 
+                                                                                        /*MD035399*/
+             ELSE       IF COND(&PRM01 = 'SE0370') THEN(DO)                             /*MD035399*/
+                        ALCOBJ OBJ((SEACKD *FILE *SHRRD)) WAIT(30)                      /*MD035399*/
+                        MONMSG MSGID(CPF1002) EXEC(DO)                                  /*MD035399*/
+                         CHGVAR VAR(&MEM2) VALUE('SEC0302 job terminated. +
+                                SE Account Keys file is in use. Please +
+                                submit the job again later.')                           /*MD035399*/
+                         SNDPGMMSG  MSG(&MEM2) TOPGMQ(*EXT) +
+                                TOMSGQ(MOPERQ MRUNQ)                                    /*MD035399*/
+                         CHGJOB SWS(XXXXXX11)                                           /*MD035399*/
+                         GOTO CMDLBL(ENDPGM)                                            /*MD035399*/
+                         ENDDO                                                          /*MD035399*/
+                        DLCOBJ OBJ((SEACKD *FILE *SHRRD))                               /*MD035399*/
+                        CALL PGM(&PRM01) PARM('L' &RSEQ)                                /*MD035399*/
+                        ENDDO                                                           /*MD035399*/
+                                                                                        /*MD035399*/
              ELSE       CMD(CALL PGM(&PRM01) PARM('L' &RSEQ))         /*S01117*/
                                                            /*E15601*/
 /**/

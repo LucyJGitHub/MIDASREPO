@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061162           Date 12Apr23               *
-      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *  Last Amend No. MD062013           Date 25Oct23               *
+      *  Prev Amend No. MD061162           Date 12Apr23               *
+      *                 MD058986           Date 11Oct21               *
       *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CCB020C            Date 16May13               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062013 - Cursors are not properly closed                   *
       *  MD061162 - Avoid duplicate key error when deleting records   *
       *             by making sure the unique no. (DIDRUN) is unique  *
       *             whether records are logically deleted or not      *
@@ -1333,12 +1335,14 @@
      C                   Setoff                                       90                    MD055891
      C                   ENDIF                                                              MD055891
      C                   END
+     C     SAEXIT        TAG                                                                MD062013
      C/EXEC SQL                                                                             MD055891
      C+ close CCursor                                                                       MD055891
      C/END-EXEC                                                                             MD055891
                                                                                             MD055891
       *================================================================
-     CSR   SAEXIT        ENDSR
+     C*SR**SAEXIT        ENDSR                                                              MD062013
+     CSR                 ENDSR                                                              MD062013
       /EJECT
      CSR   SBRVGN        BEGSR
       *================================================================
@@ -1410,12 +1414,14 @@
      C                   Setoff                                       90                    MD055891
      C                   ENDIF                                                              MD055891
      C                   END
+     C     SBEXIT        TAG                                                                MD062013
      C/EXEC SQL                                                                             MD055891
      C+ close DCursor                                                                       MD055891
      C/END-EXEC                                                                             MD055891
                                                                                             MD055891
       *================================================================
-     CSR   SBEXIT        ENDSR
+     C*SR**SBEXIT        ENDSR                                                              MD062013
+     CSR                 ENDSR                                                              MD062013
       /EJECT
      CSR   SCCHRC        BEGSR
       *================================================================

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056479           Date 14Sep19               *
+      *  Last Amend No. 251334             Date 24Oct23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056479           Date 14Sep19               *
       *                 MD055528           Date 13Aug20               *
       *                 MD053869           Date 07Jan20               *
       *                 MD052075           Date 07Jun19               *
@@ -72,6 +73,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251334 - Error on journal entry user has no authority on     *
+      *           account code. Validate based on reference user      *
+      *           instead of User ID.                                 *
+      *         - Applied for MD-53783                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056479 - Cannot accept batch due to calculated hash        *
@@ -2272,7 +2277,8 @@
       *                                                                                       CAP084
      C     KACCD         KLIST                                                                CAP084
      C                   KFLD                    WACCD                                        CAP084
-     C                   KFLD                    USRID                                        CAP084
+     C**********         KFLD                    USRID                                CAP084  251334
+     C                   KFLD                    MREFUSR                                      251334
       *                                                                                       CAP084
      C**********         ENDIF                                                        CAP084 BUG6979
       ** Access SAR details file to determine if CGL064 is on.                                CGL064

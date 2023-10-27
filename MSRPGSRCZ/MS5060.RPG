@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060786           Date 22Dec22               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1029813          Date 23Oct23               *
+      *  Prev Amend No. 256773             Date 23Oct23               *
+      *                 MD060786           Date 22Dec22               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD023232           Date 24Apr14               *
       *                 AR567569           Date 27Jul12               *
       *                 CER059             Date 19Jul10               *
@@ -36,6 +38,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1029813 - Component MSC0501 00001 failed in COB because    *
+      *              an array index error occurs on "IMS1,X" of line  *
+      *              869.00. Bypass some of the IMSG,X and IMS1,X     *
+      *              processing for Block 4 in SR/REPT, so that array *
+      *              index error will be avoided. (Child: AR1029814)  *
+      *            - Applied for MD-61849                             *
+      *  256773 - Swift error Program Dump Component MSC0501 00001.   *
+      *           Added new array to save excess data. Also added     *
+      *           processing for the said array. Applied fix 219018.  *
+      *            - Applied for MD-61849                             *
       *  MD060786 - Component MSC0501 Failed.                         *
       *           - Pattern the fix from GEMS 250829.                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -112,6 +124,7 @@
      F/COPY WNCPYSRC,MS5060F002
      E***********         IMSG     3072  1                                CSW095
      E                    IMSG     9999  1                                CSW095
+     E                    IMS1     1326  1                                                    256773
      E*******             LINE      130  1                                097534
      E                    LINE      128  1                                097534
      E                    CPY@    1   1 80
@@ -431,6 +444,8 @@
      C/COPY WNCPYSRC,MS5060C012
      C***********          Z-ADD1         X       40                      CSW095
      C                     Z-ADD1         X       50                      CSW095
+     C                     Z-ADD1         M       50                                          256773
+     C                     Z-ADD0         N       50                                          256773
       *
       **  Move all records which match key into array
      C           *IN10     DOWEQ'0'
@@ -445,7 +460,20 @@
      C                     Z-ADD1         X                                                 AR567569
      C                     ENDIF                                                            AR567569
       *                                                                                     AR567569
+     C           X         ADD  256       N                                                   256773
+     C           N         IFGT 9999                                                          256773
+     C           M         IFEQ 1                                                             256773
      C                     MOVEAMDTA      IMSG,X
+     C                     MOVE MDTA      WTMP  241 P                                         256773
+     C                     MOVEAWTMP      IMS1,M                                              256773
+     C                     ADD  241       M                                                   256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMS1,M                                              256773
+     C                     ADD  256       M                                                   256773
+     C                     ENDIF                                                              256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMSG,X                                              256773
+     C                     ENDIF                                                              256773
      C********** ETX       SCAN MDTA      @POS    30                                 086960 AR567569
       *
      C   50      KEY0      READEMSMSI2L0                 10
@@ -542,6 +570,8 @@
      C/COPY WNCPYSRC,MS5060C013
      C***********          Z-ADD1         X       40                      CSW095
      C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD1         M                                                   256773
+     C                     Z-ADD0         N                                                   256773
       *
       **  Move all records which match key into array
      C           *IN10     DOWEQ'0'
@@ -556,7 +586,20 @@
      C                     Z-ADD1         X                                                 AR567569
      C                     ENDIF                                                            AR567569
       *                                                                                     AR567569
+     C           X         ADD  256       N                                                   256773
+     C           N         IFGT 9999                                                          256773
+     C           M         IFEQ 1                                                             256773
      C                     MOVEAMDTA      IMSG,X
+     C                     MOVE MDTA      WTMP      P                                         256773
+     C                     MOVEAWTMP      IMS1,M                                              256773
+     C                     ADD  241       M                                                   256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMS1,M                                              256773
+     C                     ADD  256       M                                                   256773
+     C                     ENDIF                                                              256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMSG,X                                              256773
+     C                     ENDIF                                                              256773
      C********** ETX       SCAN MDTA      @POS                                       086960 AR567569
       *
      C   50      KEYB      READEMSMSI2LB                 10
@@ -650,6 +693,8 @@
      C           *IN11     IFEQ '0'
      C***********          Z-ADD1         X       40                      CSW095
      C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD1         M                                                   256773
+     C                     Z-ADD0         N                                                   256773
      C           *IN10     DOWEQ'0'
       *                                                                                     AR567569
       ** If "{1:" Has been repeated, it's a multiple or duplicate                           AR567569
@@ -662,7 +707,20 @@
      C                     Z-ADD1         X                                                 AR567569
      C                     ENDIF                                                            AR567569
       *                                                                                     AR567569
+     C           X         ADD  256       N                                                   256773
+     C           N         IFGT 9999                                                          256773
+     C           M         IFEQ 1                                                             256773
      C                     MOVEAMDTA      IMSG,X
+     C                     MOVE MDTA      WTMP      P                                         256773
+     C                     MOVEAWTMP      IMS1,M                                              256773
+     C                     ADD  241       M                                                   256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMS1,M                                              256773
+     C                     ADD  256       M                                                   256773
+     C                     ENDIF                                                              256773
+     C                     ELSE                                                               256773
+     C                     MOVEAMDTA      IMSG,X                                              256773
+     C                     ENDIF                                                              256773
      C********** ETX       SCAN MDTA      @POS                                       086960 AR567569
       *
      C   50      KEYB      READEMSMSI2LB                 10
@@ -809,17 +867,35 @@
       **  Write message text (block 4) headings
      C                     WRITEBLOCK4
       *
+      ** Field WIMS1 is a flag for the ff condition: all the entries of array                 256773
+      ** IMSG has been processed and subroutine REPT should proceed to process                256773
+      ** array entries of IMS1                                                                256773
+      *                                                                                       256773
+     C                     MOVEL'N'       WIMS1   1                                           256773
       **  Do while not end of message
      C           @WK2      DOUEQ'-}'
      C                     Z-ADD5         Z
       *
       **  If tag is present indent by 5 characters
+     C           WIMS1     IFEQ 'N'                                                           256773
      C           IMSG,X    IFEQ ':'
      C                     Z-ADD1         Z
      C                     END
+     C                     ELSE                                                               256773
+     C           IMS1,X    IFEQ ':'                                                           256773
+     C                     Z-ADD1         Z                                                   256773
+     C                     ENDIF                                                              256773
+     C                     ENDIF                                                              256773
       *
       **  Do while CRLF or ETX
+     C           WIMS1     IFEQ 'N'                                                           256773
+      *                                                                                    AR1029813
+      ** Do not continue the processing if '0D25' ("CRLF") is found.                       AR1029813
+      ** Otherwise, do until '02D5' or '03' ("End of Text") is found.                      AR1029813
+      *                                                                                    AR1029813
+     C           @WK2      ANDNECRLF                                                       AR1029813
      C           @WK2      DOUEQCRLF
+     C           @WK9      OREQ ETX                                                        AR1029813
      C           @WK2      OREQ CRNL                                                        MD023232
      C                     MOVE IMSG,X    LINE,Z
      C                     ADD  1         X
@@ -832,12 +908,55 @@
      C                     ELSE                                           097534
      C                     ADD  1         Z
      C                     END                                            097534
+     C           X         IFEQ 10000                                                         256773
+     C                     LEAVE                                                              256773
+     C                     ENDIF                                                              256773
      C*                                                                   097534
+      ** @WK9 contains the leftmost data of @WK2.                                          AR1029813
+      *                                                                                    AR1029813
      C                     MOVEAIMSG,X    @WK2    2
+     C                     MOVEL@WK2      @WK9    1                                        AR1029813
      C           @WK2      IFEQ ETX                                                         BUG22407
      C                     GOTO EREPT                                                       BUG22407
      C                     ENDIF                                                            BUG22407
      C                     END
+     C                     ENDIF                                                              256773
+      *                                                                                       256773
+      ** Check if whether all the entries of IMSG has been processed                          256773
+      *                                                                                       256773
+     C           X         IFGT 9999                                                          256773
+     C                     Z-ADD1         X                                                   256773
+     C                     MOVEL'Y'       WIMS1                                               256773
+     C                     END                                                                256773
+      *                                                                                       256773
+      ** Do while CRLF or ETX                                                                 256773
+      *                                                                                       256773
+     C           WIMS1     IFEQ 'Y'                                                           256773
+      *                                                                                    AR1029813
+      ** Do not continue the processing if '0D25' ("CRLF") is found.                       AR1029813
+      ** Otherwise, do until '02D5' or '03' ("End of Text") is found.                      AR1029813
+      *                                                                                    AR1029813
+     C           @WK2      ANDNECRLF                                                       AR1029813
+     C           @WK2      DOUEQCRLF                                                          256773
+     C           @WK9      OREQ ETX                                                        AR1029813
+     C                     MOVE IMS1,X    LINE,Z                                              256773
+     C                     ADD  1         X                                                   256773
+      *                                                                                       256773
+     C           Z         IFGE 128                                                           256773
+     C                     MOVEALINE      RCD                                                 256773
+     C                     WRITEFIELD                                                         256773
+     C                     MOVEA*BLANKS   LINE                                                256773
+     C                     Z-ADD5         Z                                                   256773
+     C                     ELSE                                                               256773
+     C                     ADD  1         Z                                                   256773
+     C                     ENDIF                                                              256773
+      *                                                                                       256773
+      ** @WK9 contains the leftmost data of @WK2.                                          AR1029813
+      *                                                                                    AR1029813
+     C                     MOVEAIMS1,X    @WK2    2                                           256773
+     C                     MOVEL@WK2      @WK9    1                                        AR1029813
+     C                     ENDDO                                                              256773
+     C                     ENDIF                                                              256773
       *
       **  Write out detail line
      C                     MOVEALINE      RCD
@@ -850,15 +969,30 @@
      C                     WRITEFIELD
      C                     MOVEA*BLANKS   LINE
       *
+      ** If '03' or "End of Text" is found in the current position of                      AR1029813
+      ** message array, do not continue with the current processing.                       AR1029813
+      *                                                                                    AR1029813
+     C           @WK9      IFEQ ETX                                                        AR1029813
+     C                     LEAVE                                                           AR1029813
+     C                     ENDIF                                                           AR1029813
+      *                                                                                    AR1029813
      C                     ADD  2         X
+     C           WIMS1     IFEQ 'N'                                                           256773
      C                     MOVEAIMSG,X    @WK2
      C           @WK2      IFEQ ETX                                                         BUG22407
      C                     GOTO EREPT                                                       BUG22407
      C                     ENDIF                                                            BUG22407
+     C                     ELSE                                                               256773
+     C                     MOVEAIMS1,X    @WK2                                                256773
+     C                     END                                                                256773
      C                     END
       *
      C                     ADD  2         X
+     C           WIMS1     IFEQ 'N'                                                           256773
      C                     MOVEAIMSG,X    @WL3    3
+     C                     ELSE                                                               256773
+     C                     MOVEAIMS1,X    @WL3                                                256773
+     C                     ENDIF                                                              256773
       *
       **  If message trailer present
      C           @WL3      IFEQ '{5:'
@@ -870,13 +1004,33 @@
      C           X         ORGT 9998                                                          250829
      C                     Z-ADD1         Z
       *
+     C           WIMS1     IFEQ 'N'                                                           256773
      C           IMSG,X    DOUEQ'}'
      C           Z         ORGT 127                                                           250829
      C           X         ORGT 9998                                                          250829
      C                     MOVE IMSG,X    LINE,Z
      C                     ADD  1         Z
      C                     ADD  1         X
+     C           X         IFEQ 10000                                                         256773
+     C                     LEAVE                                                              256773
+     C                     ENDIF                                                              256773
      C                     END
+     C                     ENDIF                                                              256773
+      *                                                                                       256773
+      ** Check if whether all the entries of IMSG has been processed                          256773
+      *                                                                                       256773
+     C           X         IFGT 9999                                                          256773
+     C                     Z-ADD1         X                                                   256773
+     C                     MOVEL'Y'       WIMS1                                               256773
+     C                     END                                                                256773
+      *                                                                                       256773
+     C           WIMS1     IFEQ 'Y'                                                           256773
+     C           IMS1,X    DOUEQ'}'                                                           256773
+     C                     MOVE IMS1,X    LINE,Z                                              256773
+     C                     ADD  1         Z                                                   256773
+     C                     ADD  1         X                                                   256773
+     C                     ENDDO                                                              256773
+     C                     ENDIF                                                              256773
       *
       **  Write out detail line
      C                     MOVEALINE      RCD
@@ -889,13 +1043,21 @@
      C                     WRITEFIELD
      C                     MOVEA*BLANKS   LINE
       *
+     C           WIMS1     IFEQ 'N'                                                           256773
      C                     MOVEAIMSG,X    @WK2
+     C                     ELSE                                                               256773
+     C                     MOVEAIMS1,X    @WK2                                                256773
+     C                     ENDIF                                                              256773
      C                     ADD  2         X
      C                     END
      C                     END
       *
      C           X         IFLT 9999                                                          250829
+     C           WIMS1     IFEQ 'N'                                                           256773
      C                     MOVEAIMSG,X    @WL3
+     C                     ELSE                                                               256773
+     C                     MOVEAIMS1,X    @WL3                                                256773
+     C                     ENDIF                                                              256773
       *
       **  If STS trailer present
      C           @WL3      IFEQ '{S:'
@@ -907,13 +1069,33 @@
      C           X         ORGT 9998                                                        MD060786
      C                     Z-ADD1         Z
       *
+     C           WIMS1     IFEQ 'N'                                                           256773
      C           IMSG,X    DOUEQ'}'
      C           Z         ORGT 127                                                         MD060786
      C           X         ORGT 9998                                                        MD060786
      C                     MOVE IMSG,X    LINE,Z
      C                     ADD  1         Z
      C                     ADD  1         X
+     C           X         IFEQ 10000                                                         256773
+     C                     LEAVE                                                              256773
+     C                     ENDIF                                                              256773
      C                     END
+     C                     ENDIF                                                              256773
+      *                                                                                       256773
+      ** Check if whether all the entries of IMSG has been processed                          256773
+      *                                                                                       256773
+     C           X         IFGT 9999                                                          256773
+     C                     Z-ADD1         X                                                   256773
+     C                     MOVEL'Y'       WIMS1                                               256773
+     C                     END                                                                256773
+      *                                                                                       256773
+     C           WIMS1     IFEQ 'Y'                                                           256773
+     C           IMS1,X    DOUEQ'}'                                                           256773
+     C                     MOVE IMS1,X    LINE,Z                                              256773
+     C                     ADD  1         Z                                                   256773
+     C                     ADD  1         X                                                   256773
+     C                     ENDDO                                                              256773
+     C                     ENDIF                                                              256773
       *
       **  Write out detail line
      C                     MOVEALINE      RCD
@@ -926,7 +1108,11 @@
      C                     WRITEFIELD
      C                     MOVEA*BLANKS   LINE
       *
+     C           WIMS1     IFEQ 'N'                                                           256773
      C                     MOVEAIMSG,X    @WK2
+     C                     ELSE                                                               256773
+     C                     MOVEAIMS1,X    @WK2                                                256773
+     C                     ENDIF                                                              256773
      C                     ADD  2         X
      C                     END
      C                     END

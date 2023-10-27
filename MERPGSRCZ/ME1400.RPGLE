@@ -245,7 +245,7 @@
      C**********         SETON                                        95           MD058081 MD062018
      C**********         ENDIF                                                     MD058081 MD062018
                                                                                             MD058081
-     C     WCTY          LOOKUP    XISO                                   95                MDPHSIFX
+     C     WCTY          LOOKUP    XISO                                   95                MD062018
      C******IN95         IFEQ      '0'                                                      MD062018
      C     *IN95         IFEQ      '1'                                                      MD062018
      C     ALPHN(1)      CHECK     WLOC                                   95

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD044410           Date 29May23               *
-      *  Prev Amend No. MD058079           Date 11May21               *
+      *  Last Amend No. AR944604           Date 10Apr12               *
+      *  Prev Amend No. MD044410           Date 29May23               *
+      *                 MD058079           Date 11May21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 09May13               *
       *                 AR996631           Date 28Jun12               *
@@ -54,6 +55,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR944604 - Amendment to Financial future deal goes to invalid*
+      *             queue. If from SOAP, amend is processed as delete/*
+      *             insert. So use Front Office ID to process delete  *
+      *             part of the amend action. (Child: AR944605)       *
       *  MD044410 - Exchange Trades Futures transaction : The last    *
       *             transaction was not applied to the database       *
       *  MD058079 - Deliverable Data Split for sundry files           *
@@ -456,6 +461,13 @@
       * ACCESS TRANSACTION WITH FRONT OFFICE TRANSACTION ID
       *
      C     FOTRID        CHAIN     FFEXTRL1                           99
+      *                                                                                     AR944604
+      ** If trade found is deleted, look for non-deleted trade                              AR944604
+      *                                                                                     AR944604
+     C                   DoW       (*IN99 = '0' and RECI = '*') or                          AR944604
+     C                             (*IN99 = '0' and RECI = 'R')                             AR944604
+     C     FOTRID        READE     FFEXTRL1                               99                AR944604
+     C                   Enddo                                                              AR944604
       *
       * IF INSERT
       *

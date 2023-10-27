@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054958           Date 09Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD030982           Date 27Oct23               *
+      *  Prev Amend No. MD054958           Date 09Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 CSW214             Date 25Nov14               *
       *                 MD023734           Date 30Nov13               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030982 - Execution Timestamp(TIME) is not a valid time     *
       *  MD054958 - Set *INLR ON before end of module                 *
       *           - This fix is an addition to MD-54604               *
       *  MD046248 - Finastra Rebranding                               *
@@ -1223,6 +1225,16 @@
      C                   MVR                     CurHour                                    MD023731
      C                   ENDIF                                                              MD023731
       *                                                                                     MD023731
+     C                   IF        CurMin  <  00                                            MD030982
+     C                   EVAL      CurMin  = 60 + CurMin                                    MD030982
+     C                   EVAL      CurHH  -= 1                                              MD030982
+     C                   EVAL      CurHour = CurHour + CurHH                                MD030982
+     C                   ENDIF                                                              MD030982
+      *                                                                                     MD030982
+     C                   IF        CurHour <  00                                            MD030982
+     C                   EVAL      CurHour = 24 + CurHour                                   MD030982
+     C                   ENDIF                                                              MD030982
+      *                                                                                     MD030982
      C                   MOVE      CurMin        WR3hhmm           4                        MD023731
      C                   MOVE      CurHour       WR3Hour           2                        MD023731
      C                   MOVEL     WR3Hour       WR3hhmm                                    MD023731

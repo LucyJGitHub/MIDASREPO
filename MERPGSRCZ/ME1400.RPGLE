@@ -1,7 +1,8 @@
      H DEBUG
       *****************************************************************
 /**** *  RPGBASE                                                      *                     MD058081
-/*STD *  RPGSQLBND                                                    *                     MD058081
+/**** *  RPGSQLBND                                                    *            MD058081 MD062018
+/*STD *  RPGBASEBND                                                   *                     MD062018
 /*EXI *  TEXT('Midas ME Access SWIFT BIC identifier info')            *
      F*****************************************************************
      F*                                                               *
@@ -12,8 +13,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. 260931             Date 25Nov15               *
+      *  Last Amend No. MD062018           Date 27Oct23               *
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 260931             Date 25Nov15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD040101           Date 11Aug16               *
       *                 MD036281           Date 26Oct15               *
@@ -46,6 +48,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD062018 - Performance issue with fTC0250. Replace SQL       *
+      *             access by loading array.                          *
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  260931 - Recompile due to changes in SDCUSTLS.               *
       *           Applied for MD-34062                                *
@@ -116,6 +120,7 @@
      FSDCNSTL1  IF   E           K DISK
      FSDCUSTLS  IF   E           K DISK    USROPN
      F*MEISOCL1* IF   E           K DISK                                                 MD MD058081
+     FMEISOJW0  IT   F    2        DISK                                                     MD062018
       *
       * RTV : Counterparty Details by SWIFT identifier
       *
@@ -143,6 +148,7 @@
       *                                                                                     MD027201
      D ALPHA           S             26    DIM(1) CTDATA PERRCD(1)
      D ALPHN           S             36    DIM(1) CTDATA PERRCD(1)
+     D XISO            S              2    DIM(999) FROMFILE(MEISOJW0)                      MD062018
      D/EJECT
      D/COPY WNCPYSRC,ME1400DIPG
       *
@@ -229,17 +235,19 @@
      C     ALPHA(1)      CHECK     WBNK                                   95
      C     *IN95         IFEQ      '0'
      C*****WCTY          CHAIN     MEISOCL1                           95                    MD058081
-     C/EXEC SQL                                                                             MD058081
-     C+ SELECT *                                                                            MD058081
-     C+ into :MEISOC                                                                        MD058081
-     C+ from MEISOJW0                                                                       MD058081
-     C+ where M3ISOC = :WCTY                                                                MD058081
-     C/END-EXEC                                                                             MD058081
-     C                   IF        SQLCODE <> 0                                             MD058081
-     C                   SETON                                        95                    MD058081
-     C                   ENDIF                                                              MD058081
+     C*/EXEC*SQL                                                                   MD058081 MD062018
+     C*+*SELECT**                                                                  MD058081 MD062018
+     C*+*into*:MEISOC                                                              MD058081 MD062018
+     C*+*from*MEISOJW0                                                             MD058081 MD062018
+     C*+*where*M3ISOC = :WCTY                                                      MD058081 MD062018
+     C*/END-EXEC                                                                   MD058081 MD062018
+     C**********         IF        SQLCODE <> 0                                    MD058081 MD062018
+     C**********         SETON                                        95           MD058081 MD062018
+     C**********         ENDIF                                                     MD058081 MD062018
                                                                                             MD058081
-     C     *IN95         IFEQ      '0'
+     C     WCTY          LOOKUP    XISO                                   95                MD062018
+     C******IN95         IFEQ      '0'                                                      MD062018
+     C     *IN95         IFEQ      '1'                                                      MD062018
      C     ALPHN(1)      CHECK     WLOC                                   95
      C     *IN95         IFEQ      '0'
      C                   EXSR      SRBICD

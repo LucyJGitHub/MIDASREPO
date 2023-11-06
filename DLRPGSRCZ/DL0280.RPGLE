@@ -27983,24 +27983,13 @@
      C                   SETOFF                                         31                     S0111
      C     USRST         IFEQ      'P'                                                         E2340
      C     FLRRTF        ANDEQ     'Y'                                                         S0111
-     C     DTYP          ANDNE     'RF'                                                     MD060920
-     C     USRST         OREQ      'T'                                                      MD060920
-     C     DTYP          ANDEQ     'RF'                                                     MD060920
      C* USE TOPPING UP RATE FOR C'PARTY(TAKER)                            E23400
-     C     DTYP          IFEQ      'RR'                                                     MD060920
-     C                   ELSE                                                               MD060920
      C                   Z-ADD     TPUPRT        SZINTR               31  31                   S0111
-     C                   ENDIF                                                              MD060920
      C                   END                                                                   S0111
      C*                                                                   S01119
      C     USRST         IFEQ      'T'                                                         E2340
-     C     DTYP          ANDNE     'RF'                                                     MD060920
      C* USE REIMBURSEMENT RATE FOR C'PARTY(PROVIDER)                      E23400
      C                   Z-ADD     REIMRT        SZINTR               31  31                   S0111
-     C     SZINTR        IFEQ      0                                                        MD060920
-     C     DTYP          ANDEQ     'RR'                                                     MD060920
-     C                   Z-ADD     TPUPRT        SZINTR               31  31                MD060920
-     C                   ENDIF                                                              MD060920
      C                   END                                                                   S0111
       *                                                                   S01119
       * DLRSAC                                                            S01119
@@ -28069,25 +28058,13 @@
      C*                                                                   S01119
      C     USRST         IFEQ      'T'                                                         E2340
      C     FLRRTF        ANDEQ     'Y'                                                         S0111
-     C     DTYP          ANDNE     'RF'                                                     MD060920
-     C     USRST         OREQ      'P'                                                      MD060920
-     C     DTYP          ANDEQ     'RF'                                                     MD060920
      C* USE TOPPING UP RATE FOR USER(TAKER)                               E23400
-     C     SZINTR        IFNE      0                                                        MD060920
-     C     DTYP          ANDEQ     'RR'                                                     MD060920
-     C                   ELSE                                                               MD060920
      C                   Z-ADD     TPUPRT        SZINTR               31  31                   S0111
-     C                   ENDIF                                                              MD060920
      C                   END                                                                   S0111
      C*                                                                   S01119
      C     USRST         IFEQ      'P'                                                         E2340
-     C     DTYP          ANDNE     'RF'                                                     MD060920
      C* USE REIMBURSEMENT RATE FOR USER(PROVIDER)                         E23400
      C                   Z-ADD     REIMRT        SZINTR               31  31                   S0111
-     C     SZINTR        IFEQ      0                                                        MD060920
-     C     DTYP          ANDEQ     'RR'                                                     MD060920
-     C                   Z-ADD     TPUPRT        SZINTR               31  31                MD060920
-     C                   ENDIF                                                              MD060920
      C                   END                                                                   S0111
      C*                                                                   S01119
       * DLRSAC (OURS)                                                     S01119

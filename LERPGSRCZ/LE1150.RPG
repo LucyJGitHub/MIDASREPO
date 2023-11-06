@@ -23,8 +23,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD022618           Date 19Oct23               *
+      *  Prev Amend No. AR971845           Date 19Oct23               *
+      *                 MD058815           Date 28Sep21               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056750           Date 04Nov20               *
       *                 AR847806           Date 12Jan15               *
@@ -129,6 +131,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD022618 - Loan Confirmation issues. Printing start at line  *
+      *             6. Prevent blank name address and town. Five space*
+      *             between last address and detals header. One space *
+      *             before 'Payment By'. Print properly the 'FOR A/C  *
+      *             OF' details.                                      *
+      *  AR971845 - Changes on LE1150P1. Start printing at line 6.    *
+      *             (Child: AR971846)                                 *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -2245,6 +2254,7 @@
      C                     MOVE OPSB      BRC
      C                     EXSR QNOSTR
      C                     MOVELARRAY     TITL1  40
+     C                     MOVELCPORAC    WORAC  25                                         MD022618
       *                                                                   CLE033
      C                     MOVE 'N'       REC09   1                                           218782
      C           CLE033    IFEQ 'Y'                                       CLE033
@@ -3754,8 +3764,62 @@
      C*****************************************************************
      C           EXCPT     BEGSR                           ***  EXCPT  ***
      C/COPY WNCPYSRC,LE1150C006
+      *                                                                                     MD022618
+      * Save the value of indicators                                                        MD022618
+      *                                                                                     MD022618
+     C           *IN69     IFEQ '1'                                                         MD022618
+     C           *IN71     ANDEQ'1'                                                         MD022618
+     C                     MOVE *IN90     WIN90   1                                         MD022618
+     C                     MOVE *IN91     WIN91   1                                         MD022618
+     C                     MOVE *IN92     WIN92   1                                         MD022618
+     C                     MOVE *IN93     WIN93   1                                         MD022618
+      *                                                                                     MD022618
+      * Reset the value of indicators                                                       MD022618
+      *                                                                                     MD022618
+     C                     MOVE '0'       *IN90                                             MD022618
+     C                     MOVE '0'       *IN91                                             MD022618
+     C                     MOVE '0'       *IN92                                             MD022618
+     C                     MOVE '0'       *IN93                                             MD022618
+      *                                                                                     MD022618
+      * Seton the indicators if the following fields are blank.                             MD022618
+      *                                                                                     MD022618
+     C           CNA2      IFEQ *BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN90                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C           CNA3      IFEQ *BLANKS                                                     MD022618
+     C           ONA1      ANDEQ*BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN91                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C           CNA4      IFEQ *BLANKS                                                     MD022618
+     C           ONA2      ANDEQ*BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN92                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C           TOWN1     IFEQ *BLANKS                                                     MD022618
+     C           *IN39     ANDEQ'1'                                                         MD022618
+     C           TOWN1     OREQ *BLANKS                                                     MD022618
+     C           TOWN2     ANDEQ*BLANKS                                                     MD022618
+     C           *IN39     ANDEQ'0'                                                         MD022618
+     C                     MOVE '1'       *IN93                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
      C                     EXCPT
      C/COPY WNCPYSRC,LE1150C007
+      *                                                                                     MD022618
+      * Restore the value of indcators                                                      MD022618
+      *                                                                                     MD022618
+     C           *IN69     IFEQ '1'                                                         MD022618
+     C           *IN71     ANDEQ'1'                                                         MD022618
+     C                     MOVE WIN90     *IN90                                             MD022618
+     C                     MOVE WIN91     *IN91                                             MD022618
+     C                     MOVE WIN92     *IN92                                             MD022618
+     C                     MOVE WIN93     *IN93                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
      C                     SETOF                     69
      C                     SETOF                     7273
      C                     SETOF                     7577
@@ -4162,18 +4226,24 @@
      O************        64             92 '- CANCELLATION'                                  252771
      O************        65N79          89 '- AMENDMENT'                                     252771
      O************        63            102 'COPY'                                            252771
-     O        E  2     69 71 11                                                               252771
-     O                         CNAME     72                                                   252771
-     O                    79             92 'ROLLOVER'                                        252771
-     O                    64             92 '- CANCELLATION'                                  252771
-     O                    65N79          89 '- AMENDMENT'                                     252771
-     O                    63            102 'COPY'                                            252771
-     O        E  202   69 71N11                                                               252771
-     O                         CNAME     72                                                   252771
-     O                    79             92 'ROLLOVER'                                        252771
-     O                    64             92 '- CANCELLATION'                                  252771
-     O                    65N79          89 '- AMENDMENT'                                     252771
-     O                    63            102 'COPY'                                            252771
+     O********E* 2     69 71 11                                                      252771 AR971845
+     O**********               CNAME     72                                          252771 AR971845
+     O**********          79             92 'ROLLOVER'                               252771 AR971845
+     O**********          64             92 '- CANCELLATION'                         252771 AR971845
+     O**********          65N79          89 '- AMENDMENT'                            252771 AR971845
+     O**********          63            102 'COPY'                                   252771 AR971845
+     O********E* 202   69 71N11                                                      252771 AR971845
+     O**********               CNAME     72                                          252771 AR971845
+     O**********          79             92 'ROLLOVER'                               252771 AR971845
+     O**********          64             92 '- CANCELLATION'                         252771 AR971845
+     O**********          65N79          89 '- AMENDMENT'                            252771 AR971845
+     O**********          63            102 'COPY'                                   252771 AR971845
+     O        E  2 6   69 71                                                                AR971845
+     O                         CNAME     57                                                 AR971845
+     O                    79             77 'ROLLOVER'                                      AR971845
+     O                    64             77 '- CANCELLATION'                                AR971845
+     O                    65N79          74 '- AMENDMENT'                                   AR971845
+     O                    63             87 'COPY'                                          AR971845
      O*
      O** Rundate
      O*
@@ -4198,18 +4268,26 @@
      O                         CNA1      46                                                   252771
      O********E**2     69 71                                                                  252771
      O***********              CNA2      85                                                   252771
-     O        E  1     69 71                                                                  252771
+     O********E**1     69 71                                                         252771 MD022618
+     O        E  1     69 71N90                                                             MD022618
      O                         CNA2      46                                                   252771
-     O        E  1     69 71
+     O********E* 1     69 71                                                                MD022618
      O***********              ONA1      46                                                  252771A
      O***********              CNA3      85                                                  252771A
+     O        E  1     69 71N91                                                             MD022618
      O                         CNA3      46                                                  252771A
      O                         ONA1      85                                                  252771A
-     O        E  2     69 71
+     O********E* 2     69 71                                                                MD022618
      O***********              ONA2      46                                                  252771A
      O***********              CNA4      85                                                  252771A
+     O        E  1     69 71N92                                                             MD022618
      O                         CNA4      46                                                  252771A
      O                         ONA2      85                                                  252771A
+      *                                                                                     MD022618
+      ** Five space between last address and details                                        MD022618
+      *                                                                                     MD022618
+     O        E 32     69 71                                                                MD022618
+      *                                                                                     MD022618
      O/COPY WNCPYSRC,LE1150O003
      O*
      O** Detail line 1
@@ -4419,9 +4497,10 @@
      O        E  1     69 71
      O                         NAME1  B  49
      O                   N39   NAME2  B  91
-     O        E  1     69 71
+     O********E* 1     69 71                                                                MD022618
      O***********              TOWN1  B  24                               CLE033
      O***********           N39TOWN2  B  66                               CLE033
+     O        E  1     69 71N93                                                             MD022618
      O                         TOWN1  B  29                               CLE033
      O                      N39TOWN2  B  71                               CLE033
      O        E  1     69 71 21                                                               CLE031
@@ -4440,10 +4519,15 @@
      O                 70 14   WCAMT2    79 '   ,   ,   , * . '                               CLE031
      O                 70 15   WCAMT2    79 '  ,   ,   , * .  '                               CLE031
      O                 70 26   WCAMT2    79 ' ,   ,   , * .   '                               CLE031
-     O        E  1     69 71                                              110911
-     O                 17 51N39          21 'FOR A/C OF'                  110911
-     O                 17 51N39CPORAC    48                               110911
-     O        E  1     69 71
+     O********E* 1     69 71                                                         110911 MD022618
+     O**********       17 51N39          21 'FOR A/C OF'                             110911 MD022618
+     O**********       17 51N39CPORAC    48                                          110911 MD022618
+     O        E  1     69 71                                                                MD022618
+     O       AND       17N39                                                                MD022618
+     O                 17N39             21 'FOR A/C OF'                                    MD022618
+     O                 17N39   WORAC     48                                                 MD022618
+     O********E* 1     69 71                                                                MD022618
+     O        E 11     69 71                                                                MD022618
      O                         TITL3  B  21
      O                   N39   TITL4  B  63
      O        E  1     69 71

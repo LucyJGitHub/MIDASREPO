@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058250           Date 13Jul21               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD058250           Date 13Jul21               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 258531             Date 19Aug14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Update Spot Rate value of Forward Rates File        *
       *  MD058250 - Midas_DDM_Audit_Report SD0020PM Currencies        *
       *             Maintenance.                                      *
       *           - Remove call to SD0028.                            *
@@ -111,6 +113,9 @@
      F***SDAPDRL0  IF   E        K DISK    INFSR(*PSSR)                            MD025009 MD025467
       *****************************************************************            MD025009 MD025467
       ***Midas*SD*API*Driving*File*************************************            MD025009 MD025467
+
+     FFWDRT     UF   E           K DISK    Commit Ignore(FWDRTFDF)                            259866
+      * Midas DL Forward Rates File                                                           259866
 
       *****************************************************************
       ** +--------------------------------------+
@@ -226,6 +231,11 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
 
+     D FWRFWDS         DS                                                                     259866
+     D  RAT                    1    175P 8 INZ(*ZERO)                                         259866
+     D                                     DIM(25)                                            259866
+      ** Forward Rates - signed decimal format.                                               259866
+                                                                                              259866
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -353,6 +363,8 @@
      C**********         ENDIF                                                    MD025009A MD025467
                                                                                            MD025009A
      C                   EXSR      AMEND
+                                                                                              259866
+     C                   EXSR      UpdFwd                                                     259866
                                                                                               CSC011
       ** If 24x7 Midas Availability is installed, write to the standard                       CSC011
       ** log file when support system is active                                               CSC011
@@ -918,6 +930,29 @@
      C                   ENDIF                                                  CSD006
 
      C                   ENDSR
+      ****************************************************************                        259866
+      /EJECT                                                                                  259866
+      *****************************************************************                       259866
+      *                                                               *                       259866
+      * UpdFwd - Update Spot Rate value of Forward Rates File         *                       259866
+      *                                                               *                       259866
+      * Called by: Main processing                                    *                       259866
+      *                                                               *                       259866
+      * Calls: None                                                   *                       259866
+      *                                                               *                       259866
+      *****************************************************************                       259866
+     C     UpdFwd        BegSr                                                                259866
+                                                                                              259866
+     C     AVCYCD        Chain     FWDRT                                                      259866
+                                                                                              259866
+     C                   If        %Found                                                     259866
+     C                   Eval      FWRFWDS = RFW                                              259866
+     C                   Eval      RAT(1)  = AVSPRT                                           259866
+     C                   Eval      RFW     = FWRFWDS                                          259866
+     C                   Update    FWDRTFEF                                                   259866
+     C                   Endif                                                                259866
+                                                                                              259866
+     C                   EndSr                                                                259866
       ****************************************************************
       /EJECT
       *****************************************************************

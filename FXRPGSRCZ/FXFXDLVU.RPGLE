@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR852765           Date 17Oct23               *      
-      *  Prev Amend No. AR854800           Date 10Oct23               *      
+      *  Last Amend No. AR819780           Date 05Oct23               *
+      *  Prev Amend No. AR852765           Date 17Oct23               *
+      *                 AR854800           Date 10Oct23               *
       *                 MD049123           Date 25May23               *
       *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
@@ -123,6 +124,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR819780 - Multiple deletion from SOAP of same Front Office. *
+      *             (Child: AR819781)                                 *
       *  AR852765 - Delay getting deal number for the second leg of   *
       *             Swap Deal. (Child: AR852766)                      *      
       *  AR854800 - Unable to authorise FX deal. Only auto authorise  *
@@ -1032,6 +1035,22 @@
       * The deal in file format from the FX database is retrieved as well.
 
      C                   RESET                   ReturnCode
+      *                                                                                     AR819780
+      ** If coming from Front Office via SOAP                                               AR819780
+      *                                                                                     AR819780
+     C                   IF        DDFOID <> *BLANKS                                        AR819780
+     C                   EVAL      ModeofOp = *BLANKS                                       AR819780
+      *                                                                                     AR819780
+     C                   SELECT                                                             AR819780
+     C                   WHEN      DDACTN = 'I'                                             AR819780
+     C                   EVAL      DDDLNO = *BLANKS                                         AR819780
+     C                   WHEN      DDACTN = 'D'                                             AR819780
+     C                   EVAL      APFOTranID = DDFOID                                      AR819780
+     C                   OTHER                                                              AR819780
+     C                   ENDSL                                                              AR819780
+      *                                                                                     AR819780
+     C                   ENDIF                                                              AR819780
+      *                                                                                     AR819780
      C                   CALLB     'FXFXDLRTV'
 
       * INPUTS

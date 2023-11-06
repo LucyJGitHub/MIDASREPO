@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060481           Date 05Jan23               *       
-      *  Prev Amend No. MD058081           Date 11May21               *
+      *  Last Amend No. BA5001             Date 19Oct23               *
+      *  Prev Amend No. MD060481           Date 05Jan23               *
+      *                 MD058081           Date 11May21               *
       *                 AR889497           Date 10Nov22               *
       *                 BA3101             Date 12Sep22               *
       *                 BA3100             Date 01Sep22               *
@@ -116,7 +117,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
-      *  MD060481 - Include Netting module on output of field 50K.    *       
+      *  BA5001 - Default Charge field on MT103 based on specific     *
+      *            Customer / Currency                                *
+      *  MD060481 - Include Netting module on output of field 50K.    *
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  AR889497 - Initializes fields SAV56A and SAV57A              *
       *           - Applied fix for MD060203                          *
@@ -312,6 +315,7 @@
      F            DEALSDGF                          KIGNORE                                   CDL099
      F            DEALSDFF                          KIGNORE                                   CDL099
      FMGACCNL0IF  E           K        DISK         KINFSR *PSSR                              BA3101
+     FA5F71AV0IF  E           K        DISK         KINFSR *PSSR                              BA5001
      F*                                                                   S01408
      F/COPY WNCPYSRC,MG0100FFP1                                           S01408
      F*                                                                   S01408
@@ -2100,7 +2104,31 @@
      C                     ADD  1         X                               CFT013
      C           X         OCUR MULT                                      CFT013
      C                     MOVEL':71A:'   MTAG                            CFT013
+      *                                                                                       BA5001
+     C                     MOVEL'N'       SUP71F  1                                           BA5001
+     C           BA5001    IFEQ 'N'                                                           BA5001
      C                     MOVELMGDCHG    MFLD                                              BUG26160
+      *                                                                                       BA5001
+     C           MGDCHG    IFEQ 'OUR'                                                         BA5001
+     C                     MOVEL'Y'       SUP71F                                              BA5001
+     C                     ENDIF                                                              BA5001
+      *                                                                                       BA5001
+     C                     ELSE                                                               BA5001
+     C                     MOVELMGCNUM    K5FCUS                                              BA5001
+     C                     MOVELMGCCY     K5CCY                                               BA5001
+      *                                                                                       BA5001
+     C           K5F71A    CHAINA5F71AV0             82                                       BA5001
+     C           *IN82     IFEQ *OFF                                                          BA5001
+     C                     MOVELBA71AD    MFLD                                                BA5001
+     C                     ELSE                                                               BA5001
+     C                     MOVELMGDCHG    MFLD                                                BA5001
+     C                     ENDIF                                                              BA5001
+      *                                                                                       BA5001
+     C           MFLD      IFEQ 'OUR'                                                         BA5001
+     C                     MOVEL'Y'       SUP71F                                              BA5001
+     C                     ENDIF                                                              BA5001
+      *                                                                                       BA5001
+     C                     ENDIF                                                              BA5001
      C**********           MOVEL'BEN'     MFLD                                         CFT013 219241
      C**********           MOVELENDCHG    MFLD                                       219241 BUG26160
      C**********           MOVELENDCHG    MFLD                                         219241 250600
@@ -3758,10 +3786,20 @@
       **  Format :71F: Sender's Charges                                   CFT013
       *                                                                   CFT013
      C/COPY WNCPYSRC,MG0100C044
+     C           BA5001    IFEQ 'N'                                                           BA5001
      C           MGDCHG    IFEQ *BLANK                                    CFT013
      C           MGDCHG    OREQ 'BEN'                                     CFT013
      C                     EXSR SRFM71                                    CFT013
      C                     ENDIF                                          CFT013
+      *                                                                                       BA5001
+     C                     ELSE                                                               BA5001
+     C           MGDCHG    IFEQ *BLANK                                                        BA5001
+     C           MGDCHG    OREQ 'BEN'                                                         BA5001
+     C           SUP71F    IFEQ 'N'                                                           BA5001
+     C                     EXSR SRFM71                                                        BA5001
+     C                     ENDIF                                                              BA5001
+     C                     ENDIF                                                              BA5001
+     C                     ENDIF                                                              BA5001
      C/COPY WNCPYSRC,MG0100C045
       *                                                                   CFT013
       **  Format :72: Senter to Receiver Information                      CFT013
@@ -5313,6 +5351,27 @@
      C                     MOVE 'N'       CDL099                                              CDL099
      C                     ENDIF                                                              CDL099
       *                                                                                       CDL099
+      ** Check if feature BA5001 is enabled                                                   BA5001
+      *                                                                                       BA5001
+     C                     MOVE 'N'       BA5001  1                                           BA5001
+      *                                                                                       BA5001
+     C                     CALL 'AOSARDR0'                                                    BA5001
+     C                     PARM *BLANKS   PRTCD   7                                           BA5001
+     C                     PARM '*VERIFY 'POPTN   7                                           BA5001
+     C                     PARM 'BA5001'  PSARD   6                                           BA5001
+     C           SCSARD    PARM SCSARD    DSSDY                                               BA5001
+      *                                                                                       BA5001
+     C           PRTCD     IFEQ *BLANKS                                                       BA5001
+     C                     MOVE 'Y'       BA5001                                              BA5001
+     C                     ELSE                                                               BA5001
+     C                     MOVE 'N'       BA5001                                              BA5001
+     C                     ENDIF                                                              BA5001
+      *                                                                                       BA5001
+      **  KLIST FOR LF/A5F71AV0                                                               BA5001
+     C           K5F71A    KLIST                                                              BA5001
+     C                     KFLD           K5FCUS  6                                           BA5001
+     C                     KFLD           K5CCY   3                                           BA5001
+      *                                                                                       BA5001
       ** Access system value for CustNoFirstLineFld50                                       MD026727
       *                                                                                     MD026727
      C                     CALL 'AOSVALR0'                                                  MD026727

@@ -682,6 +682,12 @@
       *                                                                                       CAP084
      C**********         MOVE      B2ACCD        WACCD             4 0                 CAP084 CGL029
      C                   MOVE      B2ACCD        WACCD            10 0                        CGL029
+     C                   MOVE      *BLANKS       WUSRID           10                          251334
+     C     MREFUSR       IFEQ      *BLANKS                                                    251334
+     C                   EVAL      WUSRID = USRID                                             251334
+     C                   ELSE                                                                 251334
+     C                   EVAL      WUSRID = MREFUSR                                           251334
+     C                   ENDIF                                                                251334
      C     KACCD         CHAIN     SFACAUL0                           22                      CAP084
       *                                                                                       CAP084
       ** If no record found, the input is not allowed                                         CAP084
@@ -1302,7 +1308,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
-     C                   PARM                    DDBTNB                                     MD055528      
+     C                   PARM                    DDBTNB                                     MD055528
       *
       ** STANDING DATA
       ** =============
@@ -1370,7 +1376,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
-     C                   PARM                    DDBTNB                                     MD055528     
+     C                   PARM                    DDBTNB                                     MD055528
       *
       ** STANDING DATA
       ** =============
@@ -2278,7 +2284,7 @@
      C     KACCD         KLIST                                                                CAP084
      C                   KFLD                    WACCD                                        CAP084
      C**********         KFLD                    USRID                                CAP084  251334
-     C                   KFLD                    MREFUSR                                      251334
+     C                   KFLD                    WUSRID                                       251334
       *                                                                                       CAP084
      C**********         ENDIF                                                        CAP084 BUG6979
       ** Access SAR details file to determine if CGL064 is on.                                CGL064

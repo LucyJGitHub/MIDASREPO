@@ -18,8 +18,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. AR834072           Date 10Oct23               *
-      *  Prev Amend No. MD021112           Date 27Apr22               *
+      *  Last Amend No. AR994871B          Date 26Oct23               *
+      *  Prev Amend No. AR994871           Date 26Oct23               *
+      *                 AR834072           Date 10Oct23               *
+      *                 MD021112           Date 27Apr22               *
       *                 AR929296           Date 25Apr22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -85,6 +87,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR994871B- Suppress '***END OF REPORT....'                   *
+      *  AR994871 - Empty report when no details to report. Add       *
+      *             header and date when no details to report and     *
+      *             prevent printing an extra page. (Child: AR994873) *
+      *             Remove and replace GEMS246860 and AR929296        *
       *  AR834072 - Incorrect interest on loan principal transfer     *
       *             confirmation. Reformat details & compute interest *
       *             from transfer date to NIDT or to MDAT if no NIDT. *
@@ -285,7 +292,10 @@
      F*     74        PARTICIPATION PURCHASED TYPE OF A LOAN
      F*     75        INPUT FILE HAS AT LEAST ONE RECORD
       *     76        Cache hit for Nostro array                                            CLE075BO
-     F*     77        No Confirmations to be reported                                         246860
+     F*     77        Atleast 1 Confirmation to be reported on P2                           AR994871
+     F*     78        No Confirmations to be reported on P1                                 AR994871
+     F*     79        No Confirmations to be reported on P2                                 AR994871
+     F******77**      No Confirmations to be reported                                246860 AR994871
      F*     88        MBIN = 'Y'
      F*     96        "DO NOT SEND" TEXT
      F*     U4        CUSTOMER LENDING SWIFT EXISTS
@@ -1078,11 +1088,11 @@
      C                     MOVE *BLANK    WOPN1   1                       119889
      C                     MOVE *BLANK    WOPN2   1                       119889
      C*
-     C           AMTP      IFEQ 'MR'                                                          246860
-     C                     MOVE '1'       *IN77                                               246860
-     C                     ELSE                                                               246860
-     C                     SETON                       75  ALLOW OUTPUT
-     C                     ENDIF                                                              246860
+     C********** AMTP      IFEQ 'MR'                                                 246860 AR994871
+     C**********           MOVE '1'       *IN77                                      246860 AR994871
+     C**********           ELSE                                                      246860 AR994871
+     C**********           SETON                       75  ALLOW OUTPUT                     AR994871
+     C**********           ENDIF                                                     246860 AR994871
      C***********          OPEN LE1160P1                                  119889
      C                     Z-ADD0         PAGE
      C                     Z-ADD0         PAGE1
@@ -1161,7 +1171,7 @@
      C           AMTP      OREQ 'RE'                                      119889
      C           WOPN1     ANDEQ*BLANK                                    119889
       *                                                                   119889
-     C                     MOVE '1'       *IN75                           119889
+     C**********           MOVE '1'       *IN75                                      119889 AR994871
       *                                                                   119889
       **  ENSURE TOTALS SPOOL FILE RECORDED BY RCF                        119889
       *                                                                   119889
@@ -1217,10 +1227,10 @@
      C                     END                                            119889
      C                     ENDIF                                                            CLE075BO
      C   U7                GOTO END                                       119889
-     C                     ELSE                                                               246860
-     C           AMTP      IFEQ 'MR'                                                          246860
-     C                     MOVE '1'       *IN77                                               246860
-     C                     ENDIF                                                              246860
+     C**********           ELSE                                                      246860 AR994871
+     C********** AMTP      IFEQ 'MR'                                                 246860 AR994871
+     C**********           MOVE '1'       *IN77                                      246860 AR994871
+     C**********           ENDIF                                                     246860 AR994871
      C                     ENDIF                                          119889
       *                                                                   119889
      C*
@@ -1230,7 +1240,9 @@
      C*
      C                     ELSE
       *                                                                                       246860
-     C           AMTP      IFEQ 'MR'                                                          246860
+     C********** AMTP      IFEQ 'MR'                                                 246860 AR994871
+     C           AMTP      IFEQ 'PT'                                                        AR994871
+     C           AMTP      OREQ 'PF'                                                        AR994871
      C                     MOVE '1'       *IN77                                               246860
      C                     ELSE                                                               246860
      C                     SETON                     75
@@ -1350,6 +1362,17 @@
      C                     EXSR SETOF
      C      03             SETON                     24
      C      05             SETON                     24
+      *                                                                                     AR994871
+      ** Set-on corresponding indicators for reporting                                      AR994871
+      *                                                                                     AR994871
+     C           *IN24     IFEQ *ON                                                         AR994871
+     C           AMTP      IFEQ 'PT'                                                        AR994871
+     C           AMTP      OREQ 'PF'                                                        AR994871
+     C                     MOVE '1'       *IN79                                             AR994871
+     C                     ELSE                                                             AR994871
+     C                     MOVE '1'       *IN78                                             AR994871
+     C                     ENDIF                                                            AR994871
+     C                     ENDIF                                                            AR994871
      C*                                                                   CCG008
      C** Process only detail records with CNFY='Y'                        CCG008
      C           *IN24     IFEQ *ON                                       CCG008
@@ -1358,6 +1381,14 @@
      C                     ENDIF                                          CCG008
      C*                                                                   CCG008
      C     N24             GOTO FIN
+     C           AMTP      IFEQ 'PT'                                                        AR994871
+     C           AMTP      OREQ 'PF'                                                        AR994871
+     C                     MOVE '0'       *IN79                                             AR994871
+     C                     MOVE '1'       *IN77                                             AR994871
+     C                     ELSE                                                             AR994871
+     C                     MOVE '0'       *IN78                                             AR994871
+     C                     MOVE '1'       *IN75                                             AR994871
+     C                     ENDIF                                                            AR994871
      C*
      C** Access SDCUSTPD record to generate telex for this customer
      C*
@@ -3764,22 +3795,49 @@
      O                    U4 96          85 'DO NOT SEND **'
      O/COPY WNCPYSRC,LE1160O013
      O*
-     O** Output this line only if there are recors on file (*IN75 on)
+     O***Output*this*line*only*if*there*are*recors*on*file*(*IN75 on)*********             AR994871B
+     O**  DO NOT PRINT END OF REPORT                                                       AR994871B
      O*
      O********T*3 12   L1 88 75                                                             AR929296
-     O        T 3      L1 88 75                                                             AR929296
-     O       AND          62                                              119889
-     O                                   64 '*** END OF REPORT'
-     O                                   75 'FOR BRANCH'
-     O                         BRCA      79
-     O                                   83 '***'
+     O********T 3      L1 88 75                                                   AR929296 AR994871B
+     O*******AND          62                                              119889           AR994871B
+     O**********                         64 '*** END OF REPORT'                            AR994871B
+     O**********                         75 'FOR BRANCH'                                   AR994871B
+     O**********               BRCA      79                                                AR994871B
+     O**********                         83 '***'                                          AR994871B
      O*
-     O** Output this line only if there are records on file (*IN75 ON)
+     O***Output*this*line*only*if*there*are*records*on*file*(*IN75 ON)*****                AR994871B
+     O**  DO NOT PRINT END OF REPORT                                                       AR994871B
      O*
      O********T 3 12   LRN88 75                                                             AR929296
-     O        T 3      LRN88 75                                                             AR929296
-     O       AND          62                                              119889
-     O                                   76 '*** END OF REPORT ***'
+     O********T 3      LRN88 75                                                    AR929296 AR994871
+     O*******AND          62                                                         119889 AR994871
+     O**********                         76 '*** END OF REPORT ***'                         AR994871
+      *                                                                                     AR994871
+      ** Output this line only if there are records on file                                 AR994871
+      ** but no confirmation is to be reported.                                             AR994871
+      *                                                                                     AR994871
+     O        T 1      L1 78N75                                                             AR994871
+     O       AND          62                                                                AR994871
+     O                       70BRNM      61                                                 AR994871
+     O        T 2      L1 78N75                                                             AR994871
+     O       AND          62                                                                AR994871
+     O                                   50 'END OF DAY CONFIRMATIONS'                      AR994871
+     O        T 1      L1 78N75                                                             AR994871
+     O       AND          62                                                                AR994871
+     O                                   50 '------------------------'                      AR994871
+     O        T 1      L1 78N75                                                             AR994871
+     O       AND          62                                                                AR994871
+     O                                   69 'DATE'                                          AR994871
+     O                         RUNA      79                                                 AR994871
+     O        T 3 12   L1 88 78                                                             AR994871
+     O       AND          62N75                                                             AR994871
+     O                                   69 '*** NO CONFIRMATIONS'                          AR994871
+     O                                   83 'TO REPORT ***'                                 AR994871
+     O        T 3 12   LRN88 78                                                             AR994871
+     O       AND          62N75                                                             AR994871
+     O                                   69 '*** NO CONFIRMATIONS'                          AR994871
+     O                                   83 'TO REPORT ***'                                 AR994871
      O*
      O** Control report
      OLE1160P2D  309   13 16                                              119889
@@ -4103,19 +4161,46 @@
      O                    U4 96          70 '** AUTO TRANSMISSION -'      119889
      O                    U4 96          85 'DO NOT SEND **'              119889
      O**                                                                  119889
-     O**  OUTPUT THIS LINE ONLY IF THERE ARE RECORDS ON FILE (*IN75 ON)   119889
+     O****OUTPUT*THIS*LINE*ONLY*IF*THERE*ARE*RECORDS*ON*FILE*(*IN75 ON)***          119889 AR994871B
+     O**  DO NOT PRINT END OF REPORT                                                       AR994871B
      O********T*3 12   L1 88 75                                                      119889 AR929296
-     O        T 3      L1 88 75                                                             AR929296
-     O       AND          63                                              119889
-     O                                   64 '*** END OF REPORT'           119889
-     O                                   75 'FOR BRANCH'                  119889
-     O                         BRCA      79                               119889
-     O                                   83 '***'                         119889
-     O**  OUTPUT THIS LINE ONLY IF THERE ARE RECORDS ON FILE (*IN75 ON)   119889
+     O********T 3      L1 88 77                                                   AR994871 AR994871B
+     O*******AND          63                                                        119889 AR994871B
+     O**********                         64 '*** END OF REPORT'                     119889 AR994871B
+     O**********                         75 'FOR BRANCH'                            119889 AR994871B
+     O**********               BRCA      79                                         119889 AR994871B
+     O**********                         83 '***'                                   119889 AR994871B
+     O****OUTPUT*THIS*LINE*ONLY*IF*THERE*ARE*RECORDS*ON*FILE*(*IN75 ON)***          119889 AR994871B
+     O**  DO NOT PRINT END OF REPORT                                                       AR994871B
      O********T*3 12   LRN88 75                                                      119889 AR929296
-     O        T 3      LRN88 75                                                             AR929296
-     O       AND          63                                              119889
-     O                                   76 '*** END OF REPORT ***'       119889
+     O********T 3      LRN88 75                                                    AR929296 AR994871
+     O*******AND          63                                                         119889 AR994871
+     O**********                         76 '*** END OF REPORT ***'                  119889 AR994871
+      *                                                                                     AR994871
+      ** Output this line only if there are records on file                                 AR994871
+      ** but no confirmation is to be reported.                                             AR994871
+      *                                                                                     AR994871
+     O        T 1      L1 78N77                                                             AR994871
+     O       AND          63                                                                AR994871
+     O                       70BRNM      61                                                 AR994871
+     O        T 2      L1 78N77                                                             AR994871
+     O       AND          63                                                                AR994871
+     O                                   50 'END OF DAY CONFIRMATIONS'                      AR994871
+     O        T 1      L1 78N77                                                             AR994871
+     O       AND          63                                                                AR994871
+     O                                   50 '------------------------'                      AR994871
+     O        T 1      L1 78N77                                                             AR994871
+     O       AND          63                                                                AR994871
+     O                                   69 'DATE'                                          AR994871
+     O                         RUNA      79                                                 AR994871
+     O        T 3 12   L1 88 79                                                             AR994871
+     O       AND          63N77                                                             AR994871
+     O                                   69 '*** NO CONFIRMATIONS'                          AR994871
+     O                                   83 'TO REPORT ***'                                 AR994871
+     O        T 3 12   LRN88 79                                                             AR994871
+     O       AND          63N77                                                             AR994871
+     O                                   69 '*** NO CONFIRMATIONS'                          AR994871
+     O                                   83 'TO REPORT ***'                                 AR994871
       *                                                                   119889
      O*
      OLE1160AUT   06   LR

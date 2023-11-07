@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 251334             Date 24Oct23               *
+      *  Last Amend No. MD062057           Date 24Oct23               *
       *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD056479           Date 14Sep19               *
       *                 MD055528           Date 13Aug20               *
@@ -73,10 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  251334 - Error on journal entry user has no authority on     *
-      *           account code. Validate based on reference user      *
-      *           instead of User ID.                                 *
-      *         - Applied for MD-53783                                *
+      *  MD062057 - Error on journal entry user has no authority on   *
+      *             account code. Validate based on reference user    *
+      *             instead of User ID.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056479 - Cannot accept batch due to calculated hash        *
@@ -682,12 +681,12 @@
       *                                                                                       CAP084
      C**********         MOVE      B2ACCD        WACCD             4 0                 CAP084 CGL029
      C                   MOVE      B2ACCD        WACCD            10 0                        CGL029
-     C                   MOVE      *BLANKS       WUSRID           10                          251334
-     C     MREFUSR       IFEQ      *BLANKS                                                    251334
-     C                   EVAL      WUSRID = USRID                                             251334
-     C                   ELSE                                                                 251334
-     C                   EVAL      WUSRID = MREFUSR                                           251334
-     C                   ENDIF                                                                251334
+     C                   MOVE      *BLANKS       WUSRID           10                        MD062057
+     C     MREFUSR       IFEQ      *BLANKS                                                  MD062057
+     C                   EVAL      WUSRID = USRID                                           MD062057
+     C                   ELSE                                                               MD062057
+     C                   EVAL      WUSRID = MREFUSR                                         MD062057
+     C                   ENDIF                                                              MD062057
      C     KACCD         CHAIN     SFACAUL0                           22                      CAP084
       *                                                                                       CAP084
       ** If no record found, the input is not allowed                                         CAP084
@@ -2283,8 +2282,8 @@
       *                                                                                       CAP084
      C     KACCD         KLIST                                                                CAP084
      C                   KFLD                    WACCD                                        CAP084
-     C**********         KFLD                    USRID                                CAP084  251334
-     C                   KFLD                    WUSRID                                       251334
+     C**********         KFLD                    USRID                               CAP084 MD062057
+     C                   KFLD                    WUSRID                                     MD062057
       *                                                                                       CAP084
      C**********         ENDIF                                                        CAP084 BUG6979
       ** Access SAR details file to determine if CGL064 is on.                                CGL064

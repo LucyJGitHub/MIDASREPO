@@ -8,7 +8,7 @@
 /*CRT *  MODULE(**********/**********)                                *                       260324
 /*CRT *  SRCFILE(**********/**********)                               *                       260324
 /*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
-/*CRT ***INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD059917
+/*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD059917
 /*CRT *  INDENT(*NONE) TGTRLS(V7R3M0)                                 *                     MD059917
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************

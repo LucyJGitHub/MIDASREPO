@@ -11,14 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 30May14               *
+      *  Last Amend No. MD022257           Date 26Mar14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 30May14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022257 - Java screen doesn't have option to override       *
+      *             function to proceed with the transfer of Prime.   *
+      *             Pass warning parameters to SDVPNOI.               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *  CRE026 - Consumer Banking                                    *
@@ -369,6 +373,11 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD022257
+      *                                                                                     MD022257
+     C                   PARM                    WFldNmXAr                                  MD022257
+     C                   PARM                    WMsgIDXAr                                  MD022257
+     C                   PARM                    WMsgDtXAr                                  MD022257
       *
       ** Prime Nostro Indicator - OK
      C                   PARM                    DDPNOIOK

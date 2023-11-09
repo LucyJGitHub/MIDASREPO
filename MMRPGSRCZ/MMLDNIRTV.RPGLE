@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR826313           Date 15Sep11               *
+      *  Last Amend No. AR826313           Date 24Oct23               *
       *  Prev Amend No. AR819780           Date 05Oct23               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *

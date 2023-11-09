@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027054           Date 04Jun15              */
+/*       Last Amend No. AR895317           Date 09Nov23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD027054           Date 04Jun15              */
 /*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      CGL155             Date 21Mar14              */
@@ -41,6 +42,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR895317 - Prevent submitted jobs from running under wrong  */
+/*                  CCSID.  (Child: AR895318)                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027054 - Impossible to work on HATS during secondary COB  */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
@@ -763,9 +766,12 @@ SNDMSG:
 /**********  SBMJOB     JOB(SCC0204) JOBD(MBATCH) JOBQ(INTERFACE) +
                           PRTDEV(*CURRENT) USER(*JOBD) +
                           RTGDTA(*JOBD) RQSDTA('CALL SCC0204') OUTQ(*JOBD) */    /*CSC023 AR687098*/
+/**********  SBMJOB     JOB(SCC0204) JOBD(MBATCHIC) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) USER(*JOBD) RTGDTA(*JOBD) +
+                          RQSDTA('CALL SCC0204') OUTQ(*JOBD)               */  /*AR687098 AR895317*/
              SBMJOB     JOB(SCC0204) JOBD(MBATCHIC) JOBQ(INTERFACE) +
                           PRTDEV(*CURRENT) USER(*JOBD) RTGDTA(*JOBD) +
-                          RQSDTA('CALL SCC0204') OUTQ(*JOBD)                            /*AR687098*/
+                          RQSDTA('CALL SCC0204') OUTQ(*JOBD) CCSID(*USRPRF)             /*AR895317*/
  
                   ENDDO
  

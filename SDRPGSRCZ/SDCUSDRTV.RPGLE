@@ -30,8 +30,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 241383             Date 15Jun12               *
-      *  Prev Amend No. MD060008           Date 11May21               *
+      *  Last Amend No. AR699788A          Date 30Oct23               *
+      *  Prev Amend No. AR699788           Date 30Oct23               *
+      *                 241383             Date 15Jun12               *
+      *                 MD060008           Date 11May21               *
       *                 MD058830           Date 01Oct21               *
       *                 MD059520           Date 21Feb22               *
       *                 254109             Date 01Jun20               *
@@ -157,6 +159,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR699788A - Cannot authorise release of customer. Amended    *
+      *              the program to properly return the correct value *
+      *              of BBTMST field.  (Child:AR699789A)              *
+      *  AR699788 - Cannot authorise release of customer. Bypass the  *
+      *             validation on extended settlement if customer is  *
+      *             being reactivated. (Child:AR699789)               *
       *  241383 - During release of closed customer, save child       *
       *           details to prevent overwrite by parent customer.    *
       *           Applied for AR967456 (Child: AR967457).             *
@@ -1121,6 +1129,7 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
+     D W_BBTMST        S             26Z                                                   AR699788A
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -2888,6 +2897,9 @@
      C                   END
       * Customer has extended settlements defined on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 008 is Do not delete
+     C     BBCLST        IFEQ      'Y'                                                      AR699788
+     C                   MOVEL     'N'           WUERCD                                     AR699788
+     C                   ELSE                                                               AR699788
      C     WDS1008       IFEQ      'F'
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
@@ -2895,6 +2907,7 @@
      C                   MOVEL     'USR1125'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   END
+     C                   ENDIF                                                              AR699788
       * Customer is receipt ordering customer on SDEXSTPD.
       * CASE: WRK.Customer Deln Flag 009 is Do not delete
      C     WDS1009       IFEQ      'F'
@@ -3534,6 +3547,7 @@
       *****************************************************************                       CSD007
      C     VALACR        BEGSR                                                                CSD007
       *                                                                                       CSD007
+     C                   MOVE      BBTMST        W_BBTMST                                  AR699788A
      C     BBDTDL        IFNE      0                                                          CSD007
      C     BBCLST        ORNE      'Y'                                                        CSD007
      C                   MOVEL     'N'           OKACTN                                       CSD007
@@ -3563,6 +3577,7 @@
      C     *IN44         IFEQ      '0'                                                      MD048748
      C     DDCUSN        CHAIN     SDCUSTLR                           44                    MD048748
      C                   ENDIF                                                              MD048748
+     C                   MOVE      W_BBTMST      BBTMST                                    AR699788A
       *                                                                                       CSD007
      C                   ENDSR                                                                CSD007
       *****************************************************************                       CSD031

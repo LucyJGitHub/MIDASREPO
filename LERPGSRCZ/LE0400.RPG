@@ -10,8 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR749052           Date 20Sep23               *
-      *  Prev Amend No. 249385             Date 01Aug22               *
+      *  Last Amend No. AR926591A          Date 19Oct23               *
+      *  Prev Amend No. AR926591           Date 19Oct23               *
+      *                 AR926377           Date 19Oct23               *
+      *                 AR834103A          Date 19Oct23               *
+      *                 AR834103           Date 19Oct23               *
+      *                 AR749052           Date 20Sep23               *
+      *                 249385             Date 01Aug22               *
       *                 MD058815           Date 28Sep21               *
       *                 MD048344           Date 29Oct21               *
       *                 CLE172             Date 01Oct20               *
@@ -266,6 +271,31 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  AR926591A - Erroneous data appears at top page of LE0630P1.  *
+      *              Prevent transfer records from being written to   *
+      *              INTSTHQ incorrectly. Pattern after fix AR834104A.*
+      *              Reverse part of fix AR926592. (Child: AR926592A) *
+      *  AR926591 - LE0630P1 - erroneous data appears                 *
+      *             Changed INTSTHQ processing sequence PRSQ from 48  *
+      *             to 01 to correct printing of detail line before   *
+      *             the header, this happened when loan events and    *
+      *             loan has the same value date. Conditioned writing *
+      *             to INTSTHQ to correct printing of detail lines    *
+      *             after the last address line and before PAGE 1,    *
+      *             these records are not due to be produced. Output  *
+      *             ROLN to INTSTHQ. (Child: AR926592)                *
+      *  AR926377 - Principal transfer applied 4 times to loan.       *
+      *             Added the missing goto statement after processing *
+      *             principal transfer. (Child: AR926379)             *
+      *  AR834103A - Principal transfer detail mixes up with other    *
+      *              loan in LE0541P2. Prevent transfer records from  *
+      *              being written to CUTX1HP incorrectly. Prevent    *
+      *              treating them as reversals when they are not.    *
+      *              Apply part of fix 208666. (Child: AR834104A)     *
+      *  AR834103 - Missing movement and customer info on LE0541P2.   *
+      *             Ensure BVMV is set correctly for newly-inserted   *
+      *             loans. Apply fix 262161. Also, setup TINTTM or    *
+      *             ACUP for PF event. (Child: AR834104)              *
       *  AR749052 - Funding details not shown.  Apply fix 263442.     *
       *             (Child: AR749053)                                 *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
@@ -3606,6 +3636,10 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           AMTP      WHEQ 'PT'                                                          236196
      C                     EXSR PRINTO                                                        236196
      C                     MOVE '0'       INTST                                               236196
+     C                     GOTO HISTEN                                                      AR926377
+     C           AMTP      WHEQ 'PF'                                                        AR834103
+     C                     EXSR PRINFR                                                      AR834103
+     C                     MOVE '0'       INTST                                             AR834103
      C                     GOTO HISTEN                                                        236196
      C           AMTP      WHEQ 'SA'                                                          236196
      C                     EXSR STACC                                                         236196
@@ -3846,6 +3880,7 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 0765 C*
 0766 C           ACTN      BEGSR                           ** ACTN **
 0767 C*
+     C                     MOVE *OFF      *IN61                                            AR834103A
       *                                                                                      BUG5673
       ** Initialize VDATS for every read action record to ensure                             BUG5673
       ** correct accrual processing.                                                         BUG5673
@@ -11517,11 +11552,18 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                   CLE004
       ** Output Rec. to S/INTSTHN if necessary                            CLE004
       *                                                                   CLE004
-     C           *IN21     IFEQ *ON                        INT.HD.READ    CLE004
-     C           *IN22     OREQ *OFF                       NO.INT.HD.O/P  CLE004
-     C           *IN71     OREQ *ON                        DEMAND LOAN    CLE004
-     C           *IN63     OREQ *ON                        INT PAYM'TS    CLE004
+     C********** *IN21     IFEQ *ON                        INT.HD.READ              CLE004 AR926591A
+     C********** *IN22     OREQ *OFF                       NO.INT.HD.O/P            CLE004 AR926591A
+     C********** *IN71     OREQ *ON                        DEMAND LOAN              CLE004 AR926591A
+     C********** *IN63     OREQ *ON                        INT PAYM'TS              CLE004 AR926591A
       *                                                                   CLE004
+     C           *IN21     IFEQ *OFF                                                       AR926591A
+     C           *IN22     OREQ *ON                                                        AR926591A
+     C           *IN71     OREQ *OFF                                                       AR926591A
+     C           *IN63     OREQ *OFF                                                       AR926591A
+      *                                                                                    AR926591A
+     C                     ELSE                                                            AR926591A
+      *                                                                                    AR926591A
      C                     SETON                     58                   CLE004
      C                     EXSR EXCPT                                     CLE004
      C                     ADD  1         NINTST                          CLE004
@@ -11550,15 +11592,27 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                   CLE004
       * Only output to CUTX1HP If necessary                               CLE004
       *                                                                   CLE004
-     C           *IN60     IFEQ *ON                                       CLE004
-     C           *IN22     OREQ *ON                                       CLE004
-      *                                                                   CLE004
-     C           *IN30     OREQ *OFF                                      CLE004
-     C           *IN12     ANDEQ*ON                                       CLE004
-      *                                                                   CLE004
-     C           *IN30     OREQ *OFF                                      CLE004
-     C           *IN12     ANDEQ*OFF                                      CLE004
-     C           *IN31     ANDEQ*ON                                       CLE004
+     C********** *IN60     IFEQ *ON                                                 CLE004 AR834103A
+     C********** *IN22     OREQ *ON                                                 CLE004 AR834103A
+      **********                                                                    CLE004 AR834103A
+     C********** *IN30     OREQ *OFF                                                CLE004 AR834103A
+     C********** *IN12     ANDEQ*ON                                                 CLE004 AR834103A
+      **********                                                                    CLE004 AR834103A
+     C********** *IN30     OREQ *OFF                                                CLE004 AR834103A
+     C********** *IN12     ANDEQ*OFF                                                CLE004 AR834103A
+     C********** *IN31     ANDEQ*ON                                                 CLE004 AR834103A
+      *                                                                                    AR834103A
+     C           *IN60     IFEQ *OFF                                                       AR834103A
+     C           *IN22     OREQ *OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C           *IN30     OREQ *ON                                                        AR834103A
+     C           *IN12     ANDEQ*OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C           *IN30     OREQ *ON                                                        AR834103A
+     C           *IN12     ANDEQ*ON                                                        AR834103A
+     C           *IN31     ANDEQ*OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C                     ELSE                                                            AR834103A
       **                                                                  CLE004
       * Only Output to CUTX1HP if Total due is Positive                   CLE004
       **                                                                  CLE004
@@ -11610,6 +11664,8 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C*                                                                   CLE004
      C********************************************************************CLE004
      C           PRINFR    BEGSR                           ** PRINFR **   CLE004
+      *                                                                                     AR834103
+     C           INTST     IFNE '1'                                                         AR834103
       *                                                                                     AR790759
      C                     MOVE 'N'       WPDCL                                             AR790759
      C                     MOVELLTYP      WLLTYP  1                                         AR790759
@@ -11706,6 +11762,8 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                   CLE004
      C                     SETOF                     17                   CLE004
      C                     ENDIF                                          CLE004
+      *                                                                                     AR834103
+     C                     ENDIF                                                            AR834103
       *                                                                   CLE004
       ** Output Recs. to S/HIUPD and S/ACTN5                              CLE004
       *                                                                   CLE004
@@ -11881,6 +11939,49 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     SETOF                     8283                                     202628
       *                                                                                       202628
      C                     ENDIF                           *** *INU3 ****                     202628
+      *                                                                                     AR834103
+      ** Set up Interest Accrued up to and including this movement                          AR834103
+      *                                                                                     AR834103
+     C           CLE003    IFEQ 'Y'                                                         AR834103
+     C           AITC      ADD  AIAP      TINTTM                                            AR834103
+     C                     ELSE                                                             AR834103
+     C                     Z-ADDACCINT    TINTTM                                            AR834103
+     C                     ENDIF                                                            AR834103
+      *                                                                                     AR834103
+     C           INTST     IFEQ '1'                                                         AR834103
+     C                     EXSR INTSDY                                                      AR834103
+     C                     ENDIF                                                            AR834103
+      *                                                                                     AR834103
+      ** Output Rec. to S/INTSTHN if necessary                                              AR834103
+      *                                                                                     AR834103
+     C********** *IN21     IFEQ *ON                        INT.HD.READ             AR834103 AR926591
+     C********** *IN22     OREQ *OFF                       NO.INT.HD.O/P           AR834103 AR926591
+     C********** *IN71     OREQ *ON                        DEMAND LOAN             AR834103 AR926591
+      ********** *IN63     OREQ *ON                        INT PAYM'TS             AR834103 AR926591
+      **********                                                                  AR926591 AR926591A
+     C********** *IN71     IFEQ *OFF                                              AR926591 AR926591A
+     C********** *IN63     OREQ *OFF                                              AR926591 AR926591A
+     C**********           GOTO SKIP1                                             AR926591 AR926591A
+     C**********           ENDIF                                                  AR926591 AR926591A
+      *                                                                                     AR834103
+     C           *IN21     IFEQ *OFF                                                       AR926591A
+     C           *IN22     OREQ *ON                                                        AR926591A
+     C           *IN71     OREQ *OFF                                                       AR926591A
+     C           *IN63     OREQ *OFF                                                       AR926591A
+      *                                                                                    AR926591A
+     C                     ELSE                                                            AR926591A
+      *                                                                                    AR926591A
+     C                     SETON                     58                                     AR834103
+     C                     EXSR EXCPT                                                       AR834103
+     C                     ADD  1         NINTST                                            AR834103
+     C                     ADD  1         NOSTRC                                            AR834103
+     C**********           ENDIF                                                   AR834103 AR926591
+     C                     ENDIF                                                           AR926591A
+     C********** SKIP1     TAG                                                    AR926591 AR926591A
+      *                                                                                     AR834103
+     C           INTST     IFEQ '1'                                                         AR834103
+     C                     GOTO PRFRE                                                       AR834103
+     C                     ENDIF                                                            AR834103
       *                                                                   CLE004
       ** Output Rec. to S/CUTX1 If necessary                              CLE004
       *                                                                   CLE004
@@ -11900,15 +12001,27 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     ENDIF                                          CLE004
      C/COPY WNCPYSRC,LE0400C101
       *                                                                   CLE004
-     C           *IN60     IFEQ *ON                                       CLE004
-     C           *IN22     OREQ *ON                                       CLE004
-      *                                                                   CLE004
-     C           *IN30     OREQ *OFF                                      CLE004
-     C           *IN12     ANDEQ*ON                                       CLE004
-      *                                                                   CLE004
-     C           *IN30     OREQ *OFF                                      CLE004
-     C           *IN12     ANDEQ*OFF                                      CLE004
-     C           *IN31     ANDEQ*ON                                       CLE004
+     C********** *IN60     IFEQ *ON                                                 CLE004 AR834103A
+     C********** *IN22     OREQ *ON                                                 CLE004 AR834103A
+      **********                                                                    CLE004 AR834103A
+     C********** *IN30     OREQ *OFF                                                CLE004 AR834103A
+     C********** *IN12     ANDEQ*ON                                                 CLE004 AR834103A
+      **********                                                                    CLE004 AR834103A
+     C********** *IN30     OREQ *OFF                                                CLE004 AR834103A
+     C********** *IN12     ANDEQ*OFF                                                CLE004 AR834103A
+     C********** *IN31     ANDEQ*ON                                                 CLE004 AR834103A
+      *                                                                                    AR834103A
+     C           *IN60     IFEQ *OFF                                                       AR834103A
+     C           *IN22     OREQ *OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C           *IN30     OREQ *ON                                                        AR834103A
+     C           *IN12     ANDEQ*OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C           *IN30     OREQ *ON                                                        AR834103A
+     C           *IN12     ANDEQ*ON                                                        AR834103A
+     C           *IN31     ANDEQ*OFF                                                       AR834103A
+      *                                                                                    AR834103A
+     C                     ELSE                                                            AR834103A
       **                                                                  CLE004
       * Only Output to CUTX1HP if Total due is Positive                   CLE004
       **                                                                  CLE004
@@ -15172,6 +15285,7 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 3492 O*
 3493 O                         NODYSI    82P
 3494 O                         TINTTM    89P
+     O                 58      ROLN      95                                                 AR926591
 3495 O*
 3496 OINTSTZX T        LR 50
 3497 O                                    1 'T'

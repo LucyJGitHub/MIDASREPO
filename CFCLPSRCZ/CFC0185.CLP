@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. BA6016             Date 10Feb23              */
-/*       Prev Amend No. MD060952           Date 19Jan23              */
+/*       Last Amend No. AR807226           Date 20Oct23              */
+/*       Prev Amend No. BA6016             Date 10Feb23              */
+/*                      MD060952           Date 19Jan23              */
 /*                      MD027509           Date 10Oct22              */
 /*                      CSC059             Date 10Oct22              */
 /*                      247251             Date 24Aug21              */
@@ -52,6 +53,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       AR807226 - Download Counterparty changes daily.             */
+/*                  (Child: AR807227)                                */
 /*       BA6016 - Upgrade CMD IFSAUT to BFMidas (GSH016)             */
 /*       MD060952 - Error with CSC059 on as CPYTOPCD is still being  */
 /*                  executed                                         */
@@ -940,6 +943,13 @@ FULL3:                                                                          
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +
                           CMDLBL(ABNOR))                             /*E43951*/
              ENDDO
+                                                                                        /*AR807226*/
+/* Submit counterparty download to sweep any customer changes done */                   /*AR807226*/
+/* for the day */                                                                       /*AR807226*/
+             SBMJOB JOB(CFC0080) JOBD(MBATCH) JOBQ(CFJOBQB) USER(*JOBD) +
+               RTGDTA(*JOBD) RQSDTA('CALL CFC0080  PARM(''   '')') +
+               INLLIBL(*JOBD) LOGCLPGM(*YES)                                            /*AR807226*/
+                                                                                        /*AR807226*/
 
              GOTO END
  ALC_ERR:    CHGVAR     VAR(&RTNVAR) VALUE('1')                      /*062640*/

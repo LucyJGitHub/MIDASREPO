@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2001                      *
       *        COMPANY CONFIDENTIAL.                                 *
       *                                                              *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027510           Date 06Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,10 @@
       *                                                              *
       *****************************************************************
       *                                                               *
+      *  MD027510 - Field 50 incorrectly formated for Non-Bank        *
+      *             Matching Service customers. Ensure correct        *
+      *             format is used.                                   *
+      *           - Applied for MD061833.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -91,6 +96,8 @@
       *
      IDSSDY     E DSDSSDY
       ** 2nd DS for access program , long data structure.
+     IDSLDY     E DSDSLDY                                                                   MD027510
+      ** 3rd DS for access program , very long data structure.                              MD027510
       *
      IMEBICD    E DSMEBICDPD                                                                  CSW201
       ** Data Structure for BIC Directory                                                     CSW201
@@ -171,12 +178,14 @@
       ** Check for customer number or shortname
      C                     MOVELZDEST     @KEY1
       *
-     C                     CALL 'AOCUSTR0'
+     C**********           CALL 'AOCUSTR0'                                                  MD027510
+     C                     CALL 'AOCUSTR1'                                                  MD027510
      C                     PARM *BLANKS   @RTCD   7
      C                     PARM '*KEY'    @OPTN   7
      C                     PARM           @KEY1  10
      C                     PARM *BLANKS   @KYST   7
-     C           SDCUST    PARM SDCUST    DSSDY
+     C********** SDCUST    PARM SDCUST    DSSDY                                             MD027510
+     C           SDCUST    PARM SDCUST    DSLDY                                             MD027510
       ***********                                                         S01401
       ***Error*handling.                                                  S01401
      C***********@RTCD     IFNE *BLANKS                    b*2            S01401
@@ -219,6 +228,11 @@
       ** customer name and address.
      C********** ZERR      IFNE '1'                                S01401 155065
      C           BBCSID    IFNE *BLANKS
+      *                                                                                     MD027510
+      ** Only if customer is not an MT3xx corporate.                                        MD027510
+      *                                                                                     MD027510
+     C           BBCORP    ANDNE'Y'                                                         MD027510
+      *                                                                                     MD027510
      C                     MOVELBBCSID    ZSADD1           b*3
      C                     MOVE 'A'       ZSTAG
       *                                                                                       CSW201

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR819780           Date 05Oct23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR826313           Date 24Oct23               *
+      *  Prev Amend No. AR819780           Date 05Oct23               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -102,6 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR826313 - When accessing Front office, ignore mature deals. *
+      *             (Child: AR826315)                                 *
       *  AR819780 - Multiple deletion from SOAP of same Front Office  *
       *             (Child: AR819781)                                 *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -618,6 +621,8 @@
       *                                                                                     AR819780
      C     *IN99         DOWEQ     '0'                                                      AR819780
      C     HKDDLT        ANDEQ     'D'                                                      AR819780
+     C     *IN99         OREQ      '0'                                                      AR826313
+     C     HKDSTS        ANDEQ     'M'                                                      AR826313
      C     FOTRID        READE     FRNTOFCL1                              99                AR819780
      C                   ENDDO                                                              AR819780
 

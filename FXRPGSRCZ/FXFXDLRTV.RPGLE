@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR819780           Date 05Oct23               *
-      *  Prev Amend No. 250655             Date 20Jan22               *
+      *  Last Amend No. AR826313           Date 23Oct23               *
+      *  Prev Amend No. AR819780           Date 05Oct23               *
+      *                 250655             Date 20Jan22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -84,6 +85,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR826313 - When accessing Front office, ignore mature deals  *
+      *             (Child: AR826315)                                 *
       *  AR819780 - Multiple deletion from SOAP of same Front Office  *
       *             (Child: AR819781)                                 *
       *  250655 - Temp fix to add 'X' for authorise when validating   *
@@ -518,6 +521,10 @@
       *                                                                                     AR819780
      C     *IN99         DOWEQ     '0'                                                      AR819780
      C     FHDDLT        ANDEQ     'D'                                                      AR819780
+     C     *IN99         OREQ      '0'                                                      AR826313
+     C     FHDSTS        ANDEQ     'M'                                                      AR826313
+     C     *IN99         OREQ      '0'                                                      AR826313
+     C     FHDSTS        ANDEQ     'E'                                                      AR826313
      C     FOTRID        READE     FRNTOFCL1                              99                AR819780
      C                   ENDDO                                                              AR819780
       *

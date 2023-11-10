@@ -87,8 +87,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058079           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR832484           Date 10Nov23               *
+      *  Prev Amend No. MD058079           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 AR967121           Date 19Aug14               *
       *                 MD029260           Date 06Aug14               *
@@ -172,6 +173,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR832484 - Enclosure shows the difference between On-screen  *
+      *             checking and EM0600P1.  Recompiled over fixed     *
+      *             logical file TABEM.  (Child: AR832485)            *
       *  MD058079 - Deliverable Data Split for sundry files           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *

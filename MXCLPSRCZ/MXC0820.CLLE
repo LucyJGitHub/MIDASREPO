@@ -9,8 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD057830           Date 17Aug23              */
-/*       Prev Amend No. MD057445           Date 17Aug23              */
+/*       Last Amend No. MD057830           Date 04Aug23              */
+/*       Prev Amend No. MD057445           Date 04Aug23              */
 /*                      CMX017  *CREATE    Date 04Aug23              */
 /*                                                                   */
 /*********************************************************************/
@@ -33,6 +33,7 @@
                           VALUE('jar -cvf ')
              DCL        VAR(&CDCMD) TYPE(*CHAR) LEN(205)
              DCL        VAR(&IFSPATH) TYPE(*CHAR) LEN(220)                              /*MD057830*/
+             DCL        VAR(&IFSPARM) TYPE(*CHAR) LEN(220)                              /*MD057830*/
              DCL        VAR(&FLNAME) TYPE(*CHAR) LEN(18)
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
              DCL        VAR(&DATEF) TYPE(*CHAR) LEN(1)
@@ -90,12 +91,21 @@
              IF (&RTCD *EQ ' ') (CHGVAR (&CMX010) VALUE('Y'))
 
 /* Retrieve system values                                                                       */
-             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+/****        CALL       PGM(AOSVALR0) PARM(&RTNCDE +
                        'EMIFSSubdirectory' &EMIFS +
                        'MXDataExportFmtName' &MXDTEF +
                        'MXJarFileName' &MXJFN +
                        'CompressDataExpFile' &CPDEF +
                         &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK0 &SVAL10)   ***/                                         /*MD057830*/
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                       'EMIFSSubdirectory' &EMIFS +
+                       'MXDataExportFmtName' &MXDTEF +
+                       'MXJarFileName' &MXJFN +
+                       'CompressDataExpFile' &CPDEF +
+                        'IFSAUTCommand' &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
                         &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
                         &SVALK0 &SVAL10)
 
@@ -111,8 +121,9 @@
              CALL       PGM(ZM0080) PARM(&SDATE &DATEF)
 
 /** Default the CCSID of this Job **/                                                   /*MD057445*/
-             ADDENVVAR ENVVAR(PASE_DEFAULT_UTF8) VALUE(N) LEVEL(*JOB)                   /*MD057445*/
+             ADDENVVAR  ENVVAR(PASE_DEFAULT_UTF8) VALUE(N) LEVEL(*JOB)                  /*MD057445*/
                                                                                         /*MD057445*/
+
 /* Construct filename of the jar for the day                                                    */
              CHGVAR     VAR(&FLNAME) VALUE(&MXJFN *TCAT +
                           &SDATE *TCAT '.jar')
@@ -151,14 +162,15 @@
 
              QSH        CMD(&QSHCMD)
 
- /*        - Update IFSPATH variable and Execute the IFSAUT Command  */                 /*MD057830*/
+/*        - Update IFSPATH variable and Execute the IFSAUT Command  */                  /*MD057830*/
              CHGVAR     VAR(&IFSPATH) VALUE(&EMIFS *TCAT &FLNAME)                       /*MD057830*/
-             IFSAUT     PATH(&IFSPATH)                                                  /*MD057830*/
-             MONMSG     MSGID(CPFA0A9)                                                  /*MD057830*/
+             CHGVAR     VAR(&IFSPARM) VALUE(&IFSPATH)                                   /*MD057830*/
+             IF         COND(&SVAL5 *NE '       ') THEN(DO)                             /*MD057830*/
+             CHGVAR     VAR(&SVAL5) VALUE(&SVAL5 *TCAT '(' *TCAT &IFSPARM *TCAT ')')    /*MD057830*/
+             CALL       PGM(QCMDEXC) PARM(&SVAL5 200)                                   /*MD057830*/
+             ENDDO                                                                      /*MD057830*/
                                                                                         /*MD057830*/
              ENDDO
-
-             DMPCLPGM                              /** Temp code to check contents of vars       */
 
              SNDPGMMSG  MSG('MXC0820 - Completed successfully.') +
                           TOMSGQ(MRUNQ)

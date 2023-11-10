@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD057760           Date 01Apr21               *
-      *  Prev Amend No. MD056838           Date 01Oct20               *
+      *  Last Amend No. MD061979           Date 18Oct23               *
+      *  Prev Amend No. MD057760           Date 01Apr21               *
+      *                 MD056838           Date 01Oct20               *
       *                 AR1095148          Date 07May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL182             Date 11May17               *
@@ -36,6 +37,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061979 - When batch is created from Payplus it did not     *
+      *             update GLBTNOPD. Update GLBTNOPD once batch is    *
+      *             created. Patterned fix MD-52962                   *
       *  MD057760 - Add error details in GL001601P1 report.           *
       *  MD056838 - Amend SFNUM type to packed decimal                *
       *  AR1095148 - Verify that currencies are in balance.           *
@@ -92,6 +96,9 @@
      F                                     Prefix(G_)                                      AR1095148
       ** GL journal entry currency summary file                                            AR1095148
       *                                                                                    AR1095148
+      ** Today's batch numbers used                                                         MD061979
+     FGLBTNOL0  UF A E           K DISK    INFSR(*PSSR)                                     MD061979
+      *                                                                                     MD061979
       ** GL journal entry Report
      F***GL001600P1O    E             PRINTER INFSR(*PSSR)                                    CER059
      FGL001601P1O    E             PRINTER INFSR(*PSSR)                                       CER059
@@ -703,6 +710,18 @@
      C                   IF        %ERROR
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD061979
+      ** Write to Today's batch numbers used                                                MD061979
+      *                                                                                     MD061979
+     C                   MOVEL     BRBTNB        B3BTNB                                     MD061979
+     C                   MOVEL     'N'           B3DUMP                                     MD061979
+     C                   WRITE     GLBTNOD0                             60                  MD061979
+     C                   IF        *IN60 = *ON                                              MD061979
+     C                   MOVEL     BRBTNB        DBKEY                                      MD061979
+     C                   MOVEL(P)  'GLBTNOPD'    DBFILE                                     MD061979
+     C                   Z-ADD     004           DBASE                                      MD061979
+     C                   EXSR      *PSSR                                                    MD061979
+     C                   ENDIF                                                              MD061979
       *
       ** If batch status is accepted, submit batch for shadow posting                       BUG25187
       *                                                                                     BUG25187

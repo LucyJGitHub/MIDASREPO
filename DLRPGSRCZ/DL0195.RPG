@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1094034          Date 18Jan23               *
-      *  Prev Amend No. AR809165C          Date 07Mar22               *
+      *  Last Amend No. MD054148           Date 09Nov23               *
+      *  Prev Amend No. AR1094034          Date 18Jan23               *
+      *                 AR809165C          Date 07Mar22               *
       *                 MD058815           Date 28Sep21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
@@ -269,6 +270,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054148 - Rate Change advice for Call Deposits not          *
+      *             showing correct rate on date of rate change       *
       *  AR1094034 - MT362 are not produced even DL0195P2 is correctly*
       *              generated - due to date Conversion error in      *
       *              SWFT01 (CSW201)                                  *
@@ -1768,6 +1771,7 @@
 0206 I                                       13  150DASN
 0207 I                                       16  17 DTYP
 0208 I                                       20  21 AMTP
+     I                                       23  240BRTS                                    MD054148
 0209 I                                    P  25  307RTSP
 0210 I                                       31  33 CCY
 0211 I                                    P  34  400DAAM
@@ -4421,6 +4425,13 @@
      C                     ENDIF                                                            AR598353
      C                     GOTO END                                       CDL017
      C                     ENDIF                                          CDL017
+      *                                                                                     MD054148
+     C           AMTP      IFEQ 'BC'                                                        MD054148
+     C                     MOVE BRTS      @BRCO                                             MD054148
+     C                     ELSE                                                             MD054148
+     C                     MOVE BRCO      @BRCO                                             MD054148
+     C                     ENDIF                                                            MD054148
+     C                     EXSR SRBSRT                                                      MD054148
       *                                                                   CDL022
       **  Produce confirmation for deal amendment type BC                 CDL022
      C           AMTP      IFEQ 'BC'                                      CDL022
@@ -5216,6 +5227,9 @@
      C           CDL020    IFEQ 'Y'                                                          BUG3620
      C   36      BRTEM     ADD  RTSP      INTR                                               BUG3620
      C                     ENDIF                                                             BUG3620
+     C           BAVDNR    IFLE VDAT                                                        MD054148
+     C   36      BANBRT    ADD  RTSP      INTR                                              MD054148
+     C                     ENDIF                                                            MD054148
      C/COPY WNCPYSRC,DL0195C257
      C*                                                                   S01119
      C                     END                                            S01119
@@ -13690,7 +13704,11 @@
      C           RTSP      IFEQ 0                                                          AR1012947
      C                     Z-ADDRTSPDC    RTSP                                             AR1012947
      C                     ENDIF                                                           AR1012947
-     C           BRTEM     ADD  RTSP      ##INTR 117                      CDL022
+     C********** BRTEM     ADD  RTSP      ##INTR 117                                 CDL022 MD054148
+     C           BACBSR    ADD  RTSPC     ##INTR 117                                        MD054148
+     C           BAVDNR    IFLE VDAT                                                        MD054148
+     C           BANBRT    ADD  RTSPC     ##INTR                                            MD054148
+     C                     ENDIF                                                            MD054148
       *                                                                   CDL022
       **  Get customer address                                            CDL022
      C                     MOVELCNUM      CLIKEY    P                     CDL022
@@ -14143,6 +14161,36 @@
      C                     ENDIF                                                              CSW213
       *                                                                                       CSW213
      C                     ENDSR                                                              CSW213
+     C*****************************************************************                     MD054148
+      *                                                               *                     MD054148
+      *  SRBSRT - Read Base Rate codes                                *                     MD054148
+      *                                                               *                     MD054148
+      *****************************************************************                     MD054148
+      *                                                                                     MD054148
+     C           SRBSRT    BEGSR                                                            MD054148
+      *                                                                                     MD054148
+     C                     CLEARSDBSRT                                                      MD054148
+     C           @BRCO     IFNE '  '                                                        MD054148
+     C           @BRCO     ANDNE'00'                                                        MD054148
+     C                     CALL 'AOBSRTR0'                                                  MD054148
+     C                     PARM '*MSG   ' @RTCD                                             MD054148
+     C                     PARM '*KEY   ' @OPTN                                             MD054148
+     C                     PARM CCYC      @CCYC                                             MD054148
+     C                     PARM           @BRCO                                             MD054148
+     C           SDBSRT    PARM SDBSRT    DSSDY                                             MD054148
+      *                                                                                     MD054148
+     C           @RTCD     IFNE *BLANK                                                      MD054148
+     C                     MOVEL'SDBSRTPD'DBFILE                                            MD054148
+     C                     MOVEL'102'     DBASE                                             MD054148
+     C                     MOVEL@OPTN     DBOPTN                                            MD054148
+     C                     MOVEL@CCYC     DBKEY                                             MD054148
+     C                     MOVE @BRCO     DBKEY                                             MD054148
+     C                     SETON                     U7U8LR                                 MD054148
+     C                     EXSR *PSSR                                                       MD054148
+     C                     GOTO END                                                         MD054148
+     C                     ENDIF                                                            MD054148
+     C                     ENDIF                                                            MD054148
+     C                     ENDSR                                                            MD054148
       *****************************************************************                       CSW213
       /EJECT                                                                                  CDL033
      C/SPACE 5                                                            066550
@@ -16939,6 +16987,13 @@
      O        E  109  N12 13   BCCONF                                                         CFC006
      O                       28          87 'INTERNAL - DO NOT SEND'      CDL022
      O                       16A8BRNM    61                               CDL022
+      *                                                                                     MD054148
+     O        E 2     N12      BCCONF                                                       MD054148
+     O                                   53 'RATE CHANGE ADVICE'                            MD054148
+      *                                                                                     MD054148
+     O        E 2     N12      BCCONF                                                       MD054148
+     O                         DLNO      15                                                 MD054148
+     O                         BJMRDT    34                                                 MD054148
       *                                                                   CDL022
      O********E*21    N12      BCCONF                                                  CDL022 CFC006
      O        E 21    N12 13   BCCONF                                                         CFC006
@@ -18924,6 +18979,13 @@
      O        E  109   12      BCCONF                                     CDL022
      O                       28          87 'INTERNAL - DO NOT SEND'      CDL022
      O                       16A8BRNM    61                               CDL022
+      *                                                                                     MD054148
+     O        E 2      12      BCCONF                                                       MD054148
+     O                                   53 'RATE CHANGE ADVICE'                            MD054148
+      *                                                                                     MD054148
+     O        E 2      12      BCCONF                                                       MD054148
+     O                         DLNO      15                                                 MD054148
+     O                         BJMRDT    34                                                 MD054148
       *                                                                   CDL022
      O        E 21     12      BCCONF                                     CDL022
      O                                   34 'WE WISH TO ADVISE YOU'       CDL022

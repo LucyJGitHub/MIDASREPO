@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD059777             Date 12Apr22             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. CUP047               Date 10Oct23             *
+      *  Prev Amend No. MD059777             Date 12Apr22             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
+      *         - Applied for MD061891.                               *
       *  MD059777 - When LF/view is a dependency without being an     *
       *             affected dependent, it is ignored by the script   *
       *  CUT017 - Adaptive Database Upgrade                           *
@@ -64,6 +67,8 @@
      D TOFILE          S             10A
      D OWNR            S             10A
      D AUTL            S             10A
+     D X_OWNR          S             10A                                                      CUP047
+     D X_AUTL          S             10A                                                      CUP047
      D UPGXRR        E DS                  EXTNAME(UPGXRRPD)
      D UPGSCR        E DS                  EXTNAME(UPGSCRTD)
      D UPGORD        E DS                  EXTNAME(UPGORDTD)
@@ -83,6 +88,36 @@
 
      C                   eval      AUTL = Prefix + 'DATABASE'
      C                   eval      OWNR = Prefix + 'OWNER'
+                                                                                              CUP047
+      ** Determine if CUP047 is on                                                            CUP047
+                                                                                              CUP047
+     C                   Call      'GPAOSARDR0'                                               CUP047
+     C                   Parm      *BLANKS       @RTCD             7                          CUP047
+     C                   Parm      '*VERIFY'     @OPTN             7                          CUP047
+     C                   Parm      'CUP047'      PSARD             6                          CUP047
+                                                                                              CUP047
+     C                   If        @RTCD = *Blanks                                            CUP047
+      ** If feature is on, check system values                                                CUP047
+     C/exec SQL                                                                               CUP047
+     C+ select GIVAL into :X_AUTL from GPSVLXTD                                               CUP047
+     C+ where GISVAL = 'AlternativeBrgAUTLDB'                                                 CUP047
+     C/end-exec                                                                               CUP047
+     C                   If        SQLCODE = 0 and                                            CUP047
+     C                             X_AUTL <> *blanks                                          CUP047
+     C                   eval      AUTL = X_AUTL                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
+     C/exec SQL                                                                               CUP047
+     C+ select GIVAL into :X_OWNR from GPSVLXTD                                               CUP047
+     C+ where GISVAL = 'AlternativeBrgOWNER'                                                  CUP047
+     C/end-exec                                                                               CUP047
+     C                   If        SQLCODE = 0 and                                            CUP047
+     C                             X_OWNR <> *blanks                                          CUP047
+     C                   eval      OWNR = X_OWNR                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
+     C                   Endif                                                                CUP047
+                                                                                              CUP047
 
       * First, delete script records generated for GV lib (by UP000056) for files
       * which are dependent (listed in UPGORDTD)

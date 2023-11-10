@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD034189           Date 21Apr15              */
-/*       Prev Amend No. CUP041   *REWRITE  Date 27May14              */
+/*       Last Amend No. CUP047             Date 10Oct23              */
+/*       Prev Amend No. MD034189           Date 21Apr15              */
+/*                      CUP041   *REWRITE  Date 27May14              */
 /*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27240           Date 12Mar10              */
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CUP047 - Alternative OWNER and AUTL for Bridge upgrade      */
+/*              - Applied for MD061891.                              */
 /*       MD034189 - Wrong authorisation list used.                   */
 /*       CUP041 - New Bridge methodology to combine menu options     */
 /*       CSC043 - MidasPlus IASP Enablement                          */
@@ -36,40 +39,88 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&LAYER &PFX &IASP &RTNFLAG)
- 
+
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
- 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CUP047*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CUP047*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CUP047*/
+/*/COPY SDCPYSRC,SDSVALDCL                                                                /*CUP047*/
+
              DCLF       FILE(UPADPJW0)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
 /**********  CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')                      */ /*MD034189*/
              CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'ADOPT')                            /*MD034189*/
+                                                                                          /*CUP047*/
+/*  Check if feature CUP047 is on */                                                      /*CUP047*/
+                                                                                          /*CUP047*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CUP047*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CUP047*/
+             CHGVAR     VAR(&SARD) VALUE('CUP047')                                        /*CUP047*/
+                                                                                          /*CUP047*/
+/*  Check System Values for CUP047 */                                                     /*CUP047*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                               /*CUP047*/
+             CALL       PGM(GPAOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                    /*CUP047*/
+                                                                                          /*CUP047*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CUP047*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC  +
+                          'AlternativeBrgOWNER' &SVAL1  +
+                          'AlternBrgAUTLnonDB' &SVAL2  +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CUP047*/
+             IF         COND(&SVAL1 *NE '          ') THEN(CHGVAR +
+                          VAR(&OWNER) VALUE(&SVAL1))                                      /*CUP047*/
+             IF         COND(&SVAL2 *NE '          ') THEN(CHGVAR +
+                          VAR(&AUTL) VALUE(&SVAL2))                                       /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+             ELSE       CMD(DO)                                                           /*CUP047*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CUP047*/
+                                                                                          /*CUP047*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CUP047*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC  +
+                          'AlternativeBrgOWNER' &SVAL1  +
+                          'AlternBrgAUTLnonDB' &SVAL2  +
+                          &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CUP047*/
+             IF         COND(&SVAL1 *NE '          ') THEN(CHGVAR +
+                          VAR(&OWNER) VALUE(&SVAL1))                                      /*CUP047*/
+             IF         COND(&SVAL2 *NE '          ') THEN(CHGVAR +
+                          VAR(&AUTL) VALUE(&SVAL2))                                       /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+             ENDDO                                                                        /*CUP047*/
+                                                                                          /*CUP047*/
              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
                 CHGVAR     VAR(&XPLIB) VALUE(&PFX *TCAT 'XPLIB')
              ENDDO
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
                 CHGVAR     VAR(&XPLIB) VALUE(&PFX *TCAT 'GXPLIB')
              ENDDO
- 
+
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
- 
+
 /* Skip if the layer does not match. */
              IF         COND(&AALAYR *NE &LAYER) THEN(DO)
                 GOTO       CMDLBL(READNEXT)
@@ -78,7 +129,7 @@ READNEXT:
              IF         COND(&AADEL *EQ 'Y') THEN(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
- 
+
              DLTPGM     PGM(&XPLIB/&AAPGM)
              MONMSG     MSGID(CPF2105)
 /* Find latest version in library list ... */
@@ -103,13 +154,13 @@ READNEXT:
 /* ... and change adoption parameters according to file. */
              CHGPGM     PGM(&XPLIB/&AAPGM) USRPRF(&AAUSER) +
                           USEADPAUT(&AAUSEA)
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              CHGVAR     VAR(&RTNFLAG) VALUE('E')
- 
+
 ENDPGM:
              ENDPGM

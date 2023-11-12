@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR744027           Date 10May11               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR744027 - Authorised status not displayed. Increase status  *
+      *             field to 10 character to handle AUTHORISED        *
+      *             status. (Child: AR744028)                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type                              *
@@ -207,7 +211,8 @@
      D PBJMRDT         S              7A
      D PBKOBRU         S              1A
      D PBKPRCU         S              1A
-     D PDDSTS          S              7A
+     D***PDDSTS*         S              7A                                                  AR744027
+     D PDDSTS          S             10A                                                    AR744027
      D PMsgDNb         S              7A
      D PMsgNm          S             10A
      D PMsgTxt         S             80A

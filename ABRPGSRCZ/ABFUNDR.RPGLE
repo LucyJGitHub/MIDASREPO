@@ -13,10 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. AR744027           Date 10May11               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
-      *   	     CGL165             Date 17Feb15               *
+      *   	        CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR744027 - Authorised status not displayed. Increase status  *
+      *             field to 10 character to handle AUTHORISED        *
+      *             status. (Child: AR744028)                         *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -579,9 +583,10 @@
      C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Deal Status
-
-     C                   PARM                    PDDSTS            7
-
+ 
+     C**********         PARM                    PDDSTS            7                        AR744027
+     C                   PARM                    PDDSTS           10                        AR744027
+ 
       ** Profit Centre Description 1
       ** Profit Centre Description 2
 

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD020393           Date 01Mar23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. AR744027           Date 09Nov23               *
+      *  Prev Amend No. MD020393           Date 01Mar23               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -55,6 +56,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR744027 - Authorised status not displayed. Increase status  *
+      *             field to 10 character to handle AUTHORISED        *
+      *             status. (Child: AR744028)                         *
       *  MD020393 - Allow negative interest                           *
       *           - Partially applied for MD033116                    *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
@@ -186,7 +190,8 @@
       ** +--------------------------------------+
 
       ** Deal Status
-     D WStatArr        S              7    DIM(2) CTDATA PERRCD(1)
+     D***WStatArr        S              7    DIM(2) CTDATA PERRCD(1)                        AR744027
+     D WStatArr        S             10    DIM(3) CTDATA PERRCD(1)                          AR744027
 
       ** External DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
@@ -260,7 +265,8 @@
      D PScRte          S             13  8
      D PSxP1           S              1S 0
      D PSxP2           S              1S 0
-     D PStatus         S              7A
+     D***PStatus         S              7A                                                  AR744027
+     D PStatus         S             10A                                                    AR744027
      D PBJDFIN         S              1A
      D PBNDCSP         S              1A
      D PPCCd           S              4A
@@ -659,6 +665,9 @@
      C                   IF        D1DSTS <> 'A' AND D1DN38 <> *ZERO
      C                   EVAL      PStatus = WStatArr(1)
      C                   ENDIF
+     C                   IF        D1DSTS = 'A' AND D1DN38 <> *ZERO                         AR744027
+     C                   EVAL      PStatus = WStatArr(3)                                    AR744027
+     C                   ENDIF                                                              AR744027
 
      C                   ENDIF
 
@@ -967,3 +976,4 @@
 ** TEXT FOR DEAL STATUS
 MATURED
 DELETED
+AUTHORISED                                                                                  AR744027

@@ -15,9 +15,10 @@
       *  Component of: ABFUNDSIN - Internal Funding Deals Maintenance *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                                                               
+      *  Last Amend No. AR744027           Date 09Nov23               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -53,7 +54,10 @@
       *                 CAP042  *CREATE    Date 08Jan01               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *                                                               
+      *  AR744027 - Authorised status not displayed. Increase status  *
+      *             field to 10 character to handle AUTHORISED        *
+      *             status. (Child: AR744028)                         *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing           )            *
@@ -398,7 +402,8 @@
      D PDDDLNO         S              6A
      D PDealNum        S              6S 0
      D PMsgID          S              7A
-     D PDDSTS          S              7A
+     D***PDDSTS*         S              7A                                                  AR744027
+     D PDDSTS          S             10A                                                    AR744027
      D PPRF1D          S             30A
      D PPRF2D          S             30A
      D PRdFwd          S              1A

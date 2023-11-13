@@ -17,13 +17,17 @@
       *  /COPY, Nostro Code amendments must not be                    *
       *  applied to this source.                                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD022257           Date 26Mar14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022257 - Java screen doesn't have option to override       *
+      *             function to proceed with the transfer of Prime.   *
+      *             Issue only a warning before changes are accepted. *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -31,7 +35,7 @@
       *                                                               *
      FSDNostL7  IF   E           K DISK    INFSR(*PSSR)
       * RSQ: Midas SD Nostro Details by CCY/NOSN/PNOI
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -43,50 +47,50 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * 800 byte DS for incoming data from Access Program
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * 200 byte DS for incoming data from Access Program
@@ -97,13 +101,17 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Define work field Use DRS Shortnames
      D WUUDRS          S              1A
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+                                                                                            MD022257
+     D BChar           DS                                                                   MD022257
+     D   BLen                  1      2B 0                                                  MD022257
+     D   LenStr                1      2                                                     MD022257
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -118,20 +126,23 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
+     C                   MOVE      *BLANK        WFldNmXAr                                  MD022257
+     C                   MOVE      *BLANK        WMsgIDXAr                                  MD022257
+     C                   MOVE      *BLANK        WMsgDtXAr                                  MD022257
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIdx
- 
+
       *
       ** VALIDATION
- 
+
       ** Validate Prime Nostro Indicator
      C                   IF        DDPNOI = *BLANK OR
      C                             DDPNOI = 'P'
@@ -157,10 +168,14 @@
      C     A7NONB        IFNE      WUNONB
      C                   EVAL      WUNONB = A7NONB                              *Nostro Number
      C                   EVAL      W0RTN = 'Y2U0003'                            *Return code
+     C                   MOVEL     DDCYCD        Nost1             5                        MD022257
+     C                   MOVEL     DDCYCD        Nost2             5                        MD022257
+     C                   MOVE      A7NONB        Nost1                                      MD022257
+     C                   MOVE      DDNONB        Nost2                                      MD022257
      C                   ENDIF
      C     KRSSJ         READE     @NOSTJ6                                90
      C                   ENDDO
- 
+
       * CASE: PGM.*Return code is *Record already exists
      C     W0RTN         IFEQ      'Y2U0003'
      C                   EVAL      WUPNIE  = 'Y'                                *PNI Error
@@ -176,11 +191,18 @@
      C                   ELSE
       * CASE: *OTHERWISE
       * Send message 'Attempt to add 2 Prime No'
-     C                   EVAL      DDPNOIOK = 'N'
-     C                   EVAL      Idx = Idx + 1
-     C                   EVAL      FldNamXAr(Idx) = 'DDPNOI    '
-     C                   EVAL      MsgIdXAr(Idx) = 'USR1543'
-      *
+     C**********         EVAL      DDPNOIOK = 'N'                                           MD022257
+     C**********         EVAL      Idx = Idx + 1                                            MD022257
+     C                   EVAL      WIdx = WIdx + 1                                          MD022257
+     C**********         EVAL      FldNamXAr(Idx) = 'DDPNOI    '                            MD022257
+     C                   EVAL      WFldNmXAr(WIdx) = 'DDPNOI    '                           MD022257
+     C**********         EVAL      MsgIdXAr(Idx) = 'USR1543'                                MD022257
+     C                   EVAL      WMsgIDXAr(WIdx) = '5049611'                              MD022257
+     C                   EVAL      BLen = %LEN(%TRIM(Nost1))                                MD022257
+     C                   EVAL      WMsgDtXAr(WIdx) = LenStr + %TRIM(Nost1)                  MD022257
+     C                   EVAL      BLen = %LEN(%TRIM(Nost2))                                MD022257
+     C                   EVAL      WMsgDtXAr(WIdx) = %TRIM(WMsgDtXAr(WIdx))                 MD022257
+     C                                           + LenStr + %TRIM(Nost2)                    MD022257
      C                   ENDIF
       *
      C                   ENDIF
@@ -205,7 +227,7 @@
      C                   ENDIF
      C     KRSSJ         READE     @NOSTJ6                                90
      C                   ENDDO
- 
+
       *
      C     W0RTN         IFEQ      'Y2U0005'
       ** Record not found, default to 'P'
@@ -222,9 +244,9 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDPNOI    '
      C                   EVAL      MsgIdXAr(Idx) = 'USR0861'
      C                   ENDIF
- 
- 
- 
+
+
+
       *
       * RETURN
       *
@@ -236,7 +258,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -261,6 +283,11 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD022257
+                                                                                            MD022257
+     C                   PARM                    WFldNmXAr                                  MD022257
+     C                   PARM                    WMsgIDXAr                                  MD022257
+     C                   PARM                    WMsgDtXAr                                  MD022257
       ** Nostro Prime Indicator      - OK
      C                   PARM                    DDPNOIOK          1
       *
@@ -314,9 +341,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

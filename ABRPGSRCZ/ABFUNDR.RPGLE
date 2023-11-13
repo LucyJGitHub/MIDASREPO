@@ -583,10 +583,17 @@
      C                   PARM                    TranScnBlrt                                  CDL102
 
       ** Deal Status
+<<<<<<< HEAD
 
      C**********         PARM                    PDDSTS            7                        AR744027
      C                   PARM                    PDDSTS           10                        AR744027
 
+=======
+
+     C**********         PARM                    PDDSTS            7                        AR744027
+     C                   PARM                    PDDSTS           10                        AR744027
+
+>>>>>>> branch 'bugfix/MDSC-41789' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       ** Profit Centre Description 1
       ** Profit Centre Description 2
 

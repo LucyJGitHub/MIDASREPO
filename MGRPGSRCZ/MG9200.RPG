@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD054644           Date 31Oct19               *
+      *  Last Amend No. MD031421           Date 13Oct23               *
+      *  Prev Amend No. AR857506           Date 13Oct23               *
+      *                 AR933432           Date 13Oct23               *
+      *                 MD058285           Date 22Jun21               *
+      *                 MD054644           Date 31Oct19               *
       *                 MD054663           Date 31Oct19               *
       *                 MD052254A          Date 19Jul19               *
       *                 MD052254           Date 21Dec18               *
@@ -69,6 +72,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031421 - MT292 incorrectly cancels MT210. Reverse MD022768 *
+      *           - If MT3XX, this is CONF and not PAYREC, therefore  *
+      *             allow delete processing                           *
+      *           - If CRTD or AMND - just delete, do not generate    *
+      *             cancellation message                              *
+      *  AR857506 - Check if pay or rec side was amended to delete    *
+      *             previously generated pay/rec messages with status *
+      *             CRTD or AMND. (Child: AR857507)                   *
+      *  AR933432 - MT202 not deleted when deal was rollover. Add     *
+      *             conditions to delete the generated pay/rec        *
+      *             messages when deal was rolled over to a new deal. *
+      *             (Child: AR933433)                                 *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD054644 - MT292 was not generated after reverse of MM deal  *
       *  MD054663 - MT292 was not generated after deletion of FX NETT *
@@ -175,6 +190,8 @@
       **                                                                                      260363
      IDEALSDBF    30                                                                          260363
      IDEALSDCF    31                                                                          260363
+     I              IPDS                            DCIPDS                                  AR933432
+     I              PCPL                            DCPCPL                                  AR933432
      IDEALSDDF    32                                                                          260363
      IDEALSDEF    33                                                                          260363
      IDEALSDGF    34                                                                          260363
@@ -260,6 +277,7 @@
      C                     PARM           @RTNC   1        return code
      C***********          PARM           @TYPE   3        message 157756 169025
      C                     PARM           @CLSS   1        CLS Settlement CDL008
+     C                     PARM           WEAMT1 13                                         AR933432
       *
       **  Perform initial process
       *
@@ -736,9 +754,29 @@
       ** If message not already deleted
       *
      C           @PTST     IFNE 'D'                                   2
+      *                                                                                     AR857506
+      ** Check if pay or rec side was amended to delete previously                          AR857506
+      ** generated pay/rec messages                                                         AR857506
+      *                                                                                     AR857506
+     C                     MOVE ' '       PAYSD   1                                         AR857506
+     C                     MOVE ' '       RECSD   1                                         AR857506
+     C                     MOVE ' '       MSPAY   1                                         AR857506
+     C                     MOVE ' '       MSREC   1                                         AR857506
+     C           MODI      IFEQ 'DL'                                                        AR857506
+     C                     EXSR PAYREC                                                      AR857506
+     C                     ENDIF                                                            AR857506
       *
       ** Call Deletion program
       *
+     C                     MOVELMTPY      #MTPY1                                            MD031421
+     C           MSREC     IFEQ 'Y'                                                         AR857506
+     C           RECSD     ANDEQ'Y'                                                         AR857506
+     C           MSPAY     OREQ 'Y'                                                         AR857506
+     C           PAYSD     ANDEQ'Y'                                                         AR857506
+     C           WROLL     OREQ 'Y'                                                         AR933432
+     C           WRROL     OREQ 'Y'                                                         AR933432
+     C           PROG      OREQ 'CE'                                                        MD031421
+     C           #MTPY1    ANDEQ'3'                                                         MD031421
      C                     CALL 'MG9205'               11
      C                     PARM           @TRNO
      C                     PARM           MODI
@@ -762,6 +800,7 @@
      C           @RTNC     IFNE *BLANKS                               3
      C                     EXSR *PSSR
      C                     END                                       E3
+     C                     ENDIF                                                            AR857506
      C*
      C** Call cancellation of confirmations                               059061
      C*                                                                   059061
@@ -769,6 +808,8 @@
      C***********          MOVE *OFF      *IN50                    157756 169025
      C           #MTPY1    IFEQ '3'                                   3   059061
      C           BGCFMT    ANDEQ'Y'                                       077555
+     C           MGST      ANDNE'CRTD'                                                      MD031421
+     C           MGST      ANDNE'AMND'                                                      MD031421
      C***********MGSG      ANDNE'2'                                157756 169025
      C***********          MOVE *ON       *IN50                    157756 169025
      C                     CALL 'MG9210'               12                 059061
@@ -905,6 +946,8 @@
      C********** MSPAY     OREQ 'Y'                                                MD052254 MD054663
      C********** PAYSD     ANDEQ'Y'                                                MD052254 MD054663
      C           DLCANC    OREQ 'Y'                                                         MD054663
+     C           WROLL     OREQ 'Y'                                                         AR933432
+     C           WRROL     OREQ 'Y'                                                         AR933432
      C***********          MOVE *ON       *IN50                    157756 169025
      C                     CALL 'MG9210'               12                 E29592
      C                     PARM           @TRNO
@@ -1109,6 +1152,76 @@
      C           PAYSD     ANDEQ'Y'                                                         MD054663
      C                     MOVEL'Y'       DLCANC                                            MD054663
      C                     ENDIF                                                            MD054663
+      ** For Rollover                                                                       AR933432
+      *                                                                                     AR933432
+     C                     MOVEL'N'       WROLL   1                                         AR933432
+     C                     MOVEL'N'       WRROL   1                                         AR933432
+     C           PROG      IFEQ 'PR'                                                        AR933432
+     C           RECSD     ANDNE'Y'                                                         AR933432
+     C           PAYSD     ANDNE'Y'                                                         AR933432
+     C           EVTP      ANDEQ*BLANKS                                                     AR933432
+      *                                                                                     AR933432
+     C           KDLNO     CHAINDEALS                20                                     AR933432
+     C           *IN20     IFEQ '0'                                                         AR933432
+     C           *IN31     ANDEQ'1'                                                         AR933432
+      *                                                                                     AR933432
+      ** Convert Amount from MGOREFPD                                                       AR933432
+      *                                                                                     AR933432
+     C           ','       SCAN AMTS      WPOS1   30                                        AR933432
+     C           WPOS1     IFGT 0                                                           AR933432
+     C           WPOS1     SUB  1         WPOS2   30                                        AR933432
+     C           WPOS2     SUBSTAMTS:1    WAMT1  13                                         AR933432
+     C           WPOS1     ADD  1         N       30                                        AR933432
+     C                     SUBSTAMTS:N    WAMT2  13                                         AR933432
+     C           WAMT1     CAT  WAMT2:0   WAMTS  13                                         AR933432
+     C                     ELSE                                                             AR933432
+     C                     MOVELAMTS      WAMTS                                             AR933432
+     C                     ENDIF                                                            AR933432
+      *                                                                                     AR933432
+      ** Convert Principal Amount from DEALSDC                                              AR933432
+      *                                                                                     AR933432
+     C                     MOVELDCPCPL    WPCP1  13                                         AR933432
+     C           '0'       CHECKWPCP1     T       30                                        AR933432
+     C                     SUBSTWPCP1:T   WPCPL  13                                         AR933432
+      *                                                                                     AR933432
+      ** Convert Amount from PREX5PH                                                        AR933432
+      *                                                                                     AR933432
+     C           '0'       CHECKWEAMT1    V       30                                        AR933432
+     C                     SUBSTWEAMT1:V  WEAMT  13                                         AR933432
+      *                                                                                     AR933432
+      ** Convert Swift Value Date                                                           AR933432
+      *                                                                                     AR933432
+     C                     MOVE *BLANKS   DYMYR                                             AR933432
+     C                     MOVELSVDT      YR1                                               AR933432
+     C                     MOVE SVDT      DY1                                               AR933432
+     C                     MOVE SVDT      MDY     40                                        AR933432
+     C                     MOVELMDY       MT1                                               AR933432
+     C                     MOVE DYMYR     ZDATE                                             AR933432
+     C                     MOVE '0'       *IN98                                             AR933432
+     C                     EXSR ZDATE1                                                      AR933432
+     C                     Z-ADDZDAYNO    VALDT   50                                        AR933432
+      *                                                                                     AR933432
+     C           RBDN      IFNE *ZEROS                                                      AR933432
+     C           DCIPDS    ANDNE'Y'                                                         AR933432
+     C           MDAT      ANDEQVALDT                                                       AR933432
+     C           RBDN      ORNE *ZEROS                                                      AR933432
+     C           DCIPDS    ANDEQ'Y'                                                         AR933432
+     C           MDAT      ANDEQVALDT                                                       AR933432
+     C           WPCPL     ANDEQWAMTS                                                       AR933432
+     C                     MOVEL'Y'       WROLL                                             AR933432
+     C                     ENDIF                                                            AR933432
+      *                                                                                     AR933432
+      ** For reversal of rollover                                                           AR933432
+      *                                                                                     AR933432
+     C           RBDN      IFEQ *ZEROS                                                      AR933432
+     C           DCIPDS    ANDNE'Y'                                                         AR933432
+     C           MDAT      ANDEQVALDT                                                       AR933432
+     C           WAMTS     ANDNEWEAMT                                                       AR933432
+     C                     MOVEL'Y'       WRROL                                             AR933432
+     C                     ENDIF                                                            AR933432
+     C                     ENDIF                                                            AR933432
+     C                     ENDIF                                                            AR933432
+      *                                                                                     AR933432
      C                     ENDSR                                                              260363
      C/EJECT                                                                                AR923287
       *****************************************************************                     AR923287

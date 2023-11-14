@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033488           Date 11Mar15               *
+      *  Last Amend No. AR833391           Date 07Nov23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR833391 - Issue error message when Contract Rate entered is *
+      *             zero. (Child: AR833392)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033488 - Allow negative rates. Use program ZA0841 instead  *
       *             ZA0840. To accept a '-' sign to indicate input    *
@@ -194,7 +197,18 @@
      C*****ZALIGNok      IFEQ      'Y'                                                        245692
      C     @@ERCD        IFEQ      0                                                          245692
      C**********         MOVE      ZFIELD        URTSPX                                       245692
+      *                                                                                     AR833391
+      **  Send error message if user entered a zero contract rate.                          AR833391
+      *                                                                                     AR833391
+     C                   Z-ADD     0             WCNTRT           12 0                      AR833391
+     C                   MOVE      @@ALPH        WCNTRT                                     AR833391
+     C     WCNTRT        IFEQ      0                                                        AR833391
+     C                   MOVE      'Y'           ErrorFound                                 AR833391
+     C                   MOVEL     'MMA0021'     Msgid1                                     AR833391
+     C                   ELSE                                                               AR833391
      C                   MOVE      @@AMT         URTSPX                                       245692
+     C                   ENDIF                                                              AR833391
+      *                                                                                     AR833391
      C                   ELSE
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMA0018'     Msgid1

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039972           Date 26May22               *
-      *  Prev Amend No. MD059067           Date 27Oct21               *
+      *  Last Amend No. AR1051966          Date 20Oct23               *
+      *  Prev Amend No. MD039972           Date 26May22               *
+      *                 MD059067           Date 27Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -61,6 +62,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1051966 - Authorising user is being replaced with AUTOAUTH *
+      *              when rejected in WIP. Passed REJECT button and   *
+      *              prevent replacing of original authorising user   *
+      *              when REJECT button is click. Patterned from      *
+      *              GEMS262766. (Child: AR1051967)                   *
       *  MD039972 - Incorrect has totalling when closing/reversing a  *
       *             facility where FAMT is negative. Fix is to take   *
       *             absolute value of FAMT field.                     *
@@ -784,6 +790,13 @@
      C                   MOVEL     '*RECUPD   '  @@RTCD
      C                   GOTO      EAMENDR
      C                   ENDIF
+      *                                                                                    AR1051966
+      ** Retrieve authorizing user if FPXUSR is blanks                                     AR1051966
+      *                                                                                    AR1051966
+     C     FPXUSR        IFEQ      *BLANKS                                                 AR1051966
+     C     FPCHTP        ANDEQ     'A'                                                     AR1051966
+     C                   MOVEL     XUSR          FPXUSR                                    AR1051966
+     C                   ENDIF                                                             AR1051966
 
       ** Update facility record type 'A'
 
@@ -941,7 +954,9 @@
      C                   Z-ADD     BJRDNB        LCD
                                                                                              BUG2449
      C                   EVAL      STMP  = TimeStamp                                         BUG2449
+     C     @ACTRV        IFNE      'Y'                                                     AR1051966
      C                   EVAL      XUSR = USRID                                              BUG2515
+     C                   END                                                               AR1051966
       *
      C                   UPDATE    FCLTYFMF
       *
@@ -1690,6 +1705,8 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
+      * Reject Button                                                                      AR1051966
+     C                   PARM                    @ACTRV            1                       AR1051966
 
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT

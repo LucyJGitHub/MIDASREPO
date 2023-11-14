@@ -10,8 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051970           Date 08Oct18               *
+      *  Last Amend No. AR986181           Date 19Oct23               *
+      *  Prev Amend No. AR834103           Date 19OCt23               *
+      *                 MD022618           Date 19Oct23               *
+      *                 AR971845           Date 19Oct23               *
+      *                 254718             Date 02Oct23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD051970           Date 08Oct18               *
       *                 MD040908           Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 222236             Date 30Oct03               *
@@ -55,6 +60,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR986181 - Different format on LE0541-7 report. Make the     *
+      *             format in synch with the other report pages.      *
+      *             (Child: AR986186)                                 *
+      *  AR834103 - B/F balance incorrect on LE0541P2. Reverse fix    *
+      *             BUG13341 that caused the error. Also, apply fix   *
+      *             261538 to show correct calculation basis.         *
+      *             (Child: AR834104)                                 *
+      *  MD022618 - Loan Bills issues. Prevent printing blank name    *
+      *             and address.                                      *
+      *  AR971845 - Changes on LE0541P2. Add header "Loan Reminder".  *
+      *             Remove dotted lines and Authorized Signature.     *
+      *             Pattern after fixes SHBI05 and 167541.            *
+      *             (Child: AR971846)                                 *
+      *  254718 - Incorrect total interest amount shown on the Loan   *
+      *           Reminder (LE0541P2). Initialise fields INTRPV and   *
+      *           INCLU as it causes incorrect interest amount due.   *
+      *         - Applied for MD036833                                *
       *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
       *  MD051970 - Missing settlement amount on Customer Bills       *
       *             and Customer Confirmation                         *
@@ -820,6 +842,13 @@
      C                     MOVELZMTH      ZWRK4
      C                     MOVE ZWRK4     TXDATE  60
      C                     MOVELZDAY      TXDATE
+      *                                                                                     MD022618
+      * Fields to hold value of name and address                                            MD022618
+      *                                                                                     MD022618
+     C                     MOVE *BLANKS   WCNA2  35                                         MD022618
+     C                     MOVE *BLANKS   WCNA3  35                                         MD022618
+     C                     MOVE *BLANKS   WCNA4  35                                         MD022618
+      *                                                                                     MD022618
       **   CALL SUBROUTINE ACCORDING TO INPUT
       *
      C   01                EXSR COMFEE
@@ -879,8 +908,8 @@
       *
      C           COMFEE    BEGSR                           ** COMFEE BEGSR
       *
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
       *
      C           BTIN      COMP 'B'                  42  41
       *
@@ -948,7 +977,22 @@
      C   42      TELX3     COMP 4                        53
      C   42 53             Z-ADD1         TELX3
       *
+     C           *IN42     IFEQ '1'                                                         MD022618
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+     C                     ELSE                                                             MD022618
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C           CFEND     TAG                             ** CFEND TAG **
      C                     SETOF                     414253
       *
@@ -1042,15 +1086,29 @@
       *
      C                     END
       *
+     C           *IN82     IFEQ '1'                                                         MD022618
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+     C                     ELSE                                                             MD022618
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
       *
      C                     END
       *
      C                     END
       *
      C                     SETOF                     818253
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
       *
      C                     ENDSR
       *
@@ -1068,6 +1126,9 @@
      C                     Z-ADDINTA      OINTO1                                              235743
      C                     Z-ADD*ZEROS    CFWD1  130                                          235743
      C                     Z-ADD*ZEROS    TADJ                                                235743
+      *                                                                                     AR834103
+     C                     Z-ADDCALC      WPCALC                                            AR834103
+     C                     Z-ADDWPCALC    BASIS                                             AR834103
       *
       **   CONVERT DATE
       *
@@ -1155,8 +1216,19 @@
       *
      C**********           EXCPT                                                            BUG13341
      C**********           SETOF                     4344                                   BUG13341
-     C**********           Z-ADDLNRF      LNRFP   60                                 BUG13341 CLE148
-     C**********           MOVELLNRF      LNRFP   6                                  CLE148 MD040908
+      *                                                                                     MD022618
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
+     C                     EXCPT                                                            AR834103
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
+     C                     SETOF                     4344                                   AR834103
+     C**********           Z-ADDLNRF      LNRFP   60                               BUG13341 AR834103
       *                                                                                       235743
       ** Retrieve the last Principal (RE) or Interest Payment (IN) date                       235743
       *                                                                                       235743
@@ -1176,6 +1248,7 @@
       *
      C           IEND      TAG                             ** IEND TAG ***
      C**********           SETOF                     4344                                   BUG13341
+     C                     SETOF                     4344                                   AR834103
       *
      C                     ENDSR
       *
@@ -1225,9 +1298,24 @@
      C   66      TELX4     COMP 4                        53
      C   66 53             Z-ADD1         TELX4
       *
+     C           *IN66     IFEQ '1'                                                         MD022618
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+     C                     ELSE                                                             MD022618
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
      C                     SETOF                     666753
       *
      C                     ENDSR
@@ -1469,8 +1557,8 @@
       **
       *
      C                     EXCPT
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
      C   72
      COR 46      BLINES    ADD  1         BLINES
      C   72
@@ -1494,7 +1582,16 @@
      C   43      PGNO      ADD  1         PGNO
      C                     SETOF                     5455
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     434473
      C                     SETOF                     70
      C***********PRTIN     TAG                                                         132738 209690
@@ -1574,9 +1671,24 @@
      C   49      TELX1     COMP 4                        53
      C   49 53             Z-ADD1         TELX1
       *
+     C           *IN49     IFEQ '1'                                                         MD022618
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+     C                     ELSE                                                             MD022618
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
       *-------------------------------------------------------------------CEU004
       ** If processing for EMU has been performed, set the output         CEU004
       ** indicator off.                                                   CEU004
@@ -1607,7 +1719,16 @@
      C   43      PGNO      ADD  1         PGNO
      C   43                Z-ADD0         BLINES
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     434470
      C           PATAG     TAG                             ** PATAG TAG **
       *
@@ -1683,8 +1804,8 @@
      C                     ENDIF                           End If         CEU004
       *-------------------------------------------------------------------CEU004
      C                     EXCPT
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
       *-------------------------------------------------------------------CEU004
       ** If processing for EMU has been performed, set the output         CEU004
       ** indicator off.                                                   CEU004
@@ -1710,7 +1831,16 @@
      C   43      PGNO      ADD  1         PGNO
      C                     SETOF                     5455
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     434470
      C                     SETOF                     73
      C***********BTIN      IFEQ 'B'                                                    132738 209690
@@ -1733,7 +1863,16 @@
      C   51 25
      COR 50 25   PRAM      COMP 0                        26
       *
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C   51      TLINES    ADD  9         TLINES
      C   51      TLINES    COMP 50                   70  70
      C                     SETOF                     5051
@@ -1745,7 +1884,16 @@
      C   43      PGNO      ADD  1         PGNO
      C   43                Z-ADD0         BLINES
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C   44 70             Z-ADD20        TLINES
      C   44N70   TLINES    ADD  13        TLINES
      C                     SETOF                     434470
@@ -1783,8 +1931,8 @@
      C                     ENDIF                           End If         CEU004
       *-------------------------------------------------------------------CEU004
      C                     EXCPT
-     C                     MOVE *OFF      *IN43                                             BUG13341
-     C                     MOVE *OFF      *IN44                                             BUG13341
+     C**********           MOVE *OFF      *IN43                                    BUG13341 AR834103
+     C**********           MOVE *OFF      *IN44                                    BUG13341 AR834103
       *-------------------------------------------------------------------CEU004
       ** If processing for EMU has been performed, set the output         CEU004
       ** indicator off.                                                   CEU004
@@ -1809,7 +1957,16 @@
      C   43      PGNO      ADD  1         PGNO
      C                     SETOF                     5455
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     434470
      C                     SETOF                     73
       *
@@ -1827,7 +1984,16 @@
      C   51 25
      COR 50 25   PRAM      COMP 0                        26
       *
+     C                     MOVELCNA2      WCNA2                                             MD022618
+     C                     MOVELCNA3      WCNA3                                             MD022618
+     C                     MOVELCNA4      WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     505138
      C                     SETOF                     26
       *
@@ -1988,6 +2154,8 @@
      C                     MOVE *BLANKS   W1AMTP  2                                           235743
      C                     Z-ADD*ZEROS    W2VDAT  50                                          235743
      C                     MOVE *BLANKS   W2AMTP  2                                           235743
+     C                     Z-ADD*ZEROS    INTRPV                                              254718
+     C                     MOVE *BLANKS   INCLU                                               254718
       *                                                                                       235743
       ** Check first if there are backvalued movements (field BVMV)                           235743
       ** in PF/CUTX1HP or PF/CUTX1HQ                                                          235743
@@ -2268,7 +2436,16 @@
      C   43      PGNO      ADD  1         PGNO
      C                     SETOF                     5455
       *
+     C                     MOVELBBCNA2    WCNA2                                             MD022618
+     C                     MOVELBBCNA3    WCNA3                                             MD022618
+     C                     MOVELBBCNA4    WCNA4                                             MD022618
+      *                                                                                     MD022618
+     C                     EXSR SETADR                                                      MD022618
+      *                                                                                     MD022618
      C                     EXCPT
+      *                                                                                     MD022618
+     C                     EXSR RSTIND                                                      MD022618
+      *                                                                                     MD022618
      C                     SETOF                     434473
      C                     SETOF                     70
      C                     MOVE 'Y'       W#FIRS                                              235743
@@ -2593,6 +2770,54 @@
      C                     ENDSR
       *
       /EJECT
+      *****************************************************************                     MD022618
+      *                                                               *                     MD022618
+      * SETADR - Set the indicators for address display               *                     MD022618
+      *                                                               *                     MD022618
+      *****************************************************************                     MD022618
+     C           SETADR    BEGSR                                                            MD022618
+      *                                                                                     MD022618
+      * Save the value of indicators                                                        MD022618
+      *                                                                                     MD022618
+     C                     MOVE *IN92     WIN92   1                                         MD022618
+     C                     MOVE *IN93     WIN93   1                                         MD022618
+     C                     MOVE *IN94     WIN94   1                                         MD022618
+      *                                                                                     MD022618
+      * Reset the value of indicators                                                       MD022618
+      *                                                                                     MD022618
+     C                     MOVE '0'       *IN92                                             MD022618
+     C                     MOVE '0'       *IN93                                             MD022618
+     C                     MOVE '0'       *IN94                                             MD022618
+      *                                                                                     MD022618
+      * Seton the value of indicators if the field is blank                                 MD022618
+      *                                                                                     MD022618
+     C           WCNA2     IFEQ *BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN92                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C           WCNA3     IFEQ *BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN93                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C           WCNA4     IFEQ *BLANKS                                                     MD022618
+     C                     MOVE '1'       *IN94                                             MD022618
+     C                     ENDIF                                                            MD022618
+      *                                                                                     MD022618
+     C                     ENDSR                                                            MD022618
+      *****************************************************************                     MD022618
+      *                                                               *                     MD022618
+      * RSTIND - Restore the original value of indicators             *                     MD022618
+      *                                                               *                     MD022618
+      *****************************************************************                     MD022618
+     C           RSTIND    BEGSR                                                            MD022618
+      *                                                                                     MD022618
+     C                     MOVE WIN92     *IN92                                             MD022618
+     C                     MOVE WIN93     *IN93                                             MD022618
+     C                     MOVE WIN94     *IN94                                             MD022618
+      *                                                                                     MD022618
+     C                     ENDSR                                                            MD022618
+      *****************************************************************                     MD022618
+      /EJECT                                                                                MD022618
       *****************************************************************
       * *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
       *                                                               *
@@ -2637,11 +2862,14 @@
      O                         BBCNA1    46
      O                                   47 'TELEX NO'
      O                         TELX      60
-     O        E  1     66
+     O********E* 1     66                                                                   MD022618
+     O        E  1     66N92                                                                MD022618
      O                         BBCNA2    46
-     O        E  1     66
+     O********E* 1     66                                                                   MD022618
+     O        E  1     66N93                                                                MD022618
      O                         BBCNA3    46
-     O        E  1     66
+     O********E* 1     66                                                                   MD022618
+     O        E  1     66N94                                                                MD022618
      O                         BBCNA4    46
      O        E  1     66
      O                         CNUM      17
@@ -2659,32 +2887,48 @@
      O        E  2     66
      O                         NAR,12    65
       *
-     O        T   03   L1 59
-     O                         TITL      61
-     O        T   05   L1 59
-     O                                   19 'REFERENCE LE0541-7'
-     O                                   51 'DATE'
-     O                         RUNA      59
-     O                                   65 'PAGE'
-     O                         PAGE7 3   70
-     O        T   07   L1 59
-     O                                   44 'LOAN PAYMENT TELEXES'
-     O        T   08   L1 59
-     O                                   44 '--------------------'
-     O        T   09   L1 59
-     O                 88                12 'BRANCH'
-     O                 88      BRCA      16
-     O                 88      BRNM      48
-     O        T   11   L1 59
-     O                                   28 'NUMBER OF TELEXES ON THI'
-     O                                   36 'S REPORT'
-     O                         NOTL4 3   42
-     O        T 3      L1 59
-     O                 88                36 '*** END OF REPORT FOR'
-     O                 88                44 ' BRANCH '
-     O                 88      BRCA      47
-     O                 88                51 ' ***'
-     O                N88                46 '*** END OF REPORT ***'
+     O********T*  03   L1 59                                                                AR986181
+     O**********               TITL      61                                                 AR986181
+     O********T*  05   L1 59                                                                AR986181
+     O**********                         19 'REFERENCE LE0541-7'                            AR986181
+     O**********                         51 'DATE'                                          AR986181
+     O**********               RUNA      59                                                 AR986181
+     O**********                         65 'PAGE'                                          AR986181
+     O**********               PAGE7 3   70                                                 AR986181
+     O********T*  07   L1 59                                                                AR986181
+     O**********                         44 'LOAN PAYMENT TELEXES'                          AR986181
+     O********T*  08   L1 59                                                                AR986181
+     O**********                         44 '--------------------'                          AR986181
+     O********T*  09   L1 59                                                                AR986181
+     O**********       88                12 'BRANCH'                                        AR986181
+     O**********       88      BRCA      16                                                 AR986181
+     O**********       88      BRNM      48                                                 AR986181
+     O********T*  11   L1 59                                                                AR986181
+     O**********                         28 'NUMBER OF TELEXES ON THI'                      AR986181
+     O**********                         36 'S REPORT'                                      AR986181
+     O**********               NOTL4 3   42                                                 AR986181
+     O********T*3      L1 59                                                                AR986181
+     O**********       88                36 '*** END OF REPORT FOR'                         AR986181
+     O**********       88                44 ' BRANCH '                                      AR986181
+     O**********       88      BRCA      47                                                 AR986181
+     O**********       88                51 ' ***'                                          AR986181
+     O**********      N88                46 '*** END OF REPORT ***'                         AR986181
+     O        T   10   L1 59                                                                AR986181
+     O                                    9 'LE0541-7'                                      AR986181
+     O                         TITL      68                                                 AR986181
+     O                         RUNA      79                                                 AR986181
+     O        T   12   L1 59                                                                AR986181
+     O                                   44 'LOAN PAYMENT TELEXES'                          AR986181
+     O        T   13   L1 59                                                                AR986181
+     O                                   44 '--------------------'                          AR986181
+     O        T   14   L1 59                                                                AR986181
+     O                 88                12 'BRANCH'                                        AR986181
+     O                 88      BRCA      16                                                 AR986181
+     O                 88      BRNM      48                                                 AR986181
+     O        T   16   L1 59                                                                AR986181
+     O                                   31 'NUMBER OF TELEXES ON THI'                      AR986181
+     O                                   39 'S REPORT'                                      AR986181
+     O                         NOTL4 3   45                                                 AR986181
       *
       **   OUTPUT TO TELEX FILE - AMENDMENT NOTIFICATION
      OLEBTX4  EADD     66
@@ -2754,11 +2998,14 @@
      O                         BBCNA1    46
      O                                   47 'TELEX NO'
      O                         TELX      60
-     O        E  1     42
+     O********E* 1     42                                                                   MD022618
+     O        E  1     42N92                                                                MD022618
      O                         BBCNA2    46
-     O        E  1     42
+     O********E* 1     42                                                                   MD022618
+     O        E  1     42N93                                                                MD022618
      O                         BBCNA3    46
-     O        E  1     42
+     O********E* 1     42                                                                   MD022618
+     O        E  1     42N94                                                                MD022618
      O                         BBCNA4    46
      O        E  1     42
      O                         CNUM      17
@@ -2819,11 +3066,14 @@
      O                         BBCNA1    46
      O                                   47 'TELEX NO'
      O                         TELX      60
-     O        E  1     82
+     O********E* 1     82                                                                   MD022618
+     O        E  1     82N92                                                                MD022618
      O                         BBCNA2    46
-     O        E  1     82
+     O********E* 1     82                                                                   MD022618
+     O        E  1     82N93                                                                MD022618
      O                         BBCNA3    46
-     O        E  1     82
+     O********E* 1     82                                                                   MD022618
+     O        E  1     82N94                                                                MD022618
      O                         BBCNA4    46
      O        E  1     82
      O                         CNUM      17
@@ -3022,11 +3272,14 @@
      O                         BBCNA1    46
      O                                   47 'TELEX NO'
      O                         TELX      60
-     O        E  1     44
+     O********E* 1     44                                                                   MD022618
+     O        E  1     44N92                                                                MD022618
      O                         BBCNA2    46
-     O        E  1     44
+     O********E* 1     44                                                                   MD022618
+     O        E  1     44N93                                                                MD022618
      O                         BBCNA3    46
-     O        E  1     44
+     O********E* 1     44                                                                   MD022618
+     O        E  1     44N94                                                                MD022618
      O                         BBCNA4    46
      O        E  1     44
      O                         CNUM      17
@@ -3336,11 +3589,14 @@
      O                         BBCNA1    46
      O                                   47 'TELEX NO'
      O                         TELX      60
-     O        E  1     49
+     O********E* 1     49                                                                   MD022618
+     O        E  1     49N92                                                                MD022618
      O                         BBCNA2    46
-     O        E  1     49
+     O********E* 1     49                                                                   MD022618
+     O        E  1     49N93                                                                MD022618
      O                         BBCNA3    46
-     O        E  1     49
+     O********E* 1     49                                                                   MD022618
+     O        E  1     49N94                                                                MD022618
      O                         BBCNA4    46
      O        E  1     49
      O                         CNUM      17
@@ -3491,15 +3747,18 @@
      O/COPY WNCPYSRC,LE0541O001
      O        E   36   67
      O                         CNA1      45
-     O        E   37   67
+     O********E*  37   67                                                                   MD022618
+     O        E 1      67N92                                                                MD022618
      O                         CNA2      45
-     O        E   38   67
+     O********E*  38   67                                                                   MD022618
+     O        E 1      67N93                                                                MD022618
      O                         CNA3      45
-     O        E   39   67
+     O********E*  39   67                                                                   MD022618
+     O        E 1      67N94                                                                MD022618
      O                         CNA4      45
-     O                                   78 '--------------------'
+     O**********                         78 '--------------------'                          AR971845
      O        E   40   67
-     O                                   78 'AUTHORIZED SIGNATURE'
+     O**********                         78 'AUTHORIZED SIGNATURE'                          AR971845
      O/COPY WNCPYSRC,LE0541O002
      O        T   10   LR U7 80
      O                                   41 '*** REFERENCE LE0541'
@@ -3561,15 +3820,18 @@
      O/COPY WNCPYSRC,LE0541O003
      O        E   36   41
      O                         CNA1      45
-     O        E   37   41
+     O********E*  37   41                                                                   MD022618
+     O        E 1      41N92                                                                MD022618
      O                         CNA2      45
-     O        E   38   41
+     O********E*  38   41                                                                   MD022618
+     O        E 1      41N93                                                                MD022618
      O                         CNA3      45
-     O        E   39   41
+     O********E*  39   41                                                                   MD022618
+     O        E 1      41N94                                                                MD022618
      O                         CNA4      45
-     O                                   78 '--------------------'
+     O**********                         78 '--------------------'                          AR971845
      O        E   40   41
-     O                                   78 'AUTHORIZED SIGNATURE'
+     O**********                         78 'AUTHORIZED SIGNATURE'                          AR971845
      O/COPY WNCPYSRC,LE0541O004
       *
       **   LOAN FEE BILLS
@@ -3608,15 +3870,18 @@
      O/COPY WNCPYSRC,LE0541O005
      O        E   36   81
      O                         CNA1      45
-     O        E   37   81
+     O********E*  37   81                                                                   MD022618
+     O        E 1      81N92                                                                MD022618
      O                         CNA2      45
-     O        E   38   81
+     O********E*  38   81                                                                   MD022618
+     O        E 1      81N93                                                                MD022618
      O                         CNA3      45
-     O        E   39   81
+     O********E*  39   81                                                                   MD022618
+     O        E 1      81N94                                                                MD022618
      O                         CNA4      45
-     O                                   78 '--------------------'
+     O**********                         78 '--------------------'                          AR971845
      O        E   40   81
-     O                                   78 'AUTHORIZED SIGNATURE'
+     O**********                         78 'AUTHORIZED SIGNATURE'                          AR971845
      O/COPY WNCPYSRC,LE0541O006
      O        T   10   LR U7 80
      O                                   41 '*** REFERENCE LE0541'
@@ -3644,7 +3909,10 @@
       **   INTEREST PAYMENT DETAILS
       *
       /COPY WNCPYSRC,LE0541O011                                                               GOC003
-     OLE0541P2E   10   43
+     O***LE0541P2E   10   43                                                                AR971845
+     OLE0541P2E    6   43                                                                   AR971845
+     O                                   50 'LOAN REMINDER'                                 AR971845
+     O        E   10   43                                                                   AR971845
      O                                    6 'PAGE'
      O                         PGNO  3   10
      O                    88 30BRNM      60
@@ -3657,7 +3925,8 @@
      O                         NAR,2     68
      O                                   55 ' NUMBER -'
      O*********                LNRF      62                                                 BUG13341
-     O                         LNRFP     62                                                 BUG13341
+     O                         LNRF      62                                                 AR834103
+     O**********               LNRFP     62                                        BUG13341 AR834103
      O                       73          74 'CONTINUED'
      O**********E   15   43 77                                                                239714
      O**********               NAR,13    68                                                   239714
@@ -3812,11 +4081,14 @@
      O/COPY WNCPYSRC,LE0541O007
      O        E   36   50
      O                         CNA1      45
-     O        E   37   50
+     O********E*  37   50                                                                   MD022618
+     O        E 1      50   N92                                                             MD022618
      O                         CNA2      45
-     O        E   38   50
+     O********E*  38   50                                                                   MD022618
+     O        E 1      50   N93                                                             MD022618
      O                         CNA3      45
-     O        E   39   50
+     O********E*  39   50                                                                   MD022618
+     O        E 1      50   N94                                                             MD022618
      O                         CNA4      45
      O********E***36           DETAIL                                                  132738 209690
      O************             CNA1      45                                            132738 209690
@@ -3827,9 +4099,9 @@
      O********E***39           DETAIL                                                  132738 209690
      O************             CNA4      45                                            132738 209690
      O********E***39   50                                                              132738 209690
-     O                                   78 '--------------------'
-     O        E   40   50
-     O                                   78 'AUTHORIZED SIGNATURE'
+     O**********                         78 '--------------------'                          AR971845
+     O********E*  40   50                                                                   AR971845
+     O**********                         78 'AUTHORIZED SIGNATURE'                          AR971845
      O/COPY WNCPYSRC,LE0541O008
      O        T   10   LR U7 80
      O                                   41 '*** REFERENCE LE0541'
@@ -3893,15 +4165,18 @@
      O/COPY WNCPYSRC,LE0541O009
      O        E   36   48
      O                         CNA1      45
-     O        E   37   48
+     O********E*  37   48                                                                   MD022618
+     O        E 1      48   N92                                                             MD022618
      O                         CNA2      45
-     O        E   38   48
+     O********E*  38   48                                                                   MD022618
+     O        E 1      48   N93                                                             MD022618
      O                         CNA3      45
-     O        E   39   48
+     O********E*  39   48                                                                   MD022618
+     O        E 1      48   N94                                                             MD022618
      O                         CNA4      45
-     O                                   78 '--------------------'
-     O        E   40   48
-     O                                   78 'AUTHORIZED SIGNATURE'
+     O**********                         78 '--------------------'                          AR971845
+     O********E*  40   48                                                                   AR971845
+     O**********                         78 'AUTHORIZED SIGNATURE'                          AR971845
      O/COPY WNCPYSRC,LE0541O010
      O        T   10   LR U7 80
      O                                   41 '*** REFERENCE LE0541'

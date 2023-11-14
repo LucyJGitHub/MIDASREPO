@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD020675           Date 05Oct23               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 241013             Date 12Dec06               *
@@ -60,6 +61,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD020675 - Applied fix 249577                                *
+      *  249577 - use RFUSR instead of NWUSR to reflect the correct   *
+      *           value of the reference user.                        *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,SFH00218                                 *
@@ -749,7 +753,8 @@
      C                   MOVE      'N'           ALACOD
      C                   MOVE      'Z'           USRLVL
      C                   MOVE      'N'           REFFLG
-     C                   MOVE      NWUSR         REFUSR
+     C**********         MOVE      NWUSR         REFUSR                                     MD020675
+     C                   MOVE      RFUSR         REFUSR                                     MD020675
      C                   ENDIF
       *
      C/COPY WNCPYSRC,SFH00222

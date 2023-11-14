@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 25May23               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. AR1083284          Date 16Oct23               *
+      *  Prev Amend No. AR850735           Date 12Oct23               *
+      *                 MD060620           Date 25May23               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057917           Date 02Jul21               *
       *                 CLE172             Date 01Oct20               *
       *                 MD042329           Date 04May21               *
@@ -137,6 +139,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1083284 - Include N as valid negative indicator.           *
+      *              (Child: AR1083285)                               *
+      *  AR850735 - Incorrect validation treatment of withholding tax *
+      *             on repayment type 3. Prevent input of invalid     *
+      *             values for repayment type. Pattern after part of  *
+      *             fix 254057. (Child: AR850736)                     *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *           - Applied fix for MD-61250.                         *
       *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
@@ -2706,8 +2714,10 @@
       *
      C     DDNEGV        IFNE      *BLANK
      C     DDNEGV        ANDNE     'Y'
+     C     DDNEGV        ANDNE     'N'                                                     AR1083284
      C     DDMARG        OREQ      *BLANKS
      C     DDNEGV        ANDNE     *BLANK
+     C     DDNEGV        ANDNE     'N'                                                     AR1083284
      C                   MOVE      'N'           DDNEGVOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDMARG'      FldNamXAr(Idx)
@@ -3239,8 +3249,9 @@ E004 C                   ENDIF
       ***  Must not be '3' if withholding tax details entered
       ***  Must be numeric, from 1 to 3
       *
+     C     CCLCHTP       IFEQ      'I'                                                      AR850735
      C     WLNPT         IFEQ      61
-     C     CCLCHTP       IFEQ      'I'
+     C*****CCLCHTP       IFEQ      'I'                                                      AR850735
      C     DDREPT        ANDNE     '2'
       *
      C     WLNPT         OREQ      68

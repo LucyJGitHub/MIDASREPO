@@ -11,8 +11,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD034158           Date 04Jun15              */
+/*       Last Amend No. MD062100           Date 09Nov23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD034158           Date 04Jun15              */
 /*                      MD026169           Date 04Apr14              */
 /*                      MD025679A          Date 21Mar14              */
 /*                      MD025679           Date 13Mar14              */
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062100 - Prevent SCC007001 submitted job from running     */
+/*                  under wrong CCSID.                               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD034158 - Job SCC007001 missing due to lock on SCBKJOBMON. */
 /*                  Deallocate SCBKJOBMON when MPHAS <> 'C'.         */
@@ -42,14 +45,14 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&LIB)
- 
+
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
 /**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2) */                     /*AR687098 MD025679*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2006')
- 
+
 /* Allocate SCBKJOBMON */                                                               /*MD025679*/
              ALCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD)) WAIT(0)                         /*MD025679*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)                         /*MD025679*/
@@ -59,7 +62,7 @@
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS) */                                 /*AR687098*/
 /**********  CHGVAR     VAR(&PREFIX) VALUE(%SUBSTRING(&LIB 1 2)) */            /*AR687098 MD025679*/
 /**********  RTVDTAARA  DTAARA((&PREFIX *CAT 'DMLIB')/MPHAS) RTNVAR(&MPHAS) */ /*AR687098 MD025679*/
- 
+
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(DO) */                               /*MD025679A*/
 /**********  IF         COND(&MPHAS *NE 'C') THEN(DO) */                      /*MD025679A MD026169*/
              IF         COND((&MPHAS *NE 'C') *AND (&MPHAS *NE 'N')) +
@@ -76,12 +79,17 @@
 /**********               JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) + */                    /*MD025679*/
 /**********               OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) + */                    /*MD025679*/
 /**********               RQSDTA('CALL SCC0204') INLLIBL(*JOBD) */             /*AR687098 MD025679*/
- 
+
              DLCOBJ     OBJ((SCBKJOBMON *DTAQ   *EXCLRD))
+/**********  SBMJOB     JOB(SCC007001) JOBD(&LIB/MBATCH) +                              /*MD062100*/
+/**********               JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +                       /*MD062100*/
+/**********               OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +                       /*MD062100*/
+/**********               RQSDTA('CALL SCC007001') INLLIBL(*JOBD) */           /*MD025679 MD062100*/
              SBMJOB     JOB(SCC007001) JOBD(&LIB/MBATCH) +
                           JOBQ(&LIB/INTERFACE) PRTDEV(*CURRENT) +
                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
-                          RQSDTA('CALL SCC007001') INLLIBL(*JOBD)                       /*MD025679*/
+                          RQSDTA('CALL SCC007001') INLLIBL(*JOBD) +
+                          CCSID(*USRPRF)                                                /*MD062100*/
              ENDDO                                                                      /*MD034158*/
              ELSE       CMD(DO)                                                         /*MD034158*/
                 DLCOBJ     OBJ((SCBKJOBMON *DTAQ *EXCLRD))                              /*MD034158*/
@@ -89,7 +97,7 @@
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              RCLACTGRP  ACTGRP(*ELIGIBLE)                                               /*MD026169*/
              MONMSG     MSGID(CPF0000)                                                  /*MD026169*/
                                                                                         /*MD026169*/

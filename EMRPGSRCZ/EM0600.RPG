@@ -52,8 +52,10 @@
 0008 F*                                                                  *
      F********************************************************************
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. AR832484           Date 10Nov23               *
+      *  Prev Amend No. MD039339           Date 02Oct23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23967           Date 13May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -90,6 +92,11 @@
 0010 F*                                                                  *
 0013 F********************************************************************
      F*
+      *  AR832484 - Enclosure shows the difference between On-screen  *
+      *             checking and EM0600P1.  Recompiled over fixed     *
+      *             logical file TABEM.  (Child: AR832485)            *
+      *  MD039339 - Wrong Account Officer Name is shown on the report.   *
+      *             Pattern fix from core 251393                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -143,6 +150,7 @@
 0016 F*EM0600FMCF**F*****116**          WORKSTN                           S01117
 0018 F**** TABLE   IF  F      96 12AI     2 DISK                          S01129
      FTABEM   IF  F      96 12AI     2 DISK                               S01129
+     FSDACOFL0IF  E           K        DISK                                                 MD039339
 0019 FCLINT   IF  F     256  7AI     2 DISK
 0020 FSNAME   IF  F     256 10AI    39 DISK
 0021 F***EMLIM***IF**F*****128  7AI     2 DISK                            S01332
@@ -415,7 +423,7 @@
 0155 ITABEM   NS  07   1 CD   2 C1   3 C4                                 S01129
 0156 I                                        1   1 RECI
 0157 I                                       12  13 ACOC
-0158 I                                       14  43 ACON
+0158 I**********                             14  43 ACON                                    MD039339
 0159 I*
 0160 I*
 0161 I*    TABLE FILE - CURRENCIES RECORD 1.
@@ -935,12 +943,19 @@
      IIPSDS      SDS
      I                                      244 246 WSID
      I                                      245 246 WSID2
+     IDSSDY     E DSDSSDY                                                                   MD039339
      ISDMMOD    E DSSDMMODPD                                              S01332
      I* External DS for Module Details                                    S01332
      ISDEXPM    E DSSDEXPMPD                                              S01332
      I* External DS for Exposure Management details                       S01332
      ISCSARD    E DSSCSARDPD                                              CTI002
      I* External DS for Switchable feature                                CTI002
+      *                                                                                     MD039339
+     ISDACOC    E DSSDACOFPD                                                                MD039339
+      *                                                                                     MD039339
+      **  External DS for Account Officer Details                                           MD039339
+      *                                                                                     MD039339
+     I              AZACON                          ACON                                    MD039339
      IDSFDY     E DSDSFDY                                                 S01332
      I* DS used by Access Objects (short records)                         S01332
      I/COPY WNCPYSRC,EM0600I004
@@ -2349,7 +2364,25 @@
 1046 C*********************MOVE MACO      ACOC                            E10841
 1046 C                     MOVE CACOC     ACOC                            E10841
 1047 C*          ZTABKY    CHAINTABLE                74                   S01129
-1047 C           ZTABKY    CHAINTABEM                74                   S01129
+1047 C********** ZTABKY    CHAINTABEM                74                              S01129 MD039339
+     C           ACOC      CHAINSDACOFL0             74                                     MD039339
+      *                                                                                     MD039339
+      ** Retrieve account officer name                                                      MD039339
+      *                                                                                     MD039339
+     C           *IN74     IFEQ *OFF                                                        MD039339
+     C                     CALL 'AOACOFR0'                                                  MD039339
+     C                     PARM '*MSG   ' @RTCD   7                                         MD039339
+     C                     PARM '*KEY   ' @OPTN   7                                         MD039339
+     C                     PARM ACOC      @ACOC   2                                         MD039339
+     C           SDACOC    PARM SDACOC    DSSDY                                             MD039339
+     C           @RTCD     IFNE *BLANK                                                      MD039339
+     C                     SETON                     U7U8LR                                 MD039339
+     C                     MOVEL'SDACOFPD'DBFILE                                            MD039339
+     C                     MOVEL@ACOC     DBKEY            ***************                  MD039339
+     C                     MOVEL'007'     DBASE            * DBERROR 007 *                  MD039339
+     C                     GOTO TERM                       ***************                  MD039339
+     C                     ENDIF                                                            MD039339
+     C                     ENDIF                                                            MD039339
 1048 C                     ENDSR
 1049 C*******************************************************************
 1050 C/EJECT

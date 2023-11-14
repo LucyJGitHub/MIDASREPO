@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. AR806441           Date 09Oct23               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -55,6 +56,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR806441 - MT300/320 are downloaded to TRAM folder even if   *
+      *             the customer has no SWIFT ID and a non-bank.      *
+      *             CFCONTROL job will not download the MT3xx to the  *
+      *             TRAM folder. (Child: AR806442)                    *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
@@ -259,6 +264,16 @@
       *
       **  Format sender, destination & TRAM brokerage
      C                     EXSR FORM
+      *                                                                                     AR806441
+      ** Check if not bank and no SWIFT ID, do not process it.                              AR806441
+      *                                                                                     AR806441
+     C           @BNBI     IFEQ 'N'                                                         AR806441
+     C           NWRK      ANDNE'SWIFT'                                                     AR806441
+     C                     MOVE 'Y'       CFPF                                              AR806441
+     C                     EXCPT                                                            AR806441
+     C           IMBR      READEMGOREFA9                 12                                 AR806441
+     C                     ITER                                                             AR806441
+     C                     ENDIF                                                            AR806441
       *
       **  Process message
      C           TRNO      SETLLMGOMSGPD
@@ -551,6 +566,7 @@
       *
      C           *IN88     IFEQ '0'                                   2
      C                     MOVELBBCSID    NWDS
+     C                     MOVE BBBNBI    @BNBI   1                                         AR806441
      C                     END                                       E2
       *
      C           NWSN      IFEQ *BLANK                                2

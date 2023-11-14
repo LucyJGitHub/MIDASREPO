@@ -35,8 +35,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061489           Date 06Jun23               *
-      *  Prev Amend No. MD022354           Date 06Jun23               *
+      *  Last Amend No. MD062022           Date 27Oct23               *
+      *  Prev Amend No. AR944604           Date 10Apr12               *
+      *                 MD061489           Date 06Jun23               *
+      *                 MD022354           Date 06Jun23               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -61,6 +63,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062022 - Remove checking of action code in checking if     *
+      *             transaction is sent from SOAP.                    *
+      *  AR944604 - Amendment to Financial future deal goes to invalid*
+      *             queue. If from SOAP, amend is processed as delete/*
+      *             insert. So specify correct mode for front office  *
+      *             processing if from SOAP.  (Child: AR944605)       *
       *  MD061489 - Extend fix of MD-22354 to FFCSETPD file and align *
       *             JAVA mapping (Recompile)                          *
       *  MD022354 - Error in Counterparty Nostro field. Recompiled    *
@@ -674,6 +682,14 @@
       * The Transaction in file format from the Sk database is retrieved
       * as well.
      C                   RESET                   ReturnCode
+      *                                                                                     AR944604
+      ** If coming from Front Office via SOAP                                               AR944604
+      *                                                                                     AR944604
+     C**********         If        (APFOTranID <> *BLANKS) and                     AR944604 MD062022
+     C**********                   SACTN = 'D'                                     AR944604 MD062022
+     C                   IF        APFOTranID <> *BLANKS                                    MD062022
+     C                   EVAL      ModeofOp = '*FRONT'                                      AR944604
+     C                   Endif                                                              AR944604
 
      C                   CALLB     'FFEXTRRTV'
 

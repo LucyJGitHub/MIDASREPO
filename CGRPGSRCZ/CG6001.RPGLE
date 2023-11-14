@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD059600           Date 17Feb22               *
-      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *  Last Amend No. MD027343           Date 16Oct23               *
+      *  Prev Amend No. MD059600           Date 17Feb22               *
+      *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
@@ -79,6 +80,8 @@
      F*---------------------------------------------------------------*
      F*  AMENDMENT HISTORY                                            *
      F*                                                               *
+      *  MD027343 - LEFacilityFeesAdvice XML extract has incorrect    *
+      *             Branch details (applied core fix MD021263).       *
       *  MD059600 - Loan narratives fields are not extrated           *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -689,7 +692,7 @@
      C                   END
      C*                                                                                       120464
      C     *IN80         IFEQ      '1'                                                        120464
-     C     BRCA          ANDEQ     *BLANKS                                                    120464
+     C*****BRCA          ANDEQ     *BLANKS                                           120464 MD027343
      C                   MOVE      #FBRCA        BRCA                                         120464
      C                   ENDIF                                                                120464
      C*

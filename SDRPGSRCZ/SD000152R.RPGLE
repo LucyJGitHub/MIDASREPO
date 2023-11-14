@@ -13,10 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited. 2017                     *
       *                                                               *
-      *  Last Amend No. MD-38440 *Create   Date 27Oct17               *
+      *  Last Amend No. MD052341           Date 04Oct23               *      
+      *  Prev Amend No. MD-38440 *Create   Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052341 - Nostro activity report still submitted after      *
+      *             pressing F3                                       *
+      *           - Added value to PCMD = 'E'                         *      
       *  MD038440 - Nostro deletion issue. Generate report            *
       *             to display transactions of a Nostro accnt.        *
       *                                                               *
@@ -181,6 +185,10 @@
      C                   MOVE      'USR0073'     ZAMSID
      C                   EXSR      ZASNMS
      C                   ENDIF
+     C                   ELSE                                                               MD052341
+      *                                                                                     MD052341
+     C                   EVAL      PCMD = 'E'                                               MD052341
+      *                                                                                     MD052341
      C                   ENDIF
      C                   ENDDO
       *

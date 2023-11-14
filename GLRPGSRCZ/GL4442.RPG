@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058710           Date 29Mar22               *
-      *  Prev Amend No. MD057555           Date 08Feb21               *
+      *  Last Amend No. AR696660           Date 16Oct23               *
+      *  Prev Amend No. MD058710           Date 29Mar22               *
+      *                 MD057555           Date 08Feb21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR989230           Date 04Jul12               *
       *                 263219             Date 29Apr20               *
@@ -136,6 +137,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR696660 - Account Movements Enquiry. Amended GL4442 to sort *
+      *             in chronological order the posting dates in       *
+      *             Account Movements Enquiry. (Child: AR696661)      *
       *  MD058710 - In ACMV screen, when journal entry is enquired    *
       *             through option 1, in some cases a 'No Details for *
       *             this movement' is displayed even if the historic  *
@@ -492,10 +496,14 @@
      F            APOSTPDF                          KRENAMEAPOST2DF
      F            GLACPHPF                          KRENAMEGLACPH2F       S01182
      F                                              KINFDS INFO2                              CGL131
-     FAPOSTL9 IF  E           K        DISK                               165546
-     F            APOSTPDF                          KRENAMEAPOST9DF       165546
-     F            GLACPHPF                          KRENAMEGLACPH9F       165546
-     F*                                                                   S01408
+     F***APOSTL9 IF  E           K        DISK                                       165546 AR696660
+     F**********  APOSTPDF                          KRENAMEAPOST9DF                  165546 AR696660
+     F**********  GLACPHPF                          KRENAMEGLACPH9F                  165546 AR696660
+     F**********                                                                     S01408 AR696660
+     FAPOSTL14IF  E           K        DISK                                                 AR696660
+     F            APOSTPDF                          KRENAMEAPST14DF                         AR696660
+     F            GLACPHPF                          KRENAMEGLCPH14F                         AR696660
+      *                                                                                     AR696660
      F/COPY WNCPYSRC,GL4442FFP1                                           S01408
      F*                                                                   S01408
      FREACR   IF  E           K        DISK                               S01311
@@ -911,14 +919,25 @@
      C                     KFLD           KASE
      C                     KFLD           CQKEY
      C*                                                                   165546
-     C           KEYSL9    KLIST                                          165546
-     C                     KFLD           KBRC                            165546
-     C                     KFLD           KCUS                            165546
-     C                     KFLD           KCCY                            165546
-     C                     KFLD           KCOD                            165546
-     C                     KFLD           KASE                            165546
-     C                     KFLD           PCKEY                           165546
+     C********** KEYSL9    KLIST                                                     165546 AR696660
+     C**********           KFLD           KBRC                                       165546 AR696660
+     C**********           KFLD           KCUS                                       165546 AR696660
+     C**********           KFLD           KCCY                                       165546 AR696660
+     C**********           KFLD           KCOD                                       165546 AR696660
+     C**********           KFLD           KASE                                       165546 AR696660
+     C**********           KFLD           PCKEY                                      165546 AR696660
      C*
+     C           KYSL14    KLIST                                                            AR696660
+     C                     KFLD           KBRC                                              AR696660
+     C                     KFLD           KCUS                                              AR696660
+     C                     KFLD           KCCY                                              AR696660
+     C                     KFLD           KCOD                                              AR696660
+     C                     KFLD           KASE                                              AR696660
+     C                     KFLD           PCKEY                                             AR696660
+     C                     KFLD           POSDN                                             AR696660
+     C                     KFLD           AMTKY                                             AR696660
+     C                     KFLD           DORK                                              AR696660
+      *                                                                                     AR696660
      C           KEYEQ     KLIST
      C                     KFLD           KBRC                            S01117
      C                     KFLD           KCUS
@@ -2255,7 +2274,8 @@
      C* 1. RESET RELATIVE RECORD NUMBERS
      C* 2. CLEAR THE SUBFILE
      C**3**D*T*RM*NE*IF*APOSTL1 OR APOSTL2 IS TO BE USED                  165546
-     C* 3. DETERMINE IF APOSTL1 OR APOSTL2 OR APOSTL9 IS TO BE USED       165546
+     C**3.*DETERMINE*IF*APOSTL1*OR*APOSTL2*OR*APOSTL9*IS*TO*BE*USED****              165546 AR696660
+      * 3. DETERMINE IF APOSTL1 OR APOSTL2 OR APOSTL14 IS TO BE USED                        AR696660
      C* 4. LOAD FIRST PAGE OF SUBFILE RECORDS
      C*
      C* CALLED FROM: ENTR, CMD5
@@ -2431,8 +2451,10 @@
      C                     EXSR BSFIL1                                    165546
      C                     ELSE                            ** X001        165546
      C                     MOVE *BLANK    POSDA                           165546
-     C           KEYSL9    SETLLAPOSTL9                                   165546
-     C           KEYEQ     READEAPOSTL9                  80               165546
+     C********** KEYSL9    SETLLAPOSTL9                                              165546 AR696660
+     C********** KEYEQ     READEAPOSTL9                  80                          165546 AR696660
+     C           KYSL14    SETLLAPOSTL14                                                    AR696660
+     C           KEYEQ     READEAPOSTL14                 80                                 AR696660
      C                     MOVE SPOS      SPOSP                           183365
      C                     EXSR BSFIL2                                    165546
      C                     END                             ** E001        165546
@@ -3296,7 +3318,8 @@
      C*****************************************************************
      C*
      C*******BSFIL2 --- BUILD SUBFILE WITH RECORDS FROM APOSTL2           165546
-     C* BSFIL2 --- BUILD SUBFILE WITH RECORDS FROM APOSTL2 OR APOSTL9     165546
+     C**BSFIL2*---*BUILD*SUBFILE*WITH*RECORDS*FROM*APOSTL2*OR*APOSTL9**              165546 AR696660
+      * BSFIL2 --- BUILD SUBFILE WITH RECORDS FROM APOSTL2 OR APOSTL14                      AR696660
      C*
      C* 1. SETLL
      C* 2. BUILD SUBFILE PAGE
@@ -3380,7 +3403,8 @@
      C*                                                                   S01408
      C*********  KEYEQ     READEAPOSTL2                  80               165546
      C  N41      KEYEQ     READEAPOSTL2                  80               165546
-     C   41      KEYEQ     READEAPOSTL9                  80               165546
+     C***41***** KEYEQ     READEAPOSTL9                  80                          165546 AR696660
+     C   41      KEYEQ     READEAPOSTL14                 80                                 AR696660
      C                     MOVE SPOS      SPOSP                           183365
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL4442CP32                                           S01408

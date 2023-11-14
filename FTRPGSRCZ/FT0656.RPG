@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR316486           Date 14Nov23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 CAP212             Date 15Sep14               *
       *                 263658             Date 19Aug14               *
@@ -79,6 +80,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR316486 - Request to have field 25 on MT210. Fix is to add  *
+      *             field 25 in MT210.                                *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -1758,6 +1761,33 @@
      C                     MOVELMFLD      TRNA   16                       S01310
      C                     MOVELMFLD      TRNO                            S01310
      C/COPY WNCPYSRC,FT0656C006
+      *                                                                                     AR316486
+      ** Field :25: - Our Account Number at Nostro.   (MT210).                              AR316486
+      *                                                                                     AR316486
+     C           ACBN      IFNE 0                                                           AR316486
+     C                     MOVELACBN      NNOST                                             AR316486
+      *                                                                                     AR316486
+     C           NKEY      CHAINSDNOSTL0             60                                     AR316486
+      *                                                                                     AR316486
+      ** If dummy nostro is not found, database error.                                      AR316486
+      *                                                                                     AR316486
+     C           *IN60     IFEQ '1'                                                         AR316486
+     C                     MOVELACBN      DBKEY                                             AR316486
+     C                     MOVE '044'     DBASE                                             AR316486
+     C                     MOVEL'SDNOSTPD'DBFILE                                            AR316486
+     C                     EXSR DBERR                                                       AR316486
+      *                                                                                     AR316486
+     C                     ELSE                                                             AR316486
+      *                                                                                     AR316486
+     C           A7OACN    IFNE *BLANK                                                      AR316486
+     C                     ADD  1         Q                                                 AR316486
+     C           Q         OCUR MULT                                                        AR316486
+     C                     MOVE ':25: '   MTAG                                              AR316486
+     C           '/'       CAT  A7OACN:0  MFLD                                              AR316486
+     C                     ENDIF                                                            AR316486
+     C                     ENDIF                                                            AR316486
+      *                                                                                     AR316486
+     C                     ENDIF                                                            AR316486
       *                                                                   S01310
       ** Field :30: - Value Date.             (MT210).                    S01310
       *                                                                   S01310

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. BA6020             Date 03Sep13               *
-      *  Prev Amend No. 255619             Date 11Aug22               *
+      *  Last Amend No. MD061852           Date 20Oct23               *
+      *  Prev Amend No. BA6020             Date 03Sep13               *
+      *                 255619             Date 11Aug22               *
       *                 MD055442           Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027486           Date 23Jun15               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061852 - UDC_PRTGEN failed i/o operation was applied to    *
+      *             closed file CGUXMLL0 in FusionMidas.              *
+      *           - Open and close file CGUXMLL0 when #@ARCH <> 'A'.  *
+      *           - Fix is for BA6020.                                *
 /*    *  BA6020 - Add specific header field to CM XML output          *
       *  255619 - Applied fix 252870.                                 *
       *  252870 - Zero-byte file transferred by CM.                   *
@@ -750,10 +755,16 @@
      C                   IF        #@ARCH = 'A'                                               BA6020
      C     B2ITEM        READE     CGXXMLL0                                                   BA6020
      C                   ELSE                                                                 BA6020
+     C                   IF        NOT %OPEN(CGUXMLL0)                                      MD061852
+     C                   OPEN      CGUXMLL0                                                 MD061852
+     C                   ENDIF                                                              MD061852
      C     B2ITEM        READE     CGUXMLL0                                                   BA6020
      C                   ENDIF                                                                BA6020
       *                                                                                       BA6020
      C                   ENDDO                                                                BA6020
+     C                   IF        #@ARCH <> 'A'                                            MD061852
+     C                   CLOSE     CGUXMLL0                                                 MD061852
+     C                   ENDIF                                                              MD061852
      C                   ENDIF                                                                BA6020
       *                                                                                       BA6020
      C                   ENDIF                                                                BA6020

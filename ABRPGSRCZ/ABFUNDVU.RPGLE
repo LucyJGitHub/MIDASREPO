@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060158           Date 28Jun22               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. AR744027           Date 09Nov23               *
+      *  Prev Amend No. MD060158           Date 28Jun22               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -69,6 +70,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR744027 - Authorised status not displayed. Increase status  *
+      *             field to 10 character to handle AUTHORISED        *
+      *             status. (Child: AR744028)                         *
       *  MD060158 - Missing modules delivery.                         *
       *             (Recompile)                                       *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -479,7 +483,9 @@
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
      C                   EXSR      ValAmd                                                     CDL038
-
+     C                   WHEN         #1ACTN = 'D'                                          AR744027
+     C                   EXSR      SetupAmd                                                 AR744027
+ 
      C                   ENDSL
       *                                                                                       CDL102
      C                   EVAL       NewLibor = TranScnBlrt                                    CDL102
@@ -955,9 +961,10 @@
      C                   PARM                    CurrScnBlrt                                  CDL102
 
       ** Deal Status
-
-     C                   PARM                    PDDSTS            7
-
+ 
+     C**********         PARM                    PDDSTS            7                        AR744027
+     C                   PARM                    PDDSTS           10                        AR744027
+ 
       ** Profit Centre Description 1
       ** Profit Centre Description 2
 

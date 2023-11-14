@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR992022           Date 26Apr16              */
+/*       Last Amend No. 253824             Date 14Nov23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR992022           Date 26Apr16              */
 /*                      CAP207             Date 10Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      260259             Date 14May09              */
@@ -45,6 +46,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       253824 - Error in ENDCMTCTL                                 */
+/*              - Applied for MD062024.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR992022 - On line Retail Advices are not being printed for */
 /*                  journal entries (CRE020). Pattern retail advice  */
@@ -135,6 +138,7 @@
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*245635*/
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1)                                   /*245635*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                  /*AR992022*/
+             DCL        VAR(&ERRFLG) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*253824*/
 /* */                                                                 /*S01408*/
 /*/COPY WNCPYSRC,GLC445INT                                           */
 /* */                                                                 /*S01408*/
@@ -241,6 +245,7 @@
 /**********  ELSE       CMD(CHGJOB     SWS(XXXXXX11)) */                          /*CSC022 BUG2714*/
              SNDPGMMSG  MSG('Transaction failed. Re-input necessary. +
                           Enter to continue.') TOMSGQ(&WRKSTN MOPERQ) /*CGL009*/
+             CHGVAR     VAR(&ERRFLG) VALUE('Y')                                           /*253824*/
              GOTO       CMDLBL(ENDPGM)                                /*CGL009*/
              ENDDO                                                    /*CGL009*/
 /**/                                                                  /*CGL009*/
@@ -257,6 +262,7 @@
                ROLLBACK                                               /*CGL009*/
 /**********    ENDDO */                                                           /*CSC022 BUG2714*/
 /**********    ELSE       CMD(CHGJOB     SWS(XXXXXX11))                           /*CSC022 BUG2714*/
+              CHGVAR     VAR(&ERRFLG) VALUE('Y')                                          /*253824*/
                GOTO ENDPGM                                            /*CGL009*/
              ENDDO                                                    /*CGL009*/
 /**/                                                                  /*CGL009*/
@@ -285,6 +291,7 @@
                 SNDPGMMSG  MSG('Transaction failed. Re-input +
                           necessary. Enter to continue.') +
                           TOMSGQ(&WRKSTN MOPERQ)
+                CHGVAR     VAR(&ERRFLG) VALUE('Y')                                        /*253824*/
                 GOTO ENDPGM
              ENDDO
 /*/COPY WNCPYSRC,GLC445001                                           */
@@ -353,6 +360,7 @@
                           *BCAT &WRKSTN) TOMSGQ(MRUNQ)                                   /*241672A*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*241672A*/
                                                                                          /*241672A*/
+             CHGVAR     VAR(&ERRFLG) VALUE(' ')                                           /*253824*/
              GOTO       CMDLBL(ENDPGM)                                /*078325*/
                                                                       /*078325*/
 ABNOR:                                                                /*078325*/
@@ -374,12 +382,12 @@ ABNOR:                                                                /*078325*/
                                                                       /*078325*/
 /*DPGM:******ENDPGM                                                   /*E17597*/
 /*DPGM:******ENDCMTCTL                                                             /*E17597 CSC022*/
-ENDPGM:      ENDCMTCTL                                                                    /*CPK022*/
+/*ENDPGM:****ENDCMTCTL                                                             /*CPK022 253824*/
 /*ENDPGM:                                                                          /*CSC022 CPK022*/
 /**********  IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +                        /*CPK022*/
 /**********               'Y') *AND (&WCMTSK *EQ 'N'))) THEN(DO)                   /*CSC022 CPK022*/
 /**********  ENDCMTCTL                                                             /*CSC022 CPK022*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*078325*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                             /*078325 253824*/
                                                                                          /*241672A*/
 /** Generate report for jobs locking GLJENHPD */                                         /*241672A*/
                                                                                          /*241672A*/
@@ -402,6 +410,11 @@ ENDPGM:      ENDCMTCTL                                                          
                           &BNUM *BCAT '(not Accepted) from device' +
                           *BCAT &WRKSTN) TOMSGQ(MRUNQ MOPERQ)                            /*241672A*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*241672A*/
+ ENDPGM:                                                                                  /*253824*/
+             IF         COND(&ERRFLG *EQ ' ') THEN(COMMIT)                                /*253824*/
+             RCLRSC                                                                       /*253824*/
+             ENDCMTCTL                                                                    /*253824*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                    /*253824*/
              ENDDO                                                                        /*260259*/
 /**********  ENDDO                                                                 /*CSC022 CPK022*/
 /**********  CHGDTAARA DTAARA(GLC0445 (1 2)) VALUE('C ')                         /*241672 BUG13062*/

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD062013           Date 25Oct23               *
-      *  Prev Amend No. MD061162           Date 12Apr23               *
+      *  Last Amend No. MD062106           Date 14Nov23               *
+      *  Prev Amend No. MD062013           Date 25Oct23               *
+      *                 MD061162           Date 12Apr23               *
       *                 MD058986           Date 11Oct21               *
       *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062106 - Duplicate records in BTD/XTd due to WUCRRC        *
+      *             not being re-initialized                          *
       *  MD062013 - Cursors are not properly closed                   *
       *  MD061162 - Avoid duplicate key error when deleting records   *
       *             by making sure the unique no. (DIDRUN) is unique  *
@@ -789,6 +792,7 @@
       * Set off error indicators
      C                   MOVEA     WKIND0        *IN(33)
      C                   SETOFF                                       98
+     C                   MOVEL     ' '           WUCRRC                                     MD062106
       *
      C     W0PMD         IFEQ      'ADD'
       * Process add request

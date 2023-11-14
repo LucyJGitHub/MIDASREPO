@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060788           Date 08May23               *
-      *  Prev Amend No. 252024             Date 14Feb08               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD060788           Date 08May23               *
+      *                 252024             Date 14Feb08               *
       *                 MD059304           Date 26Jan22               *
       *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
@@ -150,6 +151,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD060788 - Records in the Interest Rate Payment and Interest *
       *             Rate Change Schedule tabs are missing upon        *
       *             Authorisation of a TD/ CF deal                    *

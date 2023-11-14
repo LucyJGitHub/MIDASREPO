@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *                 MD056602           Date 04Sep20               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057061           Date 03Nov20               *
@@ -77,6 +78,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD060683 - Unable to Authorize newly inserted Single         *
       *             Currency IRS deal                                 *
       *  MD056602 - Deliverable Data Split for T_APICFG               *

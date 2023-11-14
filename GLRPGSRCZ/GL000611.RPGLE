@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD060676           Date 09Nov22               *
-      *  Prev Amend No. MD048482A          Date 20Jun22               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD060676           Date 09Nov22               *
+      *                 MD048482A          Date 20Jun22               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 CGL185             Date 13Mar17               *
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD060676 - Redesign HELABA fix MD-48482 ; used HISTSL0       *
       *             instead of HISTSL5 and DLDLDCL1 instead of        *
       *             DLDEALLF to prevent impact on performance of      *

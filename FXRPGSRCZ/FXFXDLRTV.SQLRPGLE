@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 250655             Date 20Jan22               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 250655             Date 20Jan22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  250655 - Temp fix to add 'X' for authorise when validating   *
       *           action code in VALD.                                *

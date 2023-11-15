@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR747068           Date 05Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. 219957             Date 15Nov23               *
+      *  Prev Amend No. AR747068           Date 05Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055440           Date 18Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE098             Date 02Dec13               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  219957 - File out of balance in Daily Journal.
       *  AR747068 - Deleted schedule entries should not be posted.    *
       *             Applied fix 251359. (Child: AR747069)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1280,8 +1282,8 @@
       *
       ** If decimal exceeds 1000, carry 1 to integer. Amount in
       ** excess of 1000 is moved back on decimal.
-     C                   IF        WDecSum > 1000
-     C                   EVAL      HRDC = WDecSum - 1000
+     C**********         IF        WDecSum > 1000                                             219957
+     C                   IF        WDecSum >= 1000                                            219957
      C                   EVAL      HRWN = HRWN + 1
      C                   ELSE
      C                   Z-ADD     WDecSum       HRDC

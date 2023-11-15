@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056543           Date 15Sep20               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056543 - EDWH SSRS Reports cannot be run.                  *

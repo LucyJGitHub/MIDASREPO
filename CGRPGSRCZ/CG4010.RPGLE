@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD060590           Date 04Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD060590           Date 04Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 255465             Date 05Jul22               *
       *                 255150             Date 22Jun22               *
       *                 MD059690           Date 14Mar22               *
@@ -176,6 +177,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD060590 - Incorrect ccr rounding applies and precision      *
       *             values for loan defined with SONIA and SARR.      *
       *             Check the calc method to be 'NCCR' before calling *

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT162             Date 16Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060110           Date 10Oct23               *
+      *  Prev Amend No. CFT162             Date 16Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 CFT157             Date 29Aug14               *
@@ -70,6 +71,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060110 - Payments can be amended and authorised by the     *
+      *             same user. Use the MSWINPUSER value from T_MSWIP  *
+      *             to populate Input Officer 1 and Input Officer 2.  *
+      *           - Applied for MD061506.                             *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -1969,9 +1974,11 @@
      C                   Eval      OTCHTP = 'I'
      C                   Eval      @USRID = WUSRID                                            CAP084
      C                   IF        InputUser = *BLANKS                                      MD042042
-     C                   Eval      OTINUSR2 = @USRID
+     C***********        Eval      OTINUSR2 = @USRID                                        MD060110
+     C                   EVAL      OTINUSR1 = @USRID                                        MD060110
      C                   ELSE                                                               MD042042
-     C                   EVAL      OTINUSR2 = InputUser                                     MD042042
+     C***********        EVAL      OTINUSR2 = InputUser                            MD042042 MD060110
+     C                   EVAL      OTINUSR1 = InputUser                                     MD060110
      C                   ENDIF                                                              MD042042
      C                   EndIf
      C

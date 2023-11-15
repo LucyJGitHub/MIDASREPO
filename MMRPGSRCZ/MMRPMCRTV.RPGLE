@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -54,6 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *

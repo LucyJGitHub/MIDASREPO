@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060920           Date 09Feb23               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD060920           Date 09Feb23               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD037890           Date 25May16               *
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD060920 - FRA/IRS: incorrect reflection of interest in      *
       *             assets and liabilities for CAPS/Coll/Floor.       *
       *           - Condition the floor/ceiling rate when calculating *

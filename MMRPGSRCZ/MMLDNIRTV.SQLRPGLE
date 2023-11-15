@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 231853             Date 15Nov22               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 231853             Date 15Nov22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
@@ -105,6 +106,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  231853 - Cannot delete repo when depot movement exists.      *
       *           Applied for MD057975.                               *

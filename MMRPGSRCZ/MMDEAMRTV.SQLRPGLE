@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 255626             Date 25Jul22               *      
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 255626             Date 25Jul22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 AR806147           Date 21May18               *
@@ -93,12 +94,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  255626 - Applied fix 250878. NAAD (next amendment action     *
       *           date ) and NASN ( next amendment sequence ) are not *
       *           properly updated when a deal amendment is authorised*
       *           and related deal amendments with lower value or     *
-      *           sequence are authorised.                            *      
+      *           sequence are authorised.                            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  AR806147 - Value date of any deal amendment must be less     *
@@ -1040,7 +1044,7 @@
      C*
      C*****@DEAMK        SETLL     MMDEAMLL                           65                      191881
      C*****@DEAMK        READPE    MMDEAMLL                               65                  191881
-     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626     
+     C     @DEAMK        SETLL     MMDEAMLL                           65                      255626
      C*****@@DLNO        SETLL     MMDEAMLL                           65               191881 255626
      C     @@DLNO        READPE    MMDEAMLL                               65                  191881
 B2   C     *IN65         DOWEQ     '0'

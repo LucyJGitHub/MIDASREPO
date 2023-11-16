@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058896           Date 21Sep21               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD058896           Date 21Sep21               *
       *                 MD057942           Date 26Apr21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057008           Date 27Oct20               *
@@ -194,6 +195,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *

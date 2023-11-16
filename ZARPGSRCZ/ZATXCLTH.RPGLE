@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR749044           Date 04May11               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR749044           Date 04May11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26979           Date 22Jan10               *
       *                 BUG26839           Date 05Jan10               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYCN_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR749044 - Manual interest adjustment did reverse threshold  *
       *             utilized on retail account. (Child: AR749045)     *

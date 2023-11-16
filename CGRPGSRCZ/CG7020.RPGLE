@@ -17,8 +17,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. MD054978           Date 26Jan21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD054978           Date 26Jan21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057260           Date 23Feb21               *
       *                 MD056543           Date 15Sep20               *
       *                 CER050             Date 16Jun19               *
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD054978 - Add Start and End Date of Capitalisation Period   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

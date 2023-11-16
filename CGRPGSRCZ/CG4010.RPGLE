@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD059690           Date 14Mar22               *
-      *  Prev Amend No. MD059369           Date 24Dec21               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD059690           Date 14Mar22               *
+      *                 MD059369           Date 24Dec21               *
       *                 MD059367           Date 24Dec21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057051           Date 28Oct20               *
@@ -172,6 +173,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD059369 - LIBOR fields must be extracted for both sides     *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *

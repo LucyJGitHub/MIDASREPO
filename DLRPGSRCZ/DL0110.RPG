@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 263674             Date 25Oct23               *
-      *  Prev Amend No. 261258             Date 25Sep23               *
+      *  Last Amend No. AR701280           Date 13Nov23               *
+      *  Prev Amend No. 263674             Date 25Oct23               *
+      *                 261258             Date 25Sep23               *
       *                 BA5103             Date 07Aug23               *
       *                 CDL103             Date 07Aug23               *
       *                 MD058815           Date 28Sep21               *
@@ -327,6 +328,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701280 - Ensure that value of OSCA and PBOR will be saved  *
+      *             so that when printing the mail confirmation, it   *
+      *             will populate the correct payment account.        *
+      *             (Child: AR701281)                                 *
       *  263674 - The phrase "As per your instruction" is being       *
       *           printed.  Fix is to print from settlement details.  *
       *  261258 - CDL041 introduced *INKG to conditionally add VAT    *
@@ -3204,6 +3209,11 @@
      I                                       26  26 ##SPC4                CDL018
      I                                       27  28 ##ACSQ                CDL018
      I*                                                                   CGL029
+     I            DS                                                                        AR701280
+     I                                        1  18 @@OSCA                                  AR701280
+     I                                        1   6 @@CUST                                  AR701280
+     I                                        7  16 @@ACCD                                  AR701280
+     I                                       17  18 @@ACSQ                                  AR701280
      I*                                                                   056425
      I/COPY ZSRSRC,ZINTDYZ1                                               056425
      I*                                                                   056425
@@ -9944,6 +9954,15 @@
 1370 C*
 1371 C*         - PAY NARRATIVE
 1372 C           QPAY      TAG                             **QPAY TAG **
+      *                                                                                     AR701280
+     C                     MOVEL@@POBR    A9BRCD                                            AR701280
+     C                     MOVE '-'       HYPEN1                                            AR701280
+     C                     MOVEL@@CUST    A9CUST                                            AR701280
+     C                     MOVE '-'       HYPEN2                                            AR701280
+     C                     MOVEL@@ACCD    A9ACCD                                            AR701280
+     C                     MOVE '-'       HYPEN3                                            AR701280
+     C                     MOVEL@@ACSQ    A9NONB                                            AR701280
+      *                                                                                     AR701280
 1373 C***52*               MOVELSENDR     CPNM                            S01194
 1373 C***52*****           MOVELSENDR     AWCPNM                                       S01194 CDL033
 1374 C***52*               MOVELSEND      CPNM                            S01194
@@ -9958,7 +9977,8 @@
      C           *IN53     IFEQ '1'                                                           CDL033
      C           WIN55     OREQ '1'                                                           CDL033
      C**********           MOVELPERYOR    AWCPNM                                       CDL033 263674
-     C                     EXSR ACTRTN                                                        263674
+     C**********           EXSR ACTRTN                                               263674 AR701280
+     C                     MOVELACTDTL    AWCPNM    P                                       AR701280
      C                     ENDIF                                                              CDL033
 1377 C   54
 1378 C*R*57*               MOVELCRTOAC    CPNM                            S01194
@@ -10394,6 +10414,10 @@ TA06 CORN62 51             MOVELPAY       ADD
      C                     EXSR *PSSR                                     180665
      C                     GOTO END                                       180665
      C                     END                                            180665
+      *                                                                                     AR701280
+     C                     MOVELOSCA      @@OSCA 18 P                                       AR701280
+     C                     MOVELPOBR      @@POBR  3 P                                       AR701280
+      *                                                                                     AR701280
      C***04******DRID      IFEQ 'Y'                                S01129 134314
      C   04      DRID      IFEQ 'R'                                       134314
      C                     MOVE '1'       *IN83                           S01129

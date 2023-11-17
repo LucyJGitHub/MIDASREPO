@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060263           Date 14Apr23               *
-      *  Prev Amend No. MD060250           Date 14Apr23               *
+      *  Last Amend No. MD061702           Date 14Nov23               *
+      *  Prev Amend No. MD060263           Date 14Apr23               *
+      *                 MD060250           Date 14Apr23               *
       *                 CSW122A            Date 14Apr23               *
       *                 HUT116             Date 06Nov20               *
       *                 MD057056           Date 19May21               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061702 - Missing MT202 COV for Outgoing Payments           *
       *  MD060263 - MT199 REJT field tag 79 Line 4 TREF value should  *
       *             not include further trailing info.                *
       *  MD060250 - Not translated Incoming MT is generating MTn99    *
@@ -2391,12 +2393,17 @@
      C                   ENDIF                                                              MD060250
       *                                                                                     MD060250
      C                   ELSE                                                               MD060250
+      *                                                                                     MD061702
+     C                   IF        HUT116 = 'Y'                                             MD061702
+     C                   EVAL      WMXFlg = 'N'                                             MD061702
+     C                   ELSE                                                               MD061702
      C     *LOCK         IN        LDA                                                      MD060250
      C                   MOVE      '040'         DBASE                                      MD060250
      C                   MOVEL     'KLIncMsg'    DBKEY                                      MD060250
      C                   MOVEL     'MEINDTL0'    DBFILE                                     MD060250
      C                   OUT       LDA                                                      MD060250
      C                   EXSR      *PSSR                                                    MD060250
+     C                   ENDIF                                                              MD061702
       *                                                                                     MD060250
      C                   ENDIF                                                              MD060250
       *                                                                                     MD060250

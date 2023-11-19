@@ -22,7 +22,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD062084           Date 14Nov23               *
+      *  Last Amend No. MD062084           Date 15Nov23               *
       *  Prev Amend No. MD054367           Date 27Oct23               *
       *                 MD052584           Date 27Oct23               *
       *                 AR819282           Date 27Oct23               *
@@ -313,8 +313,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD062084 - Missing INTEREST - Withholding tax after pressing *
-      *             page down.                                        *
+      *  MD062084 - Future interest withholding tax is not displayed  *
+      *             if the event is the first record after page down  *
+      *             and is followed by a future loan amendment ex. MR.*
+      *             Extend fix AR819282 in SRLOAM to process pending  *
+      *             display of int. withholding tax event (WSAME = Y).*
+      *             Also clear WSAME and reset *IN32 in SRWTAX to OFF *
+      *             once tax event is completely displayed.           *
       *  MD054367 - Incorrect interest and withholding tax due at     *
       *             maturity were displayed in LOAC since withholding *
       *             tax via Manual Repayment was ignored.             *
@@ -1577,6 +1582,7 @@
      C                     CLEARWOVFL                                     165648
      C                     CLEARFCALI                                     165648
      C                     CLEARFCALR                                     165648
+     C                     CLEAR@INPAY                                                      MD062084
      C                     ENDIF                                          154221
       **********                                                                      224646 BUG9240
       ***If*rolldown is pressed, putback original rollover date                       224646 BUG9240
@@ -1811,19 +1817,6 @@
      C                     END                                                                200089
       *
      C           WFINL     IFEQ *BLANKS
-      *                                                                                     MD062084
-      ** If withholding tax falls on line 21 make sure to write it the first line of the    MD062084
-      ** next page                                                                          MD062084
-      *                                                                                     MD062084
-     C           WSAME     IFEQ 'Y'                                                         MD062084
-     C           *IN32     ANDEQ'1'                                                         MD062084
-     C           SCODE     IFNE 'H'                                                         MD062084
-     C           SCODE     ANDNE'P'                                                         MD062084
-     C                     EXSR SRWTAX                                                      MD062084
-     C                     MOVE '0'       *IN32                                             MD062084
-     C                     ENDIF                                                            MD062084
-     C                     ENDIF                                                            MD062084
-      *                                                                                     MD062084                                                                                 
      C           *IN34     IFEQ '0'
      C           *IN37     OREQ '0'
      C/COPY WNCPYSRC,LEH00854
@@ -5391,6 +5384,20 @@
      C                     EXSR CONCCY                                                        238722
      C                     ENDIF                                                              238722
       *                                                                                       238722
+      ** If last line was end of page check to see if witholding tax                        MD062084
+      ** has still to be displayed.                                                         MD062084
+      *                                                                                     MD062084
+     C           WSAME     IFEQ 'Y'                                                         MD062084
+     C           WFINL     ANDEQ' '                                                         MD062084
+     C           *IN32     ANDEQ'1'                                                         MD062084
+     C           SCODE     IFNE 'H'                                                         MD062084
+     C           SCODE     ANDNE'P'                                                         MD062084
+     C                     EXSR SRWTAX                                                      MD062084
+     C                     MOVE '0'       *IN32                                             MD062084
+     C                     ENDIF                                                            MD062084
+     C                     CLEARWSAME                                                       MD062084
+     C                     ENDIF                                                            MD062084
+      *                                                                                     MD062084
      C           AMTPL     IFNE 'RE'                                                          190638
      C           AMTPL     OREQ 'RE'                                                          190638
      C           VDATL     ANDLEMDAT                                                          190638
@@ -5404,6 +5411,9 @@
      C           WSAME     IFEQ 'Y'                                       154221
      C           INTAL     ANDNE*ZEROS                                    154221
      C           WDTL2     ANDEQ*BLANK                                    154221
+     C           WSAME     OREQ 'Y'                                                         MD062084
+     C           WTXAL     ANDNE*ZEROS                                                      MD062084
+     C           WDTL3     ANDEQ*BLANK                                                      MD062084
      C                     CLEARWSAME                                     154221
      C                     ENDIF                                          154221
       *
@@ -6744,6 +6754,18 @@
      C           SRRPAY    BEGSR
       *
      C/COPY WNCPYSRC,LE0212C001
+      *                                                                   154221
+      * If last line was end of page check to see if interest payment     154221
+      * has still to be displayed. (For no history displays only.)        154221
+      *                                                                   154221
+     C           @NHIST    IFEQ 'Y'                                       154221
+     C           @INPAY    ANDEQ'Y'                                       154221
+     C           WSAME     ANDEQ'Y'                                       154221
+     C**********           EXSR SRDISR                                    154221            BUG13074
+     C                     EXSR SRDISI                                                      BUG13074
+     C                     CLEAR@INPAY                                    154221
+     C                     EXSR SRWTAX                                                      MD062084
+     C                     ENDIF                                          154221
       *                                                                                     AR819282
       ** If last line was end of page check to see if witholding tax                        AR819282
       ** has still to be displayed.                                                         AR819282
@@ -6756,18 +6778,8 @@
      C                     EXSR SRWTAX                                                      AR819282
      C                     MOVE '0'       *IN32                                             AR819282
      C                     ENDIF                                                            AR819282
+     C                     CLEARWSAME                                                       MD062084
      C                     ENDIF                                                            AR819282
-      *                                                                   154221
-      * If last line was end of page check to see if interest payment     154221
-      * has still to be displayed. (For no history displays only.)        154221
-      *                                                                   154221
-     C           @NHIST    IFEQ 'Y'                                       154221
-     C           @INPAY    ANDEQ'Y'                                       154221
-     C           WSAME     ANDEQ'Y'                                       154221
-     C**********           EXSR SRDISR                                    154221            BUG13074
-     C                     EXSR SRDISI                                                      BUG13074
-     C                     CLEAR@INPAY                                    154221
-     C                     ENDIF                                          154221
       *                                                                   154221
       * If last line was end of page check to see if repayment of         154221
       * principal has still to be displayed.                              154221
@@ -12141,6 +12153,7 @@
      C                     MOVE 'Y'       LUPFG                                            AR1051346
      C                     WRITELE0212F2                                                    AR819282
      C                     ENDIF                                                            AR819282
+     C                     MOVE '0'       *IN32                                             MD062084
      C                     ENDIF                                                            AR819282
      C                     ENDIF                                                            AR819282
      C                     ENDSR                                                            AR819282

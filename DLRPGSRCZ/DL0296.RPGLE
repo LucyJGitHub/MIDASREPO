@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  219957 - File out of balance in Daily Journal.
+      *  219957 - File out of balance in Daily Journal.               *
       *  AR747068 - Deleted schedule entries should not be posted.    *
       *             Applied fix 251359. (Child: AR747069)             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

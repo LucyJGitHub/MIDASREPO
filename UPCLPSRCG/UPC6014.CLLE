@@ -13,11 +13,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD061706           Date 01Aug23              */
-/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD62101            Date 15Nov23              */
+/*       Prev Amend No. MD062083           Date 09Nov23              */
+/*                      MD061706           Date 01Aug23              */
+/*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062101 - Add consistent logging level for components      */
+/*       MD062083 - Missing process when upgrade is done with aDBU   */
 /*       MD061706 - Various changes for transition to aDBU           */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
@@ -49,6 +53,9 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
 
+/* Set logging level */                                                                 /*MD062101*/
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)                   /*MD062101*/
+                                                                                        /*MD062101*/
              CHGVAR     VAR(&ERRPGM) VALUE('UPC6014')
              CHGVAR     VAR(&GPLIB) VALUE(&GPRFX *TCAT 'GPLIB')                         /*MD061706*/
 
@@ -68,15 +75,17 @@
                           TOFILE(&GPLIB/UPCCSITDBK) CRTFILE(*YES)                       /*MD061706*/
              RCVF                                                                       /*MD061706*/
              MONMSG     MSGID(CPF0000)                                                  /*MD061706*/
-             IF         COND(&UCADBU *EQ 'Y') THEN(GOTO aDBU)                           /*MD061706*/
+/**********  IF         COND(&UCADBU *EQ 'Y') THEN(GOTO aDBU) */              /*MD061706**MD062083*/
                                                                                         /*MD061706*/
 /* Check if layer is global or not and set *LIBL */
              IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
-             CALL       PGM(UPC0000296) PARM('*GLOBAL')
+/**********  CALL       PGM(UPC0000296) PARM('*GLOBAL') */                              /*MD062083*/
+             CALL       PGM(UPC0000296) PARM('*GLOBAL' &UCADBU)                         /*MD062083*/
              ENDDO
              ELSE CMD(DO)
              CALL       PGM(UPC0014) PARM(&LYRPFX)
-             CALL       PGM(UPC0000296) PARM('*ZONE')
+/**********  CALL       PGM(UPC0000296) PARM('*ZONE') */                                /*MD062083*/
+             CALL       PGM(UPC0000296) PARM('*ZONE' &UCADBU)                           /*MD062083*/
              ENDDO
 
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)

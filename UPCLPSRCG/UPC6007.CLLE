@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU Restore library')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6007 - Restore library                                   */
+/*                                                                   */
+/*       Function: This program restore the library. It is called    */
+/*                 via SBMJOB from UPC6008 and UPC6009.              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061954 *CREATE   Date 08Oct23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061954 - Include restore of reference libraries for aDBU  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SAVFL &LIB &BRGBRGLIB &IASP_YN &IASP)
+
+             DCL        VAR(&SAVFL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COL) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Set DTAQ name */
+             CHGVAR     VAR(&DTQN) VALUE('UP_OTBRST' *TCAT %SST(&LIB 3 1))
+
+
+/* Update status to running */
+             CHGVAR     VAR(&COL) VALUE('LRST' *TCAT %SST(&LIB 3 2))
+             CHGVAR     VAR(&STM_STR) VALUE('UPDATE UPRSTRTD SET '  +
+                          *BCAT &COL *BCAT '=' *BCAT &QUOTE *TCAT 'R' +
+                          *TCAT &QUOTE)
+             RUNSQL     SQL(&STM_STR) COMMIT(*NC)
+
+             CHGVAR     VAR(&MSGDATA) VALUE(%SST(&LIB 3 2) *TCAT '-')
+/* Ensure library does not exist */
+             CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+
+                IF         COND(&IASP_YN *EQ 'Y') THEN(DO)
+                RSTLIB     SAVLIB(&LIB) DEV(*SAVF) SAVF(&SAVFL/&LIB) +
+                             RSTASPDEV(&IASP) OUTPUT(*PRINT)
+                ENDDO
+                ELSE       CMD(DO)
+                RSTLIB     SAVLIB(&LIB) DEV(*SAVF) SAVF(&SAVFL/&LIB) +
+                             OUTPUT(*PRINT)
+                ENDDO
+
+             CHGVAR     VAR(&MSGDATA) VALUE(%SST(&MSGDATA 1 3) *TCAT 'DONE')
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &MSGDATA)
+/* Update status to complete */
+             CHGVAR     VAR(&COL) VALUE('LRST' *TCAT %SST(&LIB 3 2))
+             CHGVAR     VAR(&STM_STR) VALUE('UPDATE UPRSTRTD SET '  +
+                          *BCAT &COL *BCAT '=' *BCAT &QUOTE *TCAT 'C' +
+                          *TCAT &QUOTE)
+             RUNSQL     SQL(&STM_STR) COMMIT(*NC)
+
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/* If library exists, send FAIL message */
+             GOTO       CMDLBL(ABNOR)
+
+ABNOR:
+/* Update status to fail */
+             CHGVAR     VAR(&COL) VALUE('LRST' *TCAT %SST(&LIB 3 2))
+             CHGVAR     VAR(&STM_STR) VALUE('UPDATE UPRSTRTD SET '  +
+                          *BCAT &COL *BCAT '=' *BCAT &QUOTE *TCAT 'F' +
+                          *TCAT &QUOTE)
+             RUNSQL     SQL(&STM_STR) COMMIT(*NC)
+
+             CHGVAR     VAR(&MSGDATA) VALUE(%SST(&MSGDATA 1 3) *TCAT 'FAIL')
+             CALL       PGM(QSNDDTAQ) PARM(&DTQN &BRGBRGLIB +
+                               &MSGLEN &MSGDATA)
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDPGM

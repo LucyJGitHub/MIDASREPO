@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU Restore reference librairies')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6006 - Restore reference librairies                      */
+/*                                                                   */
+/*       Function: This program submits the restore of reference     */
+/*                 librairies passed for OTU.                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061954 *CREATE   Date 08Oct23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061954 - Include restore of reference libraries for aDBU  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBDM &LIBDP &LIBDT &LIBDV &LIBGM +
+                          &LIBGP &LIBGT &LIBGV &GLOBP &ZONEP +
+                          &BRGBRGLIB &RETURN)
+
+
+             DCL        VAR(&LIBDM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNTZ) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&COUNTG) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+/*/COPY GPCPYSRCG,GPSVALDCL  */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Create subsystem */
+             CHKOBJ     OBJ(&BRGBRGLIB/&BRGBRGLIB) OBJTYPE(*SBSD)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CALL       PGM(SMC1003) PARM(&BRGBRGLIB +
+                          'IASPinstallation' 'IASPgroup')
+             ENDDO
+
+/* Start subsystem */
+             STRSBS     SBSD(&BRGBRGLIB/&BRGBRGLIB)
+             MONMSG     MSGID(CPF1010)
+
+/* Create DTAQ for the server */
+             CHGVAR     VAR(&DTQN) VALUE('UP_OTBRSTG')
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(&BRGBRGLIB/&DTQN) MAXLEN(50) TEXT('UP +
+                           Server DTAQ for Restore')
+             CHGVAR     VAR(&DTQN) VALUE('UP_OTBRSTD')
+             DLTDTAQ    DTAQ(&BRGBRGLIB/&DTQN)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(&BRGBRGLIB/&DTQN) MAXLEN(50) TEXT('UP +
+                           Server DTAQ for Restore')
+
+/* Submit restore of zone reference libraries */
+             SBMJOB     CMD(CALL PGM(UPC6008) PARM(&LIBDM &LIBDP +
+                          &LIBDT &LIBDV &LIBGM &LIBGP &LIBGT &LIBGV +
+                          &GLOBP &ZONEP &BRGBRGLIB &RETURN)) +
+                          JOB(RST_ZONE) JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+/* Submit restore of global reference libraries */
+             SBMJOB     CMD(CALL PGM(UPC6009) PARM(&LIBDM &LIBDP +
+                          &LIBDT &LIBDV &LIBGM &LIBGP &LIBGT &LIBGV +
+                          &GLOBP &ZONEP &BRGBRGLIB &RETURN)) +
+                          JOB(RST_GLOB) JOBQ(&BRGBRGLIB/SMJOBQNM)
+
+             GOTO       CMDLBL(END)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             CHGVAR     VAR(&RETURN) VALUE('*ERROR')
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDPGM
+

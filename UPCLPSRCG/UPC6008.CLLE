@@ -1,0 +1,171 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP OTU Restore reference librairies')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6008 - Restore reference librairies                      */
+/*                                                                   */
+/*       Function: This program submits the restore of reference     */
+/*                 librairies passed for OTU for the zone.           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061954 *CREATE   Date 08Oct23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061954 - Include restore of reference libraries for aDBU  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBDM &LIBDP &LIBDT &LIBDV &LIBGM +
+                          &LIBGP &LIBGT &LIBGV &GLOBP &ZONEP +
+                          &BRGBRGLIB &RETURN)
+
+
+             DCL        VAR(&LIBDM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBDV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBGV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&DTQN) TYPE(*CHAR) LEN(10)  VALUE('UP_OTBRSTD')
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNTZ) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&COUNTG) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+/*/COPY GPCPYSRCG,GPSVALDCL  */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Get the global IASP system values */
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)
+
+/** Check whether system is in IASP environment. */
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))
+
+/** If IASP environment */
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)
+/** Get name of IASP. */
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))
+             ENDDO
+
+/* Submit DMLIB restore if needed */
+             IF         COND(&LIBDM *NE ' ') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&ZONEP *CAT 'DMLIB')
+             SBMJOB     CMD(CALL PGM(UPC6007) PARM(&LIBDM +
+                          &LIB &BRGBRGLIB &IASP_YN &IASP)) JOB(RST_DM) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             CHGVAR     VAR(&COUNTZ) VALUE(&COUNTZ + 1)
+             ENDDO
+
+/* Submit DPLIB restore if needed */
+             IF         COND(&LIBDP *NE ' ') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&ZONEP *CAT 'DPLIB')
+             SBMJOB     CMD(CALL PGM(UPC6007) PARM(&LIBDP +
+                          &LIB &BRGBRGLIB &IASP_YN &IASP)) JOB(RST_DP) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             CHGVAR     VAR(&COUNTZ) VALUE(&COUNTZ + 1)
+             ENDDO
+
+/* Submit DTALIB restore if needed */
+             IF         COND(&LIBDT *NE ' ') THEN(DO)
+             CHGVAR     VAR(&LIB) VALUE(&ZONEP *CAT 'DTALIB')
+             SBMJOB     CMD(CALL PGM(UPC6007) PARM(&LIBDT +
+                          &LIB &BRGBRGLIB &IASP_YN &IASP)) JOB(RST_DTA) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)
+             CHGVAR     VAR(&COUNTZ) VALUE(&COUNTZ + 1)
+             ENDDO
+
+LOOPZ:
+/* If jobs are complete but at least one FAIL, exit */
+             IF         COND((&COUNTZ *EQ 0) *AND (&FAIL *EQ 'Y')) +
+                          THEN(GOTO       CMDLBL(ABNOR))
+
+/* Before proceeding with DV/GV restore, wait for completion of previous RST */
+             IF         COND((&COUNTZ *EQ 0) *AND (&FAIL *EQ ' ')) +
+                          THEN(DO)
+
+/* Submit DVLIB restore if needed */
+                IF         COND(&LIBDV *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&LIB) VALUE(&ZONEP *CAT 'DVLIB')
+                   SBMJOB     CMD(CALL PGM(UPC6007) PARM(&LIBDV +
+                                &LIB &BRGBRGLIB &IASP_YN &IASP)) JOB(RST_DV) +
+                                JOBQ(&BRGBRGLIB/SMJOBQNM)
+                   CHGVAR     VAR(&COUNTZ) VALUE(&COUNTZ + 1)
+
+                   CALL       PGM(QRCVDTAQ) PARM(&DTQN &BRGBRGLIB &MSGLEN +
+                                &MSGDATA &RCVWAIT)
+                   IF         COND(&MSGDATA *EQ 'DV-DONE') THEN(CHGVAR +
+                                VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+                   IF         COND(&MSGDATA *EQ 'DV-FAIL') THEN(CHGVAR +
+                                VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+                   IF         COND(&MSGDATA *EQ 'DV-FAIL') THEN(CHGVAR +
+                                VAR(&FAIL) VALUE('Y'))
+                   GOTO       CMDLBL(CHK)
+                ENDDO
+             ENDDO
+             ELSE          CMD(DO)
+             CALL       PGM(QRCVDTAQ) PARM(&DTQN &BRGBRGLIB &MSGLEN +
+                          &MSGDATA &RCVWAIT)
+
+             IF         COND(&MSGDATA *EQ 'DM-DONE') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DM-FAIL') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DM-FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))
+             IF         COND(&MSGDATA *EQ 'DP-DONE') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DP-FAIL') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DP-FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))
+             IF         COND(&MSGDATA *EQ 'DT-DONE') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DT-FAIL') THEN(CHGVAR +
+                          VAR(&COUNTZ) VALUE(&COUNTZ - 1))
+             IF         COND(&MSGDATA *EQ 'DT-FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))
+             GOTO       CMDLBL(LOOPZ)
+             ENDDO
+
+CHK:
+             IF         COND(&FAIL *EQ 'Y') THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             CHGVAR     VAR(&RETURN) VALUE('*ERROR')
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+             ENDPGM
+

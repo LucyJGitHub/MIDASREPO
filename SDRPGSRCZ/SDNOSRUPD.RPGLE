@@ -58,7 +58,7 @@
       *                                                                                     AR920354
      FSDNOSTL7  IF   E           K DISK    PREFIX(W_)                                       MD062079
       * Midas SD Nostro Code Details by ccy/shortname/PNI                                   MD062079
-      *
+      *                                                                                     MD062079
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -527,7 +527,7 @@
       ** Write new Transaction Detail
      C                   WRITE     @A7REBE
 
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
@@ -611,7 +611,7 @@
       *
       ** Update Nostro Code Record
      C                   UPDATE    @A7REBE
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
@@ -776,7 +776,7 @@
       * WRITE DELETED RECORD IN STANDING DATA DELETED FILE
      C                   EXSR      WRTDLRC
      C                   EVAL      A7TYLC = 'D'
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL

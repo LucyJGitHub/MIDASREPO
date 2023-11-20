@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DL Interest & Withdrawals Report')              */
+/*********************************************************************/
+/*                                                                   */
+/*     MIDAS - Dealing Module                                        */
+/*                                                                   */
+/*     DLC0104 - Dealing Interest & Withdrawals Report               */
+/*                                                                   */
+/*     (c) Finastra International Limited 2023                       */
+/*                                                                   */
+/*       Last Amend No. CDL104  *Create    Date 02Oct23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*     CDL104 - Principal Decrease events on Fixed Term MM Deals     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LRTCD &RSEQ &RLEV &RENT)
+
+             DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+
+/*  Global monitor message  */
+             MONMSG     MSGID(RPG0000 CPF0000 CPD0000) EXEC(GOTO +
+                          CMDLBL(ABNORM))
+
+/*  Change job switch settings  */
+             CHGJOB     SWS(00000000)
+
+/*  Clear extract files  */
+             CLRPFM     FILE(DLEVNHPP)
+             CLRPFM     FILE(DLEVNDPP)
+             CLRPFM     FILE(DLEVNZPP)
+
+/*  Override files on call to DL0400  */
+             OVRDBF     FILE(EVNTXEC) TOFILE(DLEVNHPP)
+             OVRDBF     FILE(EVNTXED) TOFILE(DLEVNDPP)
+             OVRDBF     FILE(EVNTXZZ) TOFILE(DLEVNZPP)
+
+/*  Call dealing events extract program  */
+             CALL       PGM(DL0400)
+
+/*  Call reporting program  */
+             CALL       PGM(DL0104) PARM(&LRTCD &RSEQ &RLEV &RENT)
+
+/*  Error on call to DL0104 */
+             IF         COND(&LRTCD *EQ '*ERROR') THEN(DO)
+               SNDPGMMSG  MSG('Error has occurred on call to program +
+                          DL0104') TOMSGQ(MRUNQ MOPERQ)
+               GOTO       CMDLBL(ABNORM)
+             ENDDO
+
+/*  Remove file overrides   */
+             DLTOVR     FILE(EVNTXEC)
+             DLTOVR     FILE(EVNTXED)
+             DLTOVR     FILE(EVNTXZZ)
+
+/*  End program normally  */
+             GOTO       CMDLBL(EXIT)
+
+
+/*  Abnormal termination  */
+ ABNORM:     CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 CPD0000 MCH0000)
+             SNDPGMMSG  MSG('DLC0104 terminated abnormally') +
+                          TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000 CPD0000 MCH0000)
+
+ EXIT:       RCLRSC
+             ENDPGM

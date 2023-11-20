@@ -24,6 +24,10 @@
       *                                                               *
       *  Last Amend No. MD046102           Date 10Nov23               *
       *  Prev Amend No. AR827109           Date 10Nov23               *
+      *                 MD062084           Date 15Nov23               *
+      *                 MD054367           Date 27Oct23               *
+      *                 MD052584           Date 27Oct23               *
+      *                 AR819282           Date 27Oct23               *
       *                 AR835056           Date 02Oct23               *
       *                 MD048593           Date 12Sep23               *
       *                 MD060205           Date 23Aug23               *
@@ -322,6 +326,23 @@
       *             earlier than rundate, get base rate from history  *
       *             file. Pattern fix 247970. (Child: AR827110)       *
       *           - Applied for MD046102                              *
+      *  MD062084 - Future interest withholding tax is not displayed  *
+      *             if the event is the first record after page down  *
+      *             and is followed by a future loan amendment ex. MR.*
+      *             Extend fix AR819282 in SRLOAM to process pending  *
+      *             display of int. withholding tax event (WSAME = Y).*
+      *             Also clear WSAME and reset *IN32 in SRWTAX to OFF *
+      *             once tax event is completely displayed.           *
+      *  MD054367 - Incorrect interest and withholding tax due at     *
+      *             maturity were displayed in LOAC since withholding *
+      *             tax via Manual Repayment was ignored.             *
+      *  MD052584 - Loan Activity Enquiry - Maturity Interest         *
+      *  AR819282 - Lending- unable to verify interest in Loan        *
+      *             activity. (Child: AR819283)                       *
+      *           - Display Witholding Tax amount for each frequency  *
+      *             interest payment amount. Calculation of future    *
+      *             interest payments does not take previous tax      *
+      *             payments into account. Applied fix 248623.        *
       *  AR835056 - Loan activity enquiry shows abnormal interest     *
       *             amount. Process blank PDDI like PDDI='M'.         *
       *             (Child: AR835057)                                 *
@@ -1228,6 +1249,7 @@
      I              ROLN                            ROLNL
      I              PDDI                            PDDIL                 154221
      I              PTDI                            PTDIL                 154221
+     I              WTIN                            WTINL                                   AR819282
      I              AUTO                            AUTOL                                     218984
      I**********    XAVD                            XAVDL                              242852 257301
      I              GASS                            GASSL                                     247071
@@ -1573,6 +1595,7 @@
      C                     CLEARWOVFL                                     165648
      C                     CLEARFCALI                                     165648
      C                     CLEARFCALR                                     165648
+     C                     CLEAR@INPAY                                                      MD062084
      C                     ENDIF                                          154221
       **********                                                                      224646 BUG9240
       ***If*rolldown is pressed, putback original rollover date                       224646 BUG9240
@@ -3050,6 +3073,11 @@
      C           AMTPH     WHEQ 'IN'
      C                     ADD  INTAH     WINPD
      C                     ADD  INTAH     WIPAID                          133915
+     C           WTXAH     IFNE *ZEROS                                                      AR819282
+     C           WTINH     ANDNE'N'                                                         AR819282
+     C                     ADD  WTXAH     WINPD                                             AR819282
+     C                     ADD  WTXAH     WIPAID                                            AR819282
+     C                     ENDIF                                                            AR819282
      C           SCAPI     IFEQ 'YES'
      C                     ADD  INTAH     WCUPR
      C/COPY WNCPYSRC,LEH00935
@@ -3109,6 +3137,11 @@
      C           AMTPH     OREQ 'MA'
      C                     ADD  INTAH     WINPD
      C                     ADD  INTAH     WIPAID                          133915
+     C           WTXAH     IFNE *ZEROS                                                      MD052584
+     C           WTINH     ANDNE'N'                                                         MD052584
+     C                     ADD  WTXAH     WINPD                                             MD052584
+     C                     ADD  WTXAH     WIPAID                                            MD052584
+     C                     ENDIF                                                            MD052584
       ** For 'MA' records, add the INTAH to WCUPR if interest is                              186180
       ** capitalised                                                                          186180
      C           AMTPH     IFEQ 'MA'                                                          186180
@@ -3640,8 +3673,8 @@
      C           WTXAH     IFNE *ZEROS
      C           WDTL3     ANDEQ*BLANK
      C           VSLN      ANDLT20
-     C           WTIN      IFNE 'G'
-     C           WTIN      ANDNE'N'
+     C********** WTIN      IFNE 'G'                                                         AR819282
+     C********** WTIN      ANDNE'N'                                                         AR819282
       *                                                                                       247071
      C           GASSH     IFEQ 'A'                                                           247071
      C                     MOVEL'LEE0316' ZAMSID                                              247071
@@ -3656,7 +3689,7 @@
      C                     MOVE ZOUT21    SAMNT
      C                     MOVE 'Y'       WDTL3
      C                     EXSR SRDISH
-     C                     ENDIF
+     C**********           ENDIF                                                            AR819282
      C                     ENDIF
       *
       ** ... fee amount
@@ -3776,7 +3809,8 @@
       ** ... withholding tax
      C           WTXAH     IFNE *ZEROS
      C           WDTL2     ANDEQ*BLANKS
-     C           WTIN      IFEQ 'R'
+     C           VSLN      ANDLT20                                                          AR819282
+     C********** WTIN      IFEQ 'R'                                                         AR819282
      C                     MOVEL'LEE0051' ZAMSID
      C                     EXSR SRTEXT
      C                     MOVELZAMSTX    SNARR
@@ -3785,7 +3819,7 @@
      C                     MOVE ZOUT21    SAMNT
      C                     MOVE 'Y'       WDTL2
      C                     EXSR SRDISH
-     C                     ENDIF
+     C**********           ENDIF                                                            AR819282
      C                     ENDIF
       *
       ** Repayments - principal
@@ -4168,7 +4202,8 @@
       ** ... withholding tax
       *
      C           WTXAH     IFNE *ZEROS
-     C           WDTL2     ANDEQ*BLANK
+     C********** WDTL2     ANDEQ*BLANK                                                      MD052584
+     C           WDTL3     ANDEQ*BLANK                                                      MD052584
      C           VSLN      ANDLT20
      C                     MOVEL'LEE0020' ZAMSID
      C                     EXSR SRTEXT
@@ -4176,7 +4211,8 @@
      C                     Z-ADDWTXAH     ZFLD15
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SAMNT
-     C                     MOVE 'Y'       WDTL2
+     C**********           MOVE 'Y'       WDTL2                                             MD052584
+     C                     MOVE 'Y'       WDTL3                                             MD052584
      C                     EXSR SRDISH
      C                     ENDIF
       *
@@ -5361,6 +5397,20 @@
      C                     EXSR CONCCY                                                        238722
      C                     ENDIF                                                              238722
       *                                                                                       238722
+      ** If last line was end of page check to see if witholding tax                        MD062084
+      ** has still to be displayed.                                                         MD062084
+      *                                                                                     MD062084
+     C           WSAME     IFEQ 'Y'                                                         MD062084
+     C           WFINL     ANDEQ' '                                                         MD062084
+     C           *IN32     ANDEQ'1'                                                         MD062084
+     C           SCODE     IFNE 'H'                                                         MD062084
+     C           SCODE     ANDNE'P'                                                         MD062084
+     C                     EXSR SRWTAX                                                      MD062084
+     C                     MOVE '0'       *IN32                                             MD062084
+     C                     ENDIF                                                            MD062084
+     C                     CLEARWSAME                                                       MD062084
+     C                     ENDIF                                                            MD062084
+      *                                                                                     MD062084
      C           AMTPL     IFNE 'RE'                                                          190638
      C           AMTPL     OREQ 'RE'                                                          190638
      C           VDATL     ANDLEMDAT                                                          190638
@@ -5374,6 +5424,9 @@
      C           WSAME     IFEQ 'Y'                                       154221
      C           INTAL     ANDNE*ZEROS                                    154221
      C           WDTL2     ANDEQ*BLANK                                    154221
+     C           WSAME     OREQ 'Y'                                                         MD062084
+     C           WTXAL     ANDNE*ZEROS                                                      MD062084
+     C           WDTL3     ANDEQ*BLANK                                                      MD062084
      C                     CLEARWSAME                                     154221
      C                     ENDIF                                          154221
       *
@@ -5699,6 +5752,11 @@
      C                     ADD  INTAL     WINPD
      C                     ADD  INTAL     WIPAID 152                      133915
      C                     SUB  PRAML     WCUPR
+     C           WTXAL     IFNE *ZEROS                                                      MD054367
+     C           WTINL     ANDNE'N'                                                         MD054367
+     C                     ADD  WTXAL     WINPD                                             MD054367
+     C                     ADD  WTXAL     WIPAID                                            MD054367
+     C                     ENDIF                                                            MD054367
      C/COPY WNCPYSRC,LEH00950
      C                     ENDIF                                                              238722
       *
@@ -6719,7 +6777,22 @@
      C**********           EXSR SRDISR                                    154221            BUG13074
      C                     EXSR SRDISI                                                      BUG13074
      C                     CLEAR@INPAY                                    154221
+     C                     EXSR SRWTAX                                                      MD062084
      C                     ENDIF                                          154221
+      *                                                                                     AR819282
+      ** If last line was end of page check to see if witholding tax                        AR819282
+      ** has still to be displayed.                                                         AR819282
+      *                                                                                     AR819282
+     C           WSAME     IFEQ 'Y'                                                         AR819282
+     C           WFINL     ANDEQ' '                                                         AR819282
+     C           *IN32     ANDEQ'1'                                                         AR819282
+     C           SCODE     IFNE 'H'                                                         AR819282
+     C           SCODE     ANDNE'P'                                                         AR819282
+     C                     EXSR SRWTAX                                                      AR819282
+     C                     MOVE '0'       *IN32                                             AR819282
+     C                     ENDIF                                                            AR819282
+     C                     CLEARWSAME                                                       MD062084
+     C                     ENDIF                                                            AR819282
       *                                                                   154221
       * If last line was end of page check to see if repayment of         154221
       * principal has still to be displayed.                              154221
@@ -7559,6 +7632,12 @@
      C                     ADD  ZINTR     WCALC                           133915
      C***********          ADD  ZINTR     WIPAID                   133915 159779
      C                     ENDIF
+     C           WTIN      IFEQ 'G'                                                         AR819282
+     C           WTIN      OREQ 'R'                                                         AR819282
+     C           WINTR     MULT WTRT      WRKAMT                                            AR819282
+     C           WRKAMT    DIV  100       WRKAMT 130H                                       AR819282
+     C                     ADD  WRKAMT    WINPD                                             AR819282
+     C                     ENDIF                                                            AR819282
      C           WINCA     SUB  WINPD     WINTR
      C                     ADD  WINTR     WINPD
      C                     ENDIF
@@ -7606,8 +7685,11 @@
       *                                                                                      BUG9052
      C           REPT      IFEQ 2                                                            BUG9052
      C                     ADD  WINTR     WIPAID                                             BUG9052
+     C                     EXSR SRWTAX                                                      AR819282
      C                     ELSE                                                              BUG9052
-     C                     ADD  ZINTR     WIPAID                          159779
+     C**********           ADD  ZINTR     WIPAID                                     159779 AR819282
+     C                     ADD  WINTR     WIPAID                                            AR819282
+     C                     EXSR SRWTAX                                                      AR819282
      C                     ENDIF                                                             BUG9052
      C                     ENDIF
      C                     ENDIF
@@ -8140,7 +8222,14 @@
      C                     ENDIF
      C                     EXSR SRTEXT
      C                     MOVELZAMSTX    SNARR
+     C           WTIN      IFEQ 'G'                                                         AR819282
+     C           WTIN      OREQ 'R'                                                         AR819282
+     C           WINTR     MULT WTRT      WRKAMT                                            AR819282
+     C           WRKAMT    DIV  100       WRKAMT 130H                                       AR819282
+     C           WINTR     SUB  WRKAMT    ZFLD15                                            AR819282
+     C                     ELSE                                                             AR819282
      C                     Z-ADDWINTR     ZFLD15
+     C                     ENDIF                                                            AR819282
      C                     EXSR ZSEDIT
      C                     MOVE ZOUT21    SAMNT
       *
@@ -8299,8 +8388,10 @@
       ** WOVFL should be initialised to 'Y'when VSLN is 20 to avoid       186995
       ** session device error.                                            186995
       *                                                                   186995
-     C           VSLN      IFEQ 20                                        186995
+     C********** VSLN      IFEQ 20                                                   186995 AR819282
+     C           VSLN      IFGE 20                                                          AR819282
      C                     MOVE 'Y'       WOVFL                           186995
+     C                     MOVE 'Y'       WSAME                                             AR819282
      C                     ENDIF                                          186995
       *                                                                   186995
      C           WOVFL     IFEQ *BLANK
@@ -10468,6 +10559,22 @@
      C********** WCALC     SUB  WIPAID    ZFLD15                                       159779 188806
      C           WCALC     SUB  WINPD     ZFLD15                                              188806
      C                     Z-ADDWCALC     WIPAID                          159779
+      *                                                                                     AR819282
+      ** Calculate withholding tax first before displaying the interest                     AR819282
+      ** due at maturity to get the correct interest and withholding                        AR819282
+      ** tax amounts.                                                                       AR819282
+      *                                                                                     AR819282
+     C           WTIN      IFEQ 'G'                                                         AR819282
+     C           WTIN      OREQ 'R'                                                         AR819282
+     C           ZFLD15    MULT WTRT      WRKAMT                                            AR819282
+     C           WRKAMT    DIV  100       WRKAMT 130H                                       AR819282
+     C           ZFLD15    SUB  WRKAMT    ZFLD15                                            AR819282
+     C                     ENDIF                                                            AR819282
+     C           WTIN      IFEQ 'N'                                                         AR819282
+     C           100       SUB  WTRT      WTWRK  117                                        AR819282
+     C           WTRT      DIV  WTWRK     WTWRK     H                                       AR819282
+     C           ZFLD15    MULT WTWRK     WRKAMT 130H                                       AR819282
+     C                     ENDIF                                                            AR819282
       *                                                                                       CLE028
       ** Display last interest payment computed on maturity if flat                           CLE028
       ** rate personal loan and non-add on interest                                           CLE028
@@ -10512,16 +10619,16 @@
      C                     ELSE                                           133915
      C           *IN24     IFEQ '0'                                       133915
       *                                                                   133915
-     C           WTIN      IFEQ 'R'                                       133915
-     C           WTIN      OREQ 'G'                                       133915
-     C           ZINTR     MULT WTRT      WRKAMT 130                      133915
-     C           WRKAMT    DIV  100       WRKAMT                          133915
-     C                     ENDIF                                          133915
-     C           WTIN      IFEQ 'N'                                       133915
-     C           100       SUB  WTRT      WRKAMT                          133915
-     C           ZINTR     DIV  WRKAMT    WRKAMT                          133915
-     C           WRKAMT    MULT 10        WRKAMT                          133915
-     C                     ENDIF                                          133915
+     C********** WTIN      IFEQ 'R'                                                  133915 AR819282
+     C********** WTIN      OREQ 'G'                                                  133915 AR819282
+     C********** ZINTR     MULT WTRT      WRKAMT 130                                 133915 AR819282
+     C********** WRKAMT    DIV  100       WRKAMT                                     133915 AR819282
+     C**********           ENDIF                                                     133915 AR819282
+     C********** WTIN      IFEQ 'N'                                                  133915 AR819282
+     C********** 100       SUB  WTRT      WRKAMT                                     133915 AR819282
+     C********** ZINTR     DIV  WRKAMT    WRKAMT                                     133915 AR819282
+     C********** WRKAMT    MULT 10        WRKAMT                                     133915 AR819282
+     C**********           ENDIF                                                     133915 AR819282
       *                                                                   133915
      C                     Z-ADDWRKAMT    ZFLD15                          133915
      C                     EXSR ZSEDIT                                    133915
@@ -12059,6 +12166,47 @@
       *                                                                                       193701
      C                     ENDSR                                                              193701
       /EJECT                                                                                  193701
+      *****************************************************************                     AR819282
+      * SRWTAX  -  Process Witholding tax for frequency of interest.  *                     AR819282
+      * Called by: SRRPAY - Process each forward repayment            *                     AR819282
+      *                                                               *                     AR819282
+      *****************************************************************                     AR819282
+     C           SRWTAX    BEGSR                                                            AR819282
+     C           WTRT      IFNE 0                                                           AR819282
+      *                                                                                     AR819282
+     C           VSLN      IFGE 20                                                          AR819282
+     C                     MOVE ' '       WFINL                                             AR819282
+     C                     MOVE 'Y'       WSAME                                             AR819282
+     C                     MOVE '1'       *IN32                                             AR819282
+     C                     ELSE                                                             AR819282
+     C           *IN24     IFEQ '0'                                                         AR819282
+      *                                                                                     AR819282
+     C           WTIN      IFEQ 'R'                                                         AR819282
+     C           WTIN      OREQ 'G'                                                         AR819282
+     C           WINTR     MULT WTRT      WRKAMT                                            AR819282
+     C           WRKAMT    DIV  100       WRKAMT 130H                                       AR819282
+     C                     ENDIF                                                            AR819282
+     C           WTIN      IFEQ 'N'                                                         AR819282
+     C           100       SUB  WTRT      WTWRK  117                                        AR819282
+     C           WTRT      DIV  WTWRK     WTWRK     H                                       AR819282
+     C           WINTR     MULT WTWRK     WRKAMT 130H                                       AR819282
+     C                     ENDIF                                                            AR819282
+      *                                                                                     AR819282
+     C                     Z-ADDWRKAMT    ZFLD15                                            AR819282
+     C                     EXSR ZSEDIT                                                      AR819282
+     C                     MOVE ZOUT21    SAMNT                                             AR819282
+     C                     MOVE ZOUT21    SAMNT                                             AR819282
+     C                     MOVEL'LEE0051' ZAMSID                                            AR819282
+     C                     EXSR SRTEXT                                                      AR819282
+     C                     MOVELZAMSTX    SNARR                                             AR819282
+     C                     ADD  1         VSLN                                              AR819282
+     C                     MOVE 'Y'       LUPFG                                            AR1051346
+     C                     WRITELE0212F2                                                    AR819282
+     C                     ENDIF                                                            AR819282
+     C                     MOVE '0'       *IN32                                             MD062084
+     C                     ENDIF                                                            AR819282
+     C                     ENDIF                                                            AR819282
+     C                     ENDSR                                                            AR819282
       *****************************************************************                       239062
       * SRBRFZ  -  Get Base rate history                              *                       239062
       * Called by:                                                    *                       239062

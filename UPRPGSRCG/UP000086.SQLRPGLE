@@ -13,13 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061912             Date 27Sep23             *
-      *  Prev Amend No. CUP047               Date 27Aug23             *
+      *  Last Amend No. MD061906             Date 23Sep23             *
+      *  Prev Amend No. MD061912             Date 27Sep23             *
+      *                 CUP047               Date 27Aug23             *
       *                 MD060709             Date 08Nov22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061906 - Bridge journalling improvement                    *
       *  MD061912 - DTAQ not upgraded with aDBU                       *
       *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
       *  MD060709 - Change in LF dynamic selection is omitted         *
@@ -400,6 +402,43 @@
      C+ )
      C/END-EXEC
 
+      * Adding journalling instruction                                                      MD061906
+     C                   eval      #SEQ = #SEQ + 1                                          MD061906
+     C                   eval      SCCMD = 'STRJRNPF FILE(' + %trimr(DRLIB) +               MD061906
+     C                             '/' + %trimr(DRFILE) +                                   MD061906
+     C                             ') JRN(GPJRN) IMAGES(*BOTH) OMTJRNE(*OPNCLO)'            MD061906
+                                                                                            MD061906
+     C/EXEC SQL                                                                             MD061906
+     C+ insert into UPGSCRTD                                                                MD061906
+     C+ (                                                                                   MD061906
+     C+   SCPRFX                                                                            MD061906
+     C+  ,SCFILE                                                                            MD061906
+     C+  ,SCLIB                                                                             MD061906
+     C+  ,SCSEQ                                                                             MD061906
+     C+  ,SCTYPE                                                                            MD061906
+     C+  ,SCCMTY                                                                            MD061906
+     C+  ,SCCDSH                                                                            MD061906
+     C+  ,SCDEPF                                                                            MD061906
+     C+  ,SCCDRN                                                                            MD061906
+     C+  ,SCCMD                                                                             MD061906
+     C+  ,SCOPGM                                                                            MD061906
+     C+ )                                                                                   MD061906
+     C+ Values                                                                              MD061906
+     C+ (                                                                                   MD061906
+     C+   :Prefix                                                                           MD061906
+     C+  ,:DRFILE                                                                           MD061906
+     C+  ,:DRLIB                                                                            MD061906
+     C+  ,:#SEQ                                                                             MD061906
+     C+  ,'  '                                                                              MD061906
+     C+  ,'CLP'                                                                             MD061906
+     C+  ,'STRJRNPF'                                                                        MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,:SCCMD                                                                            MD061906
+     C+  ,'UP000056'                                                                        MD061906
+     C+ )                                                                                   MD061906
+     C/END-EXEC                                                                             MD061906
+                                                                                            MD061906
      C                   exsr      SR_Delete
 
 
@@ -652,6 +691,45 @@
      C+ )
      C/END-EXEC
 
+      * Adding journalling instruction for PF only                                          MD061906
+     C                   If        %SUBST(DRLIB:4:1) <> 'V'                                 MD061906
+     C                   eval      #SEQ = #SEQ + 1                                          MD061906
+     C                   eval      SCCMD = 'STRJRNPF FILE(' + %trimr(DRLIB) +               MD061906
+     C                             '/' + %trimr(DRFILE) +                                   MD061906
+     C                             ') JRN(GPJRN) IMAGES(*BOTH) OMTJRNE(*OPNCLO)'            MD061906
+                                                                                            MD061906
+     C/EXEC SQL                                                                             MD061906
+     C+ insert into UPGSCRTD                                                                MD061906
+     C+ (                                                                                   MD061906
+     C+   SCPRFX                                                                            MD061906
+     C+  ,SCFILE                                                                            MD061906
+     C+  ,SCLIB                                                                             MD061906
+     C+  ,SCSEQ                                                                             MD061906
+     C+  ,SCTYPE                                                                            MD061906
+     C+  ,SCCMTY                                                                            MD061906
+     C+  ,SCCDSH                                                                            MD061906
+     C+  ,SCDEPF                                                                            MD061906
+     C+  ,SCCDRN                                                                            MD061906
+     C+  ,SCCMD                                                                             MD061906
+     C+  ,SCOPGM                                                                            MD061906
+     C+ )                                                                                   MD061906
+     C+ Values                                                                              MD061906
+     C+ (                                                                                   MD061906
+     C+   :Prefix                                                                           MD061906
+     C+  ,:DRFILE                                                                           MD061906
+     C+  ,:DRLIB                                                                            MD061906
+     C+  ,:#SEQ                                                                             MD061906
+     C+  ,'  '                                                                              MD061906
+     C+  ,'CLP'                                                                             MD061906
+     C+  ,'STRJRNPF'                                                                        MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,:SCCMD                                                                            MD061906
+     C+  ,'UP000056'                                                                        MD061906
+     C+ )                                                                                   MD061906
+     C/END-EXEC                                                                             MD061906
+     C                   ENDIF                                                              MD061906
+                                                                                            MD061906
       * LF has to be moved back and its dependency library have now to be moved back
      C                   If        %SUBST(DRLIB:4:1) = 'V'
      C                   exsr      SR_MOVEBack
@@ -1149,6 +1227,43 @@
      C+ )
      C/END-EXEC
 
+      * Adding journalling instruction                                                      MD061906
+     C                   eval      #SEQ = #SEQ + 1                                          MD061906
+     C                   eval      SCCMD = 'STRJRNOBJ OBJ(' + %trimr(DRLIB) +               MD061906
+     C                             '/' + %trimr(DRFILE) +                                   MD061906
+     C                             ') OBJTYPE(*DTAARA) JRN(GPJRN) IMAGES(*BOTH)'            MD061906
+                                                                                            MD061906
+     C/EXEC SQL                                                                             MD061906
+     C+ insert into UPGSCRTD                                                                MD061906
+     C+ (                                                                                   MD061906
+     C+   SCPRFX                                                                            MD061906
+     C+  ,SCFILE                                                                            MD061906
+     C+  ,SCLIB                                                                             MD061906
+     C+  ,SCSEQ                                                                             MD061906
+     C+  ,SCTYPE                                                                            MD061906
+     C+  ,SCCMTY                                                                            MD061906
+     C+  ,SCCDSH                                                                            MD061906
+     C+  ,SCDEPF                                                                            MD061906
+     C+  ,SCCDRN                                                                            MD061906
+     C+  ,SCCMD                                                                             MD061906
+     C+  ,SCOPGM                                                                            MD061906
+     C+ )                                                                                   MD061906
+     C+ Values                                                                              MD061906
+     C+ (                                                                                   MD061906
+     C+   :Prefix                                                                           MD061906
+     C+  ,:DRFILE                                                                           MD061906
+     C+  ,:DRLIB                                                                            MD061906
+     C+  ,:#SEQ                                                                             MD061906
+     C+  ,'  '                                                                              MD061906
+     C+  ,'CLP'                                                                             MD061906
+     C+  ,'STRJRNPF'                                                                        MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,:SCCMD                                                                            MD061906
+     C+  ,'UP000056'                                                                        MD061906
+     C+ )                                                                                   MD061906
+     C/END-EXEC                                                                             MD061906
+                                                                                            MD061906
      C                   If        DRACTN = 'Existing DTAARA will be' +
      C                             ' duplicated'
      C                   exsr      SR_RestoreDTAA
@@ -1405,6 +1520,43 @@
      C+ )
      C/END-EXEC
 
+      * Adding journalling instruction                                                      MD061906
+     C                   eval      #SEQ = #SEQ + 1                                          MD061906
+     C                   eval      SCCMD = 'STRJRNOBJ OBJ(' + %trimr(DRLIB) +               MD061906
+     C                             '/' + %trimr(DRFILE) +                                   MD061906
+     C                             ') OBJTYPE(*DTAQ) JRN(GPJRN)'                            MD061906
+                                                                                            MD061906
+     C/EXEC SQL                                                                             MD061906
+     C+ insert into UPGSCRTD                                                                MD061906
+     C+ (                                                                                   MD061906
+     C+   SCPRFX                                                                            MD061906
+     C+  ,SCFILE                                                                            MD061906
+     C+  ,SCLIB                                                                             MD061906
+     C+  ,SCSEQ                                                                             MD061906
+     C+  ,SCTYPE                                                                            MD061906
+     C+  ,SCCMTY                                                                            MD061906
+     C+  ,SCCDSH                                                                            MD061906
+     C+  ,SCDEPF                                                                            MD061906
+     C+  ,SCCDRN                                                                            MD061906
+     C+  ,SCCMD                                                                             MD061906
+     C+  ,SCOPGM                                                                            MD061906
+     C+ )                                                                                   MD061906
+     C+ Values                                                                              MD061906
+     C+ (                                                                                   MD061906
+     C+   :Prefix                                                                           MD061906
+     C+  ,:DRFILE                                                                           MD061906
+     C+  ,:DRLIB                                                                            MD061906
+     C+  ,:#SEQ                                                                             MD061906
+     C+  ,'  '                                                                              MD061906
+     C+  ,'CLP'                                                                             MD061906
+     C+  ,'STRJRNPF'                                                                        MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,' '                                                                               MD061906
+     C+  ,:SCCMD                                                                            MD061906
+     C+  ,'UP000056'                                                                        MD061906
+     C+ )                                                                                   MD061906
+     C/END-EXEC                                                                             MD061906
+                                                                                            MD061906
      C                   If        DRACTN = 'Existing DTAQ will be' +
      C                             ' duplicated'
      C                   exsr      SR_RestoreDTAQ

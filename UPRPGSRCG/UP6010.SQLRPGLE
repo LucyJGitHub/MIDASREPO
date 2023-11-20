@@ -15,13 +15,24 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061706           Date 01Aug23               *
-      *  Prev Amend No. MD061632           Date 13Jul23               *
+      *  Last Amend No. MD061779           Date 17Aug23               *
+      *  Prev Amend No. MD061992           Date 23Oct23               *
+      *                 MD061951           Date 06Oct23               *
+      *                 MD061880           Date 14Sep23               *
+      *                 MD061927           Date 28Sep23               *
+      *                 MD061706           Date 01Aug23               *
+      *                 MD061632           Date 13Jul23               *
       *                 MD061533           Date 27Jun23               *
       *                 MD061004 *CREATE   Date 02Feb23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061779 - Upgrading deliverable data with full DDS set      *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *             Recompiled                                        *
+      *  MD061951 - Default library name based on package + 'F'       *
+      *  MD061880 - Include Fix package installation                  *
+      *  MD061927 - Delivering Stored Procedures in *U library        *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061632 - *U library for client package can be either core  *
       *             or client                                         *
@@ -105,6 +116,9 @@
      D LIBP            S             10                                                     MD061533
      D RTN             S             10                                                     MD061533
      D LIBU            S             10A                                                    MD061632
+     D LIBD            S             10A                                                    MD061880
+     D LibG            S              2  0                                                  MD061880
+     D LibZ            S              2  0                                                  MD061880
      D aDBU_Flg        S              1A                                                    MD061706
      D ErrInd2         S              1A                                                    MD061706
 
@@ -360,6 +374,10 @@
      C                   if        XSELG <> *blanks
      C                   eval      XNAXG  = '/' + XPACK + 'G' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXG  = '/' + XPACK + 'M' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C**********         eval      XNAYG  = 'Programs PGMAG, PGMB1 and PGMC1' +             MD061533
      C                   eval      XNAYG  = 'Programs PGMB1 and PGMC1' +                    MD061533
      C                             ' will be called for global'
@@ -371,6 +389,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ1 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ1 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C**********         eval      XNAYZ1 = 'Programs PGMAZ, PGMB2 and PGMC2' +             MD061533
      C                   eval      XNAYZ1 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf
@@ -382,6 +404,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ2 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ2 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ2 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ2 = sprf + 'IRLIB'
@@ -392,6 +418,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ3 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ3 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ3 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ3 = sprf + 'IRLIB'
@@ -402,6 +432,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ4 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ4 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ4 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ4 = sprf + 'IRLIB'
@@ -412,6 +446,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ5 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ5 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ5 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ5 = sprf + 'IRLIB'
@@ -423,6 +461,10 @@
      C                   eval      XNAXZ6 = '/' + XPACK + 'Z' + ' objects ' +
      C**********                   'will be restored to ' + sprf + 'IRLIB'                  MD061533
      C                             'will be restored to'                                    MD061533
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ6 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ6 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ6 = sprf + 'IRLIB'
@@ -433,6 +475,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ7 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ7 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ7 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ7 = sprf + 'IRLIB'
@@ -443,6 +489,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ8 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ8 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ8 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ8 = sprf + 'IRLIB'
@@ -453,6 +503,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ9 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ9 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ9 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ9 = sprf + 'IRLIB'
@@ -463,6 +517,10 @@
      C                   exsr      SrSysVal
      C                   eval      XNAXZ0 = '/' + XPACK + 'Z' + ' objects ' +
      C                             'will be restored to'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      XNAXZ0 = '/' + XPACK + 'N' + ' objects ' +               MD061880
+     C                             'will be restored to'                                    MD061880
+     C                   Endif                                                              MD061880
      C                   eval      XNAYZ0 = 'Programs PGMB2 and PGMC2' +                    MD061533
      C                             ' will be called for layer ' + sprf                      MD061533
      C                   eval      XLIRZ0 = sprf + 'IRLIB'
@@ -594,6 +652,7 @@
      C                             and XSELZ6 = *blanks and XSELZ7 = *blanks
      C                             and XSELZ8 = *blanks and XSELZ9 = *blanks
      C                             and XSELZ0 = *blanks
+     C                   seton                                        3031                  MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6000'
      C                   EVAL      ErrInd = 'Y'
@@ -701,6 +760,14 @@
      C                   EXSR      ZASNMS                                                   MD061706
      C                   seton                                        55                    MD061706
      C                   ENDIF                                                              MD061706
+      ** If no library exists, sent message 'At least one library...'                       MD061880
+     C                   If        LibG = 0                                                 MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6018'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        55                    MD061880
+     C                   ENDIF                                                              MD061880
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
       ** Validate libraries for zone reference                                              MD061706
@@ -713,6 +780,14 @@
      C                   EXSR      ZASNMS                                                   MD061706
      C                   seton                                        54                    MD061706
      C                   ENDIF                                                              MD061706
+      ** If no library exists, sent message 'At least one library...'                       MD061880
+     C                   If        LibZ = 0                                                 MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6018'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        54                    MD061880
+     C                   ENDIF                                                              MD061880
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
      C                   If        XREFG = GPFX                                             MD061706
@@ -725,6 +800,7 @@
                                                                                             MD061706
      C                   eval      Idx = %LOOKUP(XREFZ : ZoneArr)                           MD061706
      C                   If        Idx <> 0                                                 MD061706
+     C                             and XREFZ <> *blanks                                     MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
      C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
      C                   EVAL      ErrInd = 'Y'                                             MD061706
@@ -761,6 +837,7 @@
      C                             and XSELZ6 = *blanks and XSELZ7 = *blanks
      C                             and XSELZ8 = *blanks and XSELZ9 = *blanks
      C                             and XSELZ0 = *blanks
+     C                   seton                                        3031                  MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6000'
      C                   EVAL      ErrInd = 'Y'
@@ -844,6 +921,7 @@
      C                   seton                                        22                    MD061706
       ** Validate Reference prefixes                                                        MD061706
      C                   If        XREFG = *blanks                                          MD061706
+     C                             and XCUM <> '3'                                          MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
      C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
      C                   EVAL      ErrInd = 'Y'                                             MD061706
@@ -852,6 +930,7 @@
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
      C                   If        XREFZ = *blanks                                          MD061706
+     C                             and XCUM <> '3'                                          MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
      C                   EVAL      ZAMSID = 'UPM6013'                                       MD061706
      C                   EVAL      ErrInd = 'Y'                                             MD061706
@@ -859,6 +938,33 @@
      C                   seton                                        54                    MD061706
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
+      ** Fox fix pakcage, reference prefix must be entered for the selected layer           MD061706
+     C                   If        XCUM = '3' and XREFG = *blanks                           MD061880
+     C                             and XSELG = 'X'                                          MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        55                    MD061880
+     C                   Endif                                                              MD061880
+     C                   If        XCUM = '3' and XREFZ = *blanks                           MD061880
+     C                             and (XSELZ1 <> *blanks or                                MD061880
+     C                                  XSELZ2 <> *blanks or                                MD061880
+     C                                  XSELZ3 <> *blanks or                                MD061880
+     C                                  XSELZ4 <> *blanks or                                MD061880
+     C                                  XSELZ5 <> *blanks or                                MD061880
+     C                                  XSELZ6 <> *blanks or                                MD061880
+     C                                  XSELZ7 <> *blanks or                                MD061880
+     C                                  XSELZ8 <> *blanks or                                MD061880
+     C                                  XSELZ9 <> *blanks or                                MD061880
+     C                                  XSELZ0 <> *blanks )                                 MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        54                    MD061880
+     C                   Endif                                                              MD061880
+                                                                                            MD061880
       ** Validate libraries for global reference                                            MD061706
      C                   If        XREFG <> *blanks                                         MD061706
      C                   exsr      Sr_ValRefG                                               MD061706
@@ -869,6 +975,14 @@
      C                   EXSR      ZASNMS                                                   MD061706
      C                   seton                                        55                    MD061706
      C                   ENDIF                                                              MD061706
+      ** If no library exists, sent message 'At least one library...'                       MD061880
+     C                   If        LibG = 0                                                 MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6018'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        55                    MD061880
+     C                   ENDIF                                                              MD061880
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
       ** Validate libraries for zone reference                                              MD061706
@@ -881,6 +995,14 @@
      C                   EXSR      ZASNMS                                                   MD061706
      C                   seton                                        54                    MD061706
      C                   ENDIF                                                              MD061706
+      ** If no library exists, sent message 'At least one library...'                       MD061880
+     C                   If        LibZ = 0                                                 MD061880
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061880
+     C                   EVAL      ZAMSID = 'UPM6018'                                       MD061880
+     C                   EVAL      ErrInd = 'Y'                                             MD061880
+     C                   EXSR      ZASNMS                                                   MD061880
+     C                   seton                                        54                    MD061880
+     C                   ENDIF                                                              MD061880
      C                   ENDIF                                                              MD061706
                                                                                             MD061706
      C                   If        XREFG = GPFX                                             MD061706
@@ -893,6 +1015,7 @@
                                                                                             MD061706
      C                   eval      Idx = %LOOKUP(XREFZ : ZoneArr)                           MD061706
      C                   If        Idx <> 0                                                 MD061706
+     C                             and XREFZ <> *blanks                                     MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
      C                   EVAL      ZAMSID = 'UPM6016'                                       MD061706
      C                   EVAL      ErrInd = 'Y'                                             MD061706
@@ -1053,17 +1176,22 @@
       * Validate non blank
      C                   If        XCUM  = *blanks
      C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6009'
+     C**********         EVAL      ZAMSID = 'UPM6009'                                       MD061880
+     C                   EVAL      ZAMSID = 'UPM6017'                                       MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   seton                                        29
      C                   EXSR      ZASNMS
      C                   ITER
      C                   ENDIF
 
-      * Validate 'Y' or 'N'
-     C                   If        XCUM <> 'Y' and XCUM <> 'N'
+      **Validate*'Y' or 'N'                                                                 MD061880
+      * Validate '1' or '2' or '3'                                                          MD061880
+     C**********         If        XCUM <> 'Y' and XCUM <> 'N'                              MD061880
+     C                   If        XCUM <> '1' and XCUM <> '2'                              MD061880
+     C                             and XCUM <> '3'                                          MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6009'
+     C**********         EVAL      ZAMSID = 'UPM6009'                                       MD061880
+     C                   EVAL      ZAMSID = 'UPM6017'                                       MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   seton                                        29
      C                   EXSR      ZASNMS
@@ -1075,11 +1203,20 @@
       * display second part
      C                   eval      ErrInd = 'Y'
      C                   seton                                        19
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   SELECT                                                             MD061880
+     C                   WHEN      XCUM = '2'                                               MD061880
      C                   seton                                        18
-     C                   else
+     C                   eval      XCOFI = '(Core package)'                                 MD061880
+     C**********         else                                                               MD061880
+     C                   WHEN      XCUM = '3'                                               MD061880
+     C                   setoff                                       18                    MD061880
+     C                   eval      XCOFI = '(Fix package)'                                  MD061880
+     C                   OTHER                                                              MD061880
      C                   setoff                                       18
-     C                   endif
+     C                   eval      XCOFI = '(Core package)'                                 MD061880
+     C**********         endif
+     C                   ENDSL                                                              MD061880
 
      C                   DOW       *INKC = *OFF
      C                             and ErrInd = 'Y'
@@ -1104,7 +1241,8 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   If        XPACK2 = *blanks
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6002'
@@ -1127,7 +1265,8 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   If        %len(%trim(XPACK2)) <> 9
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6003'
@@ -1143,7 +1282,8 @@
 
       * Check that libraries exist
       * *B
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      LibName = XPACK2 + 'B'
      C                   else
      C                   eval      LibName = XPACK + 'B'
@@ -1157,7 +1297,8 @@
       *
       * If libary does not exist, send message
      C     RTNCOD        IFNE      'Exist'
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   seton                                        31
      C                   else
      C                   seton                                        30
@@ -1181,8 +1322,15 @@
      C                   PARM      '*LIB'        P2OBTP            8
      C                   PARM      *blanks       CHKMBR           10
       *
+      * If libary does not exist, accept if Fix package                                     MD061880
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C     XCUM          ANDEQ     '3'                                                      MD061880
+     C                   EVAL      LIBU = *blanks                                           MD061880
+     C                   ENDIF                                                              MD061880
+     C                                                                                      MD061880
       * If libary does not exist, check with client package                                 MD061632
      C     RTNCOD        IFNE      'Exist'                                                  MD061632
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   eval      LibName = XPACK2 + 'U'                                   MD061632
      C                   EVAL      LIBU = LibName                                           MD061632
      C                   CALL      'UTCHKOBJ'                                               MD061632
@@ -1196,7 +1344,13 @@
       * Accept if *U libary does not exist as *U is not needed for aDBU                     MD061706
      C     RTNCOD        IFNE      'Exist'
       * In that case, default adBU flag to 'Y'                                              MD061706
+      * but not for Fix package                                                             MD061880
+     C                   If        XCUM <> '3'                                              MD061880
      C                   eval      aDBU_Flg = 'Y'                                           MD061706
+     C                   EVAL      LIBU = *blanks                                           MD061880
+     C                   Else                                                               MD061880
+     C                   EVAL      LIBU = *blanks                                           MD061880
+     C                   Endif                                                              MD061880
      C**********         seton                                        30                    MD061706
      C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061706
      C**********         EVAL      ZAMSID = 'UPM6004'                                       MD061706
@@ -1208,6 +1362,7 @@
 
       * Check content of library *U to correctly default flag                               MD061706
      C                   If        aDBU_Flg = 'N'                                           MD061706
+     C                             and LIBU <> *blanks                                      MD061880
      C                   CALL      'UPC000356'                                              MD061706
      C                   PARM                    LibName                                    MD061706
      C                   PARM      *blanks       RTN                                        MD061706
@@ -1227,7 +1382,8 @@
      C                   Endif                                                              MD061706
                                                                                             MD061706
       * *D
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      LibName = XPACK2 + 'D'
      C                   else
      C                   eval      LibName = XPACK + 'D'
@@ -1241,7 +1397,13 @@
       *
       * If libary does not exist, send message
      C     RTNCOD        IFNE      'Exist'
-     C                   If        XCUM = 'Y'
+     C                   If        XCUM = '3'                                               MD061880
+      * Relax validation as deliverable data are part of reference system                   MD061779
+     C                             or XCUM = '1' or XCUM = '2'                              MD061779
+     C                   EVAL      LIBD = *blanks                                           MD061880
+     C                   Else                                                               MD061880
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   seton                                        31
      C                   else
      C                   seton                                        30
@@ -1251,25 +1413,34 @@
      C                   EVAL      ZAMSDA = LibName
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
+     C                   ENDIF                                                              MD061880
+     C                   Else                                                               MD061880
+     C                   EVAL      LIBD = LibName                                           MD061880
      C                   ENDIF
 
-      * *Q
-     C                   eval      LibName = XPACK + 'Q'
-     C                   CALL      'UTCHKOBJ'
-     C                   PARM      *BLANK        RTNCOD           10
-     C                   PARM      LibName       P2OBNM           10
-     C                   PARM      '*LIBL'       P2TLIB           10
-     C                   PARM      '*LIB'        P2OBTP            8
-     C                   PARM      *blanks       CHKMBR           10
-      *
-      * If libary does not exist replace it by BrgDeliveredSrcLib
-     C     RTNCOD        IFNE      'Exist'
-     C                   eval      LibNameQ = XPACK + 'U'
-     C                   else
-     C                   eval      LibNameQ = XPACK + 'Q'
-     C                   ENDIF
+      ***Q******                                                                            MD061927
+     C**********         eval      LibName = XPACK + 'Q'                                    MD061927
+     C**********         CALL      'UTCHKOBJ'                                               MD061927
+     C**********         PARM      *BLANK        RTNCOD           10                        MD061927
+     C**********         PARM      LibName       P2OBNM           10                        MD061927
+     C**********         PARM      '*LIBL'       P2TLIB           10                        MD061927
+     C**********         PARM      '*LIB'        P2OBTP            8                        MD061927
+     C**********         PARM      *blanks       CHKMBR           10                        MD061927
+      **********                                                                            MD061927
+      **If*libary does not exist replace it by BrgDeliveredSrcLib                           MD061927
+     C*****RTNCOD        IFNE      'Exist'                                                  MD061927
+     C**********         If        LIBU = *blanks                                  MD061880 MD061927
+     C**********         eval      LibNameQ = *blanks                              MD061880 MD061927
+     C**********         else                                                      MD061880 MD061927
+     C**********         eval      LibNameQ = XPACK + 'U'                                   MD061927
+     C**********         else                                                               MD061927
+     C**********         Endif                                                     MD061880 MD061927
+     C**********         eval      LibNameQ = XPACK + 'Q'                                   MD061927
+     C**********         ENDIF                                                              MD061927
+      **********                                                                            MD061927
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
       * *G
      C                   eval      LibName = XPACK + 'G'
      C                   CALL      'UTCHKOBJ'
@@ -1378,7 +1549,8 @@
       *****************************************************************
      C     SrSysValg     BEGSR
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +
      C                             '/GPSVLXTD set GIVAL = ' + '''' +
      C                             XPACK2 + 'B' + '''' + ' where GISVAL = ' +
@@ -1403,7 +1575,14 @@
      C                   exsr      *pssr
      C                   Endif
 
-     C                   If        XCUM = 'Y'
+     C                   If        LIBD = *blanks                                           MD061880
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +                MD061880
+     C                             '/GPSVLXTD set GIVAL = ' + '''' +                        MD061880
+     C                             '''' + ' where GISVAL = ' +                              MD061880
+     C                             '''' + 'BrgDeliveredDtaLib' + ''''                       MD061880
+     C                   else                                                               MD061880
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +
      C                             '/GPSVLXTD set GIVAL = ' + '''' +
      C                             XPACK2 + 'D' + '''' + ' where GISVAL = ' +
@@ -1414,6 +1593,7 @@
      C                             XPACK + 'D' + '''' + ' where GISVAL = ' +
      C                             '''' + 'BrgDeliveredDtaLib' + ''''
      C                   endif
+     C                   Endif                                                              MD061880
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -1447,10 +1627,15 @@
      C                   exsr      *pssr
      C                   Endif
 
-     C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +
-     C                             '/GPSVLXTD set GIVAL = ' + '''' +
-     C                             LibNameQ    + '''' + ' where GISVAL = ' +
-     C                             '''' + 'BrgDeliveredStrPrLib' + ''''
+     C**********         eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +                MD061927
+     C**********                   '/GPSVLXTD set GIVAL = ' + '''' +                        MD061927
+     C**********                   LibNameQ    + '''' + ' where GISVAL = ' +                MD061927
+     C**********                   '''' + 'BrgDeliveredStrPrLib' + ''''                     MD061927
+      * Set system value to blank. UPC0000366 will then use the source library *U           MD061927
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'GMLIB' +                MD061927
+     C                             '/GPSVLXTD set GIVAL = ' + '''' +                        MD061927
+     C                              '        ' + '''' + ' where GISVAL = ' +                MD061927
+     C                             '''' + 'BrgDeliveredStrPrLib' + ''''                     MD061927
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -1497,7 +1682,8 @@
       *****************************************************************
      C     SrSysVal      BEGSR
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +
      C                             '/SDSVLXTD set GIVAL = ' + '''' +
      C                             XPACK2 + 'B' + '''' + ' where GISVAL = ' +
@@ -1522,7 +1708,14 @@
      C                   exsr      *pssr
      C                   Endif
 
-     C                   If        XCUM = 'Y'
+     C                   If        LIBD = *blanks                                           MD061880
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +                MD061880
+     C                             '/SDSVLXTD set GIVAL = ' + '''' +                        MD061880
+     C                             '''' + ' where GISVAL = ' +                              MD061880
+     C                             '''' + 'BrgDeliveredDtaLib' + ''''                       MD061880
+     C                   else                                                               MD061880
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +
      C                             '/SDSVLXTD set GIVAL = ' + '''' +
      C                             XPACK2 + 'D' + '''' + ' where GISVAL = ' +
@@ -1533,6 +1726,7 @@
      C                             XPACK + 'D' + '''' + ' where GISVAL = ' +
      C                             '''' + 'BrgDeliveredDtaLib' + ''''
      C                   Endif
+     C                   Endif                                                              MD061880
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -1566,10 +1760,15 @@
      C                   exsr      *pssr
      C                   Endif
 
-     C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +
-     C                             '/SDSVLXTD set GIVAL = ' + '''' +
-     C                             LibNameQ    + '''' + ' where GISVAL = ' +
-     C                             '''' + 'BrgDeliveredStrPrLib' + ''''
+     C**********         eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +                MD061927
+     C**********                   '/SDSVLXTD set GIVAL = ' + '''' +                        MD061927
+     C**********                   LibNameQ    + '''' + ' where GISVAL = ' +                MD061927
+     C**********                   '''' + 'BrgDeliveredStrPrLib' + ''''                     MD061927
+      * Set system value to blank. UPC0000366 will then use the source library *U           MD061927
+     C                   eval      SQLDynStmt = 'update ' + sprf + 'DMLIB' +                MD061927
+     C                             '/SDSVLXTD set GIVAL = ' + '''' +                        MD061927
+     C                              '        ' + '''' + ' where GISVAL = ' +                MD061927
+     C                             '''' + 'BrgDeliveredStrPrLib' + ''''                     MD061927
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -1620,8 +1819,36 @@
      C                   eval      ErrInd = 'Y'
 
       * If not cumulative
-     C                   If        XCUM <> 'Y'
+     C**********         If        XCUM <> 'Y'                                              MD061880
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061880
 
+      * Default library name                                                                MD061951
+     C                   If        XCUM = '1'                                               MD061951
+     C                   eval      XLIBG = XPACK + 'F'                                      MD061951
+     C                   eval      XLIBZ1 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ2 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ3 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ4 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ5 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ6 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ7 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ8 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ9 = XPACK + 'F'                                     MD061951
+     C                   eval      XLIBZ0 = XPACK + 'F'                                     MD061951
+     C                   Else                                                               MD061951
+     C                   eval      XLIBG = 'MISYSFIXES'                                     MD061951
+     C                   eval      XLIBZ1 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ2 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ3 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ4 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ5 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ6 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ7 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ8 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ9 = 'MISYSFIXES'                                    MD061951
+     C                   eval      XLIBZ0 = 'MISYSFIXES'                                    MD061951
+     C                   Endif                                                              MD061951
+                                                                                            MD061951
      C                   DOW       *INKC = *OFF
      C                             and ErrInd = 'Y'
      C                   eval      ErrInd = 'N'
@@ -1645,6 +1872,10 @@
 
       * Run validation for each selected layer
      C                   if        XSELG <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBG = *blanks and XCUM = '3'                           MD061880
+     C                   goto      SKIPZ1                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBG
      C                   exsr      Sr_ValLibG
      C                   If        ErrInd = 'Y'
@@ -1657,7 +1888,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ1        TAG                                                                MD061880
      C                   if        vPFX1 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ1 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ2                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ1
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1670,7 +1906,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ2        TAG                                                                MD061880
      C                   if        vPFX2 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ2 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ3                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ2
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1683,7 +1924,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ3        TAG                                                                MD061880
      C                   if        vPFX3 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ3 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ4                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ3
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1697,7 +1943,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ4        TAG                                                                MD061880
      C                   if        vPFX4 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ4 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ5                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ4
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1710,7 +1961,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ5        TAG                                                                MD061880
      C                   if        vPFX5 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ5 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ6                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ5
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1723,7 +1979,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ6        TAG                                                                MD061880
      C                   if        vPFX6 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ6 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ7                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ6
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1736,7 +1997,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ7        TAG                                                                MD061880
      C                   if        vPFX7 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ7 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ8                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ7
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1749,7 +2015,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ8        TAG                                                                MD061880
      C                   if        vPFX8 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ8 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ9                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ8
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1762,7 +2033,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ9        TAG                                                                MD061880
      C                   if        vPFX9 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ9 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPZ0                                                   MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ9
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1775,7 +2051,12 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPZ0        TAG                                                                MD061880
      C                   if        vPFX0 <> *blanks
+      * Skip validation if no libary has been entered and Fix package scenario              MD061880
+     C                   if        XLIBZ0 = *blanks and XCUM = '3'                          MD061880
+     C                   goto      SKIPE                                                    MD061880
+     C                   endif                                                              MD061880
      C                   eval      ValLib = XLIBZ0
      C                   exsr      Sr_ValLibZ
      C                   If        ErrInd = 'Y'
@@ -1788,6 +2069,7 @@
      C                   ENDIF
      C                   ENDIF
 
+     C     SKIPE         TAG                                                                MD061880
      C                   eval      pos = %LOOKUP(*ON: *IN: 30 : 10)
      C                   If        pos > 0
      C                   eval      ErrInd = 'Y'
@@ -1859,6 +2141,9 @@
 
       * Check that SAVF exists in the library
      C                   eval      SAVF = XPACK + 'G'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      SAVF = XPACK + 'M'                                       MD061880
+     C                   Endif                                                              MD061880
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD
      C                   PARM      SAVF          P2OBNM
@@ -1934,6 +2219,9 @@
 
       * Check that SAVF exists in the library
      C                   eval      SAVF = XPACK + 'Z'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   eval      SAVF = XPACK + 'N'                                       MD061880
+     C                   Endif                                                              MD061880
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD
      C                   PARM      SAVF          P2OBNM
@@ -1964,7 +2252,8 @@
      C                   eval      ErrInd = 'Y'
 
       * If no cumulative
-     C                   If        XCUM <> 'Y'
+     C**********         If        XCUM <> 'Y'                                              MD061880
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061880
 
      C                   DOW       *INKC = *OFF
      C                             and ErrInd = 'Y'
@@ -1987,6 +2276,7 @@
 
       * Run validation for each selected layer
      C                   if        XSELG <> *blanks
+     C                             and XLIBG <> *blanks                                     MD061880
      C                   eval      sprf = GPFX
      C                   eval      ValLib = XLIBG
      C                   exsr      Sr_RestG
@@ -1996,6 +2286,7 @@
      C                   ENDIF
 
      C                   if        vPFX1 <> *blanks
+     C                             and XLIBZ1 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX1
      C                   eval      ValLib = XLIBZ1
      C                   eval      RstLib = XLIRZ1
@@ -2006,6 +2297,7 @@
      C                   ENDIF
 
      C                   if        vPFX2 <> *blanks
+     C                             and XLIBZ2 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX2
      C                   eval      ValLib = XLIBZ2
      C                   eval      RstLib = XLIRZ2
@@ -2016,6 +2308,7 @@
      C                   ENDIF
 
      C                   if        vPFX3 <> *blanks
+     C                             and XLIBZ3 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX3
      C                   eval      ValLib = XLIBZ3
      C                   eval      RstLib = XLIRZ3
@@ -2026,6 +2319,7 @@
      C                   ENDIF
 
      C                   if        vPFX4 <> *blanks
+     C                             and XLIBZ4 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX4
      C                   eval      ValLib = XLIBZ4
      C                   eval      RstLib = XLIRZ4
@@ -2036,6 +2330,7 @@
      C                   ENDIF
 
      C                   if        vPFX5 <> *blanks
+     C                             and XLIBZ5 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX5
      C                   eval      ValLib = XLIBZ5
      C                   eval      RstLib = XLIRZ5
@@ -2046,6 +2341,7 @@
      C                   ENDIF
 
      C                   if        vPFX6 <> *blanks
+     C                             and XLIBZ6 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX6
      C                   eval      ValLib = XLIBZ6
      C                   eval      RstLib = XLIRZ6
@@ -2056,6 +2352,7 @@
      C                   ENDIF
 
      C                   if        vPFX7 <> *blanks
+     C                             and XLIBZ7 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX7
      C                   eval      ValLib = XLIBZ7
      C                   eval      RstLib = XLIRZ7
@@ -2066,6 +2363,7 @@
      C                   ENDIF
 
      C                   if        vPFX8 <> *blanks
+     C                             and XLIBZ8 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX8
      C                   eval      ValLib = XLIBZ8
      C                   eval      RstLib = XLIRZ8
@@ -2076,6 +2374,7 @@
      C                   ENDIF
 
      C                   if        vPFX9 <> *blanks
+     C                             and XLIBZ9 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX9
      C                   eval      ValLib = XLIBZ9
      C                   eval      RstLib = XLIRZ9
@@ -2086,6 +2385,7 @@
      C                   ENDIF
 
      C                   if        vPFX0 <> *blanks
+     C                             and XLIBZ0 <> *blanks                                    MD061880
      C                   eval      sprf = vPFX0
      C                   eval      ValLib = XLIBZ0
      C                   eval      RstLib = XLIRZ0
@@ -2253,12 +2553,21 @@
 
      C                   eval      ErrInd = ' '
      C                   eval      PSExcpNo = '    '
+     C                   If        XCUM = '3'                                               MD061880
+     C                   EVAL      Cmd_String = 'RSTOBJ OBJ(*ALL) SAVLIB(' +                MD061880
+     C                             XPACK + 'M) DEV(*SAVF) SAVF(' +                          MD061880
+     C                             %trim(ValLib) + '/' +                                    MD061880
+     C                             XPACK + 'M) MBROPT(*ALL) ALWOBJDIF' +                    MD061880
+     C                             '(*ALL) RSTLIB(' + %trimr(XLIRG) + ')'  +                MD061880
+     C                             ' OUTPUT(*PRINT)'                                        MD061880
+     C                   else                                                               MD061880
      C                   EVAL      Cmd_String = 'RSTOBJ OBJ(*ALL) SAVLIB(' +
      C                             XPACK + 'G) DEV(*SAVF) SAVF(' +
      C                             %trim(ValLib) + '/' +
      C                             XPACK + 'G) MBROPT(*ALL) ALWOBJDIF' +
      C                             '(*ALL) RSTLIB(' + %trimr(XLIRG) + ')'  +
      C                             ' OUTPUT(*PRINT)'
+     C                   Endif                                                              MD061880
      C                   CALL      'QCMDEXC'                            20
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
@@ -2277,7 +2586,11 @@
      C                             or PSExcpNo = '3773' and X_CHK <> ' 0'
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6008'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   EVAL      ZAMSDA = %trimr(XPACK) + 'M'                             MD061880
+     C                   else                                                               MD061880
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'G'
+     C                   Endif                                                              MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
      C                   Endif
@@ -2295,12 +2608,21 @@
 
      C                   eval      ErrInd = ' '
      C                   eval      PSExcpNo = '    '
+     C                   If        XCUM = '3'                                               MD061880
+     C                   EVAL      Cmd_String = 'RSTOBJ OBJ(*ALL) SAVLIB(' +                MD061880
+     C                             XPACK + 'N) DEV(*SAVF) SAVF(' +                          MD061880
+     C                             %trim(ValLib) + '/' +                                    MD061880
+     C                             XPACK + 'N) MBROPT(*ALL) ALWOBJDIF' +                    MD061880
+     C                             '(*ALL) RSTLIB(' + %trimr(RstLib) + ')' +                MD061880
+     C                             ' OUTPUT(*PRINT)'                                        MD061880
+     C                   else                                                               MD061880
      C                   EVAL      Cmd_String = 'RSTOBJ OBJ(*ALL) SAVLIB(' +
      C                             XPACK + 'Z) DEV(*SAVF) SAVF(' +
      C                             %trim(ValLib) + '/' +
      C                             XPACK + 'Z) MBROPT(*ALL) ALWOBJDIF' +
      C                             '(*ALL) RSTLIB(' + %trimr(RstLib) + ')' +
      C                             ' OUTPUT(*PRINT)'
+     C                   Endif                                                              MD061880
      C                   CALL      'QCMDEXC'                            20
      C                   PARM                    Cmd_String
      C                   PARM                    Cmd_Len
@@ -2319,7 +2641,11 @@
      C                             or PSExcpNo = '3773' and X_CHK <> ' 0'
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6008'
+     C                   If        XCUM = '3'                                               MD061880
+     C                   EVAL      ZAMSDA = %trimr(XPACK) + 'N'                             MD061880
+     C                   else                                                               MD061880
      C                   EVAL      ZAMSDA = %trimr(XPACK) + 'Z'
+     C                   Endif                                                              MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   seton                                        51
      C                   EXSR      ZASNMS
@@ -2437,6 +2763,7 @@
      C     Sr_ValRefG    BEGSR                                                              MD061706
                                                                                             MD061706
      C                   eval      ErrInd2 = ' '                                            MD061706
+     C                   eval      LibG = 4                                                 MD061880
                                                                                             MD061706
       * Check that GM library exists                                                        MD061706
      C                   eval      ValLib = XREFG + 'GMLIB'                                 MD061706
@@ -2449,9 +2776,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibG                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that GP library exists                                                        MD061706
      C                   eval      ValLib = XREFG + 'GPLIB'                                 MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2463,9 +2795,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibG                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that GV library exists                                                        MD061706
      C                   eval      ValLib = XREFG + 'GVLIB'                                 MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2477,9 +2814,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibG                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that GTA library exists                                                       MD061706
      C                   eval      ValLib = XREFG + 'GTALIB'                                MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2491,9 +2833,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibG                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
      C                   ENDIF                                                              MD061706
      C                   ENDIF                                                              MD061706
      C                   ENDIF                                                              MD061706
@@ -2510,6 +2857,7 @@
      C     Sr_ValRefZ    BEGSR                                                              MD061706
                                                                                             MD061706
      C                   eval      ErrInd2 = ' '                                            MD061706
+     C                   eval      LibZ = 4                                                 MD061880
                                                                                             MD061706
       * Check that DM library exists                                                        MD061706
      C                   eval      ValLib = XREFZ + 'DMLIB'                                 MD061706
@@ -2522,9 +2870,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibZ                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that DP library exists                                                        MD061706
      C                   eval      ValLib = XREFZ + 'DPLIB'                                 MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2536,9 +2889,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibZ                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that DV library exists                                                        MD061706
      C                   eval      ValLib = XREFZ + 'DVLIB'                                 MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2550,9 +2908,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibZ                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * Check that DTA library exists                                                       MD061706
      C                   eval      ValLib = XREFZ + 'DTALIB'                                MD061706
      C                   CALL      'UTCHKOBJ'                                               MD061706
@@ -2564,9 +2927,14 @@
       *                                                                                     MD061706
       * If libary does not exist in the library list, send message                          MD061706
      C     RTNCOD        IFNE      'Exist'                                                  MD061706
+     C     XCUM          ANDNE     '3'                                                      MD061880
      C                   EVAL      ErrInd2 = 'Y'                                            MD061706
      C                   else                                                               MD061706
                                                                                             MD061706
+     C     RTNCOD        IFNE      'Exist'                                                  MD061880
+     C                   SUB       1             LibZ                                       MD061880
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
      C                   ENDIF                                                              MD061706
      C                   ENDIF                                                              MD061706
      C                   ENDIF                                                              MD061706

@@ -14,8 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061706           Date 01Aug23               *
-      *  Prev Amend No. MD061544           Date 27Jun23               *
+      *  Last Amend No. MD061779           Date 17Aug23               *
+      *  Prev Amend No. MD061992           Date 23Oct23               *
+      *                 MD061954           Date 08Oct23               *
+      *                 MD061951           Date 06Oct23               *
+      *                 MD061927           Date 28Sep23               *
+      *                 MD061880           Date 14Sep23               *
+      *                 MD061706           Date 01Aug23               *
+      *                 MD061544           Date 27Jun23               *
       *                 MD061351           Date 03May23               *
       *                 MD060386           Date 22Aug22               *
       *                 MD060362           Date 19Aug22               *
@@ -23,6 +29,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061779 - Upgrading deliverable data with full DDS set      *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *             Recompiled                                        *
+      *  MD061954 - Include restore of reference libraries for aDBU   *
+      *  MD061951 - Default library name based on package + 'F'       *
+      *  MD061927 - Delivering Stored Procedures in *U library        *
+      *  MD061880 - Include Fix package installation                  *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061544 - Allow CPF messages while restoring as long as     *
       *             all objects have been restored                    *
@@ -80,8 +93,10 @@
      D Cmd_Len         S             15  5
      D X_CHK           S              2                                                     MD060386
      D pos             S              5  0                                                  MD060386
+     D WAIT            S              3                                                     MD061954
 
      D ZONE          E DS                  EXTNAME(GPZONEPD)
+     D UPRSTR        E DS                  EXTNAME(UPRSTRTD)                                MD061954
 
      D C_DOTA          C                   Const('Enter library name where the-             MD060362
      D                                     se save files are placed. Each save-             MD060362
@@ -116,7 +131,20 @@
      C                   EXSR      Exit
      C                   ENDIF
 
-
+      ** End SBS in case option ran before                                                  MD061954
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061954
+     C                   eval      BRGLIB = XPACK + 'B'                                     MD061954
+     C                   Else                                                               MD061954
+     C                   eval      BRGLIB = XPACK2 + 'B'                                    MD061954
+     C                   Endif                                                              MD061954
+     C                   EVAL      Cmd_String = 'ENDSBS SBS(' +                             MD061954
+     C                             %trimr(BRGLIB) + ') OPTION(*IMMED)'                      MD061954
+     C                   CALL      'QCMDEXC'                            20                  MD061954
+     C                   PARM                    Cmd_String                                 MD061954
+     C                   PARM      40            Cmd_Len                                    MD061954
+                                                                                            MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+                                                                                            MD061954
       ** Handle library names
      C                   exsr      Sr_LibInst
 
@@ -131,6 +159,27 @@
      C                   exsr      Sr_LibRest
      C                   ENDIF
 
+     C                   EXSR      CLEAR                                                    MD061954
+      ** Check if aDBU                                                                      MD061954
+     C                   exsr      Sr_aDBU                                                  MD061954
+                                                                                            MD061954
+     C                   If        XADBU =  'Y'                                             MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+      ** Handle library names for reference libraries restore                               MD061954
+     C                   exsr      Sr_LibInstR                                              MD061954
+                                                                                            MD061954
+      ** End program if F3 is pressed.                                                      MD061954
+     C                   IF        *INKC = *ON                                              MD061954
+     C                   EXSR      Exit                                                     MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      ** Proceed with restore                                                               MD061954
+                                                                                            MD061954
+     C                   IF        *INKC = *OFF                                             MD061954
+     C                   exsr      Sr_LibRestR                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
       ** End of program.
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -264,17 +313,22 @@
       * Validate non blank
      C                   If        XCUM  = *blanks
      C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6009'
+     C**********         EVAL      ZAMSID = 'UPM6009'                                       MD061880
+     C                   EVAL      ZAMSID = 'UPM6017'                                       MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   seton                                        29
      C                   EXSR      ZASNMS
      C                   ITER
      C                   ENDIF
 
-      * Validate 'Y' or 'N'
-     C                   If        XCUM <> 'Y' and XCUM <> 'N'
+      **Validate*'Y' or 'N'                                                                 MD061880
+      * Validate '1' or '2' or '3'                                                          MD061880
+     C**********         If        XCUM <> 'Y' and XCUM <> 'N'                              MD061880
+     C                   If        XCUM <> '1' and XCUM <> '2'                              MD061880
+     C                             and XCUM <> '3'                                          MD061880
      C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6009'
+     C**********         EVAL      ZAMSID = 'UPM6009'                                       MD061880
+     C                   EVAL      ZAMSID = 'UPM6017'                                       MD061880
      C                   EVAL      ErrInd = 'Y'
      C                   seton                                        29
      C                   EXSR      ZASNMS
@@ -286,11 +340,20 @@
       * display second part
      C                   eval      ErrInd = 'Y'
      C                   seton                                        19
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   SELECT                                                             MD061880
+     C                   WHEN      XCUM = '2'                                               MD061880
      C                   seton                                        18
-     C                   else
+     C                   eval      XCOFI = '(Core package)'                                 MD061880
+     C**********         else                                                               MD061880
+     C                   WHEN      XCUM = '3'                                               MD061880
+     C                   setoff                                       18                    MD061880
+     C                   eval      XCOFI = '(Fix package)'                                  MD061880
+     C                   OTHER                                                              MD061880
      C                   setoff                                       18
-     C                   endif
+     C                   eval      XCOFI = '(Core package)'                                 MD061880
+     C**********         endif
+     C                   ENDSL                                                              MD061880
 
      C                   DOW       *INKC = *OFF
      C                             and ErrInd = 'Y'
@@ -316,7 +379,8 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   If        XPACK2 = *blanks
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6002'
@@ -339,7 +403,8 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
 
-     C                   If        XCUM = 'Y'
+     C**********         If        XCUM = 'Y'                                               MD061880
+     C                   If        XCUM = '2'                                               MD061880
      C                   If        %len(%trim(XPACK2)) <> 9
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6003'
@@ -371,8 +436,20 @@
      C                   eval      ##DOT4 = C_DOTB                                          MD060362
                                                                                             MD060362
       * for non- cumulative package
-     C                   If        XCUM = 'N'
+     C***********        If        XCUM = 'N'                                               MD061880
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061880
 
+      * Default library name                                                                MD061951
+     C                   If        XCUM = '1'                                               MD061951
+     C                   eval      #LIBSFB = XPACK + 'F'                                    MD061951
+     C                   eval      #LIBSFD = XPACK + 'F'                                    MD061951
+     C                   eval      #LIBSFU = XPACK + 'F'                                    MD061951
+     C                   Else                                                               MD061951
+     C                   eval      #LIBSFB = 'MISYSFIXES'                                   MD061951
+     C                   eval      #LIBSFD = 'MISYSFIXES'                                   MD061951
+     C                   eval      #LIBSFU = 'MISYSFIXES'                                   MD061951
+     C                   Endif                                                              MD061951
+                                                                                            MD061951
       * Protect Package name
      C                   seton                                        20
 
@@ -380,8 +457,8 @@
      C                   eval      #LIBB = XPACK + 'B - Bridge Library'
      C                   eval      #LIBD = XPACK + 'D - Deliverable Data Lib' +
      C                             'rary'
-     C                   eval      #LIBQ = XPACK + 'Q - Stored Procedure Lib' +
-     C                             'rary'
+     C**********         eval      #LIBQ = XPACK + 'Q - Stored Procedure Lib' +             MD061927
+     C**********                   'rary'                                                   MD061927
      C                   eval      #LIBU = XPACK + 'U - Upgrade Library'
 
      C                   DOW       *INKC = *OFF
@@ -392,7 +469,7 @@
 
      C                   seton                                        28
      C                   WRITE     UP6006C1
-     C                   WRITE     UP6006F2
+     C**********         WRITE     UP6006F2                                                 MD061954
      C                   WRITE     UP6006F22
 
      C                   EXFMT     UP6006F21
@@ -452,14 +529,19 @@
 
       * *D library
       * Validate that library entered is non blank
+      * If deliverable data is included in the reference libraries used by aDBU             MD061779
+      * *D library is not delivered anymore, hence no error message to be sent              MD061779
      C                   If        #LIBSFD = *blanks
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6005'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        52
-     C                   EXSR      ZASNMS
+      * If Fix package being installed, library may not be delivered                        MD061880
+     C**********                   and XCUM = '1'                                  MD061880 MD061779
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061779
+     C**********         EVAL      ZAMSID = 'UPM6005'                                       MD061779
+     C**********         EVAL      ErrInd = 'Y'                                             MD061779
+     C**********         seton                                        52                    MD061779
+     C**********         EXSR      ZASNMS                                                   MD061779
      C                   else
 
+     C                   If        #LIBSFD <> *blanks                                       MD061880
       * Check that library exists
      C                   CALL      'UTCHKOBJ'
      C                   PARM      *BLANK        RTNCOD
@@ -497,57 +579,62 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD061880
      C                   ENDIF
 
-      * *Q library
-      * Validate that library entered is non blank
-      * But it can be blank  as Stored Procedure are not always delivered
-     C                   If        #LIBSFQ = *blanks
+      ***Q*library                                                                          MD061927
+      **Validate that library entered is non blank                                          MD061927
+      **But it can be blank  as Stored Procedure are not always delivered                   MD061927
+     C**********         If        #LIBSFQ = *blanks                                        MD061927
+      **If*Fix*package being installed, library may not be delivered               MD061880 MD061927
+     C**********                   and XCUM = '1'                                  MD061880 MD061927
      C**********         EVAL      ZAMSGF = 'UTMSGF'
      C**********         EVAL      ZAMSID = 'UPM6005'
      C**********         EVAL      ErrInd = 'Y'
      C**********         seton                                        53
      C**********         EXSR      ZASNMS
-     C                   else
-
-      * Check that library exists
-     C                   CALL      'UTCHKOBJ'
-     C                   PARM      *BLANK        RTNCOD
-     C                   PARM      #LIBSFQ       P2OBNM
-     C                   PARM      '*LIBL'       P2TLIB
-     C                   PARM      '*LIB'        P2OBTP
-     C                   PARM      *blanks       CHKMBR
-      *
-      * If libary does not exist in the library list, send message
-     C     RTNCOD        IFNE      'Exist'
-     C                   seton                                        53
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6004'
-     C                   EVAL      ZAMSDA = #LIBSFQ
-     C                   EVAL      ErrInd = 'Y'
-     C                   EXSR      ZASNMS
-     C                   else
-
-      * Check that SAVF exists in the library
-     C                   eval      SAVF = XPACK + 'Q'
-     C                   CALL      'UTCHKOBJ'
-     C                   PARM      *BLANK        RTNCOD
-     C                   PARM      SAVF          P2OBNM
-     C                   PARM      #LIBSFQ       P2TLIB
-     C                   PARM      '*FILE'       P2OBTP
-     C                   PARM      *blanks       CHKMBR
-      *
-      * If libary does not exist in the library list, send message
-     C     RTNCOD        IFNE      'Exist'
-     C                   seton                                        53
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6006'
-     C                   EVAL      ZAMSDA = SAVF
-     C                   EVAL      ErrInd = 'Y'
-     C                   EXSR      ZASNMS
-     C                   ENDIF
-     C                   ENDIF
-     C                   ENDIF
+     C**********         else                                                               MD061927
+      **********                                                                            MD061927
+     C**********         If        #LIBSFQ <> *blanks                              MD061880 MD061927
+      **Check*that library exists                                                           MD061927
+     C**********         CALL      'UTCHKOBJ'                                               MD061927
+     C**********         PARM      *BLANK        RTNCOD                                     MD061927
+     C**********         PARM      #LIBSFQ       P2OBNM                                     MD061927
+     C**********         PARM      '*LIBL'       P2TLIB                                     MD061927
+     C**********         PARM      '*LIB'        P2OBTP                                     MD061927
+     C**********         PARM      *blanks       CHKMBR                                     MD061927
+      **********                                                                            MD061927
+      * If libary does not exist in the library list, send message                          MD061927
+     C*****RTNCOD        IFNE      'Exist'                                                  MD061927
+     C**********         seton                                        53                    MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6004'                                       MD061927
+     C**********         EVAL      ZAMSDA = #LIBSFQ                                         MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         else                                                               MD061927
+      **********                                                                            MD061927
+      **Check*that SAVF exists in the library                                               MD061927
+     C**********         eval      SAVF = XPACK + 'Q'                                       MD061927
+     C**********         CALL      'UTCHKOBJ'                                               MD061927
+     C**********         PARM      *BLANK        RTNCOD                                     MD061927
+     C**********         PARM      SAVF          P2OBNM                                     MD061927
+     C**********         PARM      #LIBSFQ       P2TLIB                                     MD061927
+     C**********         PARM      '*FILE'       P2OBTP                                     MD061927
+     C**********         PARM      *blanks       CHKMBR                                     MD061927
+      **********                                                                            MD061927
+      **If*libary does not exist in the library list, send message                          MD061927
+     C*****RTNCOD        IFNE      'Exist'                                                  MD061927
+     C**********         seton                                        53                    MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6006'                                       MD061927
+     C**********         EVAL      ZAMSDA = SAVF                                            MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         ENDIF                                                              MD061927
+     C**********         ENDIF                                                              MD061927
+     C**********         ENDIF                                                     MD061880 MD061927
+     C**********         ENDIF                                                              MD061927
 
       * *U library
       * Validate that library entered is non blank
@@ -603,6 +690,16 @@
 
       * for cumulative package
      C                   else
+      * Default library name                                                                MD061951
+     C                   eval      #LIBCBN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCDN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCMN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCNN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCPN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCUN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCGN = XPACK2 + 'F'                                   MD061951
+     C                   eval      #LIBCZN = XPACK2 + 'F'                                   MD061951
+                                                                                            MD061951
       * Protect Package name
      C                   seton                                        20
 
@@ -623,8 +720,8 @@
      C                             'U -  Cumulative Upgrade library'                        MD061351
      C                   eval      #LIBCG = XPACK + 'G - Cumulative Global ' +
      C                             'objects library'
-     C                   eval      #LIBCQ = XPACK + 'Q - Cumulative Stored ' +
-     C                             'procedures library'
+     C**********         eval      #LIBCQ = XPACK + 'Q - Cumulative Stored ' +              MD061927
+     C**********                   'procedures library'                                     MD061927
      C                   eval      #LIBCZ = XPACK + 'Z - Cumulative Zone ' +
      C                             'objects library'
 
@@ -636,7 +733,7 @@
 
      C                   seton                                        28
      C                   WRITE     UP6006C1
-     C                   WRITE     UP6006F2
+     C**********         WRITE     UP6006F2                                                 MD061954
      C                   WRITE     UP6006F22
 
      C                   EXFMT     UP6006F23
@@ -695,12 +792,14 @@
 
       * *D library
       * Validate that library entered is non blank
+      * If deliverable data is included in the reference libraries used by aDBU             MD061779
+      * *D library is not delivered anymore, hence no error message to be sent              MD061779
      C                   If        #LIBCDN = *blanks
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6005'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        52
-     C                   EXSR      ZASNMS
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061779
+     C**********         EVAL      ZAMSID = 'UPM6005'                                       MD061779
+     C**********         EVAL      ErrInd = 'Y'                                             MD061779
+     C**********         seton                                        52                    MD061779
+     C**********         EXSR      ZASNMS                                                   MD061779
      C                   else
 
       * Check that library exists
@@ -1003,54 +1102,54 @@
      C                   ENDIF
      C                   ENDIF
 
-      * *Q library
-      * Validate that library entered is non blank
-     C                   If        #LIBCQN = *blanks
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6005'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        58
-     C                   EXSR      ZASNMS
-     C                   else
-
-      * Check that library exists
-     C                   CALL      'UTCHKOBJ'
-     C                   PARM      *BLANK        RTNCOD
-     C                   PARM      #LIBCQN       P2OBNM
-     C                   PARM      '*LIBL'       P2TLIB
-     C                   PARM      '*LIB'        P2OBTP
-     C                   PARM      *blanks       CHKMBR
-      *
-      * If libary does not exist in the library list, send message
-     C     RTNCOD        IFNE      'Exist'
-     C                   seton                                        58
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6004'
-     C                   EVAL      ZAMSDA = #LIBCQN
-     C                   EVAL      ErrInd = 'Y'
-     C                   EXSR      ZASNMS
-     C                   else
-
-      * Check that SAVF exists in the library
-     C                   eval      SAVF = XPACK + 'Q'
-     C                   CALL      'UTCHKOBJ'
-     C                   PARM      *BLANK        RTNCOD
-     C                   PARM      SAVF          P2OBNM
-     C                   PARM      #LIBCQN       P2TLIB
-     C                   PARM      '*FILE'       P2OBTP
-     C                   PARM      *blanks       CHKMBR
-      *
-      * If libary does not exist in the library list, send message
-     C     RTNCOD        IFNE      'Exist'
-     C                   seton                                        58
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6006'
-     C                   EVAL      ZAMSDA = SAVF
-     C                   EVAL      ErrInd = 'Y'
-     C                   EXSR      ZASNMS
-     C                   ENDIF
-     C                   ENDIF
-     C                   ENDIF
+      ***Q*library                                                                          MD061927
+      **Validate that library entered is non blank                                          MD061927
+     C**********         If        #LIBCQN = *blanks                                        MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6005'                                       MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         seton                                        58                    MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         else                                                               MD061927
+      **********                                                                            MD061927
+      **Check*that library exists                                                           MD061927
+     C**********         CALL      'UTCHKOBJ'                                               MD061927
+     C**********         PARM      *BLANK        RTNCOD                                     MD061927
+     C**********         PARM      #LIBCQN       P2OBNM                                     MD061927
+     C**********         PARM      '*LIBL'       P2TLIB                                     MD061927
+     C**********         PARM      '*LIB'        P2OBTP                                     MD061927
+     C**********         PARM      *blanks       CHKMBR                                     MD061927
+      **********                                                                            MD061927
+      **If*libary does not exist in the library list, send message                          MD061927
+     C*****RTNCOD        IFNE      'Exist'                                                  MD061927
+     C**********         seton                                        58                    MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6004'                                       MD061927
+     C**********         EVAL      ZAMSDA = #LIBCQN                                         MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         else                                                               MD061927
+      **********                                                                            MD061927
+      * Check that SAVF exists in the library                                               MD061927
+     C**********         eval      SAVF = XPACK + 'Q'                                       MD061927
+     C**********         CALL      'UTCHKOBJ'                                               MD061927
+     C**********         PARM      *BLANK        RTNCOD                                     MD061927
+     C**********         PARM      SAVF          P2OBNM                                     MD061927
+     C**********         PARM      #LIBCQN       P2TLIB                                     MD061927
+     C**********         PARM      '*FILE'       P2OBTP                                     MD061927
+     C**********         PARM      *blanks       CHKMBR                                     MD061927
+      **********                                                                            MD061927
+      **If*libary does not exist in the library list, send message                          MD061927
+     C*****RTNCOD        IFNE      'Exist'                                                  MD061927
+     C**********         seton                                        58                    MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6006'                                       MD061927
+     C**********         EVAL      ZAMSDA = SAVF                                            MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         ENDIF                                                              MD061927
+     C**********         ENDIF                                                              MD061927
+     C**********         ENDIF                                                              MD061927
 
       * *Z library
       * Validate that library entered is non blank
@@ -1075,7 +1174,8 @@
      C                   seton                                        59
      C                   EVAL      ZAMSGF = 'UTMSGF'
      C                   EVAL      ZAMSID = 'UPM6004'
-     C                   EVAL      ZAMSDA = #LIBCQN
+     C**********         EVAL      ZAMSDA = #LIBCQN                                         MD061927
+     C                   EVAL      ZAMSDA = #LIBCZN                                         MD061927
      C                   EVAL      ErrInd = 'Y'
      C                   EXSR      ZASNMS
      C                   else
@@ -1121,7 +1221,8 @@
      C                   EVAL      Cmd_Len = 200
 
       * for non- cumulative package
-     C                   If        XCUM = 'N'
+     C***********        If        XCUM = 'N'                                               MD061880
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061880
 
      C                   eval      ErrInd = 'Y'
 
@@ -1132,7 +1233,7 @@
       ** Display screen for conformation
      C                   seton                                        2021
      C                   WRITE     UP6006C1
-     C                   WRITE     UP6006F2
+     C**********         WRITE     UP6006F2                                                 MD061954
      C                   WRITE     UP6006F22
      C                   EXFMT     UP6006F21
 
@@ -1177,6 +1278,8 @@
      C                   Endif
 
       * *D library
+      * *D library may not be delivered, restore only if delivered                          MD061880
+     C                   If        #LIBSFD <> *blanks                                       MD061880
      C                   eval      PSExcpNo = '    '
      C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
      C                             %trimr(XPACK) + 'D) DEV(*SAVF) SAVF(' +
@@ -1196,29 +1299,30 @@
      C                   seton                                        52
      C                   EXSR      ZASNMS
      C                   Endif
+     C                   Endif                                                              MD061880
 
-      * *Q library
-     C                   if        #LIBSFQ <> *blanks
-     C                   eval      PSExcpNo = '    '
-     C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
-     C                             %trimr(XPACK) + 'Q) DEV(*SAVF) SAVF(' +
-     C                             %trim(#LIBSFQ) + '/' +
-     C                             %trimr(XPACK) + 'Q) RSTLIB(' +
-     C                             %trimr(XPACK) + 'Q) OUTPUT(*PRINT)'
-     C                   CALL      'QCMDEXC'                            20
-     C                   PARM                    Cmd_String
-     C                   PARM                    Cmd_Len
-
-      ** if error
-     C                   If        PSExcpNo <> '    '
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6007'
-     C                   EVAL      ZAMSDA = %trimr(XPACK) + 'Q'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        53
-     C                   EXSR      ZASNMS
-     C                   Endif
-     C                   Endif
+      ***Q*library                                                                          MD061927
+     C**********         if        #LIBSFQ <> *blanks                                       MD061927
+     C**********         eval      PSExcpNo = '    '                                        MD061927
+     C**********         EVAL      Cmd_String = 'RSTLIB SAVLIB(' +                          MD061927
+     C**********                   %trimr(XPACK) + 'Q) DEV(*SAVF) SAVF(' +                  MD061927
+     C**********                   %trim(#LIBSFQ) + '/' +                                   MD061927
+     C**********                   %trimr(XPACK) + 'Q) RSTLIB(' +                           MD061927
+     C**********                   %trimr(XPACK) + 'Q) OUTPUT(*PRINT)'                      MD061927
+     C**********         CALL      'QCMDEXC'                            20                  MD061927
+     C**********         PARM                    Cmd_String                                 MD061927
+     C**********         PARM                    Cmd_Len                                    MD061927
+      **********                                                                            MD061927
+      ***if*error                                                                           MD061927
+     C**********         If        PSExcpNo <> '    '                                       MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6007'                                       MD061927
+     C**********         EVAL      ZAMSDA = %trimr(XPACK) + 'Q'                             MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         seton                                        53                    MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         Endif                                                              MD061927
+     C**********         Endif                                                              MD061927
 
       * *U library
       * *U library may not be delivered, restore only if delivered                          MD061706
@@ -1259,7 +1363,7 @@
       ** Display screen for conformation
      C                   seton                                        2021
      C                   WRITE     UP6006C1
-     C                   WRITE     UP6006F2
+     C**********         WRITE     UP6006F2                                                 MD061954
      C                   WRITE     UP6006F22
      C                   EXFMT     UP6006F23
 
@@ -1303,6 +1407,8 @@
      C                   Endif
 
       * *D library
+      * *D library may not be delivered, restore only if delivered                          MD061779
+     C                   If        #LIBCDN <> *blanks                                       MD061779
      C                   eval      PSExcpNo = '    '
      C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
      C                             %trimr(XPACK2) + 'D) DEV(*SAVF) SAVF(' +
@@ -1331,6 +1437,7 @@
      C                   seton                                        52
      C                   EXSR      ZASNMS
      C                   Endif
+     C                   Endif                                                              MD061779
 
       * *M library
      C                   eval      PSExcpNo = '    '
@@ -1490,35 +1597,35 @@
      C                   EXSR      ZASNMS
      C                   Endif
 
-      * *Q library
-     C                   eval      PSExcpNo = '    '
-     C                   EVAL      Cmd_String = 'RSTLIB SAVLIB(' +
-     C                             %trimr(XPACK) + 'Q) DEV(*SAVF) SAVF(' +
-     C                             %trim(#LIBCQN) + '/' +
-     C                             %trimr(XPACK) + 'Q) RSTLIB(' +
-     C                             %trimr(XPACK) + 'Q) OUTPUT(*PRINT)'
-     C                   CALL      'QCMDEXC'                            20
-     C                   PARM                    Cmd_String
-     C                   PARM                    Cmd_Len
-
-      ** if CPF3773, allow '0 not restored'                                                 MD061544
-     C                   eval      X_CHK = *blanks                                          MD061544
-     C                   If        PSExcpNo = '3773'                                        MD061544
-     C                   eval      pos = %scan('not restored':PSExcpData:1)                 MD061544
-     C                   eval      X_CHK = %subst(PSExcpData:pos-3:2)                       MD061544
-     C                   ENDIF                                                              MD061544
-                                                                                            MD061544
-      ** if error
-     C                   If        PSExcpNo <> '    '
-     C                             and PSExcpNo <> '3773'                                   MD061544
-     C                             or PSExcpNo = '3773' and X_CHK <> ' 0'                   MD061544
-     C                   EVAL      ZAMSGF = 'UTMSGF'
-     C                   EVAL      ZAMSID = 'UPM6007'
-     C                   EVAL      ZAMSDA = %trimr(XPACK) + 'Q'
-     C                   EVAL      ErrInd = 'Y'
-     C                   seton                                        58
-     C                   EXSR      ZASNMS
-     C                   Endif
+      ***Q*library                                                                          MD061927
+     C**********         eval      PSExcpNo = '    '                                        MD061927
+     C**********         EVAL      Cmd_String = 'RSTLIB SAVLIB(' +                          MD061927
+     C**********                   %trimr(XPACK) + 'Q) DEV(*SAVF) SAVF(' +                  MD061927
+     C**********                   %trim(#LIBCQN) + '/' +                                   MD061927
+     C**********                   %trimr(XPACK) + 'Q) RSTLIB(' +                           MD061927
+     C**********                   %trimr(XPACK) + 'Q) OUTPUT(*PRINT)'                      MD061927
+     C**********         CALL      'QCMDEXC'                            20                  MD061927
+     C**********         PARM                    Cmd_String                                 MD061927
+     C**********         PARM                    Cmd_Len                                    MD061927
+      **********                                                                            MD061927
+      ***if*CPF3773, allow '0 not restored'                                        MD061544 MD061927
+     C**********         eval      X_CHK = *blanks                                 MD061544 MD061927
+     C**********         If        PSExcpNo = '3773'                               MD061544 MD061927
+     C**********         eval      pos = %scan('not restored':PSExcpData:1)        MD061544 MD061927
+     C**********         eval      X_CHK = %subst(PSExcpData:pos-3:2)              MD061544 MD061927
+     C**********         ENDIF                                                     MD061544 MD061927
+      **********                                                                   MD061544 MD061927
+      ***if*error                                                                           MD061927
+     C**********         If        PSExcpNo <> '    '                                       MD061927
+     C**********                   and PSExcpNo <> '3773'                          MD061544 MD061927
+     C**********                   or PSExcpNo = '3773' and X_CHK <> ' 0'          MD061544 MD061927
+     C**********         EVAL      ZAMSGF = 'UTMSGF'                                        MD061927
+     C**********         EVAL      ZAMSID = 'UPM6007'                                       MD061927
+     C**********         EVAL      ZAMSDA = %trimr(XPACK) + 'Q'                             MD061927
+     C**********         EVAL      ErrInd = 'Y'                                             MD061927
+     C**********         seton                                        58                    MD061927
+     C**********         EXSR      ZASNMS                                                   MD061927
+     C**********         Endif                                                              MD061927
 
       * *Z library
      C                   eval      PSExcpNo = '    '
@@ -1555,3 +1662,899 @@
      C                   Endif
 
      C                   ENDSR
+      /EJECT
+      *****************************************************************                     MD061954
+      *                                                               *                     MD061954
+      *  Sr_aDBU - Check if aDBU                                      *                     MD061954
+      *                                                               *                     MD061954
+      *****************************************************************                     MD061954
+     C     Sr_aDBU       BEGSR                                                              MD061954
+                                                                                            MD061954
+     C                   eval      ErrInd = 'Y'                                             MD061954
+                                                                                            MD061954
+      * display first part                                                                  MD061954
+     C                   setoff                                       406221                MD061954
+     C                   DOW       *INKC = *OFF                                             MD061954
+     C                             and ErrInd = 'Y'                                         MD061954
+     C                   eval      ErrInd = 'N'                                             MD061954
+                                                                                            MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+                                                                                            MD061954
+     C                   seton                                        28                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F22                                                MD061954
+                                                                                            MD061954
+     C                   EXFMT     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+     C                   setoff                                       62                    MD061954
+                                                                                            MD061954
+      * Validate non blank                                                                  MD061954
+      ** Validate aDBU flag                                                                 MD061954
+     C                   If        XADBU <> 'Y' and XADBU <> 'N'                            MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6009'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   seton                                        62                    MD061954
+     C                   ITER                                                               MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+     C                   ENDDO                                                              MD061954
+                                                                                            MD061954
+      * display second part                                                                 MD061954
+     C                   If        XADBU =  'Y'                                             MD061954
+     C                   seton                                        4063                  MD061954
+     C                   setoff                                       41                    MD061954
+     C                   eval      ErrInd = 'Y'                                             MD061954
+                                                                                            MD061954
+     C                   DOW       *INKC = *OFF                                             MD061954
+     C                             and ErrInd = 'Y'                                         MD061954
+     C                   eval      ErrInd = 'N'                                             MD061954
+                                                                                            MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+                                                                                            MD061954
+     C                   seton                                        28                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F22                                                MD061954
+                                                                                            MD061954
+     C                   EXFMT     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+     C                   setoff                                       6465                  MD061954
+                                                                                            MD061954
+      ** Validate Reference prefixes                                                        MD061954
+     C                   If        GLOBP = *blanks                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   seton                                        65                    MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+     C                   If        ZONEP = *blanks                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6013'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   seton                                        64                    MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+                                                                                            MD061954
+     C                   If        ErrInd = 'Y'                                             MD061954
+     C                   ITER                                                               MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C                   ENDDO                                                              MD061954
+                                                                                            MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C                   ENDSR                                                              MD061954
+      /EJECT                                                                                MD061954
+      *****************************************************************                     MD061954
+      *                                                               *                     MD061954
+      *  Sr_LibInstR - Request library name for SAVF                  *                     MD061954
+      *                                                               *                     MD061954
+      *****************************************************************                     MD061954
+     C     Sr_LibInstR   BEGSR                                                              MD061954
+                                                                                            MD061954
+     C                   eval      ##DOT5 = C_DOTA                                          MD061954
+     C                   eval      ##DOT6 = C_DOTB                                          MD061954
+     C                   eval      %Subarr(*IN : 51 : 10) = *OFF                            MD061954
+     C                   setoff                                       2021                  MD061954
+                                                                                            MD061954
+      * Default library name                                                                MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      XCUM = '1'                                               MD061954
+     C                   eval      #LIBRDM = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRDP = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRDT = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRDV = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRGM = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRGP = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRGT = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRGV = XPACK  + 'F'                                   MD061954
+     C                   WHEN      XCUM = '2'                                               MD061954
+     C                   eval      #LIBRDM = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRDP = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRDT = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRDV = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRGM = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRGP = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRGT = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRGV = XPACK2 + 'F'                                   MD061954
+     C                   WHEN      XCUM = '3'                                               MD061954
+     C                   eval      #LIBRDM = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRDP = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRDT = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRDV = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRGM = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRGP = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRGT = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRGV = 'MISYSFIXES'                                   MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+      * Protect aDBU and prefixes                                                           MD061954
+     C                   seton                                        4041                  MD061954
+                                                                                            MD061954
+     C                   eval      ErrInd = 'Y'                                             MD061954
+     C                   eval      #LIBDMN = ZONEP + 'DMLIB - BankFusion Midas'+            MD061954
+     C                             ' zone master PFs/tables/DTAARA'                         MD061954
+     C                   eval      #LIBDPN = ZONEP + 'DPLIB - BankFusion Midas'+            MD061954
+     C                             ' zone non-master PF/DTAARA/DTAQ'                        MD061954
+     C                   eval      #LIBDTN = ZONEP + 'DTALIB - BankFusion Mida'+            MD061954
+     C                             's zone delivered data'                                  MD061954
+     C                   eval      #LIBDVN = ZONEP + 'DVLIB - BankFusion Midas'+            MD061954
+     C                             ' zone logicals/views/indexes'                           MD061954
+     C                   eval      #LIBGMN = GLOBP + 'GMLIB - BankFusion Midas'+            MD061954
+     C                             ' global master PFs/tables/DTAARA'                       MD061954
+     C                   eval      #LIBGPN = GLOBP + 'GPLIB - BankFusion Midas'+            MD061954
+     C                             ' global non-master PF/DTAARA/DTAQ'                      MD061954
+     C                   eval      #LIBGTN = GLOBP + 'GTALIB - BankFusion Mida'+            MD061954
+     C                             's global delivered data'                                MD061954
+     C                   eval      #LIBGVN = GLOBP + 'GVLIB - BankFusion Midas'+            MD061954
+     C                             ' global logicals/views/indexes'                         MD061954
+                                                                                            MD061954
+     C                   DOW       *INKC = *OFF                                             MD061954
+     C                             and ErrInd = 'Y'                                         MD061954
+     C                   eval      ErrInd = 'N'                                             MD061954
+                                                                                            MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+                                                                                            MD061954
+     C                   seton                                        28                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F22                                                MD061954
+     C                   WRITE     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   EXFMT     UP6006F25                                                MD061954
+                                                                                            MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+     C                   eval      %Subarr(*IN : 51 : 10) = *OFF                            MD061954
+                                                                                            MD061954
+      * DMLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRDM = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        51                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRDM <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD           10                        MD061954
+     C                   PARM      #LIBRDM       P2OBNM           10                        MD061954
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061954
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061954
+     C                   PARM      *blanks       CHKMBR           10                        MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        51                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRDM                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = ZONEP + 'DMLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRDM       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        51                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * DPLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRDP = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        52                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRDP <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD           10                        MD061954
+     C                   PARM      #LIBRDP       P2OBNM           10                        MD061954
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061954
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061954
+     C                   PARM      *blanks       CHKMBR           10                        MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        52                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRDP                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = ZONEP + 'DPLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRDP       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        52                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * DTALIB                                                                              MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRDT = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        53                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRDT <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD           10                        MD061954
+     C                   PARM      #LIBRDT       P2OBNM           10                        MD061954
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061954
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061954
+     C                   PARM      *blanks       CHKMBR           10                        MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        53                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRDT                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = ZONEP + 'DTALIB'                                  MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRDT       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        53                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * DVLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRDV = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        54                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRDV <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD           10                        MD061954
+     C                   PARM      #LIBRDV       P2OBNM           10                        MD061954
+     C                   PARM      '*LIBL'       P2TLIB           10                        MD061954
+     C                   PARM      '*LIB'        P2OBTP            8                        MD061954
+     C                   PARM      *blanks       CHKMBR           10                        MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        54                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRDV                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = ZONEP + 'DVLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRDV       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        54                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * GMLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRGM = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        55                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRGM <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      #LIBRGM       P2OBNM                                     MD061954
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061954
+     C                   PARM      '*LIB'        P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        55                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRGM                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = GLOBP + 'GMLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRGM       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        55                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * GPLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRGP = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        56                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRGP <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      #LIBRGP       P2OBNM                                     MD061954
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061954
+     C                   PARM      '*LIB'        P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        56                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRGP                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = GLOBP + 'GPLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRGP       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        56                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * GTALIB                                                                              MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRGT = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        57                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRGT <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      #LIBRGT       P2OBNM                                     MD061954
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061954
+     C                   PARM      '*LIB'        P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        57                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRGT                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = GLOBP + 'GTALIB'                                  MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRGT       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        57                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+      * GVLIB                                                                               MD061954
+      * Validate that library entered is non blank                                          MD061954
+     C                   If        #LIBRGV = *blanks                                        MD061954
+      * optional for type '3'                                                               MD061954
+     C                             and XCUM <> '3'                                          MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        58                    MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+     C                   If        #LIBRGV <> *blanks                                       MD061954
+      * Check that library exists                                                           MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      #LIBRGV       P2OBNM                                     MD061954
+     C                   PARM      '*LIBL'       P2TLIB                                     MD061954
+     C                   PARM      '*LIB'        P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+      *                                                                                     MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        58                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD061954
+     C                   EVAL      ZAMSDA = #LIBRGV                                         MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   else                                                               MD061954
+                                                                                            MD061954
+      * Check that SAVF exists in the library                                               MD061954
+     C                   eval      SAVF = GLOBP + 'GVLIB'                                   MD061954
+     C                   CALL      'UTCHKOBJ'                                               MD061954
+     C                   PARM      *BLANK        RTNCOD                                     MD061954
+     C                   PARM      SAVF          P2OBNM                                     MD061954
+     C                   PARM      #LIBRGV       P2TLIB                                     MD061954
+     C                   PARM      '*FILE'       P2OBTP                                     MD061954
+     C                   PARM      *blanks       CHKMBR                                     MD061954
+                                                                                            MD061954
+      * If libary does not exist in the library list, send message                          MD061954
+     C     RTNCOD        IFNE      'Exist'                                                  MD061954
+     C                   seton                                        58                    MD061954
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061954
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD061954
+     C                   EVAL      ZAMSDA = SAVF                                            MD061954
+     C                   EVAL      ErrInd = 'Y'                                             MD061954
+     C                   EXSR      ZASNMS                                                   MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+     C                   ENDDO                                                              MD061954
+                                                                                            MD061954
+     C                   ENDSR                                                              MD061954
+      *****************************************************************                     MD061954
+      /EJECT                                                                                MD061954
+      *****************************************************************                     MD061954
+      *                                                               *                     MD061954
+      *  Sr_LibRestR - Restore reference libraries                    *                     MD061954
+      *                                                               *                     MD061954
+      *****************************************************************                     MD061954
+     C     Sr_LibRestR   BEGSR                                                              MD061954
+                                                                                            MD061954
+     C                   eval      ErrInd = 'Y'                                             MD061954
+     C                   seton                                        21                    MD061954
+                                                                                            MD061954
+      ** Initialize work file                                                               MD061954
+     C/exec SQL                                                                             MD061954
+      + delete from UPRSTRTD                                                                MD061954
+     C/end-exec                                                                             MD061954
+     C                   If        SQLCode <> 0                                             MD061954
+     C                             and SQLCode <> 100                                       MD061954
+     C                   eval      DBASE = '100'                                            MD061954
+     C                   exsr      *pssr                                                    MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C/EXEC SQL                                                                             MD061954
+     C+ insert into UPRSTRTD                                                                MD061954
+     C+ (                                                                                   MD061954
+     C+   LRSTDM                                                                            MD061954
+     C+  ,LRSTDP                                                                            MD061954
+     C+  ,LRSTDT                                                                            MD061954
+     C+  ,LRSTDV                                                                            MD061954
+     C+  ,LRSTGM                                                                            MD061954
+     C+  ,LRSTGP                                                                            MD061954
+     C+  ,LRSTGT                                                                            MD061954
+     C+  ,LRSTGV                                                                            MD061954
+     C+ )                                                                                   MD061954
+     C+ Values                                                                              MD061954
+     C+ (                                                                                   MD061954
+     C+   ' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD061954
+     C+ )                                                                                   MD061954
+     C/END-EXEC                                                                             MD061954
+     C                   If        SQLCode <> 0                                             MD061954
+     C                   eval      DBASE = '101'                                            MD061954
+     C                   exsr      *pssr                                                    MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C                   DOW       *INKC = *OFF                                             MD061954
+     C                             and ErrInd = 'Y'                                         MD061954
+     C                   eval      ErrInd = 'N'                                             MD061954
+      ** Display screen for confirmation                                                    MD061954
+                                                                                            MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+                                                                                            MD061954
+     C                   seton                                        28                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F22                                                MD061954
+     C                   WRITE     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   EXFMT     UP6006F25                                                MD061954
+                                                                                            MD061954
+     C                   setoff                                       515253                MD061954
+     C                   setoff                                       54                    MD061954
+     C                   eval      %Subarr(*IN : 71 : 8) = *OFF                             MD061954
+                                                                                            MD061954
+      ** End program if F3 is pressed.                                                      MD061954
+     C                   IF        *INKC = *ON                                              MD061954
+     C                   EXSR      Exit                                                     MD061954
+     C                   ENDIF                                                              MD061954
+                                                                                            MD061954
+     C                   EXSR      CLEAR                                                    MD061954
+                                                                                            MD061954
+     C                   If        XCUM = '1' or XCUM = '3'                                 MD061954
+     C                   eval      BRGLIB = XPACK + 'B'                                     MD061954
+     C                   Else                                                               MD061954
+     C                   eval      BRGLIB = XPACK2 + 'B'                                    MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C                   If        #LIBRDM <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTDM = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRDP <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTDP = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRDT <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTDT = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRDV <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTDV = ' '                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRGM <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTGM = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRGP <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTGP = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRGT <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTGT = 'S'                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+     C                   If        #LIBRGV <> ' '                                           MD061954
+     C/exec SQL                                                                             MD061954
+      + update UPRSTRTD set LRSTGV = ' '                                                    MD061954
+     C/end-exec                                                                             MD061954
+     C                   Endif                                                              MD061954
+      ** submit restore in SBSD for each SAVF having a library inserted                     MD061954
+     C                   CALL      'UPC6006'                                                MD061954
+     C                   PARM                    #LIBRDM                                    MD061954
+     C                   PARM                    #LIBRDP                                    MD061954
+     C                   PARM                    #LIBRDT                                    MD061954
+     C                   PARM                    #LIBRDV                                    MD061954
+     C                   PARM                    #LIBRGM                                    MD061954
+     C                   PARM                    #LIBRGP                                    MD061954
+     C                   PARM                    #LIBRGT                                    MD061954
+     C                   PARM                    #LIBRGV                                    MD061954
+     C                   PARM                    GLOBP                                      MD061954
+     C                   PARM                    ZONEP                                      MD061954
+     C                   PARM                    BRGLIB           10                        MD061954
+     C                   PARM                    RETRN            10                        MD061954
+                                                                                            MD061954
+     C                   eval      WAIT = 'YES'                                             MD061954
+      * Display Status                                                                      MD061954
+     C                   seton                                        79                    MD061954
+                                                                                            MD061954
+     C                   DOW       WAIT = 'YES'                                             MD061954
+     C                   CALL      'QCMDEXC'                                                MD061954
+     C                   PARM      'DLYJOB 2'    CMD               8                        MD061954
+     C                   PARM      8             CMDLEN           15 5                      MD061954
+                                                                                            MD061954
+      ** Retrieve status and wait for all to be ' ' or 'C' or 'F'                           MD061954
+     C/EXEC SQL                                                                             MD061954
+     C+ select * into :UPRSTR from UPRSTRTD                                                 MD061954
+     C/END-EXEC                                                                             MD061954
+                                                                                            MD061954
+     C                   EXSR      Sr_Check                                                 MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+     C                   seton                                        28                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   WRITE     UP6006F25                                                MD061954
+     C                   ENDDO                                                              MD061954
+                                                                                            MD061954
+      * Check if all complete                                                               MD061954
+     C                   eval      pos = %LOOKUP(*ON: *IN: 70 : 8)                          MD061954
+     C                   If        pos > 0                                                  MD061954
+     C                   eval      ErrInd = 'Y'                                             MD061954
+     C                   ITER                                                               MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+      * At the end send message                                                             MD061954
+     C                   WRITE     UP6006F0                                                 MD061954
+     C                   seton                                        288022                MD061954
+     C                   setoff                                       21                    MD061954
+     C                   WRITE     UP6006C1                                                 MD061954
+     C                   WRITE     UP6006F22                                                MD061954
+     C                   WRITE     UP6006F24                                                MD061954
+                                                                                            MD061954
+     C                   EXFMT     UP6006F25                                                MD061954
+                                                                                            MD061954
+     C                   ENDDO                                                              MD061954
+                                                                                            MD061954
+     C                   ENDSR                                                              MD061954
+      *****************************************************************                     MD061954
+      /EJECT                                                                                MD061954
+      *****************************************************************                     MD061954
+      *                                                               *                     MD061954
+      *  Sr_Check - Check status of restore                           *                     MD061954
+      *                                                               *                     MD061954
+      *****************************************************************                     MD061954
+     C     Sr_Check      BEGSR                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTDM = 'S'                                             MD061954
+     C                   eval      #DMSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTDM = 'F'                                             MD061954
+     C                   eval      #DMSTS = 'Failed'                                        MD061954
+     C                   seton                                        71                    MD061954
+     C                   WHEN      LRSTDM = 'R'                                             MD061954
+     C                   eval      #DMSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTDM = 'C'                                             MD061954
+     C                   eval      #DMSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTDP = 'S'                                             MD061954
+     C                   eval      #DPSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTDP = 'F'                                             MD061954
+     C                   eval      #DPSTS = 'Failed'                                        MD061954
+     C                   seton                                        72                    MD061954
+     C                   WHEN      LRSTDP = 'R'                                             MD061954
+     C                   eval      #DPSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTDP = 'C'                                             MD061954
+     C                   eval      #DPSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTDT = 'S'                                             MD061954
+     C                   eval      #DTSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTDT = 'F'                                             MD061954
+     C                   eval      #DTSTS = 'Failed'                                        MD061954
+     C                   seton                                        73                    MD061954
+     C                   WHEN      LRSTDT = 'R'                                             MD061954
+     C                   eval      #DTSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTDT = 'C'                                             MD061954
+     C                   eval      #DTSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTDV = 'S'                                             MD061954
+     C                   eval      #DVSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTDV = 'F'                                             MD061954
+     C                   eval      #DVSTS = 'Failed'                                        MD061954
+     C                   seton                                        74                    MD061954
+     C                   WHEN      LRSTDV = 'R'                                             MD061954
+     C                   eval      #DVSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTDV = 'C'                                             MD061954
+     C                   eval      #DVSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTGM = 'S'                                             MD061954
+     C                   eval      #GMSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTGM = 'F'                                             MD061954
+     C                   eval      #GMSTS = 'Failed'                                        MD061954
+     C                   seton                                        75                    MD061954
+     C                   WHEN      LRSTGM = 'R'                                             MD061954
+     C                   eval      #GMSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTGM = 'C'                                             MD061954
+     C                   eval      #GMSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTGP = 'S'                                             MD061954
+     C                   eval      #GPSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTGP = 'F'                                             MD061954
+     C                   eval      #GPSTS = 'Failed'                                        MD061954
+     C                   seton                                        76                    MD061954
+     C                   WHEN      LRSTGP = 'R'                                             MD061954
+     C                   eval      #GPSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTGP = 'C'                                             MD061954
+     C                   eval      #GPSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTGT = 'S'                                             MD061954
+     C                   eval      #GTSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTGT = 'F'                                             MD061954
+     C                   eval      #GTSTS = 'Failed'                                        MD061954
+     C                   seton                                        77                    MD061954
+     C                   WHEN      LRSTGT = 'R'                                             MD061954
+     C                   eval      #GTSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTGT = 'C'                                             MD061954
+     C                   eval      #GTSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   SELECT                                                             MD061954
+     C                   WHEN      LRSTGV = 'S'                                             MD061954
+     C                   eval      #GVSTS = 'Submitted'                                     MD061954
+     C                   WHEN      LRSTGV = 'F'                                             MD061954
+     C                   eval      #GVSTS = 'Failed'                                        MD061954
+     C                   seton                                        78                    MD061954
+     C                   WHEN      LRSTGV = 'R'                                             MD061954
+     C                   eval      #GVSTS = 'Running'                                       MD061954
+     C                   WHEN      LRSTGV = 'C'                                             MD061954
+     C                   eval      #GVSTS = 'Complete'                                      MD061954
+     C                   ENDSL                                                              MD061954
+                                                                                            MD061954
+     C                   eval      WAIT = 'NO'                                              MD061954
+      ** If at least one is submitted or running, wait                                      MD061954
+     C                   IF        LRSTDM = 'S' or LRSTDM = 'R'                             MD061954
+     C                             or LRSTDP = 'S' or LRSTDP = 'R'                          MD061954
+     C                             or LRSTDT = 'S' or LRSTDT = 'R'                          MD061954
+     C                             or LRSTDV = 'S' or LRSTDV = 'R'                          MD061954
+     C                             or LRSTGM = 'S' or LRSTGM = 'R'                          MD061954
+     C                             or LRSTGP = 'S' or LRSTGP = 'R'                          MD061954
+     C                             or LRSTGT = 'S' or LRSTGT = 'R'                          MD061954
+     C                             or LRSTGV = 'S' or LRSTGV = 'R'                          MD061954
+     C                   eval      WAIT = 'YES'                                             MD061954
+     C                   Endif                                                              MD061954
+                                                                                            MD061954
+     C                   ENDSR                                                              MD061954
+      *****************************************************************                     MD061954

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSE119             Date 08Aug23               *
-      *  Prev Amend No. MD057753           Date 07Jul21               *
+      *  Last Amend No. CAP241             Date 19Sep23               *
+      *  Prev Amend No. CSE119             Date 08Aug23               *
+      *                 MD057753           Date 07Jul21               *
       *                 MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
@@ -132,6 +133,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP241 - Front Office Id in Transactions Input               *
       *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
@@ -807,6 +809,7 @@
                                                                                               247907
       ** Front office id variable.                                                         AR698195B
      D DDFRNT          S             20A                                                   AR698195B
+     D PFrntId         S             20A                                                      CAP241
                                                                                              BUG5230
       ***** Data used by SETRADR ******                                                      BUG5230
       ** Array of Fields in error.                                                           BUG5230
@@ -872,6 +875,7 @@
      C                   MOVEL     TranInExt1    TranInExtA
      C                   MOVEL     TranInExt2    TranInExtB
      C                   MOVEL     TransQ        StampTax                                     CER049
+     C                   Eval      PFrntId = DDFRNT                                           CAP241
 
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
@@ -2040,6 +2044,10 @@
      C                   PARM                    B_DDROTC         12
      C                   PARM                    DDFRNT                                    AR698195B
 
+     C                   If        CAP241 = 'Y'                                               CAP241
+     C                   Eval      DDFRNT = PFrntId                                           CAP241
+     C                   Endif                                                                CAP241
+     C
       * Converse TRADSDX2 into Screen Format
 
      C                   CALLB     'SETRADCVT2'
@@ -5348,6 +5356,18 @@
      C                   ENDIF                                                                CSW210
                                                                                               CSW210
      C                   ENDIF                                                                CSW210
+      *                                                                                       CAP241
+      ** Check if CAP241 is enabled.                                                          CAP241
+     C                   Movel     'N'           CAP241            1                          CAP241
+     C                   CALL      'AOSARDR0'                                                 CAP241
+     C                   PARM      *BLANKS       @RTCD                                        CAP241
+     C                   PARM      '*VERIFY'     @OPTN                                        CAP241
+     C                   PARM      'CAP241'      @SARD                                        CAP241
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CAP241
+      *                                                                                       CAP241
+     C     @RTCD         IFEQ      *BLANK                                                     CAP241
+     C                   MOVEL     'Y'           CAP241                                       CAP241
+     C                   ENDIF                                                                CAP241
 
      C                   ENDSR
       *****************************************************************
@@ -5393,6 +5413,10 @@
      C                   EVAL      V_REPA = APRprLocn
                                                                                               244537
      C                   ENDIF                                                                244537
+
+     C                   If        CAP241 = 'Y'                                               CAP241
+     C                   Eval      V_FRNT = DDFRNT                                            CAP241
+     C                   Endif                                                                CAP241
 
       * Automatic Authorisation flag
      C                   IF        CAP051 = 'Y'

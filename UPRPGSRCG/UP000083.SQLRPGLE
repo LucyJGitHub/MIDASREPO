@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061880             Date 14Sep23             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061880 - Include Fix package installation                  *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -57,10 +59,12 @@
      C     *ENTRY        PLIST
      C                   PARM                    Lib1             10
      C                   PARM                    Lib2             10
+     C                   PARM                    SUBSET            1                        MD061880
 
      C     *LIKE         DEFINE    QWCBSG        ##Lgth1
      C     *LIKE         DEFINE    QWCBSG        ##Lgth2
 
+     C                   IF        SUBSET <> 'Y'                                            MD061880
       * List DTAARA which does not exist in Reference System
      C/exec SQL
      C+ declare Cursor1 cursor for
@@ -105,6 +109,8 @@
      C+ close Cursor1
      C/end-exec
 
+     C                   ENDIF                                                              MD061880
+                                                                                            MD061880
       * List DTAARA which does not exist in Current System
      C/exec SQL
      C+ declare Cursor2 cursor for

@@ -9,10 +9,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD061706 *CRATE    Date 01Aug23              */
+/*       Last Amend No. MD061880           Date 14Sep23              */
+/*       Prev Amend No. MD061706 *CRATE    Date 01Aug23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061880 - Include Fix package installation                 */
 /*       MD061706 - Various changes for transition to aDBU           */
 /*                                                                   */
 /*********************************************************************/
@@ -80,13 +82,22 @@
              If         COND(&RTNCODE *EQ '*NRF   ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
              ENDDO
+          sndusrmsg test                                                                /*MD061880*/
+/* If Fix package installation, either the global ref prefix can be blank */            /*MD061880*/
+/* or UPEXCCTD may not be delivered */                                                  /*MD061880*/
+             IF         COND(%SST(&SVAL1 1 2) *EQ '  ') THEN(GOTO +
+                          ADBUCHK)                                                      /*MD061880*/
              CHGVAR     VAR(&GTALIBR) VALUE((%SST(&SVAL1 1 2)) *TCAT 'GTALIB')
+             CHKOBJ     OBJ(&GTALIBR/UPEXCCTD) OBJTYPE(*FILE)                           /*MD061880*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(GOTO ADBUCHK)                       /*MD061880*/
+                                                                                        /*MD061880*/
              CHGVAR     VAR(&GTALIB) VALUE((%SST(&SVAL2 1 2)) *TCAT 'GTALIB')
              CPYF       FROMFILE(&GTALIBR/UPEXCCTD) TOFILE(UPEXCCTD) +
                           MBROPT(*REPLACE)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
              CALL       PGM(UP000701) PARM(&ERRORFLAG 'UPEXCCTD' &GTALIB)
 
+ADBUCHK:                                                                                /*MD061880*/
 /* Check if ADBU is installed in the system*/
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
              CHGVAR     VAR(&SVALK1) VALUE('BrgADBUGlobalRefer')

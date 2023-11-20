@@ -12,11 +12,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. MD061516           Date 15Jun23              */
-/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD061906           Date 23Sep23              */
+/*       Prev Amend No. MD061880           Date 14Sep23              */
+/*                      MD061516           Date 15Jun23              */
+/*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061906 - Bridge journalling improvement                   */
+/*       MD061880 - Include Fix package installation                 */
 /*       MD061516 - SCSWPSVL is removed from Bridge library after    */
 /*                  database upgrade (same as MD060005)              */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
@@ -176,6 +180,11 @@ ADOPTPGMS:
 
 /* Create stored procedures. */
 PROCEDURES:
+/* If no source library has been provided, skip and go to ROUTE_ENTS */                 /*MD061880*/
+             IF         COND(&BRGSRCLIB *EQ ' ') THEN(DO)                               /*MD061880*/
+             GOTO       CMDLBL(ROUTE_ENTS)                                              /*MD061880*/
+             ENDDO                                                                      /*MD061880*/
+                                                                                        /*MD061880*/
              CHGVAR     VAR(&SUBOPT) VALUE('Procedures')
              CHGVAR     VAR(&ERRPGM) VALUE('UPC002001')
              CALL       PGM(UP000009) PARM('*CHK' &MENUOPT &SUBOPT +
@@ -229,31 +238,32 @@ SQLAUTOGEN:
                 ENDDO
              ENDDO
 
-/* Start journaling. */
-STARTJRN:
-             CHGVAR     VAR(&SUBOPT) VALUE('StartJournaling')
-             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
-                CHGVAR     VAR(&ERRPGM) VALUE('SCBEGINJRN')
-             ENDDO
-             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
-                CHGVAR     VAR(&ERRPGM) VALUE('GPBEGINJRN')
-             ENDDO
-             CALL       PGM(UP000009) PARM('*CHK' &MENUOPT &SUBOPT +
-                          &LAYER &STATUS)
-             IF         COND(&STATUS *EQ 'E') THEN(DO)
-                CHGVAR     VAR(&ERRPGM) VALUE('UP000009')
-                GOTO       CMDLBL(ERROR)
-             ENDDO
-             IF         COND(&STATUS *NE 'C') THEN(DO)
-                CALL       PGM(&ERRPGM) PARM(&PFX '*START')
-                MONMSG     MSGID(CPF0000) EXEC(DO)
-                   CHGVAR     VAR(&RTNFLAG) VALUE('E')
-                ENDDO
-                CALLSUBR   SUBR(ERRORHAND2) RTNVAL(&SRERROR)
-                IF         COND(&SRERROR *EQ 2) THEN(DO)
-                   GOTO       CMDLBL(ERROR)
-                ENDDO
-             ENDDO
+/* Journalling is now done in DBU/aDBU */                                               /*MD061906*/
+/**Start*journaling. */                                                                 /*MD061906*/
+/*STARTJRN:*/                                                                           /*MD061906*/
+/**********  CHGVAR     VAR(&SUBOPT) VALUE('StartJournaling') */                        /*MD061906*/
+/**********  IF         COND(&LAYER *EQ '*ZONE') THEN(DO) */                            /*MD061906*/
+/**********     CHGVAR     VAR(&ERRPGM) VALUE('SCBEGINJRN') */                          /*MD061906*/
+/**********  ENDDO */                                                                   /*MD061906*/
+/**********  IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO) */                          /*MD061906*/
+/**********     CHGVAR     VAR(&ERRPGM) VALUE('GPBEGINJRN') */                          /*MD061906*/
+/**********  ENDDO */                                                                   /*MD061906*/
+/**********  CALL       PGM(UP000009) PARM('*CHK' &MENUOPT &SUBOPT +
+                          &LAYER &STATUS) */                                            /*MD061906*/
+/**********  IF         COND(&STATUS *EQ 'E') THEN(DO) */                               /*MD061906*/
+/**********     CHGVAR     VAR(&ERRPGM) VALUE('UP000009') */                            /*MD061906*/
+/**********     GOTO       CMDLBL(ERROR) */                                             /*MD061906*/
+/**********  ENDDO */                                                                   /*MD061906*/
+/**********  IF         COND(&STATUS *NE 'C') THEN(DO) */                               /*MD061906*/
+/**********     CALL       PGM(&ERRPGM) PARM(&PFX '*START') */                          /*MD061906*/
+/**********     MONMSG     MSGID(CPF0000) EXEC(DO) */                                   /*MD061906*/
+/**********        CHGVAR     VAR(&RTNFLAG) VALUE('E') */                               /*MD061906*/
+/**********     ENDDO */                                                                /*MD061906*/
+/**********     CALLSUBR   SUBR(ERRORHAND2) RTNVAL(&SRERROR) */                         /*MD061906*/
+/**********     IF         COND(&SRERROR *EQ 2) THEN(DO) */                             /*MD061906*/
+/**********        GOTO       CMDLBL(ERROR) */                                          /*MD061906*/
+/**********     ENDDO */                                                                /*MD061906*/
+/**********  ENDDO */                                                                   /*MD061906*/
 
 /* Start triggering. */
 STARTTRG:
@@ -471,7 +481,8 @@ ENDPGM:
                       CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                    ENDDO
                    IF         COND(&SVAL5 *EQ ' ') THEN(DO)
-                      CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredSrcLib can be blank if Fix package */                                    /*MD061880*/
+/**********           CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                          /*MD061880*/
                    ENDDO
                 ENDDO
              ENDDO
@@ -509,7 +520,8 @@ ENDPGM:
                    CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                 ENDDO
                 IF         COND(&SVAL5 *EQ ' ') THEN(DO)
-                   CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredSrcLib can be blank if Fix package */                                    /*MD061880*/
+/**********        CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                             /*MD061880*/
                 ENDDO
              ENDDO
 

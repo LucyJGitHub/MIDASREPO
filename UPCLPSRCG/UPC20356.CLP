@@ -12,10 +12,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD061880           Date 14Sep23              */
+/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061880 - Include Fix package installation                 */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                                                                   */
@@ -81,7 +83,9 @@ VALIDATE:                                                                       
 
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
-                GOTO       CMDLBL(ABNOR)
+/* Simply skip process if system value is blank */                                      /*MD061880*/
+/**********     GOTO       CMDLBL(ABNOR) */                                             /*MD061880*/
+                GOTO       CMDLBL(END)                                                  /*MD061880*/
              ENDDO
 
 /**Obtain*list*of*files*in*'From*Library'**/ /*                                        */ /*CPK016*/

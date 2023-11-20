@@ -10,12 +10,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD061706           Date 01Aug23              */
-/*       Prev Amend No. MD060709           Date 08Nov22              */
+/*       Last Amend No. MD061880           Date 14Sep23              */
+/*       Prev Amend No. MD061706           Date 01Aug23              */
+/*                      MD060709           Date 08Nov22              */
 /*                      CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061880 - Include Fix package installation                 */
 /*       MD061706 - Various changes for transition to aDBU           */
 /*       MD060709 - Change in LF dynamic selection is omitted        */
 /*                  File is not deleted when both DTAARA and file    */
@@ -40,7 +42,8 @@
              DCL        VAR(&FLDVAL) TYPE(*CHAR) LEN(100)
              DCL        VAR(&WLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
              DCL        VAR(&WMSG) TYPE(*CHAR) LEN(50) VALUE('DONE')
-             DCL        VAR(&WMSGF) TYPE(*CHAR) LEN(4) VALUE('FAIL')
+/**********  DCL        VAR(&WMSGF) TYPE(*CHAR) LEN(4) VALUE('FAIL') */                 /*MD061880*/
+             DCL        VAR(&WMSGF) TYPE(*CHAR) LEN(50) VALUE('FAIL')                   /*MD061880*/
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
@@ -57,6 +60,7 @@
              DCL        VAR(&RCVL) TYPE(*CHAR) LEN(4)
              DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(200)
              DCL        VAR(&RTVINFO) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&SUBSET) TYPE(*CHAR) LEN(1)                                 /*MD061880*/
 
              DCLF       FILE(UPMBRLT) OPNID(OPNID)
 
@@ -109,7 +113,9 @@
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 Library' +
                              *BCAT &LIB2 *BCAT 'does not exist.') MSGTYPE(*DIAG)
-                GOTO       CMDLBL(ABNOR)
+/* In case of Fix package installation, &LIB2 may not exist */                          /*MD061880*/
+/**********     GOTO       CMDLBL(ABNOR) */                                             /*MD061880*/
+                GOTO       CMDLBL(DONE)                                                 /*MD061880*/
              ENDDO
 
 /* Clear log file */
@@ -150,6 +156,7 @@
              CHGVAR     VAR(&HALF) VALUE(&LIBCNT1 * 0.5)
 /* If &LIB2 contains less than 50% of objects of &LIB1 */
              IF         COND(&LIBCNT2 *LT &HALF) THEN(DO)
+             CHGVAR     VAR(&SUBSET) VALUE('Y')                                         /*MD061880*/
 /* List &LIB2 files */
                 DLTF       FILE(QTEMP/SMC000034F)
              MONMSG     MSGID(CPF0000)
@@ -158,6 +165,12 @@
                 DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
                              OUTPUT(*OUTFILE) +
                              OUTFILE(QTEMP/SMC000034F)
+/* In case of Fix package, library may contain no file (just DTAARA for instance */     /*MD061880*/
+             MONMSG     MSGID(CPF3012) EXEC(DO)                                         /*MD061880*/
+             OVRDBF     FILE(UPCLOGPD) TOFILE(&LOGFILE)                                 /*MD061880*/
+             GOTO       CMDLBL(DTAARA)                                                  /*MD061880*/
+             ENDDO                                                                      /*MD061880*/
+                                                                                        /*MD061880*/
              CPYF       FROMFILE(QTEMP/SMC000034F) +
                           TOFILE(QTEMP/UPMBRLT) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
@@ -435,6 +448,7 @@ DSPFDAC2:                                                                       
              OVRDBF     FILE(UTFLDDL1) MBR(&NMBR)                                       /*MD060709*/
              CALL       PGM(UT000037) PARM(&LIB1 &LIB2 ' ' &DSP1 &DSP2)                 /*MD060709*/
                                                                                         /*MD060709*/
+DTAARA:                                                                                 /*MD061880*/
 /* List and compare DTAARA */
              DSPOBJD    OBJ(&LIB1/*ALL) OBJTYPE(*DTAARA) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/DTAARA1)
@@ -442,7 +456,8 @@ DSPFDAC2:                                                                       
              DSPOBJD    OBJ(&LIB2/*ALL) OBJTYPE(*DTAARA) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/DTAARA2)
              MONMSG     MSGID(CPF2123)
-             CALL       PGM(UP000083) PARM(&LIB1 &LIB2)
+/**********  CALL       PGM(UP000083) PARM(&LIB1 &LIB2) */                              /*MD061880*/
+             CALL       PGM(UP000083) PARM(&LIB1 &LIB2 &SUBSET)                         /*MD061880*/
 
 /* List and compare DTAQ */
              DSPOBJD    OBJ(&LIB1/*ALL) OBJTYPE(*DTAQ) +
@@ -452,6 +467,7 @@ DSPFDAC2:                                                                       
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/DTAQ2)
              MONMSG     MSGID(CPF2123)
  /******     CALL       PGM(UP000084) PARM(&LIB1 &LIB2)  *************/
+             CALL       PGM(UP000084) PARM(&LIB1 &LIB2 &SUBSET)                         /*MD061880*/
 
 DONE:
 /* Update Compare Work File */

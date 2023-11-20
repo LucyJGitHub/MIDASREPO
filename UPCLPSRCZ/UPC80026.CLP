@@ -12,10 +12,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD061880           Date 14Sep23              */
+/*       Prev Amend No. CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061880 - Include Fix package installation                 */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                                                                   */
@@ -104,6 +106,8 @@ VALIDATE:                                                                       
              ENDDO                                                                        /*CUP033*/
              IF         COND(&GISVAL *EQ &BRGDTASV) THEN(DO)                              /*CUP040*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP040*/
+/* Simply skip process if system value is blank */                                      /*MD061880*/
+                GOTO       CMDLBL(END)                                                  /*MD061880*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP040*/
                 ENDDO                                                                     /*CUP040*/
                 ELSE       CMD(DO)                                                        /*CUP040*/

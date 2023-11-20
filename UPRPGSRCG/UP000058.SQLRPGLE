@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061690             Date 27Jul23             *
-      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061690             Date 27Jul23             *
+      *                 MD059742             Date 23Mar22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *             Recompiled                                        *
       *  MD061690 - File GPSRAJW0 was deleted because one of its      *
       *             dependency was deleted                            *
       *  MD059742 - Cope with change in Alternative field name        *

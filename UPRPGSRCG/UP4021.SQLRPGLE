@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060709           Date 08Nov22               *
-      *  Prev Amend No. CUT017 *CREATE     Date 17Mar20               *
+      *  Last Amend No. MD061992           Date 23Oct23               *
+      *  Prev Amend No. MD060709           Date 08Nov22               *
+      *                 CUT017 *CREATE     Date 17Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD060709 - Change in LF dynamic selection is omitted         *
       *             File is not deleted when both DTAARA and file     *
       *             have the same name.                               *
@@ -475,7 +477,8 @@
 
      C                   CALL      'UP4006'
      C                   PARM                    CurSys            2
-     C                   PARM                    RefSys            2
+     C*********          PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys                                     MD061992
      C                   PARM      '*GLOBAL'     Layer             7
      C                   PARM                    DFFILE
      C                   EVAL      Command = *blanks
@@ -497,7 +500,8 @@
      C                   CALL      'UP000086'
      C                   PARM                    DFLIBR
      C                   PARM                    CurSys            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys                                     MD061992
      C                   PARM      0             #SEQ             15 5
      C                   PARM                    BRIDGELIB
      C                   PARM                    Return           10
@@ -1200,7 +1204,8 @@
       *
      C     *ENTRY        PLIST
      C                   PARM                    CurSys            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    BRIDGELIB        10
 
       ** Get the current time.

@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -177,7 +179,8 @@
 
       *
      C     *ENTRY        PLIST
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    Error            10
 
 

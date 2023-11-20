@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International 2023                              *
       *                                                               *
-      *  Last Amend No. CUP047               Date 27Aug23             *
-      *  Prev Amend No. MD060960 *CREATE     Date 16Jan23             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. CUP047               Date 27Aug23             *
+      *                 MD060960 *CREATE     Date 16Jan23             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
       *  MD060960 - Some dependents do not exist yet as their         *
       *             CRTDUPOBJ has not been executed yet. Fix is to    *
@@ -82,7 +84,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    Prefix            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    ERROR
 
      C                   eval      AUTL = Prefix + 'DATABASE'
@@ -407,10 +410,12 @@
       * 1.2 move dependency into DM if not in DM - Prod System
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' + Prefix +
-     C                             %trimr(%subst(ArrLPF:3:8)) +
+     C**********                   %trimr(%subst(ArrLPF:3:8)) +                             MD061992
+     C                             %trimr(%subst(ArrLPF:4:7)) +                             MD061992
      C                             '/' + %trimr(ArrFPF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(S##MNLIB:3:8)) + ')'
+     C**********                   %trimr(%subst(S##MNLIB:3:8)) + ')'                       MD061992
+     C                             %trimr(%subst(S##MNLIB:4:7)) + ')'                       MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -524,15 +529,18 @@
      C                             %trimr(ArrFLF) + ') FROMLIB(' +
      C                             %trimr(S##MNLIB) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(S##MNLIB:3:8)) + ')'
-     C                   eval      TOLIB = Prefix + %trimr(%subst(S##MNLIB:3:8))
+     C**********                   %trimr(%subst(S##MNLIB:3:8)) + ')'                       MD061992
+     C                             %trimr(%subst(S##MNLIB:4:7)) + ')'                       MD061992
+     C**********         eval      TOLIB = Prefix + %trimr(%subst(S##MNLIB:3:8))            MD061992
+     C                   eval      TOLIB = Prefix + %trimr(%subst(S##MNLIB:4:7))            MD061992
      C                   eval      TOFILE = %trimr(ArrFLF)
       * add Disaster Recovery step
      C                   eval      Add_DR = 'Y'
      C                   Else
       * but beware it is not a LF as there is no need to move from VLIB to VLIB
      C                   If        %trimr(Prefix + 'GVLIB') =  Prefix +
-     C                             %trimr(%subst(S##MNLIB:3:8))
+     C**********                   %trimr(%subst(S##MNLIB:3:8))                             MD061992
+     C                             %trimr(%subst(S##MNLIB:4:7))                             MD061992
       * do not write script step
      C                   eval      Write_Scr = 'N'
      C                   else
@@ -540,7 +548,8 @@
      C                             %trimr(Prefix + 'GVLIB') + '/' +
      C                             %trimr(ArrFLF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(S##MNLIB:3:8)) + ')'
+     C**********                   %trimr(%subst(S##MNLIB:3:8)) + ')'                       MD061992
+     C                             %trimr(%subst(S##MNLIB:4:7)) + ')'                       MD061992
      C                   Endif
      C                   Endif
 
@@ -823,10 +832,12 @@
 
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' +
-     C                             Prefix  + %trimr(%subst(S##MNLIB:3:8)) +
+     C**********                   Prefix  + %trimr(%subst(S##MNLIB:3:8)) +                 MD061992
+     C                             Prefix  + %trimr(%subst(S##MNLIB:4:7)) +                 MD061992
      C                             '/' + %trimr(ArrFLF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(ArrLLF:3:8)) + ')'
+     C**********                   %trimr(%subst(ArrLLF:3:8)) + ')'                         MD061992
+     C                             %trimr(%subst(ArrLLF:4:7)) + ')'                         MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -945,10 +956,12 @@
       * 5.2 move dependency into DM if it was moved to DM in 1. - Prod System
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' + Prefix +
-     C                             %trimr(%subst(S##MNLIB:3:8))  +
+     C**********                   %trimr(%subst(S##MNLIB:3:8))  +                          MD061992
+     C                             %trimr(%subst(S##MNLIB:4:7))  +                          MD061992
      C                             '/' + %trimr(ArrFPF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(ArrLPF:3:8)) + ')'
+     C**********                   %trimr(%subst(ArrLPF:3:8)) + ')'                         MD061992
+     C                             %trimr(%subst(ArrLPF:4:7)) + ')'                         MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD

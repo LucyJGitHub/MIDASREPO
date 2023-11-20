@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. CUP047               Date 27Aug23             *
-      *  Prev Amend No. MD059777             Date 12Apr22             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. CUP047               Date 27Aug23             *
+      *                 MD059777             Date 12Apr22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
       *  MD059777 - When LF/view is a dependency without being an     *
       *             affected dependent, it is ignored by the script   *
@@ -82,7 +84,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    Prefix            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    ERROR
 
      C                   eval      AUTL = Prefix + 'DATABASE'

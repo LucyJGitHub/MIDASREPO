@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061690             Date 27Jul23             *
-      *  Prev Amend No. MD060271             Date 21Jul22             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061690             Date 27Jul23             *
+      *                 MD060271             Date 21Jul22             *
       *                 MD059751             Date 25Mar22             *
       *                 MD059742             Date 23Mar22             *
       *                 MD058089             Date 01Sep21             *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061690 - File GPSRAJW0 was deleted because one of its      *
       *             dependency was deleted                            *
       *  MD060271 - UDF tables are reported but should be ignored     *
@@ -77,7 +79,8 @@
      **************************************************************************
      C     *ENTRY        PLIST
      C                   PARM                    Lib1              2
-     C                   PARM                    Lib2              2
+     C**********         PARM                    Lib2              2                        MD061992
+     C                   PARM                    Lib2              3                        MD061992
      C                   PARM                    LAYER             7
      C                   PARM                    File             10
       *

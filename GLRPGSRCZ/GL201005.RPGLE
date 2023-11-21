@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas GL Today's Transfer Postings Report')            *
+/*E*I****TEXT('Midas*GL*Today's*Transfer*Postings*Report')*************                     MD062120
+/*EXI *  TEXT('Midas GL Todays Transfer Postings Report')             *                     MD062120
       *****************************************************************
       *                                                               *
       *  Midas - Dealing Module                                       *
@@ -23,11 +24,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. AR854120           Date 22Sep23               *
-      *  Prev Amend No. CGL201 *Create     Date 22Sep23               *
+      *  Last Amend No. MD062120           Date 21Nov23               *
+      *  Prev Amend No. AR854120           Date 22Sep23               *
+      *                 CGL201 *Create     Date 22Sep23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062120 - LBBW ASIA CAR Upgrade to FM2021.G - fixes         *
       *  AR854120  - Seoul reports with SUMMARY FOR SINGAPORE BRANCH -*
       *              Added variable field to pass correct header      *
       *              statement for the Country Code (Child: AR854121) *

@@ -12,19 +12,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD048898           Date 11Dec17               *
+      *  Last Amend No. MD062079           Date 15Nov23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
       *                 AR1095725          Date 15Mar13               *
-      *       Amend No. AR920354           Date 09Nov12               *
+      *                 AR920354           Date 09Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062079 - Add Prime Nostro designation transfer process     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD048898 - Files not updating. Correct Parameters            *
       *  MD038440 - Nostro deletion issue. Revised validation process *
@@ -54,6 +56,9 @@
       ** GL Acc Movts by cust/ccy/acct code/acct seq/branch                                 AR920354
       ** (full a/c)                                                                         AR920354
       *                                                                                     AR920354
+     FSDNOSTL7  IF   E           K DISK    PREFIX(W_)                                       MD062079
+      * Midas SD Nostro Code Details by ccy/shortname/PNI                                   MD062079
+      *                                                                                     MD062079
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -215,6 +220,12 @@
      D IdIn            S             18    Inz                                                CDL094
      D Key10           S             10    Inz                                                CDL094
      D x               S              3U 0                                                    CDL094
+                                                                                            MD062079
+     D WOverride       S              1A                                                    MD062079
+     D WNostroNum      S              2A                                                    MD062079
+     D WLastChgType    S              1A                                                    MD062079
+     D KCurrency       S              3A                                                    MD062079
+     D KNostroNum      S              2A                                                    MD062079
 
       /EJECT
       *****************************************************************
@@ -322,6 +333,16 @@
      C                   KFLD                    A_NVCYCD
      C                   KFLD                    A_NVNONB
 
+      ** Key to Access Nostro Details by Currency/Shortname/Prime Nostro Indicator          MD062079
+     C     KLPNOI        KLIST                                                              MD062079
+     C                   KFLD                    A_NVCYCD                                   MD062079
+     C                   KFLD                    A_NVNOSN                                   MD062079
+     C                   KFLD                    A_NVPNOI                                   MD062079
+                                                                                            MD062079
+      ** Key to Access Nostro Details - Transfer Prime Nostro Designation                   MD062079
+     C     KLTRFR        KLIST                                                              MD062079
+     C                   KFLD                    KCurrency                                  MD062079
+     C                   KFLD                    KNostroNum                                 MD062079
 
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
@@ -442,6 +463,11 @@
       ****************************************************************
      C     INSERT        BEGSR
 
+      ** Check if need to transfer Prime Nostro designation                                 MD062079
+     C                   IF        A_NVPNOI = 'P'                                           MD062079
+     C                   EXSR      TRANSFER                                                 MD062079
+     C                   ENDIF                                                              MD062079
+                                                                                            MD062079
       ** Access Nostro Details
      C     KLCRSL        CHAIN     SDNOSTL0                           99
       ** Database error
@@ -501,7 +527,7 @@
       ** Write new Transaction Detail
      C                   WRITE     @A7REBE
 
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
@@ -515,6 +541,11 @@
       ****************************************************************
      C     AMEND         BEGSR
 
+      ** Check if need to transfer Prime Nostro designation                                 MD062079
+     C                   IF        A_NVPNOI = 'P'                                           MD062079
+     C                   EXSR      TRANSFER                                                 MD062079
+     C                   ENDIF                                                              MD062079
+                                                                                            MD062079
       ** Access Nostro Details                                     HILO
      C     KLCRSL        CHAIN     SDNOSTL0                           9998
       ** Database error (Record Not Found)
@@ -580,7 +611,7 @@
       *
       ** Update Nostro Code Record
      C                   UPDATE    @A7REBE
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
@@ -745,7 +776,7 @@
       * WRITE DELETED RECORD IN STANDING DATA DELETED FILE
      C                   EXSR      WRTDLRC
      C                   EVAL      A7TYLC = 'D'
-      * INSERT A RECORD IN THE TABLE TABLETH
+      * INSERT A RECORD IN THE TABLE TABLETL
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
@@ -753,6 +784,79 @@
      C**********         ENDSR                                                              AR920354
      C     DELEXIT       ENDSR                                                              AR920354
       ****************************************************************
+      /EJECT                                                                                MD062079
+      ****************************************************************                      MD062079
+      *                                                              *                      MD062079
+      * TRANSFER - Transfer Prime Nostro Designation                 *                      MD062079
+      *                                                              *                      MD062079
+      ****************************************************************                      MD062079
+     C     TRANSFER      BEGSR                                                              MD062079
+                                                                                            MD062079
+      ** Initialize work and key fields                                                     MD062079
+     C                   EVAL      WOverride = 'N'                                          MD062079
+     C                   EVAL      WNostroNum = *BLANKS                                     MD062079
+     C                   EVAL      WLastChgType = *BLANKS                                   MD062079
+     C                   EVAL      KCurrency = *BLANKS                                      MD062079
+     C                   EVAL      KNostroNum = *BLANKS                                     MD062079
+                                                                                            MD062079
+      ** Save Nostro Number from input to a work field for comparison                       MD062079
+     C                   EVAL      WNostroNum = A_NVNONB                                    MD062079
+                                                                                            MD062079
+     C     KLPNOI        CHAIN     SDNOSTL7                           9998                  MD062079
+                                                                                            MD062079
+      ** If same ccy/shortname/prime nostro indicator combination is found,                 MD062079
+      ** override prime nostro indicator                                                    MD062079
+     C                   IF        *IN99 = *OFF                                             MD062079
+     C     W_A7NONB      IFNE      WNostroNum                                               MD062079
+     C                   EVAL      WOverride = 'Y'                                          MD062079
+     C                   ENDIF                                                              MD062079
+     C                   ENDIF                                                              MD062079
+                                                                                            MD062079
+      ** Transfer Prime Nostro Designation                                                  MD062079
+     C                   IF        WOverride = 'Y'                                          MD062079
+                                                                                            MD062079
+     C                   EVAL      KCurrency = W_A7CYCD                                     MD062079
+     C                   EVAL      KNostroNum = W_A7NONB                                    MD062079
+                                                                                            MD062079
+     C     KLTRFR        CHAIN     SDNOSTL0                           9998                  MD062079
+                                                                                            MD062079
+      ** Database error (record locked)                                                     MD062079
+     C                   IF        *IN98 = *ON                                              MD062079
+     C                   EVAL      DBKEY = A_NVCYCD + A_NVNONB                              MD062079
+     C                   EVAL      DBFILE = 'SDNOSTPD'                                      MD062079
+     C                   EVAL      DBASE = 908                                              MD062079
+     C                   EXSR      *PSSR                                                    MD062079
+     C                   ENDIF                                                              MD062079
+                                                                                            MD062079
+      ** Set Prime Nostro Indicator to blank                                                MD062079
+     C                   EVAL      A7PNOI = *BLANKS                                         MD062079
+     C                   EVAL      A7LCD  = BJRDNB                                          MD062079
+     C                   EVAL      A7TYLC = 'A'                                             MD062079
+                                                                                            MD062079
+      ** Timestamp                                                                          MD062079
+     C                   CALLB     'ZAGENTMSTM'                                             MD062079
+     C                   PARM                    TimeStamp                                  MD062079
+     C                   EVAL      A7TMST = TimeStamp                                       MD062079
+                                                                                            MD062079
+      ** Update SDNOSTPD                                                                    MD062079
+     C                   UPDATE    @A7REBE                                                  MD062079
+                                                                                            MD062079
+      ** Update TABLETL                                                                     MD062079
+     C                   EXSR      UPDTABL                                                  MD062079
+                                                                                            MD062079
+      ** Save Last Change Type from input                                                   MD062079
+     C                   EVAL      WLastChgType = A_NVTYLC                                  MD062079
+     C                   EVAL      A_NVTYLC = 'A'                                           MD062079
+                                                                                            MD062079
+      ** Update Standing Data Control File                                                  MD062079
+     C                   EXSR      UPDCTRL                                                  MD062079
+     C                                                                                      MD062079
+      ** Restore orignal value of Last Change Type from input                               MD062079
+     C                   EVAL      A_NVTYLC = WLastChgType                                  MD062079
+                                                                                            MD062079
+     C                   ENDIF                                                              MD062079
+     C                   ENDSR                                                              MD062079
+      ****************************************************************                      MD062079
       /EJECT
      C****************************************************************
      C*                                                              *

@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD062084           Date 15Nov23               *
-      *  Prev Amend No. MD054367           Date 27Oct23               *
+      *  Last Amend No. MD046102           Date 10Nov23               *
+      *  Prev Amend No. AR827109           Date 10Nov23               *
+      *                 MD062084           Date 15Nov23               *
+      *                 MD054367           Date 27Oct23               *
       *                 MD052584           Date 27Oct23               *
       *                 AR819282           Date 27Oct23               *
       *                 AR835056           Date 02Oct23               *
@@ -313,6 +315,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046102 - Loan is not picking up the correct historic base  *
+      *             rate during a backvalued rollover. Get base rate  *
+      *             from history if RLDT is less than BAVDNR and rate *
+      *             is not yet fixed. Enhance fix AR827109. Also,     *
+      *             base rate for CHIN=N should be the loan's base    *
+      *             rate. Retrieve correct base rate for BC event.    *
+      *  AR827109 - Not possible to change the base rate code with    *
+      *             back value date. If backvalued rollover date is   *
+      *             earlier than rundate, get base rate from history  *
+      *             file. Pattern fix 247970. (Child: AR827110)       *
+      *           - Applied for MD046102                              *
       *  MD062084 - Future interest withholding tax is not displayed  *
       *             if the event is the first record after page down  *
       *             and is followed by a future loan amendment ex. MR.*
@@ -11117,6 +11130,10 @@
      C           WBRAT     ORNE *BLANKS                                                       CSD103
      C           CLE036    ANDEQ'Y'                                                           CLE036
       *                                                                                       CLE036
+     C           CHIN      IFEQ 'N'                                                         MD046102
+     C           BRTT      ANDEQNBRA                                                        MD046102
+     C                     MOVE WCUBR     ZFIELD                                            MD046102
+     C                     ELSE                                                             MD046102
      C                     MOVE WBRAT     PKEY2   2                       184903
      C                     CALL 'AOBSRTR0'                                184903
      C                     PARM *BLANKS   PRTCD   7                       184903
@@ -11139,6 +11156,7 @@
      C                     Z-ADDBACBSR    WWBRTE                                              224646
      C                     ENDIF                                                              224646
      C                     ENDIF                                          184903
+     C                     ENDIF                                                            MD046102
       *                                                                                       CLE036
      C                     ELSE                                                               CLE036
       *                                                                                       CLE036
@@ -11203,6 +11221,38 @@
      C                     Z-ADDWCUBR     WNBRTE                                            MD059620
      C                     ENDIF                                                              239062
       *                                                                                       239062
+     C           CHIN      IFEQ 'N'                                                         MD046102
+     C           BRTT      ANDEQNBRA                                                        MD046102
+     C                     ELSE                                                             MD046102
+     C           RLDT      IFLT RUND                                                        AR827109
+     C           RLDT      ANDNE*ZEROS                                                      AR827109
+     C           RFRI      ANDNE'Y'                                                         MD046102
+     C           RLDT      ANDLTBAVDNR                                                      MD046102
+     C                     Z-ADDRLDT      WDAYN                                             AR827109
+     C                     MOVE PKEY1     ZCCY                                              MD046102
+     C                     MOVE PKEY2     WBRTT                                             MD046102
+     C           CHIN      IFEQ 'R'                                                         MD046102
+     C                     Z-ADDRLDT      ZDAYNO                                            MD046102
+     C                     MOVE *BLANK    ZLOC                                              MD046102
+     C                     MOVE RFDY      ZNRDYS                                            MD046102
+     C                     EXSR ZBKDT                                                       MD046102
+     C                     Z-ADDZDYNBR    WDAYN   50                                        MD046102
+     C                     ENDIF                                                            MD046102
+     C                     CALL 'AOBSHSR0'                                                  AR827109
+     C                     PARM *BLANK    @RTCD                                             AR827109
+     C                     PARM '*KEY    'POPTN                                             AR827109
+     C                     PARM           ZCCY                                              AR827109
+     C                     PARM           WBRTT                                             AR827109
+     C                     PARM           WDAYN                                             AR827109
+     C           SDBSHS    PARM           SDBSHS                                            AR827109
+      *                                                                                     AR827109
+     C           @RTCD     IFEQ *BLANK                                                      AR827109
+     C                     MOVE G0CBSR    ZFIELD                                            AR827109
+     C                     MOVE ZFIELD    WNBRTE                                            AR827109
+     C                     ENDIF                                                            AR827109
+     C                     ENDIF                                                            AR827109
+     C                     ENDIF                                                            MD046102
+      *                                                                                     AR827109
       ** Display a negative rate properly                                                   MD059620
       *                                                                                     MD059620
      C           WNBRTE    IFLT 0                                                           MD059620

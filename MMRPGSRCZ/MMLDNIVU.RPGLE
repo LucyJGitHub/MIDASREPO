@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060788           Date 08May23               *
-      *  Prev Amend No. 252024             Date 14Feb08               *
+      *  Last Amend No. AR819780           Date 16Nov23               *
+      *  Prev Amend No. AR816445           Date 16Nov23               *
+      *                 AR816464           Date 16Nov23               *
+      *                 MD060788           Date 08May23               *
+      *                 252024             Date 14Feb08               *
       *                 MD059304           Date 26Jan22               *
       *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
@@ -150,6 +153,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR819780 - Amendment done on Meridian to cater for multiple  *
+      *             delete for same Front office. Build Back office   *
+      *             number from Meridian. (Child: AR819781)           *
+      *           - Applied for MD-61950.                             *
+      *  AR816445 - SOAP interface from Meridian LDNI from K+ update  *
+      *             (i.e. cancel/insert) rejecting the delete due     *
+      *             to invalid deal number. (Child: AR816446)         *
+      *           - Applied for MD-61950.                             *
+      *  AR816464 - SOAP interface from Meridian LDNI from K+ update  *
+      *             (i.e. cancel/insert) rejecting the insert due     *
+      *             to invalid deal number. Clear DDDLNO when action  *
+      *             is Insert. (Child: AR816466)                      *
+      *           - Applied for MD-61950.                             *
       *  MD060788 - Records in the Interest Rate Payment and Interest *
       *             Rate Change Schedule tabs are missing upon        *
       *             Authorisation of a TD/ CF deal                    *
@@ -2213,6 +2229,23 @@
       * The deal in file format from the MM database is retrieved as well.
 
      C                   RESET                   ReturnCode
+      *                                                                                     AR816464
+      ** If coming from Front Office via SOAP                                               AR816464
+      *                                                                                     AR816464
+     C                   IF        DDFOID <> *Blanks                                        AR816464
+     C                   EVAL      ModeofOp = *BLANKS                                       AR816464
+      *                                                                                     AR816464
+     C                   SELECT                                                             AR816464
+     C                   WHEN      DDACTN = 'I'                                             AR816464
+     C                   EVAL      DDDLNO = *BLANKS                                         AR816464
+     C                   WHEN      DDACTN = 'D'                                             AR816445
+     C                   EVAL      APFOTranID  = DDFOID                                     AR816445
+     C**********         EVAL      ModeofOp = '*FRONT'                             AR816445 AR819780
+     C                   OTHER                                                              AR816464
+     C                   ENDSL                                                              AR816464
+      *                                                                                     AR816464
+     C                   END                                                                AR816464
+      *                                                                                     AR816464
      C                   CALLB     'MMLDNIRTV'
 
       * INPUTS
@@ -2221,7 +2254,8 @@
 
       * Mode = '*FRONT' (Front Office transaction interface)
       * Mode = '      ' (Not Front Office transaction interface)
-     C                   PARM      '      '      ModeofOp          6
+     C**********         PARM      '      '      ModeofOp          6                        AR816445
+     C                   PARM                    ModeofOp          6                        AR816445
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE

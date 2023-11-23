@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058232           Date 31May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059527           Date 23Nov23               *
+      *  Prev Amend No. MD058232           Date 31May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057246           Date 08Jan21               *
       *                 BUG25122A          Date 02Sep09               *
       *                 CER050             Date 16Jun19               *
@@ -88,6 +89,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD059527 - GLC3571 00001 component Printer overflow error    *
+      *             detected during COB.                              *
+      *           - Applied for MD-62131.                             *
       *  MD058232 - Review Deliverable Data Split for Pulldowns       *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057246 - Multiple calls to UTCHOBJEX. Move call to         *
@@ -2666,6 +2670,8 @@
      C*                                                                   S01408
      C* Charges
      C                     WRITEGL3572F4
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C*
      C* Commission
      C*
@@ -2693,6 +2699,8 @@
      C*                                                                   S01408
      C                     ENDIF                                                              CER001
       *                                                                                       CER001
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572F6
       *                                                                                       CRE015
       ** Periods and Penalties Details                                                        CRE015
@@ -2760,11 +2768,15 @@
      C* Fontis Account Details.                                           CGL004
      C*                                                                   CGL004
      C           *IN36     IFEQ '1'                                       CGL004
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572F7                                  CGL004
      C                     ENDIF                                          CGL004
       *                                                                                       CER001
      C           ULX004    IFEQ 'Y'                                                           CER001
       *                                                                                       CER001
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572F9                                                      CER001
      C                     ENDIF                                                              CER001
      C*                                                                   S01408
@@ -2773,6 +2785,8 @@
       ** If BoE yellow book is 'on'                                                          LLN022A
       *                                                                                      LLN022A
      C           LLN007    IFEQ 'Y'                                                          LLN022A
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572FA                                                     LLN022A
       *                                                                                      LLN022A
       ** Set display file fields to blank                                                    LLN022A
@@ -2791,6 +2805,8 @@
       *                                                                                       CGL018
      C           CGL018    IFEQ 'Y'                                                           CGL018
      C                     EXSR RWADTL                                                        CGL018
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572F8                                                      CGL018
      C                     ENDIF                                                              CGL018
       *                                                                                       CGL018
@@ -2809,6 +2825,8 @@
      C                     ELSE                                                               CER050
      C                     Z-ADD0         PAPRC                                               CER050
      C                     ENDIF                                                              CER050
+      *  Check for printer overflow                                                         MD059527
+     C                     EXSR OVRFLW                                                      MD059527
      C                     WRITEGL3572FC                                                      CER050
      C                     ENDIF                                                              CER050
       *                                                                                      LLN022A
@@ -3366,6 +3384,27 @@
      C                     ENDIF                                                              CGL018
       *                                                                                       CGL018
      C                     ENDSR                                                              CGL018
+      *******************************************************************                   MD059527
+      *                                                                 *                   MD059527
+      *  OVRFLW - Subroutine to check for overflow                      *                   MD059527
+      *                                                                 *                   MD059527
+      *******************************************************************                   MD059527
+     C           OVRFLW    BEGSR                                                            MD059527
+      *                                                                                     MD059527
+     C                     Z-ADD11        RQDLN                                             MD059527
+     C           OFLLN     SUB  PRTLN     REMLN                                             MD059527
+     C           REMLN     IFLT RQDLN                                                       MD059527
+     C                     MOVE '1'       *IN98                                             MD059527
+     C                     ELSE                                                             MD059527
+     C                     MOVE '0'       *IN98                                             MD059527
+     C                     ENDIF                                                            MD059527
+      *                                                                                     MD059527
+     C           *IN98     IFEQ '1'                                                         MD059527
+     C                     WRITEGL3572HR                                                    MD059527
+     C                     MOVE '0'       *IN98                                             MD059527
+     C                     ENDIF                                                            MD059527
+      *                                                                                     MD059527
+     C                     ENDSR                                                            MD059527
       *******************************************************************                     CGL018
 ** CPY@   **      OBJECT COPYRIGHT
 (c) Finastra International Limited 2001

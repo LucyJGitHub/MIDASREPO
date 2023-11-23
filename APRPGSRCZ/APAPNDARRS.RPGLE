@@ -18,29 +18,31 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 262990             Date 18Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CAP004  *CREATE    Date 01Jun98               *
+      *                 CAP004  *CREATE    Date 01Jun98               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262990 - Allow contract price of zero in Futures & Options.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP004 - Conversion of Midas inputs to APIs.                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -52,25 +54,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -78,32 +80,32 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--- Named indicators -------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Map variable names to indicators to allow use of names instead ¦
@@ -117,20 +119,20 @@
      D pIndicator      S               *   INZ(%Addr(*In))
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** General-purpose array index
      D GI              S              3P 0 INZ(1)
- 
+
       ** Error array index
      D Idx             S              3P 0
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -138,66 +140,67 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise the general-purpose array index
      C                   RESET                   GI
- 
+
       ** Find the position of the first blank elements in the general
       ** error arrays.
      C     *blank        LOOKUP    FldNameArr(GI)                         98
- 
+
       ** Indicator 98 is mapped to the field LookupSucc
      C                   IF        LookupSucc = True
      C                   MOVEA     FldNamXArr    FldNameArr(GI)
      C                   MOVEA     MsgIDXArr     MsgIdArr(GI)
      C                   MOVEA     MsgDtaXArr    MsgDtaArr(GI)
      C                   ENDIF
- 
+
       ** Find the first blank again, and set the current index to one less
       ** than this value
      C                   RESET                   GI
      C     *BLANK        LOOKUP    FldNameArr(GI)                         98
      C                   EVAL      Idx = GI - 1
- 
+
       ** Repeat the above for the warning arrays
- 
+
       ** Initialise the general-purpose array index
      C                   RESET                   GI
- 
+
      C     *blank        LOOKUP    WFldNamArr(GI)                         98
- 
+
      C                   IF        LookupSucc = True
      C                   MOVEA     FldNamWArr    WFldNamArr(GI)
      C                   MOVEA     MsgIDWArr     WMsgIdArr(GI)
      C                   MOVEA     MsgDtaWArr    WMsgDtaArr(GI)
      C                   ENDIF
- 
+
       ** Find the first blank again, and set the current index to one less
       ** than this value
      C                   RESET                   GI
-     C     *BLANK        LOOKUP    FldNameArr(GI)                         98
+     C******BLANK        LOOKUP    FldNameArr(GI)                         98                  262990
+     C     *BLANK        LOOKUP    WFldNamArr(GI)                         98                  262990
      C                   EVAL      WIdx = GI - 1
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -209,9 +212,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Outputs from this procedure
       ** ---------------------------
@@ -233,7 +236,7 @@
      C                   PARM                    WMsgIDArr
       ** Warning message data array (<ArrayMax> x 45A)
      C                   PARM                    WMsgDtaArr
- 
+
       ** Inputs to this procedure
       ** ------------------------
       ** Field name array (<ErrArrMax> x 10A)
@@ -248,17 +251,17 @@
      C                   PARM                    MsgIDWArr
       ** Warning message data array (<WArrMax> x 45A)
      C                   PARM                    MsgDtaWArr
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

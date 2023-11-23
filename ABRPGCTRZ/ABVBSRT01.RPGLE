@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. 262583             Date 24Oct23               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -40,6 +41,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262583 - System validates base currency rate in amend mode   *
+      *           but field is unamendable.  Validate this field only *
+      *           when in insert mode.                                *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -358,6 +362,7 @@
 
      C                   IF        DDCCY = BJCYCD AND
      C                             POAmount <> WAmount
+     C                             AND DDACTN = 'I'                                           262583
 
      C                   EVAL      OKBCXR = 'N'
      C                   EVAL      IDx = IDx + 1
@@ -372,8 +377,12 @@
       ** If there is a difference in the input and calculated interest
       ** amounts, output it in a message.
 
-     C                   IF        POAmount < WVLLimit OR
-     C                             POAmount > WVULimit
+     C**********         IF        POAmount < WVLLimit OR                                     262583
+     C**********                   POAmount > WVULimit                                        262583
+     C                   IF        (POAmount < WVLLimit                                       262583
+     C                             AND DDACTN = 'I') OR                                       262583
+     C                             (POAmount > WVULimit                                       262583
+     C                             AND DDACTN = 'I')                                          262583
 
      C                   Z-ADD     WAmount       WAmountIn
      C                   EXSR      SRZA0921

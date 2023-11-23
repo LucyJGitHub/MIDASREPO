@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058379           Date 12Jul21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. 262583             Date 24Oct23               *
+      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262583 - Do not validate deal date against back value limit  *
+      *           other than Insert mode.  Upgraded fix 226823.       *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
       *             the placement of reference rate field (Recompile) *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
@@ -345,6 +348,11 @@
      C                   ENDIF
 
       ** Deal Date must not be lower than the back value limit
+      *                                                                                       262583
+      ** Only process this validation during insert.  Deal date is a                          262583
+      ** non amendable field.                                                                 262583
+      *                                                                                       262583
+     C     DDACTN        IFEQ      'I'                                                        262583
 
      C     BJRDNB        SUB       BJBVPD        WBakVaLim
 
@@ -357,6 +365,8 @@
      C                   GOTO      EndValDDAT
 
      C                   ENDIF
+      *                                                                                       262583
+     C                   ENDIF                                                                262583
 
       ** For multibranching on, the deal date must not be a holiday
       ** in the local currency for the booking branch location.

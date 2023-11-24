@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas GL Today's Base CCY IN/EX Postings Extract')     *
+/*E*I****TEXT('Midas*GL*Today's*Base*CCY*IN/EX*Postings*Extract')******                     MD062120
+/*EXI *  TEXT('Midas GL Todays Base CCY IN/EX Postings Extract')      *                     MD062120
       *****************************************************************
       *                                                               *
       *  Midas - Dealing Module                                       *
@@ -14,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. CGL201 *Create     Date 22Sep23               *
+      *  Last Amend No. MD062120           Date 21Nov23               *
+      *  Prev Amend No. CGL201 *Create     Date 22Sep23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062120 - LBBW ASIA CAR Upgrade to FM2021.G - fixes         *
       *  CGL201 - New Reports for Daily Transfer of Foreign Exchange  *
       *                                                               *
       *****************************************************************

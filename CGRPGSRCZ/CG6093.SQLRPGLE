@@ -16,12 +16,17 @@
      F*                                                               *
       *  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD060590           Date 04Oct22               *
-      *  Prev Amend No. MD059624           Date 20Jul22               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. MD060590           Date 04Oct22               *
+      *                 MD059624           Date 20Jul22               *
       *                 MD059367 *CREATE   Date 24Dec21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  MD060590 - Incorrect ccr rounding applies and precision      *
       *             values for loan defined with SONIA and SARR.      *
       *             Check the calc method to be 'NCCR' before calling *

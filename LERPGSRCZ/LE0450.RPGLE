@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 230214             Date 03Jul23               *
-      *  Prev Amend No. AR987344           Date 18Sep23               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. 230214             Date 03Jul23               *
+      *                 AR987344           Date 18Sep23               *
       *                 MD015646           Date 18Sep23               *
       *                 AR947177           Date 18Sep23               *
       *                 249385             Date 01Aug22               *
@@ -440,6 +441,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  230214 - Reset CBLI and TLXI in RPDTUP and INDTUP regardless *
       *           of the rundate as long as the event is actioned     *
       *           within the day.                                     *

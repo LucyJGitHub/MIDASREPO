@@ -17,13 +17,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061006            Date 02Feb23              *
-      *  Prev Amend No. MD060824            Date 10Jan23              *
+      *  Last Amend No. MD061774            Date 22Nov23              *
+      *  Prev Amend No. MD061006            Date 02Feb23              *
+      *                 MD060824            Date 10Jan23              *
       *                 MD060897            Date 10Jan23              *
       *                 MD058517 *CREATE    Date 17Oct22              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  MD061006 - Compilation failed on LE000372 due to SDLIBRTD    *
       *             made redundant                                    *
       *             Amended all calls to SDLIBRTD to access           *

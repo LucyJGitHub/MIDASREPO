@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR819780           Date 05Oct23               *
-      *  Prev Amend No. AR852765           Date 17Oct23               *
+      *  Last Amend No. MD061950           Date 16Nov23               *
+      *  Prev Amend No. AR819780           Date 05Oct23               *
+      *                 AR852765           Date 17Oct23               *
       *                 AR854800           Date 10Oct23               *
       *                 MD049123           Date 25May23               *
       *                 252024             Date 03Feb22               *
@@ -124,13 +125,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061950 - FX Deal API Frontoffice ID is used already        *
       *  AR819780 - Multiple deletion from SOAP of same Front Office. *
       *             (Child: AR819781)                                 *
       *  AR852765 - Delay getting deal number for the second leg of   *
-      *             Swap Deal. (Child: AR852766)                      *      
+      *             Swap Deal. (Child: AR852766)                      *
       *  AR854800 - Unable to authorise FX deal. Only auto authorise  *
       *             when Front Office ID is not blank.                *
-      *             (Child: AR854801)                                 *      
+      *             (Child: AR854801)                                 *
       *  MD049123 - Added process for Customer Number formatting.     *
       *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -1046,6 +1048,7 @@
      C                   EVAL      DDDLNO = *BLANKS                                         AR819780
      C                   WHEN      DDACTN = 'D'                                             AR819780
      C                   EVAL      APFOTranID = DDFOID                                      AR819780
+     C                   EVAL      ModeofOp = '*FRONT'                                      MD061950
      C                   OTHER                                                              AR819780
      C                   ENDSL                                                              AR819780
       *                                                                                     AR819780

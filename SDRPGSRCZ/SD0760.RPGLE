@@ -115,11 +115,11 @@
      C                   When      LYRECI = 'D'
      C                   Eval      LYRECI = 'H'
      C                   Update    SDEXSTDA
-     C**********         Eval      AHFLNM = 'SDEXSTPD'                               252050 AR746274
-     C*****AHFLNM        Chain     SDFCTLL0                                          252050 AR746274
-     C**********         Eval      AHNORC = AHNORC - 1                               252050 AR746274
-     C**********         Eval      AHNODL = AHNODL + 1                               252050 AR746274
-     C**********         Update    @AHREAU                                           252050 AR746274
+     C                   Eval      AHFLNM = 'SDEXSTPD'                                        252050
+     C     AHFLNM        Chain     SDFCTLL0                                                   252050
+     C                   Eval      AHNORC = AHNORC - 1                                        252050
+     C                   Eval      AHNODL = AHNODL + 1                                        252050
+     C                   Update    @AHREAU                                                    252050
 
      C                   When      LYRECI = 'F' and LYEFFD = BYEFFD
      C                   Eval      LYRECI = 'D'

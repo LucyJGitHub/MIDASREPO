@@ -28,9 +28,6 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2023')
-             DCL        VAR(&PGMED) TYPE(*CHAR) LEN(10) VALUE('SMC1002')
-             DCL        VAR(&KEYVR) TYPE(*CHAR) LEN(4)
-             DCL        VAR(&SNDER) TYPE(*CHAR) LEN(80)
              DCLF       FILE(UPGSVALJ0) ALWNULL(*YES)
 
 

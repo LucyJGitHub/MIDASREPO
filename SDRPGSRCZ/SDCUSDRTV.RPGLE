@@ -30,8 +30,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR699788A          Date 30Oct23               *
-      *  Prev Amend No. AR699788           Date 30Oct23               *
+      *  Last Amend No. MD062146           Date 29Nov23               *
+      *  Prev Amend No. MD035664           Date 20Nov23               *
+      *                 AR652127           Date 20Nov23               *
+      *                 AR699788A          Date 30Oct23               *
+      *                 AR699788           Date 30Oct23               *
       *                 241383             Date 15Jun12               *
       *                 MD060008           Date 11May21               *
       *                 MD058830           Date 01Oct21               *
@@ -159,6 +162,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062146 - Change error message to event codes               *
+      *  MD035664 - Failed Component: MRC0210                         *
+      *  AR652127 - Add validation if customer has GL account, do not *
+      *             allow closure. Add new error message.             *
       *  AR699788A - Cannot authorise release of customer. Amended    *
       *              the program to properly return the correct value *
       *              of BBTMST field.  (Child:AR699789A)              *
@@ -3306,6 +3313,26 @@
      C**********         ENDIF                                                      BUG7233 MD052297
      C**********         GOTO      EVALAC                                          MD019261 MD052297
      C**********         ENDIF                                                       253344 MD052297
+      *                                                                                     AR652127
+      ** GENERAL LEDGER CHECKS:                                                             AR652127
+      ** Customer defined on ACCNT.                                                         AR652127
+      ** CASE: WRK.Customer Deln Flag 231 is Do not delete                                  AR652127
+      *                                                                                     AR652127
+     C     WDS2031       IFEQ      'F'                                                      AR652127
+     C**********         MOVEL     'USR9475'     MsgIdArr(Ix)                      AR652127 MD062146
+     C                   MOVEL     '5049612'     MsgIdArr(Ix)                               MD062146
+     C                   GOTO      EVALAC                                                   AR652127
+     C                   ENDIF                                                              AR652127
+      *                                                                                     MD035664
+      ** OTHER ACCOUNT TYPES CHECKS (R, N, D, or C)                                         MD035664
+      ** Customer defined on ACCNT.                                                         MD035664
+      ** CASE: WRK.Customer Deln Flag 231 is Do not delete                                  MD035664
+      *                                                                                     MD035664
+     C     WDS2031       IFEQ      'E'                                                      MD035664
+     C**********         MOVEL     'USR9480'     MsgIdArr(Ix)                      MD035664 MD062146
+     C                   MOVEL     '5049318'     MsgIdArr(Ix)                               MD062146
+     C                   GOTO      EVALAC                                                   MD035664
+     C                   ENDIF                                                              MD035664
       *                                                                                     MD052297
       ** GENERAL LEDGER CHECKS:                                                             MD052297
       ** Customer defined on ACCNT.                                                         MD052297

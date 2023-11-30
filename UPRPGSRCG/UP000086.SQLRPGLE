@@ -13,14 +13,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061906             Date 23Sep23             *
-      *  Prev Amend No. MD061912             Date 27Sep23             *
+      *  Last Amend No. MD061962             Date 14Nov23             *
+      *  Prev Amend No. MD061992             Date 23Oct23             *
+      *                 MD061906             Date 23Sep23             *
+      *                 MD061912             Date 27Sep23             *
       *                 CUP047               Date 27Aug23             *
       *                 MD060709             Date 08Nov22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061962 - Add CHGPF and CHGLF for database objects changed  *
+      *             with SQL                                          *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061906 - Bridge journalling improvement                    *
       *  MD061912 - DTAQ not upgraded with aDBU                       *
       *  CUP047 - Alternative OWNER and AUTL for Bridge upgrade       *
@@ -42,6 +47,8 @@
      D AUTL            S             10A
      D X_OWNR          S             10A                                                      CUP047
      D X_AUTL          S             10A                                                      CUP047
+     D REFLIB          S             10A                                                    MD061962
+     D OBJSRC          S             10A                                                    MD061962
      D Attr            S             10A
      D SAVFN           S             10A
       * Array to store Dependency (PF only)
@@ -80,7 +87,8 @@
      C     *ENTRY        PLIST
      C                   PARM                    Library          10
      C                   PARM                    Prefix            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    #SEQ
      C                   PARM                    SavLib           10
      C                   PARM                    Return           10
@@ -204,6 +212,9 @@
      C                   exsr      SR_FileChange
      C                   Endif
 
+      * Add script for updating the source library                                          MD061962
+     C                   exsr      SR_UpdSrcLib                                             MD061962
+                                                                                            MD061962
 
       ******************* F I L E  W I L L  B E  C O P I E D
      C                   WHEN      DRACTN = 'File will be copied'
@@ -219,7 +230,8 @@
      C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
      C                             %trimr(DRFILE) + ') FROMLIB(' +
      C                             %trimr(#Lib2) + ') OBJTYPE(*FILE) TOLIB(' +
-     C                             Prefix + %trimr(%subst(#Lib2:3:8)) + ')'
+     C**********                   Prefix + %trimr(%subst(#Lib2:3:8)) + ')'                 MD061992
+     C                             Prefix + %trimr(%subst(DRLIB:3:8)) + ')'                 MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -535,8 +547,10 @@
      C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
      C                             %trimr(DRFILE) + ') FROMLIB(' +
      C                             %trimr(MovLib) + ') OBJTYPE(*FILE) TOLIB(' +
-     C                             Prefix + %trimr(%subst(MovLib:3:8)) + ')'
-     C                   eval      TOLIB =  Prefix + %trimr(%subst(MovLib:3:8))
+     C**********                   Prefix + %trimr(%subst(MovLib:3:8)) + ')'                MD061992
+     C                             Prefix + %trimr(%subst(MovLib:4:7)) + ')'                MD061992
+     C**********         eval      TOLIB =  Prefix + %trimr(%subst(MovLib:3:8))             MD061992
+     C                   eval      TOLIB =  Prefix + %trimr(%subst(MovLib:4:7))             MD061992
      C                   else
      C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
      C                             %trimr(DRFILE) + ') FROMLIB(' +
@@ -790,8 +804,10 @@
      C                   eval      SCCMD = 'CRTDUPOBJ OBJ(' +
      C                             %trimr(DRFILE) + ') FROMLIB(' +
      C                             %trimr(MovLib) + ') OBJTYPE(*FILE) TOLIB(' +
-     C                             Prefix + %trimr(%subst(MovLib:3:8)) + ')'
-     C                   eval      TOLIB = Prefix + %trimr(%subst(MovLib:3:8))
+     C**********                   Prefix + %trimr(%subst(MovLib:3:8)) + ')'                MD061992
+     C                             Prefix + %trimr(%subst(MovLib:4:7)) + ')'                MD061992
+     C**********         eval      TOLIB = Prefix + %trimr(%subst(MovLib:3:8))              MD061992
+     C                   eval      TOLIB = Prefix + %trimr(%subst(MovLib:4:7))              MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -1686,10 +1702,12 @@
       * 2.2 move dependency  - Prod System
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' + Prefix +
-     C                             %trimr(%subst(ArrLPF:3:8)) +
+     C**********                   %trimr(%subst(ArrLPF:3:8)) +                             MD061992
+     C                             %trimr(%subst(ArrLPF:4:7)) +                             MD061992
      C                             '/' + %trimr(ArrFPF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(MovLib:3:8)) + ')'
+     C**********                   %trimr(%subst(MovLib:3:8)) + ')'                         MD061992
+     C                             %trimr(%subst(MovLib:4:7)) + ')'                         MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -1814,7 +1832,8 @@
       * 2. move back LF - Prod system
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' + Prefix +
-     C                             %trimr(%subst(MovLib:3:8)) + '/' +
+     C**********                   %trimr(%subst(MovLib:3:8)) + '/' +                       MD061992
+     C                             %trimr(%subst(MovLib:4:7)) + '/' +                       MD061992
      C                             %trimr(DRFILE) +
      C                             ') OBJTYPE(*FILE) TOLIB(' +
      C                             %trimr(DRLIB) + ')'
@@ -1898,10 +1917,12 @@
       * 3.2 move dependency  - Prod System
      C                   eval      #SEQ = #SEQ + 1
      C                   eval      SCCMD = 'MOVOBJ OBJ(' + Prefix +
-     C                             %trimr(%subst(MovLib:3:8)) +
+     C**********                   %trimr(%subst(MovLib:3:8)) +                             MD061992
+     C                             %trimr(%subst(MovLib:4:7)) +                             MD061992
      C                             '/' + %trimr(ArrFPF) +
      C                             ') OBJTYPE(*FILE) TOLIB(' + Prefix +
-     C                             %trimr(%subst(ArrLPF:3:8)) + ')'
+     C**********                   %trimr(%subst(ArrLPF:3:8)) + ')'                         MD061992
+     C                             %trimr(%subst(ArrLPF:4:7)) + ')'                         MD061992
 
      C/EXEC SQL
      C+ insert into UPGSCRTD
@@ -2809,6 +2830,63 @@
 
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                MD061962
+      *****************************************************************                     MD061962
+      *                                                               *                     MD061962
+      * SR_UpdSrcLib - generate command to update the source library  *                     MD061962
+      *                                                               *                     MD061962
+      * Calls: UPC4016                                                *                     MD061962
+      *                                                               *                     MD061962
+      *****************************************************************                     MD061962
+      *****************************************************************                     MD061962
+     C     SR_UpdSrcLib  BEGSR                                                              MD061962
+                                                                                            MD061962
+      * Retrieve source library                                                             MD061962
+      * set the library name to the reference system                                        MD061962
+     C                   eval      REFLIB = RefSys + %SUBST(DRLIB:3:8)                      MD061962
+                                                                                            MD061962
+     C                   CALL      'UPC4016'                                                MD061962
+     C                   PARM                    REFLIB                                     MD061962
+     C                   PARM                    DRFILE                                     MD061962
+     C                   PARM      *BLANKS       OBJSRC                                     MD061962
+                                                                                            MD061962
+     C                   eval      #SEQ = #SEQ + 1                                          MD061962
+     C                   eval      SCCMD = 'CHGOBJ OBJ(' + %trimr(DRLIB) +                  MD061962
+     C                              '/' + %trimr(DRFILE) + ')' +                            MD061962
+     C                             ' OBJTYP(*FILE) NEWLIB(' + OBJSRC + ')'                  MD061962
+                                                                                            MD061962
+     C/EXEC SQL                                                                             MD061962
+     C+ insert into UPGSCRTD                                                                MD061962
+     C+ (                                                                                   MD061962
+     C+   SCPRFX                                                                            MD061962
+     C+  ,SCFILE                                                                            MD061962
+     C+  ,SCLIB                                                                             MD061962
+     C+  ,SCSEQ                                                                             MD061962
+     C+  ,SCTYPE                                                                            MD061962
+     C+  ,SCCMTY                                                                            MD061962
+     C+  ,SCCDSH                                                                            MD061962
+     C+  ,SCDEPF                                                                            MD061962
+     C+  ,SCCDRN                                                                            MD061962
+     C+  ,SCCMD                                                                             MD061962
+     C+  ,SCOPGM                                                                            MD061962
+     C+ )                                                                                   MD061962
+     C+ Values                                                                              MD061962
+     C+ (                                                                                   MD061962
+     C+   :Prefix                                                                           MD061962
+     C+  ,:DRFILE                                                                           MD061962
+     C+  ,:DRLIB                                                                            MD061962
+     C+  ,:#SEQ                                                                             MD061962
+     C+  ,'  '                                                                              MD061962
+     C+  ,'CLP'                                                                             MD061962
+     C+  ,'CHGOBJ'                                                                          MD061962
+     C+  ,' '                                                                               MD061962
+     C+  ,' '                                                                               MD061962
+     C+  ,:SCCMD                                                                            MD061962
+     C+  ,'UP000056'                                                                        MD061962
+     C+ )                                                                                   MD061962
+     C/END-EXEC                                                                             MD061962
+                                                                                            MD061962
+     C                   ENDSR                                                              MD061962
       /EJECT
       *****************************************************************
       *                                                               *

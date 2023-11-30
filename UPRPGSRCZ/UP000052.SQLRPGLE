@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD061962             Date 14Nob23             *
+      *  Last Amend No. MD061962             Date 14Nov23             *
       *  Prev Amend No. MD061992             Date 23Oct23             *
       *                 MD061906             Date 23Sep23             *
       *                 MD061912             Date 27Sep23             *
@@ -2834,9 +2834,9 @@
       /EJECT                                                                                MD061962
       *****************************************************************                     MD061962
       *                                                               *                     MD061962
-      * SR_UpdSrcLib - geneate command to update the source library   *                     MD061962
+      * SR_UpdSrcLib - generate command to update the source library  *                     MD061962
       *                                                               *                     MD061962
-      * Calls: None                                                   *                     MD061962
+      * Calls: UPC4016                                                *                     MD061962
       *                                                               *                     MD061962
       *****************************************************************                     MD061962
       *****************************************************************                     MD061962

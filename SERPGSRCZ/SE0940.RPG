@@ -25,8 +25,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSE121             Date 16Nov23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -66,6 +67,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSE121 - Amend Narratives on SE Customer Trading Statement   *
+      *            Report.                                            *
+      *            TP PURCH OF                                        *
+    	 *            TS SALE OF                                         *
+      *            BB BOND BORR                                       *
+      *            BL BOND LEND                                       *
+      *            RP REPO                                            *
+      *            RR REV REPO                                        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -208,6 +217,8 @@
      E********************TABA    1   9  2   TABB    9                    S01176
      E                    TABA    1  11  2   TABB    9                    S01176
      E********************TABC    1  12  3   TABD    2 0                  E15997
+      *  Change text for narrative of TP/TS.                                                  CSE121
+     E                    TABC    1  11  2   TABD    9                                        CSE121
      E/COPY ZSRSRC,ZDATE2Z1
      E/COPY ZSRSRC,ZSEDITZ1
       /EJECT
@@ -508,6 +519,19 @@
      C           @RTCD     IFEQ *BLANK                                    S01496
      C                     MOVE 'Y'       S01496  1                       S01496
      C                     END                                            S01496
+      *                                                                                       CSE121
+      **  Access SAR details file to see if CSE121 is installed.                              CSE121
+      *                                                                                       CSE121
+     C                     MOVE 'N'       CSE121                                              CSE121
+     C                     CALL 'AOSARDR0'                                                    CSE121
+     C                     PARM '       ' @RTCD   7                                           CSE121
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE121
+     C                     PARM 'CSE121'  WSARD   6                                           CSE121
+      *                                                                                       CSE121
+     C           @RTCD     IFEQ *BLANK                                                        CSE121
+     C                     MOVE 'Y'       CSE121  1                                           CSE121
+     C                     END                                                                CSE121
+      *                                                                                       CSE121
      C/COPY WNCPYSRC,SE0940C001
      C*
      C                     ENDSR
@@ -673,10 +697,21 @@
      C* PICK UP THE TRADE REFERENCE NARRATIVE FROM TABLE AT END OF PGM.
      C*
      C                     MOVE *BLANKS   TMTYPE
+      *                                                                                       CSE121
+      ** USE TABC/TABD IF CSE121 IS SWITCHED ON                                               CSE121
+     C           CSE121    IFEQ 'Y'                                                           CSE121
+     C           TTMT      LOKUPTABC      TABD           23                                   CSE121
+     C           *IN23     IFEQ '1'                                                           CSE121
+     C                     MOVE TABD      TMTYPE                                              CSE121
+     C                     END                                                                CSE121
+     C                     ELSE                                                               CSE121
+      *                                                                                       CSE121
      C           TTMT      LOKUPTABA      TABB           23
      C           *IN23     IFEQ '1'
      C                     MOVE TABB      TMTYPE  9
      C                     END
+      *                                                                                       CSE121
+     C                     ENDIF                                                              CSE121
      C*
      C* USE THE SHORT SECURITY NAME TO CHAIN TO THE SECURITIES FILE TO PICK
      C* UP THE NOMINAL DECIMAL PLACES INORDER TO EDIT THE NOMINAL FIELD FOR
@@ -1155,6 +1190,18 @@ RRREPO
 RPREV REPO
 PDPLEDGE DP                                                               S01176
 PLPLEDGE LN                                                               S01176
+**   TABC AND TABD FOR TRADE/MOVEMENT NARRATIVE - Change text for narrative of TP/TS.         CSE121
+TPPURCH OF                                                                                    CSE121
+TSSALE OF                                                                                     CSE121
+WIWALK IN                                                                                     CSE121
+WOWALK OUT                                                                                    CSE121
+DTDEP TFR                                                                                     CSE121
+BLBOND LEND                                                                                   CSE121
+BBBOND BORR                                                                                   CSE121
+RRREV REPO                                                                                    CSE121
+RPREPO                                                                                        CSE121
+PDPLEDGE DP                                                                                   CSE121
+PLPLEDGE LN                                                                                   CSE121
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

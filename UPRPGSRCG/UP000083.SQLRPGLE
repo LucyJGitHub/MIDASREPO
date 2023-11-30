@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061880             Date 14Sep23             *
-      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061880             Date 14Sep23             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *             Recompiled                                        *
       *  MD061880 - Include Fix package installation                  *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. AR635878           Date 14Jul22               *
-      *  Prev Amend No. MD050150           Date 12Oct18               *
+      *  Last Amend No. AR648157           Date 24Nov23               *
+      *  Prev Amend No. AR635878           Date 14Jul22               *
+      *                 MD050150           Date 12Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CFB001             Date 12Nov14               *
       *                 AR805470           Date 27Jul11               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR648157 - Reinitialise report fields to prevent printing of *
+      *             erroneous records.                                *
       *  AR635878 - Request to apply fix SC263737 and AR576681.       *
       *  AR576681 - User not printed consistently on a specific line  *
       *             (for optical reporting): Skip a line when Dep't   *
@@ -605,6 +608,43 @@
      C                   EVAL      BACOL3 = 'N'
      C                   EVAL      ITMOK    = 'N'
       *
+      *                                                                                     AR648157
+      ** Initialize printer file fields.                                                    AR648157
+      *                                                                                     AR648157
+     C                   EVAL      SBRCH3 = *BLANKS                                         AR648157
+     C                   EVAL      ACR21 = *BLANKS                                          AR648157
+     C                   EVAL      ACR22 = *BLANKS                                          AR648157
+     C                   EVAL      ACR23 = *BLANKS                                          AR648157
+     C                   EVAL      ACR24 = *BLANKS                                          AR648157
+     C                   EVAL      ACR25 = *BLANKS                                          AR648157
+     C                   EVAL      ACR26 = *BLANKS                                          AR648157
+     C                   EVAL      ACR27 = *BLANKS                                          AR648157
+     C                   EVAL      ACR28 = *BLANKS                                          AR648157
+     C                   EVAL      ACR29 = *BLANKS                                          AR648157
+     C                   EVAL      ACR30 = *BLANKS                                          AR648157
+     C                   EVAL      SBRCH2 = *BLANKS                                         AR648157
+     C                   EVAL      ACR11 = *BLANKS                                          AR648157
+     C                   EVAL      ACR12 = *BLANKS                                          AR648157
+     C                   EVAL      ACR13 = *BLANKS                                          AR648157
+     C                   EVAL      ACR14 = *BLANKS                                          AR648157
+     C                   EVAL      ACR15 = *BLANKS                                          AR648157
+     C                   EVAL      ACR16 = *BLANKS                                          AR648157
+     C                   EVAL      ACR17 = *BLANKS                                          AR648157
+     C                   EVAL      ACR18 = *BLANKS                                          AR648157
+     C                   EVAL      ACR19 = *BLANKS                                          AR648157
+     C                   EVAL      ACR20 = *BLANKS                                          AR648157
+     C                   EVAL      SBRCH = *BLANKS                                          AR648157
+     C                   EVAL      ACR1 = *BLANKS                                           AR648157
+     C                   EVAL      ACR2 = *BLANKS                                           AR648157
+     C                   EVAL      ACR3 = *BLANKS                                           AR648157
+     C                   EVAL      ACR4 = *BLANKS                                           AR648157
+     C                   EVAL      ACR5 = *BLANKS                                           AR648157
+     C                   EVAL      ACR6 = *BLANKS                                           AR648157
+     C                   EVAL      ACR7 = *BLANKS                                           AR648157
+     C                   EVAL      ACR8 = *BLANKS                                           AR648157
+     C                   EVAL      ACR9 = *BLANKS                                           AR648157
+     C                   EVAL      ACR10 = *BLANKS                                          AR648157
+                                                                                            AR648157
      C     KMACBR        SETLL     GZMACBRL2
      C     KMACBRP       READE     GZMACBRL2                              51
 

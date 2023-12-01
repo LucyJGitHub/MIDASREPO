@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036339           Date 08May23               *
-      *  Prev Amend No. AR690814           Date 31May22               *
+      *  Last Amend No. AR819780           Date 16Nov23               *
+      *  Prev Amend No. MD036339           Date 08May23               *
+      *                 AR690814           Date 31May22               *
       *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -117,6 +118,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR819780 - Use Midas number instead of Front office for      *
+      *             deletion from SOAP. (Child: AR819781)             *
+      *           - Applied for MD-61950.                             *
       *  MD036339 - DL Error amending Maturity date.                  *
       *           - Ensure Interest rate field is updated when Short  *
       *             Term rate is amended.                             *
@@ -2698,6 +2702,12 @@
       ** program.                                                               CAP006
       ** In batch (API input) check return parameters from Retrieve             CAP006
       ** module for errors, and send message to system operator.                CAP006
+      *                                                                                     AR819780
+     C     IKLACT        IFEQ      'D'                                                      AR819780
+     C     IKFRNT        ANDNE     *BLANKS                                                  AR819780
+     C     CHHKTMST      ANDNE     IKTMESTMP                                                AR819780
+     C                   MOVE      IKTMESTMP     CHHKTMST                                   AR819780
+     C                   ENDIF                                                              AR819780
                                                                                 CAP006
       ** Interactive mode:                                                      CAP006
                                                                                 CAP006

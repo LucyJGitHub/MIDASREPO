@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. 231853             Date 15Nov22               *
+      *  Last Amend No. AR826313           Date 16Nov23               *
+      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *                 MD056602           Date 04Sep20               *
+      *                 231853             Date 15Nov22               *
       *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
@@ -105,6 +107,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR826313 - When accessing Front office, ignore mature deals. *
+      *             (Child: AR826315)                                 *
+      *           - Applied for MD-61950.                             *
+      *  AR819780 - Multiple deletion from SOAP of same Front Office  *
+      *             (Child: AR819781)                                 *
+      *           - Applied for MD-61950.                             *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  231853 - Cannot delete repo when depot movement exists.      *
       *           Applied for MD057975.                               *
@@ -618,6 +626,15 @@
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
      C*****FOTRID        CHAIN     MMDELFOI                           99                      259924
      C     FOTRID        CHAIN     FRNTOFCL1                          99                      259924
+      *                                                                                     AR819780
+      ** If deal found is deleted, look for non-deleted deal                                AR819780
+      *                                                                                     AR819780
+     C     *IN99         DOWEQ     '0'                                                      AR819780
+     C     HKDDLT        ANDEQ     'D'                                                      AR819780
+     C     *IN99         OREQ      '0'                                                      AR826313
+     C     HKDSTS        ANDEQ     'M'                                                      AR826313
+     C     FOTRID        READE     FRNTOFCL1                              99                AR819780
+     C                   ENDDO                                                              AR819780
 
       * IF INSERT
      C     DDACTN        IFEQ      'I'

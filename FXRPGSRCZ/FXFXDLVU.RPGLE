@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 252024             Date 03Feb22               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD061950           Date 16Nov23               *
+      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *                 252024             Date 03Feb22               *
+      *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
       *                 AR818539           Date 12Mar20               *
       *                 CSD102             Date 08Jan19               *
@@ -120,6 +122,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061950 - FX Deal API Frontoffice ID is used already        *
+      *  AR819780 - Multiple deletion from SOAP of same Front Office. *
+      *             (Child: AR819781)                                 *
+      *           - Applied for MD-61950.                             *
       *  252024 - Ensure std settle instructions are defaulted.       *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
@@ -1012,6 +1018,23 @@
       * The deal in file format from the FX database is retrieved as well.
 
      C                   RESET                   ReturnCode
+      *                                                                                     AR819780
+      ** If coming from Front Office via SOAP                                               AR819780
+      *                                                                                     AR819780
+     C                   IF        DDFOID <> *BLANKS                                        AR819780
+     C                   EVAL      ModeofOp = *BLANKS                                       AR819780
+      *                                                                                     AR819780
+     C                   SELECT                                                             AR819780
+     C                   WHEN      DDACTN = 'I'                                             AR819780
+     C                   EVAL      DDDLNO = *BLANKS                                         AR819780
+     C                   WHEN      DDACTN = 'D'                                             AR819780
+     C                   EVAL      APFOTranID = DDFOID                                      AR819780
+     C                   EVAL      ModeofOp = '*FRONT'                                      MD061950
+     C                   OTHER                                                              AR819780
+     C                   ENDSL                                                              AR819780
+      *                                                                                     AR819780
+     C                   ENDIF                                                              AR819780
+      *                                                                                     AR819780
      C                   CALLB     'FXFXDLRTV'
 
       * INPUTS

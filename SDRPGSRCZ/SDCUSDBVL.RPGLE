@@ -11,14 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062003           Date 15Nov23               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CSD079  *CREATE    Date 05Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062003 - Cannot delete customer due to error message       *
+      *             'This account is closed' and 'Settlement Account  *
+      *              does not exist'.                                 *
+      *           - Add DDACTN parameter for transaction mode to      *
+      *             pass to SDVSMAC module                            *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD079 - Enhanced Customer Maintenance API                   *
@@ -305,6 +311,7 @@
       ** Settlement Branch
  
      C                   PARM                    SFSBCH
+     C                   PARM                    WDDACTN                                    MD062003
  
       ** Update error info with that returned from the validation module
  
@@ -697,6 +704,7 @@
       ** Valid Service Fees layout (DS) from/to caller
  
      C                   PARM                    ValidSFEE
+     C                   PARM                    WDDACTN           1                        MD062003
  
       ** Access Bank Details
  

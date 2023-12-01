@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054954           Date 15Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061867           Date 24Oct23               *
+      *  Prev Amend No. MD054954           Date 15Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CER059             Date 19Jul10               *
@@ -71,6 +72,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061867 - Component FTC0520  00001 failed.                  *
+      *           - Check printer overflow before printing P2NWRK.    *
       *  MD054954 - Changed indicator used in checking for CER031 to  *
       *             prevent conflict with the checking of CSW209      *
       *  MD046248 - Finastra Rebranding                               *
@@ -468,6 +471,9 @@
      ISPOOL1      DS                                                      S01117
      I                                       83  92 SFILE1                S01117
      I                                    B 123 1240SFNUM1                S01117
+     I                                    B 152 1530SFLIN                                   MD061867
+     I                                    B 188 1890OFLLN                                   MD061867
+     I                                    B 367 3680PRTLN                                   MD061867
      I*                                                                   S01194
      I** INFDS for AU printer file                                        S01194
      ISPOOL2      DS                                                      S01194
@@ -3032,6 +3038,7 @@
      C*                                                                   S01117
      C           @PENT     IFEQ 'ALL'                                     S01117
      C           *IN21     IFEQ '1'                                       S01117
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEP1EOR                                     S01117
      C                     END                                            S01117
      C                     EXSR ZSFLP1                                    S01117
@@ -3091,7 +3098,9 @@
      C                     WRITEP1HD
      C                     WRITEP1DETL
      C           ULX043    IFEQ 'Y'                                                           CER001
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEZZEXBLNK                                                      CER001
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEZZEXIBLC                                                      CER001
      C                     ENDIF                                                              CER001
       *                                                                   CFT009
@@ -3104,6 +3113,7 @@
       *                                                                                       CSW209
      C           CSW209    IFEQ 'Y'                                                           CSW209
       *                                                                                       CSW209
+     C                     EXSR CHKOF2                                                      MD061867
      C                     WRITEP2NWRK                                                        CSW209
       *                                                                                       CSW209
      C           INVALF    IFEQ 'COV'                                                         CSW209
@@ -3151,11 +3161,13 @@
       ** If something to Print for IBLC 2002                                                  CER001
       *                                                                                       CER001
      C           DOLX43    IFEQ 'Y'                                                           CER001
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEZZEXBLNK                   blank Line                         CER001
       *                                                                                       CER001
      C                     DO   3         UL      10       max 3 lines                        CER001
      C           IUL,UL    IFNE *BLANKS                    write details                      CER001
      C                     MOVELIUL,UL    RRLINE                                              CER001
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEZZEXIBLC                                                      CER001
      C                     ENDIF                                                              CER001
      C                     ENDDO                                                              CER001
@@ -3356,6 +3368,7 @@
      C** OUTPUT END-OF-REPORT MESSAGE TO DETAIL REPORT
      C*
      C           *IN21     IFEQ '1'                                       S01117
+     C                     EXSR CHKOF1                                                      MD061867
      C                     WRITEP1EOR
      C                     END                                            S01117
      C*
@@ -4050,6 +4063,44 @@
      C                     RETRN                                          143852
      C                     END                                            143852
      C                     ENDSR                                          143852
+     C/EJECT                                                                                MD061867
+      *****************************************************************                     MD061867
+      ** CHECK PRINTER OVERFLOW FOR P1HD                                                    MD061867
+      **                                                                                    MD061867
+      *****************************************************************                     MD061867
+     C           CHKOF1    BEGSR                                                            MD061867
+     C                     Z-ADD11        RQDLN   20                                        MD061867
+     C           OFLLN     SUB  PRTLN     REMLN   20                                        MD061867
+     C           REMLN     IFLT RQDLN                                                       MD061867
+     C                     MOVE '1'       *IN87                                             MD061867
+     C                     ELSE                                                             MD061867
+     C                     MOVE '0'       *IN87                                             MD061867
+     C                     ENDIF                                                            MD061867
+      *                                                                                     MD061867
+     C           *IN87     IFEQ '1'                                                         MD061867
+     C                     WRITEP1HD                                                        MD061867
+     C                     MOVE '0'       *IN87                                             MD061867
+     C                     ENDIF                                                            MD061867
+     C                     ENDSR                                                            MD061867
+     C/EJECT                                                                                MD061867
+      *****************************************************************                     MD061867
+      ** CHECK PRINTER OVERFLOW FOR P2HD                                                    MD061867
+      **                                                                                    MD061867
+      *****************************************************************                     MD061867
+     C           CHKOF2    BEGSR                                                            MD061867
+     C                     Z-ADD11        RQDLN   20                                        MD061867
+     C           OFLLN     SUB  PRTLN     REMLN   20                                        MD061867
+     C           REMLN     IFLT RQDLN                                                       MD061867
+     C                     MOVE '1'       *IN87                                             MD061867
+     C                     ELSE                                                             MD061867
+     C                     MOVE '0'       *IN87                                             MD061867
+     C                     ENDIF                                                            MD061867
+      *                                                                                     MD061867
+     C           *IN87     IFEQ '1'                                                         MD061867
+     C                     WRITEP2HD                                                        MD061867
+     C                     MOVE '0'       *IN87                                             MD061867
+     C                     ENDIF                                                            MD061867
+     C                     ENDSR                                                            MD061867
      C**
       /EJECT                                                              CEU006
      C/COPY ZSRSRC,ZSEDITZ3                                               CEU006

@@ -23,8 +23,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD061774           Date 25Aug23               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD061774           Date 25Aug23               *
+      *                 MD058815           Date 28Sep21               *
       *                 MD058896           Date 21Sep21               *
       *                 MD057942           Date 26Apr21               *
       *                 CSD103             Date 10Aug20               *
@@ -195,6 +196,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD061774 - Deal Accrual Posting Difference for Deals with    *
       *           - Value Date 28th Feb.                              *
       *           - Recompile due to changes in ZINTDYZ2LE.           *

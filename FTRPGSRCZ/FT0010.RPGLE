@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057650           Date 31Mar21               *
-      *  Prev Amend No. MD056477           Date 22Sep20               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD057650           Date 31Mar21               *
+      *                 MD056477           Date 22Sep20               *
       *                 MD056483           Date 15Sep20               *
       *                 MD053553           Date 21Jan20               *
       *                 MD050134           Date 21Mar18               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD057650 - A serious midas error encountered when settlement *
       *             and pay amounts are both blank                    *
       *  MD056477 - In SrVAmtNR9DSR, if P#RATE is zero, use ZRATEX.   *

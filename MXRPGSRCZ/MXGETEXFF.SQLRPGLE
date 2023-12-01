@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061958           Date 16Nov23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061958 - NY: Midas Export format extracts have fields in   *
+      *             the wrong sequence.                               *
+      *           - Added order by to sort MXEXFJW0 records according *
+      *             to export sequence defined on file.               *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface (Recompile)    *
@@ -167,11 +172,18 @@
      C                   Z-ADD     1             FD                5 0
      C*****MXEXFFK       SETLL     MXEXFFPD                                                 MD056612
      C*****MXEXFFK       READE     MXEXFFPD                               90                MD056612
-     C/EXEC SQL                                                                             MD056612
-     C+ declare FCursor insensitive scroll cursor for                                       MD056612
-     C+ select * from MXEXFJW0                                                              MD056612
-     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN                                         MD056612
-     C/END-EXEC                                                                             MD056612
+     C*EXEC*SQL***                                                                 MD056612 MD061958
+     C**declare*FCursor insensitive scroll cursor for                              MD056612 MD061958
+     C**select***from MXEXFJW0                                                     MD056612 MD061958
+     C**where*WHFILE = :EXFILE and WHFSQN = :EXFSQN                                MD056612 MD061958
+     C*END*EXEC***                                                                 MD056612 MD061958
+                                                                                            MD061958
+     C/EXEC SQL                                                                             MD061958
+     C+ declare FCursor insensitive scroll cursor for                                       MD061958
+     C+ select * from MXEXFJW0                                                              MD061958
+     C+ where WHFILE = :EXFILE and WHFSQN = :EXFSQN                                         MD061958
+     C+ order by WHFILE, WHFSQN, WHIBO, WHFOBO                                              MD061958
+     C/END-EXEC                                                                             MD061958
                                                                                             MD056612
      C/EXEC SQL                                                                             MD056612
      C+ open FCursor                                                                        MD056612

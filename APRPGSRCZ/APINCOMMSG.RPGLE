@@ -24,8 +24,9 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 21Jan19               *
-      *  Prev Amend No. MD058203           Date 01Jul21               *
+      *  Last Amend No. MD062156           Date 04Dec23               *
+      *  Prev Amend No. MD041126           Date 21Jan19               *
+      *                 MD058203           Date 01Jul21               *
       *                 MD039032           Date 22May20               *
       *                 259813             Date 22May20               *
       *                 251029             Date 22May20               *
@@ -136,6 +137,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062156 - Error CPF3C3C when calling QSYGETPH               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-60517                              *
       *  MD058203 - Remove MD041126 completely.                       *
@@ -542,6 +544,9 @@
      D Return          S              7A
      D Bypass          S              1A                                                      CPK015
 
+     D X_LEN           S             10I 0                                                  MD062156
+     D X_CCSID         S             10I 0 INZ(37)                                          MD062156
+                                                                                            MD062156
       ** Error message for sending to the operator                              138019
      D MQError         S            132A                                        138019
                                                                                 138019
@@ -2520,12 +2525,15 @@
 
      C                   MOVE      *BLANKS       PrfHandle
      C                   RESET                   QUSEC
+     C                   EVAL      X_LEN = %len(%trim(PASSWORD))                            MD062156
 
      C                   CALL      'QSYGETPH'
      C                   PARM                    USERID
      C                   PARM                    PASSWORD
      C                   PARM                    PrfHandle        12
      C                   PARM                    QUSEC
+     C                   PARM                    X_LEN                                      MD062156
+     C                   PARM                    X_CCSID                                    MD062156
 
       ** The UserID and Password fields are now irrelevant, and are
       ** starred out to prevent them appearing on log files and dumps.

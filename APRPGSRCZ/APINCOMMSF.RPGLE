@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 248812B            Date 22May20               *
-      *  Prev Amend No. 248812A            Date 22MaY20               *
+      *  Last Amend No. MD062156           Date 04Dec23               *
+      *  Prev Amend No. 248812B            Date 22May20               *
+      *                 248812A            Date 22MaY20               *
       *                 248812             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062156 - Error CPF3C3C when calling QSYGETPH               *
       *  248812B- Another MSGW due to non-existence of other data area*
       *  248812A- Another MSGW due to non-existence of ZBRU1 not ZVRU1*
       *  248812 - Error on APISERVFL when Response Mode S A S on MQ   *
@@ -316,6 +318,9 @@
      D Return          S              7A
 
 
+     D X_LEN           S             10I 0                                                  MD062156
+     D X_CCSID         S             10I 0 INZ(37)                                          MD062156
+                                                                                            MD062156
       ** Error message for sending to the operator
      D MQError         S            132A
 
@@ -605,6 +610,7 @@
 
      C                   MOVE      *BLANKS       PrfHandle
      C                   RESET                   QUSEC
+     C                   EVAL      X_LEN = %len(%trim(PASSWORD))                            MD062156
 
 
      C                   CALL      'QSYGETPH'
@@ -612,6 +618,8 @@
      C                   PARM                    PASSWORD
      C                   PARM                    PrfHandle        12
      C                   PARM                    QUSEC
+     C                   PARM                    X_LEN                                      MD062156
+     C                   PARM                    X_CCSID                                    MD062156
 
 
       ** The UserID and Password fields are now irrelevant, and are

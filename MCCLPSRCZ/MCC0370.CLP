@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD026618           Date 27Jan23              */
-/*       Prev Amend No. MD021359           Date 20Jan23              */
+/*       Last Amend No. MD062157           Date 04Dec23              */
+/*       Prev Amend No. MD026618           Date 27Jan23              */
+/*                      MD021359           Date 20Jan23              */
 /*                      227690             Date 20Jan23              */
 /*                      227662             Date 20Jan23              */
 /*                      259402             Date 06Jun20              */
@@ -28,6 +29,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD062157 - SHA3K0001 MCC0370 issue on COB - Fix             */
+/*                  Formalization                                    */
 /*       MD026618 - When CAS005 is ON, the same fix should apply to  */
 /*                  &FRLA and &FCAC.                                 */
 /*       MD021359 - No reversal of FR posting when CAS005 is         */
@@ -343,13 +346,29 @@
 /**********               0))                                                  /*CGL029*/ /*259402*/
 /**/                                                                                      /*259402*/
              CHGVAR     VAR(&ACSCD) VALUE('''' *CAT &ACSC *CAT '''')                      /*259402*/
+/**********  OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +                       /*MD062157*/
+/**********               QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +                     /*MD062157*/
+/**********               ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +                     /*MD062157*/
+/**********               ''' *AND HBPDNY *EQ ''' *CAT &PDNY *CAT +                     /*MD062157*/
+/**********               ''' *AND (HBACCD *EQ ''' *CAT &FACC *CAT +                    /*MD062157*/
+/**********               ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +                    /*MD062157*/
+/**********               (ACOD &FRPL) (CNUM HBCUST) (ACSQ HBACSN) +                    /*MD062157*/
+/**********               (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +                   /*MD062157*/
+/**********               (OTST HBTSTY) (ASOC HBACNB) (ACSC &ACSCD) +                   /*MD062157*/
+/**********               (PAMT 'HBPDCB * 1') (VOIN 1) (GETP +                          /*MD062157*/
+/**********               '''F''') (ATYP ''' ''') (CPNB (&PDCT *CAT +                   /*MD062157*/
+/**********               &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +                         /*MD062157*/
+/**********               VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +                   /*MD062157*/
+/**********               (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +                     /*MD062157*/
+/**********               0))                                                    /*259402 MD062157*/
              OPNQRYF    FILE((GLHIBLPD &PGCD)) FORMAT(MCPCACPD) +
                           QRYSLT(' HBPDCT *EQ ''' *CAT &PDCT *CAT +
                           ''' *AND HBPDYR *EQ ''' *CAT &PDYR *CAT +
                           ''' *AND HBPDNY *EQ ''' *CAT &PDNY *CAT +
                           ''' *AND (HBACCD *EQ ''' *CAT &FACC *CAT +
                           ''')') MAPFLD((BRCA HBBRCD) (CCY HBCYCD) +
-                          (ACOD &FRPL) (CNUM HBCUST) (ACSQ HBACSN) +
+                          (ACOD ''' *CAT &FRPL *CAT ''') +
+                          (CNUM HBCUST) (ACSQ HBACSN) +
                           (PRFC HBPCCD) (BOKC HBBKCD) (OTTP HBOTTP) +
                           (OTST HBTSTY) (ASOC HBACNB) (ACSC &ACSCD) +
                           (PAMT 'HBPDCB * 1') (VOIN 1) (GETP +
@@ -357,7 +376,7 @@
                           &PDYR *CAT &PDNY)) (PNAR '''FWD P&L +
                           VALUATION REVERSAL''') (EVDT &DEVD) (PDTM +
                           (&PSTD *CAT '235959')) (DRCR 0) (ACODQQ +
-                          0))                                                             /*259402*/
+                          0))                                                           /*MD062157*/
 /**/
 /*  Copy OPNQRYF to MCFREXPD  */
 /**/

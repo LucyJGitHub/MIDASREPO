@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061161           Date 21Nov23               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 261402             Date 11May16               *
       *                 CSW214             Date 25Nov14               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061161 - MT518 reference number is incorrect for Repo deals*
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -160,6 +162,7 @@
      FTRADSDY1  IF   E           K DISK    INFSR(*PSSR)
      FTRADSDY2  IF   E           K DISK    INFSR(*PSSR)
      FSEMKC     IF   E           K DISK    INFSR(*PSSR)
+     FDPTMVDY1  IF   E           K DISK    INFSR(*PSSR)                                     MD061161
      FMGOREFPD  O    E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      FMGOMSGPD  O    E             DISK    INFSR(*PSSR)
@@ -944,6 +947,12 @@
       *
      C     KCRTN         KLIST
      C                   KFLD                    KTDRF             6
+      *                                                                                     MD061161
+      ** Key fields for DPTMVDX1                                                            MD061161
+      *                                                                                     MD061161
+     C     KDPTMX1       KLIST                                                              MD061161
+     C                   KFLD                    MKSECU           10                        MD061161
+     C                   KFLD                    MKTNUM            6                        MD061161
       *
       ** Set CRLF control character
       *
@@ -1325,12 +1334,39 @@
       *
      C                   ENDIF
       *
+     C                   MOVE      *BLANKS       REPOFLAG          1                        MD061161
+     C     CSE006        IFEQ      'Y'                                                      MD061161
+     C     MGARF         ANDNE     *BLANKS                                                  MD061161
+     C                   MOVE      'Y'           REPOFLAG                                   MD061161
+     C                   ENDIF                                                              MD061161
+      *
+      *
+     C     REPOFLAG      IFEQ      'Y'                                                      MD061161
+     C     WWMDAT        CAT       MGARF:0       WWMDAT                                     MD061161
+     C                   ELSE                                                               MD061161
      C     WWMDAT        CAT       MGTNUM:0      WWMDAT
+     C                   ENDIF                                                              MD061161
       *
      C     @LSWS         IFEQ      9999999
      C                   Z-ADD     1             WWLSWS            7 0
      C                   ELSE
+      *                                                                                     MD061161
+     C                   SELECT                                                             MD061161
+     C                   WHEN      REPOFLAG = 'Y'                                           MD061161
+     C                   MOVE      *BLANKS       MKSECU                                     MD061161
+     C                   MOVE      *BLANKS       MKTNUM                                     MD061161
+     C                   MOVEL     MGSFN1        MKSECU                                     MD061161
+     C                   MOVEL     MGTNUM        MKTNUM                                     MD061161
+      *                                                                                     MD061161
+     C     KDPTMX1       CHAIN     DPTMVDY1                           70                    MD061161
+     C                   IF        *IN70 = *OFF                                             MD061161
+     C                   Z-ADD     DPLSWS        WWLSWS                                     MD061161
+     C                   ADD       1             WWLSWS                                     MD061161
+     C                   ENDIF                                                              MD061161
+      *                                                                                     MD061161
+     C                   WHEN      REPOFLAG <> 'Y'                                          MD061161
      C     @LSWS         ADD       1             WWLSWS
+     C                   ENDSL                                                              MD061161
      C                   ENDIF
       *
      C                   MOVEL     WWLSWS        WALSWS            7

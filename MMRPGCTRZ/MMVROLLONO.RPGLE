@@ -25,8 +25,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR324372           Date 13Jun22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. AR324372           Date 13Jun22               *
+      *                 MD058815           Date 28Sep21               *
       *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -72,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  AR324372 - Serious Midas Error occured. Amend to only allow  *
       *             rollover on authorised deals.                     *
       *           - Applied for MD-48315                              *

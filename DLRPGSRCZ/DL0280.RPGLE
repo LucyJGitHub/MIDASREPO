@@ -9,7 +9,7 @@
       *                                                               *
       *  DL0280 - DEALS FILE UPDATE                                   *
       *                                                               *
-      *  (c) Finastra International Limited 2001.                     *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
       *****************************************************************
@@ -77,7 +77,8 @@
      F*DLBHISPD* O  A F 1291        DISK                                                      CDL038
      F*DLBHISPD* O  A F 1367        DISK                                             CDL038 BUG25189
      F***DLBHISPD**O**A F 1368        DISK                                           BUG25189 CSW212
-     FDLBHISPD  O  A F 2025        DISK                                                       CSW212
+     F***DLBHISPD**O**A F 2025        DISK                                           CSW212 MD061957
+     FDLBHISPD  O  A F 2244        DISK                                                     MD061957
       *                                                                                       CAS001
      F***DLCHISPDO   F    1636            DISK                      A                  CAS001 CAS005
      F*DLCHISPD*O  A F 1720        DISK                                                       CDL038
@@ -614,7 +615,8 @@
      I**********                        1 1291  UBDATA                                        CDL038
      I**********                        1 1367  UBDATA                               CDL038 BUG25189
      I**********                        1 1368  UBDATA                               BUG25189 CSW212
-     I                                  1 2025  UBDATA                                        CSW212
+     I**********                        1 2025  UBDATA                               CSW212 MD061957
+     I                                  1 2244  UBDATA                                      MD061957
 0136 I                                  1    1  RECR
 0137 I                                  2    7 0DLNO
 0138 I                                  8    8  RCDT
@@ -767,6 +769,12 @@
      I                               2016 2021 0AGDT                                          CSW212
      I                               2022 2023 0AGVV                                          CSW212
      I                               2024 2025 0AGVC                                          CSW212
+     I                               2026 2060  RBTB1                                       MD061957
+     I                               2061 2095  RBTB2                                       MD061957
+     I                               2096 2130  RBTB3                                       MD061957
+     I                               2131 2165  RBTB4                                       MD061957
+     I                               2166 2200  RBTB5                                       MD061957
+     I                               2201 2235  RBTB6                                       MD061957
      I                             P 2236 2238 0BSDT1                                         CDL099
      I                             P 2239 2241 0BSDT2                                         CDL099
      I                             P 2242 2244 0BRSD2                                         CDL099
@@ -34275,7 +34283,8 @@
      O**********             UBDATA            1291                                           CDL038
      O**********             UBDATA            1367                                  CDL038 BUG25189
      O**********             UBDATA            1368                                  BUG25189 CSW212
-     O                       UBDATA            2025                                           CSW212
+     O**********             UBDATA            2025                                  CSW212 MD061957
+     O                       UBDATA            2244                                         MD061957
      O                       LCD                396P                            S01444
      O*                                                                   S01444
      ODLCHISPD  EADD         DLCHIS                                             S01444

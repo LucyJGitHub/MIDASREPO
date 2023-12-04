@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD055146           Date 04Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
@@ -22,6 +23,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 CLE138             Date 02Nov21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -68,6 +69,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *

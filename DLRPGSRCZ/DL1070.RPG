@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD062129           Date 24Nov23               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 AR1075401          Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
       *                 CER050             Date 16Jun19               *
@@ -117,6 +118,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD062129 - Matured deals are deleted even if it is linked    *
+      *             to a live collateral.                             *
+      *             Check if the deal is attached to a collateral     *
+      *             before deletion.                                  *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  AR1075401 - Increase QFOAMT length in PMHOLDPD. Recompiled.  *
@@ -355,6 +360,9 @@
       ** Midas APR MM Deals History                                                           CER050
      FDLHISTI0UF  E           K        DISK                                                   CER050
       *                                                                                       CER050
+      ** Collateral Register keyed by deal number                                           MD062129
+     FGLCOLLL9IF  E           K        DISK         KINFSR *PSSR                            MD062129
+      *                                                                                     MD062129
      F/COPY WNCPYSRC,DL1070FFPG                                           S01408
      F*                                                                   S01408
      E                    CPY@    1   1 80
@@ -1255,6 +1263,24 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL1070CCP4                                           S01408
      C*                                                                   S01408
+      ** Check if matured deal record exist in GLCOLLPD and is currently active             MD062129
+      ** Do not allow deletion of records if the deal is linked to an active collateral     MD062129
+      ** register record                                                                    MD062129
+      *                                                                                     MD062129
+     C                     SETOF                     76                                     MD062129
+     C                     SETOF                     77                                     MD062129
+     C           *IN02     IFEQ '1'                                                         MD062129
+     C           DLNO      SETLLGLCOLLL9                                                    MD062129
+     C           *IN77     DOWEQ*OFF                                                        MD062129
+     C           DLNO      READEGLCOLLL9                 77                                 MD062129
+     C           *IN77     IFEQ *OFF                                                        MD062129
+     C           CDRECI    IFEQ 'D'                                                         MD062129
+     C                     SETON                     76                                     MD062129
+     C                     ENDIF                                                            MD062129
+     C                     ENDIF                                                            MD062129
+     C                     ENDDO                                                            MD062129
+     C                     ENDIF                                                            MD062129
+      *                                                                                     MD062129
       *                                                                                       CDL099
       ** If CDL099 Exists in System, then Initialise Field MDATW.                             CDL099
       ** NOTE: Work Field MDATW is updated in this part of the program                        CDL099
@@ -1315,6 +1341,12 @@
      C                     ADD  1         RECSM   50                      048933
      C/COPY WNCPYSRC,DL1070C004
      C                     END                             **  E  002     048933
+      *                                                                 MD062129
+     C           *IN02     IFEQ '1'                                     MD062129
+     C           *IN76     ANDEQ'1'                                     MD062129
+     C                     GOTO SKIPDC                                  MD062129
+     C                     ENDIF                                        MD062129
+      *                                                                 MD062129
      C/COPY WNCPYSRC,DL1070C009
      C***********MDATW     ANDLTBJRDNB                     **      E43300 048933
      C************IN02     IFEQ '1'                        ** IF   AUS003 048933
@@ -1936,6 +1968,7 @@
      C                     Z-ADD0         TTAXM                           S01119
      C                     EXCPTFRAIRS                                    S01119
      C                     END                                            S01119
+     C           SKIPDC    TAG                                                              MD062129
      C/COPY WNCPYSRC,DL1070C003
      C**   TOTAL TIME - UPDATE FILE CONTROLS
      CLR                   MOVE '0'       *IN99

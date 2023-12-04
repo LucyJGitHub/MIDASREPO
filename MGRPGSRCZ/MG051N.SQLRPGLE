@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056560           Date 31Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061161           Date 21Nov23               *
+      *  Prev Amend No. MD056560           Date 31Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 261402             Date 11May16               *
       *                 CSW214             Date 25Nov14               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061161 - MT518 reference number is incorrect for Repo deals*
       *  MD056560 - Deliverable Data Split for SDMTAGPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -160,6 +162,9 @@
      FTRADSDY1  IF   E           K DISK    INFSR(*PSSR)
      FTRADSDY2  IF   E           K DISK    INFSR(*PSSR)
      FSEMKC     IF   E           K DISK    INFSR(*PSSR)
+     FMGOREFL1  IF   E           K DISK    INFSR(*PSSR)                                     MD061161
+     F                                     RENAME(MGOREFD0:MGREFL0)                         MD061161
+     F                                     PREFIX(M_)                                       MD061161
      FMGOREFPD  O    E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      FMGOMSGPD  O    E             DISK    INFSR(*PSSR)
@@ -463,6 +468,12 @@
      D  PLCTOF                41     44  0
      D  PSYTM                 51     56  0
      D  PSYTOF                61     64  0
+      *                                                                                     MD061161
+      ** DS for MGOREFPD Transaction Number                                                 MD061161
+      *                                                                                     MD061161
+     D MGOKEY          DS            16                                                     MD061161
+     D  TRANNO                 1     10                                                     MD061161
+     D  SEQNUM                11     16  0                                                  MD061161
       *                                                                                     BUG19304
      D PGMF            C                   CONST('SDMFID-                                         BU
      D                                     TIM')                                                  BU
@@ -1325,7 +1336,17 @@
       *
      C                   ENDIF
       *
+     C                   MOVE      *BLANKS       REPOFLAG          1                        MD061161
+     C     CSE006        IFEQ      'Y'                                                      MD061161
+     C     MGARF         ANDNE     *BLANKS                                                  MD061161
+     C                   MOVE      'Y'           REPOFLAG                                   MD061161
+     C                   ENDIF                                                              MD061161
+      *                                                                                     MD061161
+     C     REPOFLAG      IFEQ      'Y'                                                      MD061161
+     C     WWMDAT        CAT       MGARF:0       WWMDAT                                     MD061161
+     C                   ELSE                                                               MD061161
      C     WWMDAT        CAT       MGTNUM:0      WWMDAT
+     C                   ENDIF                                                              MD061161
       *
      C     @LSWS         IFEQ      9999999
      C                   Z-ADD     1             WWLSWS            7 0
@@ -1336,6 +1357,21 @@
      C                   MOVEL     WWLSWS        WALSWS            7
       *
      C     WWMDAT        CAT       WALSWS:0      WWMDAT
+      *                                                                                     MD061161
+     C     REPOFLAG      IFEQ      'Y'                                                      MD061161
+     C                   MOVE      *BLANKS       MGOKEY                                     MD061161
+     C                   MOVEL     WWMDAT        MGOKEY                                     MD061161
+      *                                                                                     MD061161
+     C     MGOKEY        CHAIN(N)  MGOREFL1                           70                    MD061161
+     C     *IN70         DOWEQ     *OFF                                                     MD061161
+     C                   ADD       1             SEQNUM                                     MD061161
+     C     MGOKEY        READE(N)  MGOREFL1                               70                MD061161
+     C                   ENDDO                                                              MD061161
+      *                                                                                     MD061161
+     C                   MOVE      *BLANKS       WWMDAT                                     MD061161
+     C                   MOVEL     MGOKEY        WWMDAT                                     MD061161
+     C                   ENDIF                                                              MD061161
+      *                                                                                     MD061161
      C     MDAT          CAT       WWMDAT:0      MDAT
      C                   MOVEL     MDAT          RDAT
       *

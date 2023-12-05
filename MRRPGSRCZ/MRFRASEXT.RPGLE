@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039909           Date 29Nov23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039909 - Component MRC0210 failed during COB. Prevent      *
+      *             component MRC0210 from failing when a customer is *
+      *             closed/deleted while it is linked to a matured    *
+      *             deal.                                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -805,6 +810,8 @@
      C     SDCUST        PARM      *BLANKS       DSSDY
 
      C                   IF        PRetCode <> *BLANKS
+     C                             AND PRetCode <> '*CUSCLS'                                MD039909
+     C                             AND PRetCode <> '*CUSDEL'                                MD039909
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

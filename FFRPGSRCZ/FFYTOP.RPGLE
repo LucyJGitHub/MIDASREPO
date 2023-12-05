@@ -28,12 +28,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 262292             Date 28Nov23               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 222373             Date 28Oct03               *
+      *                 222373             Date 28Oct03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CPK015             Date 17Jun02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262292 - Coupon rate for yield was change from 12% to 6% as  *
+      *           per Australia's standard. Applied fix 230909.       *      
       *  MD046248 - Finastra Rebranding                               *
       *  222373 - Correct parameters on program calls                 *
       *  CPK015 - Conversion of ZYIELD from PLI to RPG                *
@@ -208,21 +211,26 @@
       *                                                                   AUS022
      C     FFCNTT        IFEQ      2                                                           AUS02
      C                   MOVE      'X'           CUMEXF                                        E3041
-     C                   Z-ADD     12            CPRTE                                         AUS02
+     C**********         Z-ADD     12            CPRTE                                  AUS02 262292
+     C                   Z-ADD     6             CPRTE                                        262292
      C                   Z-ADD     1095          MATDTE                                        AUS02
      C                   Z-ADD     1             NCPDTE                                        E3041
      C                   Z-ADD     182           PERIOD                                        AUS02
      C                   Z-ADD     6             CPTOMT                                        AUS02
+     C     YIELDC        MULT      2             YIELDC                                       262292
      C                   END                                                    IF FFCNTT=2    AUS02
       *                                                                   AUS022
       * Contract type 3 (10 year treasury bonds)                          AUS022
       *                                                                   AUS022
      C     FFCNTT        IFEQ      3                                                           AUS02
-     C                   Z-ADD     12            CPRTE                                         AUS02
+     C**********         Z-ADD     12            CPRTE                                  AUS02 262292
+     C                   Z-ADD     6             CPRTE                                        262292
      C                   Z-ADD     3650          MATDTE                                        AUS02
-     C                   Z-ADD     183           NCPDTE                                        AUS02
+     C**********         Z-ADD     183           NCPDTE                                 AUS02 262292
+     C                   Z-ADD     1             NCPDTE                                       262292
      C                   Z-ADD     182           PERIOD                                        AUS02
      C                   Z-ADD     20            CPTOMT                                        AUS02
+     C     YIELDC        MULT      2             YIELDC                                       262290
      C                   END                                                    IF FFCNTT=3    AUS02
       *                                                                   AUS022
       * Call ZYIELD                                                       AUS022

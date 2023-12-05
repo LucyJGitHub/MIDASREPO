@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 220932             Date 01Jun10               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062144           Date 28Nov23               *
+      *  Prev Amend No. 220932             Date 01Jun10               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSD095CC1          Date 13Sep16               *
       *                 MD030458           Date 17Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -100,6 +101,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062144 - Exclude non-live records in file control totals   *
+      *             when CDL031 is enabled. Apply similar fix of      *
+      *             250336 and applied 256672.                        *
+      *  256672 - File out of Balance in SD0400AU. Fix is to ensure   *
+      *           that trailer file is updated correctly during insert*
+      *           delete and amend of extended settlement.            *
       *  220932 - Use the customer's branch for the security check.   *
       *         - Applied for MD-28927.                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -5963,10 +5970,17 @@
      C                     MOVEL'Y2U0004' W0RTN   7                            CDL031
      C                     ELSE                                                CDL031
       * USER: Processing after Data update                                     CDL031
+     C           BYRECI    IFEQ 'D'                                                         MD062144
      C                     Z-ADD1         WUNORC           No. of Records      CDL031
      C                     Z-ADD*ZERO     WUNOAM           No. of Amends       CDL031
      C                     Z-ADD*ZERO     WUNODL           No. of Deletes      CDL031
      C                     Z-ADD1         WUNOIN           No. of Inserts      CDL031
+     C                     ELSE                                                             MD062144
+     C                     Z-ADD0         WUNORC           No. of Records                   MD062144
+     C                     Z-ADD0         WUNOAM           No. of Amends                    MD062144
+     C                     Z-ADD0         WUNODL           No. of Deletes                   MD062144
+     C                     Z-ADD0         WUNOIN           No. of Inserts                   MD062144
+     C                     ENDIF                                                            MD062144
       * Start of SAR S01117                                                    CDL031
       * Change File Control Filename from EXST to SDEXSTPD                     CDL031
       * Change Standing Data Cont - Standing Data Controls  *                  CDL031
@@ -6198,6 +6212,7 @@
       *                                                                                      BUG7544
      C                     Z-ADDBYLCD     LCDSV   50       Last Change Date                  BUG7544
      C                     MOVELBYTYLC    TYLCSV  1        Type of Last Change               BUG7544
+     C                     MOVELBYRECI    TYRECI  1        Record ID                          256672
       *                                                                                      BUG7544
      C           CSD012    IFEQ 'Y'                                                           CSD012
      C           SVAL11    ANDEQ'Y'                                                           CSD012
@@ -6320,11 +6335,17 @@
       * Trailer update for a delete of a record previously inserted today.                   BUG7544
      C           TYLCSV    IFEQ 'I'                                                          BUG7544
      C           LCDSV     ANDEQWURDNB                                                       BUG7544
+     C           TYRECI    ANDNE'F'                                                           256672
      C                     Z-ADD-1        WUNOIN           No. of Inserts                    BUG7544
      C                     ENDIF                                                             BUG7544
+     C           TYRECI    IFEQ 'F'                                                           256672
+     C                     Z-ADD*ZERO     WUNORC           No. of Records                     256672
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes                     256672
+     C                     ENDIF                                                              256672
       * Trailer update for a delete of a record previously amended today.                    BUG7544
      C           TYLCSV    IFEQ 'A'                                                          BUG7544
      C           LCDSV     ANDEQWURDNB                                                       BUG7544
+     C           TYRECI    ANDNE'F'                                                           256672
      C                     Z-ADD-1        WUNOAM           No. of Amends                     BUG7544
      C                     ENDIF                                                             BUG7544
       * Start of SAR S01117
@@ -6661,6 +6682,7 @@
       *                                                                                      BUG7544
      C                     Z-ADDBYLCD     LCDSV            Last Change Date                  BUG7544
      C                     MOVELBYTYLC    TYLCSV           Type of Last Change               BUG7544
+     C                     MOVELBYRECI    TYRECI           Record ID                          256672
       *                                                                                      BUG7544
      C           YCRDC     IFEQ 'Y'
      C                     Z-ADDWURDNB    BYLCD            Last Change Dat                    CSD012
@@ -6749,13 +6771,26 @@
       * Trailer update for an amend of a record previously inserted today.                   BUG7544
      C           TYLCSV    IFEQ 'I'                                                          BUG7544
      C           LCDSV     ANDEQWURDNB                                                       BUG7544
+     C           P2ANCD    ANDNE'I'                                                           256672
+     C           TYRECI    ANDNE'F'                                                           256672
      C                     Z-ADD-1        WUNOIN           No. of Inserts                    BUG7544
      C                     ENDIF                                                             BUG7544
       * Trailer update for an amend of a record previously amended today.                    BUG7544
      C           TYLCSV    IFEQ 'A'                                                          BUG7544
      C           LCDSV     ANDEQWURDNB                                                       BUG7544
+     C           TYRECI    OREQ 'F'                                                           256672
      C                     Z-ADD*ZERO     WUNOAM           No. of Amends                     BUG7544
      C                     ENDIF                                                             BUG7544
+      *                                                                                       256672
+      ** Trailer update for an insert of a record previously deleted today                    256672
+      *                                                                                       256672
+     C           P2ANCD    IFEQ 'I'                                                           256672
+     C           TYRECI    ANDNE'F'                                                           256672
+     C                     Z-ADD1         WUNORC           No. of Records                     256672
+     C           LCDSV     IFEQ WURDNB                                                        256672
+     C                     Z-ADD-1        WUNODL           No. of Deletes                     256672
+     C                     ENDIF                                                              256672
+     C                     ENDIF                                                              256672
       * Start of SAR S01117
       * Change File Control Filename from EXST to SDEXSTPD
       * Change Standing Data Cont - Standing Data Controls  *

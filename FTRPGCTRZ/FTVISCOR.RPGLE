@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents SWIFT IDs         *
+      *           referring to closed customers from being inserted   *
+      *           in the sender's correspondent field. Applied fix    *
+      *           229380.                                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -330,6 +335,21 @@
       *
      C                   ENDIF
       *
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVEL     'N'           OKSNC1                                     AR666005
+     C                   ADD       1             IDX                                        AR666005
+     C                   MOVEL     'DDSNC1'      FldNamXAR(IDX)                             AR666005
+     C                   EVAL      BLen = %Len(%Trim(CLSWTK))                               AR666005
+     C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(CLSWTK)                   AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(IDX)                              AR666005
+      *                                                                                     AR666005
+     C     ADSLSH        IFNE      '/'                                                      AR666005
+     C                   MOVEL     'N'           OKSNC1                                     AR666005
+     C                   ELSE                                                               AR666005
+     C                   MOVEL     'N'           OKSNC2                                     AR666005
+     C                   ENDIF                                                              AR666005
+      *                                                                                     AR666005
+     C                   ENDIF                                                              AR666005
      C                   MOVEL     'S'           WPSNCT
       *
       ** No SWIFT address record.

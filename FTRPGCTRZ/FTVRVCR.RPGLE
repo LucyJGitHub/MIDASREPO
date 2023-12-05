@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061038           Date 01Dec23               *
+      *  Prev Amend No. AR666005           Date 01Dec23               *
+      *                 CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -49,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061038 - AR666005 additional fix                           *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           customers from being inserted in the receiver's     *
+      *           correspondent field. Applied fix 229380.            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -183,6 +189,7 @@
 
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR666005
 
      D/COPY FTCPYSRC,SFTADDRILE
 
@@ -348,12 +355,14 @@
      C                   End
       *
       *  Call to access pgm for Customer details
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
-     C     SDCUST        Parm      *Blanks       DSSDY
+     C*****SDCUST        Parm      *Blanks       DSSDY                                      AR666005
+     C     SDCUST        PARM      *BLANKS       DSLDY                                      AR666005
 
      C                   If        C#RTCD = *Blanks
 
@@ -398,7 +407,9 @@
 
      C                   If        ##CSID = 'Y'
 
-     C                   If        *IN31 = *On
+     C**********         If        *IN31 = *On                                              AR666005
+     C     *IN31         IFEQ      '1'                                                      AR666005
+     C     WCUSTC        OREQ      'Y'                                                      AR666005
       * Send error to screen
      C**********         Add       1             Idx                                          CSD089
      C                   Add       1             WIx                                          CSD089
@@ -414,7 +425,11 @@
      C                   Movel     'SRCO2'       WFldNmXAr(WIx)                               CSD089
      C                   End
      C**********         Movel     'MMA1038'     MsgIdXAr(Idx)                                CSD089
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVEL     'FTM7140'     WMsgIdXAr(WIx)                             MD061038
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1038'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              AR666005
 
      C                   Else
      C                   Eval      @RCRT = 'S'
@@ -449,6 +464,7 @@
 
      C                   If        OKRco1 <> 'N' and
      C                             @RCRT = *Blanks
+     C                             AND WCUSTC <> 'Y'                                         MD061038
 
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
@@ -470,7 +486,12 @@
      C                   Move      'N'           OKRco2
      C                   Movel     'SRCO2'       FldNamXAr(Idx)
      C                   End
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1040'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
 
      C                   Else
       * Validate as an address

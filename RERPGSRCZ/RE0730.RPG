@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056198           Date 08Jul20               *
-      *  Prev Amend No. MD035074           Date 13May20               *
+      *  Last Amend No. MD060988           Date 30Nov23               *
+      *  Prev Amend No. MD056198           Date 08Jul20               *
+      *                 MD035074           Date 13May20               *
       *                 255449             Date 21Apr20               *
       *                 MD050452           Date 11Feb20               *
       *                 MD054019           Date 11Feb20               *
@@ -108,6 +109,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060988 - Standing Orders whose Next Payment Date falls on  *
+      *             weekend process entries in advance. Introduce     *
+      *             system value ‘SOPostOnRUND’ to condition MD-54019.*
+      *             If system value='Y' and Next Payment Date is a    *
+      *             holiday, posting date is based on Accrual Non-    *
+      *             Working Day. If system value='N' and, Next Payment*
+      *             Date is holiday,posting date is next working day. *
+      *           - Applied for MD-61998.                             *
       *  MD056198 - STOR was processed despite insufficient balance,  *
       *             switch on CRE013 even if CAP207 is on             *
       *  MD035074 - Standing Order failed due to insufficient funds,  *
@@ -952,6 +961,11 @@
       *                                                                                       CRE013
      I              'ReptFailedSO'        C         SVALKK                                    CRE013
       *                                                                                       CRE013
+     IWSVL1       DS                            200                                         MD060988
+     I                                        1   1 WSVL11                                  MD060988
+      ** DS for AOSVALR0                                                                    MD060988
+     I              'SOPostOnRUND'        C         WSYSVL                                  MD060988
+      *                                                                                     MD060988
       *****************************************************************                       CRE013
      C                     MOVEACPY@      BIS@   80
      C*                                                                   E17948
@@ -1127,11 +1141,45 @@
      C                     GOTO ERROR                                                       MD054019
      C                     END                                                              MD054019
      C*                                                                                     MD054019
+      ** Check if 'SOPostOnRUND' is on                                                      MD060988
+      *                                                                                     MD060988
+     C                     CALL 'AOSVALR0'                                                  MD060988
+     C                     PARM           @RTCD                                             MD060988
+     C                     PARM WSYSVL    WSVLK1 20                                         MD060988
+     C                     PARM           WSVL1 200                                         MD060988
+     C                     PARM *BLANK    WSVLK2 20                                         MD060988
+     C                     PARM           WSVL2 200                                         MD060988
+     C                     PARM *BLANK    WSVLK3 20                                         MD060988
+     C                     PARM           WSVL3 200                                         MD060988
+     C                     PARM *BLANK    WSVLK4 20                                         MD060988
+     C                     PARM           WSVL4 200                                         MD060988
+     C                     PARM *BLANK    WSVLK5 20                                         MD060988
+     C                     PARM           WSVL5 200                                         MD060988
+     C                     PARM *BLANK    WSVLK6 20                                         MD060988
+     C                     PARM           WSVL6 200                                         MD060988
+     C                     PARM *BLANK    WSVLK7 20                                         MD060988
+     C                     PARM           WSVL7 200                                         MD060988
+     C                     PARM *BLANK    WSVLK8 20                                         MD060988
+     C                     PARM           WSVL8 200                                         MD060988
+     C                     PARM *BLANK    WSVLK9 20                                         MD060988
+     C                     PARM           WSVL9 200                                         MD060988
+     C                     PARM *BLANK    WSVLK0 20                                         MD060988
+     C                     PARM           WSVL0 200                                         MD060988
+      *                                                                                     MD060988
+     C           @RTCD     IFNE *BLANK                                                      MD060988
+     C                     MOVEL'SDSVLJW0'DBFILE                                            MD060988
+     C                     MOVEL'89'      DBASE                                             MD060988
+     C                     MOVELWSYSVL    DBKEY                                             MD060988
+     C                     MOVE *ON       *INU7                                             MD060988
+     C                     MOVE *ON       *IN98                                             MD060988
+     C                     GOTO ERROR                                                       MD060988
+     C                     ENDIF                                                            MD060988
      C*                                                                                     MD054019
      C** Get Event Control Date                                                             MD054019
      C** For Accrual for Non-working days Processing Types 0 and 1,                         MD054019
      C** Event Control Date is BJDNWD -1.                                                   MD054019
      C*                                                                                     MD054019
+     C           WSVL11    IFEQ 'Y'                                                         MD060988
      C                     Z-ADD*ZEROS    EVTDAT  50                                        MD054019
      C           BJDNWD    SUB  1         EVTDAT                                            MD054019
      C*                                                                                     MD054019
@@ -1148,6 +1196,9 @@
      C                     END                                                              MD054019
      C                     END                                                              MD054019
      C*                                                                                     MD054019
+     C                     ELSE                                                             MD060988
+     C                     Z-ADDBJRDNB    EVTDAT                                            MD060988
+     C                     ENDIF                                                            MD060988
       *                                                                   S01522
       * Call module prog. for module details.                             S01522
      C                     CALL 'AOMMODR0'                                S01522

@@ -1,0 +1,155 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*OVR    OVRDBF FILE(UPALLSPD) TOFILE(QADSPOBJ)                      */
+/*EXI    TEXT('Midas UP OTBU deliverable data upgrade')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC6018 - OTBU deliverable data upgrade                     */
+/*                                                                   */
+/*       Function: This program upgrades the deliverable data        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD062161           Date 06Dec23              */
+/*       Prev Amend No. MD061779 *CREATE   Date 17Aug23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD062161 - Avoid component failure when deliverable data    */
+/*                  is not included in a fix package                 */
+/*       MD061779 - Upgrading deliverable data with full DDS set     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPRFX &LYRPFX &BRGBRGLIB &RETURN)
+
+             DCL        VAR(&GPRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LYRPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XTD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPALLSPD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2023')
+
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERRPGM) VALUE('UPC6018')
+
+/* Retrieve reference system prefix */
+             IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+                CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgADBUGlobalRefer' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL1 1 3) *TCAT 'GTALIB')
+                CHGVAR     VAR(&TOLIB) VALUE(&LYRPFX *TCAT 'GTALIB')
+             ENDDO
+
+             ELSE CMD(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgADBUSystemRefer' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL1 1 3) *TCAT 'DTALIB')
+                CHGVAR     VAR(&TOLIB) VALUE(&LYRPFX *TCAT 'DTALIB')
+             ENDDO
+
+
+/* List all objects in the reference library */
+             DLTF       FILE(QTEMP/UPALLSPD)
+             MONMSG     MSGID(CPF2105)
+
+             DSPOBJD    OBJ(&FROMLIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPALLSPD)
+             MONMSG     MSGID(CPF2123) EXEC(GOTO CMDLBL(END))                           /*MD062161*/
+
+LOOP:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+
+/* If MSGF */
+             IF         COND(&ODOBTP *EQ '*MSGF') THEN(DO)
+             MRGMSGF    FROMMSGF(&FROMLIB/&ODOBNM) +
+                          TOMSGF(&TOLIB/&ODOBNM) SELECT(*ALL)
+             GOTO       CMDLBL(LOOP)
+             ENDDO
+
+
+/* If CTD */
+             IF         COND(%SST(&ODOBNM 6 3) *EQ 'CTD') THEN(DO)
+                CHGVAR     VAR(&XTD) VALUE(%SST(&ODOBNM 1 5) *TCAT 'XTD')
+
+/* If UTMNUCTD */
+
+             IF         COND(&ODOBNM *EQ 'UTMNUCTD') THEN(DO)
+             CHGVAR     VAR(&GPLIB) VALUE(&LYRPFX *TCAT 'GPLIB')
+             DLTF       FILE(&GPLIB/UTMNUCTDX)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&FROMLIB/&ODOBNM) +
+                          TOFILE(&GPLIB/UTMNUCTDX) CRTFILE(*YES)
+             CHGDTAARA DTAARA(UPSTAT (55 1)) VALUE('Y')
+             GOTO CMDLBL(LOOP)
+             ENDDO
+
+/* stop triggering */
+                IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+                   TRIGGLOB FILE(&ODOBNM) ACTION(*RMVTRIG)
+                   TRIGGLOB FILE(&XTD)    ACTION(*RMVTRIG)
+                ENDDO
+                ELSE CMD(DO)
+                   TRIGZONE FILE(&ODOBNM) ACTION(*RMVTRIG)
+                   TRIGZONE FILE(&XTD)    ACTION(*RMVTRIG)
+                ENDDO
+
+/* copy table */
+                CPYF       FROMFILE(&FROMLIB/&ODOBNM) +
+                             TOFILE(&TOLIB/&ODOBNM) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2965)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+/* synchronize XTD */
+                CALL       PGM(UP000701) PARM(&ERROR &ODOBNM &TOLIB)
+                IF         COND(&ERROR *NE ' ') THEN(GOTO ERROR)
+
+/* add triggering */
+                IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+                   TRIGGLOB FILE(&ODOBNM) ACTION(*ADDTRIG)
+                   TRIGGLOB FILE(&XTD)    ACTION(*ADDTRIG)
+                ENDDO
+                ELSE CMD(DO)
+                   TRIGZONE FILE(&ODOBNM) ACTION(*ADDTRIG)
+                   TRIGZONE FILE(&XTD)    ACTION(*ADDTRIG)
+                ENDDO
+
+                GOTO       CMDLBL(LOOP)
+             ENDDO
+
+             GOTO       CMDLBL(LOOP)
+
+ERROR:      CHGJOB     SWS(XXXXXX11)
+            DMPCLPGM
+
+/* End program */
+
+ END:        ENDPGM

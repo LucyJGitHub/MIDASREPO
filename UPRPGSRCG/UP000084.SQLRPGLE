@@ -12,7 +12,7 @@
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
       *  Last Amend No. MD061880             Date 14Sep23             *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Prev Amend No. CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD058517           Date 17Oct22              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 263952             Date 05Dec23              */
+/*       Prev Amend No. MD058517           Date 17Oct22              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       263952 - Client wants that LE0426 report should appear      */
+/*                regardless if S01465 is ON or OFF. Added SDSVALPD  */
+/*                record to determine if LE0426 should be printed if */
+/*                S01465 is ON. Applied fix 261160.                  */
 /*       MD058517 - CLE172 LIBOR Lending- Change Control CC3.1       */
 /*                  Interest Projection Using Known Rates            */
 /*                  CC10 CLE172 Spool File Correspondence (MD059817) */
@@ -48,6 +53,26 @@
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                 /*S01465*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)            /*S01465*/
              DCL        VAR(&CLE172) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD058517*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*263952*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                  /*263952*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                  /*263952*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                 /*263952*/
 /*/COPY WNCPYSRC,LEC0426004                                          */
 
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -73,12 +98,28 @@
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                  /*S01465*/
              CHGVAR     VAR(&SAR) VALUE('S01465')                    /*S01465*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD) /*S01465*/
+/**/                                                                                      /*263952*/
+/* Access SDSVALPD to check if LE0426 is printed when S01465 is ON */                     /*263952*/
+/**/                                                                                      /*263952*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                            'PrintLE0426Report' &SVAL1 &SVALK2 +
+                            &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                            &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                            &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                            &SVALK0 &SVAL10)                                              /*263952*/
+            IF         COND(%SUBSTRING(&SVAL1 1 4) *EQ '*NRF') THEN(DO)                   /*263952*/
+            CHGVAR     VAR(&SVAL1) VALUE('N')                                             /*263952*/
+            ENDDO                                                                         /*263952*/             
 /**/                                                                 /*S01465*/
-/**  If switchable feature is on, call LE1170.  Else, call LE0426 */ /*S01465*/
+/****If*switchable*feature*is*on,*call*LE1170.**Else,*call*LE0426*****/            /*S01465 263952*/
+/* If switchable feature is on and SDSVALPD is 'N' call LE1170 */                         /*263952*/
+/* else call LE0426 */                                                                    /*263952*/
 /**/                                                                 /*S01465*/
 /*/COPY WNCPYSRC,LEC0426003                                          */
 /**********  IF         COND(&RTCD *EQ '       ') THEN(+             */                 /*MD058517*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD058517*/
+/**********  IF         COND(&RTCD *EQ '       ') THEN(DO)                       /*MD058517 263952*/
+             IF         COND(&RTCD *EQ '       ' *AND +
+                        %SUBSTRING(&SVAL1 1 1) *EQ 'N') THEN(DO)                          /*263952*/
                                                                                         /*MD058517*/
 /** Override LE1170P1 attributes to increase page size and overflow  */                 /*MD058517*/
                  IF        COND(&CLE172 *EQ 'Y') THEN(OVRPRTF +

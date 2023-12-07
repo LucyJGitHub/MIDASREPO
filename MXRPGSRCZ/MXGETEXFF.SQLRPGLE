@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061958           Date 16Nov23               *
-      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *  Last Amend No. MD062059           Date 27Nov23               *
+      *  Prev Amend No. MD061958           Date 16Nov23               *
+      *                 MD056612           Date 12Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062059 - NY: Midas Export extracts no data if selection    *
+      *             criteria.                                         *
+      *           - Use the correct field names of MXEXSJW0 file      *
+      *             when converting the date of the selected codes.   *
       *  MD061958 - NY: Midas Export format extracts have fields in   *
       *             the wrong sequence.                               *
       *           - Added order by to sort MXEXFJW0 records according *
@@ -243,24 +248,44 @@
       ********************************************************************
      C     CNV_DTSELC    BEGSR
      C                   SELECT
-     C     ESSCPV        WHENEQ    '*CUREOM   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     CUREOM        ESSCPV
-     C     ESSCPV        WHENEQ    '*CURSOM   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     CURSOM        ESSCPV
-     C     ESSCPV        WHENEQ    '*PRVSOM   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     PRVSOM        ESSCPV
-     C     ESSCPV        WHENEQ    '*CURRUN   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     CURRUN        ESSCPV
-     C     ESSCPV        WHENEQ    '*CURNWD   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     CURNWD        ESSCPV
-     C     ESSCPV        WHENEQ    '*PRVRUN   '
-     C                   MOVEL     *BLANK        ESSCPV
-     C                   MOVEL     PRVRUN        ESSCPV
+     C*****ESSCPV        WHENEQ    '*CUREOM   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     CUREOM        ESSCPV                                     MD062059
+     C*****ESSCPV        WHENEQ    '*CURSOM   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     CURSOM        ESSCPV                                     MD062059
+     C*****ESSCPV        WHENEQ    '*PRVSOM   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     PRVSOM        ESSCPV                                     MD062059
+     C*****ESSCPV        WHENEQ    '*CURRUN   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     CURRUN        ESSCPV                                     MD062059
+     C*****ESSCPV        WHENEQ    '*CURNWD   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     CURNWD        ESSCPV                                     MD062059
+     C*****ESSCPV        WHENEQ    '*PRVRUN   '                                             MD062059
+     C**********         MOVEL     *BLANK        ESSCPV                                     MD062059
+     C**********         MOVEL     PRVRUN        ESSCPV                                     MD062059
+      *                                                                                     MD062059
+     C     X_ESSCPV      WHENEQ    '*CUREOM   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     CUREOM        X_ESSCPV                                   MD062059
+     C     X_ESSCPV      WHENEQ    '*CURSOM   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     CURSOM        X_ESSCPV                                   MD062059
+     C     X_ESSCPV      WHENEQ    '*PRVSOM   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     PRVSOM        X_ESSCPV                                   MD062059
+     C     X_ESSCPV      WHENEQ    '*CURRUN   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     CURRUN        X_ESSCPV                                   MD062059
+     C     X_ESSCPV      WHENEQ    '*CURNWD   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     CURNWD        X_ESSCPV                                   MD062059
+     C     X_ESSCPV      WHENEQ    '*PRVRUN   '                                             MD062059
+     C                   MOVEL     *BLANK        X_ESSCPV                                   MD062059
+     C                   MOVEL     PRVRUN        X_ESSCPV                                   MD062059
+      *                                                                                     MD062059
      C                   ENDSL
      C                   ENDSR
       ********************************************************************

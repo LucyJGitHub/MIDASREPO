@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD021276           Date 31Jul13               *
@@ -63,6 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the destination field.       *
+      *           Applied fix 229380.                                 *
       *  MD039547 - Referred account is not properly validated.       *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -259,6 +263,7 @@
  
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR666005
  
      D DSFDY         E DS                  EXTNAME(DSFDY)
  
@@ -734,12 +739,14 @@
      C                   Move      DNUM          K#CNUM
      C                   Move      DNUM          WCNUMA                                       CSD027
  
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm      WCNUMA        C#KEY1
      C                   Parm      *Blanks       C#KYST
-     C     SDCUST        Parm      SDCUST        DSSDY
+     C*****SDCUST        Parm      SDCUST        DSSDY                                      AR666005
+     C     SDCUST        PARM      SDCUST        DSLDY                                      AR666005
  
      C**********         End                                                                  CSD027
  
@@ -754,7 +761,12 @@
      C                   Move      'N'           OKDst1
      C                   Add       1             Idx
      C                   Movel     'SDST1'       FldNamXAr(Idx)
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA0948'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
  
      C                   Else
      C                   Eval      @DSTT = 'C'
@@ -879,16 +891,28 @@
       * CHECK IF NAME
      C                   Move      DCUS          CSNM
  
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *BLANKS       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm      CSNM          C#KEY1
      C                   Parm      *BLANKS       C#KYST
-     C     SDCUST        Parm      SDCUST        DSSDY
+     C*****SDCUST        Parm      SDCUST        DSSDY                                      AR666005
+     C     SDCUST        PARM      SDCUST        DSLDY                                      AR666005
  
      C                   If        C#RTCD <> *Blanks or
      C**********                   C#KYST <> '*CSHT  '                                        241255
      C                             C#KYST = '*CSHT  '                                         241255
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+      *                                                                                     AR666005
+      ** Send error to screen                                                               AR666005
+      *                                                                                     AR666005
+     C                   MOVE      'N'           OKDst1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'SDST1'       FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
  
       * Check that it is not a SWIFT address
      C**********         Movel     #SDST1        CLSWTK           12                          CGL029
@@ -899,7 +923,9 @@
  
      C                   If        ##CSID = 'Y' and
      C                             *IN31 = *OFF and
-     C                             *IN32 = *OFF
+     C**********                   *IN32 = *OFF                                             AR666005
+     C                             *IN32 = *OFF and                                         AR666005
+     C                             WCUSTC = 'N'                                             AR666005
      C                   Eval      SwiftOK = 'Y'
      C                   Eval      @DSTT = 'S'
      C                   Else
@@ -912,8 +938,13 @@
      C                   Move      'N'           OKDst1
      C                   Add       1             Idx
      C                   Movel     'SDST1'       FldNamXAr(Idx)
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
 c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
      C                   End
+     C                   ENDIF                                                              AR666005
  
      C                   Else
      C* Move new SYNON field names to old field names
@@ -952,12 +983,22 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
       * If Swift Id not found, allow it and display warning message.
      C                             ##CSID = 'Y' and
      C                             *IN32 = *On
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+      *                                                                                     AR666005
+      ** Send error to screen                                                               AR666005
+      *                                                                                     AR666005
+     C                   MOVE      'N'           OKDst1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'SDST1'       FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'MMA0952'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   If        *in32 = *on                                                205679
      C                   Movel     '*NFND'       @SWIIND
      C                   Endif                                                                205679
      C                   Eval      SwiftOK = 'Y'
      C                   Eval      @DSTT = 'S'
      C                   Movea     ##002         *IN(31)
+     C                   ENDIF                                                              AR666005
  
      C                   Else
      C                   Movea     ##002         *IN(31)

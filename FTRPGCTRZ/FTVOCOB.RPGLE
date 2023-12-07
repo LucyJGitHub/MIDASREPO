@@ -11,13 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the account with bank field. *
+      *           Applied fix 229380. (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSW209 - SWIFT 2009 Changes                                  *

@@ -22,12 +22,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 17Mar06               *
       *                 CSW037A            Date 02May05               *
       *                 BUG6198            Date 04Apr05               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Checks if customer record is found but customer   *
+      *           is closed. Applied fix 229380.                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -172,7 +175,8 @@
      C                   SetOff                                       909192
      C                   SetOff                                       939495
      C                   SetOff                                       969798
- 
+     C                   MOVE      '0'           *IN80                                      AR666005
+
       ** Test indicators
  
      C                   SetOff                                       505152
@@ -367,13 +371,15 @@
  
      C                   If        *IN95 = *off
      C     BBDTDL        IfNe      0
-     C                   SetOn                                        95
+     C**********         SetOn                                        95                    AR666005
+     C                   MOVE      '1'           *IN80                                      AR666005
      C                   EndIf
      C                   EndIf
       *                                                                                       CSD007
      C                   If        *IN95 = *off                                               CSD007
      C                   If        BBCLST = 'Y'                                               CSD007
-     C                   Movel     '1'           *IN95                                        CSD007
+     C**********         Movel     '1'           *IN95                               CSD007 AR666005
+     C                   MOVE      '1'           *IN80                                      AR666005
      C                   EndIf                                                                CSD007
      C                   EndIf                                                                CSD007
  
@@ -403,6 +409,7 @@
      C   97              Move      '*KEY   '     P@RtCd
      C   54              Move      '*NOSEL '     P@RtCd
      C   55              Move      '*CALL  '     P@RtCd
+     C   80              MOVE      '*CUSDEL'     P@RTCD                                     AR666005
      C   97              Move      '*ERROR '     P@Kyst
  
       ** Caller requests message sent to program queue :
@@ -415,6 +422,7 @@
      C   93              Move      'ACO1004'     P@MGID
      C   94              Move      'ACO1005'     P@MGID
      C   95              Move      'ACO1006'     P@MGID
+     C   80              MOVE      'ACO1006'     P@MGID                                     AR666005
      C   96              Move      'ACO1007'     P@MGID
      C   97              Move      'ACO1008'     P@MGID
      C   54              Move      'ACO1009'     P@MGID

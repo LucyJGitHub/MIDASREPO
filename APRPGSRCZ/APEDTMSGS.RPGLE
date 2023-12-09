@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD061462           Date 04Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022             Date 03Jun15               *
       *                 MD024980           Date 26Mar14               *
       *                 AR218328           Date 23Mar10               *
       *                 MD020915           Date 27Jun13               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061462 - Error on warning messages with ampersand (&).     *
+      *           - Adjust DDta if remaining char to extract is more  *
+      *             than 45.                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - Increase message file array due to merge of BoE     *
       *           changes.                                            *
@@ -75,14 +79,14 @@
       *  CAP084 - Midas Plus API development                          *
       *                                                               *
       *****************************************************************
- 
+
      D Lower           S              1    DIM(26) CTDATA PERRCD(26)
      D Upper           S              1    DIM(26) CTDATA PERRCD(26)
- 
+
      D FLD             S              1    DIM(75)
- 
+
      D CompMsgArr      S              1    DIM(3000)
- 
+
      D*MsgLen***       C                   CONST(300)                                         CLE106
      D***MsgLen*         C                   CONST(1000)                              CLE106 BUG7970
      D MsgLen          C                   CONST(3000)                                       BUG7970
@@ -91,7 +95,7 @@
      D MsgArrLen       C                   CONST(9999)                                      AR218328
      D MsgArrLenE      C                   CONST(9999)                                      AR218328
      D MsgNotF         C                   CONST('*ERROR - Message not found')
- 
+
      D MsgArr          S              1    DIM(MsgArrLen)
      D Msg             S              1    DIM(MsgLen)
      D BF              S              3  0                                                    CBF011
@@ -104,6 +108,7 @@
      D CharDta         S              2                                                     MD000091
      D DtaValue        S             45                                                     MD000091
      D DDta            S              2  0                                                  MD000091
+     D WRem            S              2  0                                                  MD061462
       ** Binary Char Data Structure                                                         MD000091
      D BinChar         DS                                                                   MD000091
      D   WBinChar              1      2                                                     MD000091
@@ -112,10 +117,10 @@
      D************ #MsgData        S             45A                                          BG1105
      D***#MsgData********S            600A                                            BG1105 BUG3407
      D #MsgData        S             45A                                                     BUG3407
- 
+
       ** Message ID
      D #MsgID          S              7A
- 
+
       ** Message ID for BF Event Codes                                                        CBF011
      D #MsgIDBF        S             50A                                                      CBF011
                                                                                               CBF011
@@ -127,25 +132,25 @@
                                                                                               CBF011
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
- 
+
       ** Array of Fields in error.
      D FldNameArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D MsgDtaArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNamArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of warning message data.
      D WMsgDtaArr      S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
@@ -154,13 +159,13 @@
       *                                                                                     AR994582
      D TWMsgDtaArr     S                   DIM(1)                                           AR994582
      D                                     LIKE(#MsgData)                                   AR994582
- 
+
       ** Array of message files
      D***MsgFileArr      S                   DIM(5)                                           LLN022
      D MsgFileArr      S                   DIM(6)                                             LLN022
      D                                     LIKE(FldNameArr)
      D/COPY WNCPYSRC,APH00064
- 
+
       ** Array of input error message IDs for BF Event Codes                                  CBF011
      D MsgIDArrBF      S                   DIM(ArrayMax)                                      CBF011
      D                                     LIKE(#MsgIDBF)                                     CBF011
@@ -197,7 +202,7 @@
      C                   PARM                    MsgArrOUT      9999                          BG1105
      C                   PARM                    APIName                                      CBF011
      C/COPY WNCPYSRC,APH00065
- 
+
       ** Move MsgId (7A) to BF Arrays (50A)                                                   CBF011
                                                                                               CBF011
      C                   Z-ADD     1             BF                                           CBF011
@@ -244,7 +249,7 @@
      C                   Z-ADD     1             LP                5 0
      C                   EXSR      EDIT_EMSG
      C                   EXSR      EDIT_WMSG
- 
+
      C                   MOVEA     MsgArr        MsgArrOUT
                                                                                               BG1639
       *                                                                                       BG1639
@@ -266,7 +271,7 @@
      C                   EndIf                                                               BUG3654
      C                   EndIf                                                                BG1639
      C                   EndIf                                                                BG1639
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -275,16 +280,16 @@
       * Edit Error Messages
       ********************************************************************
      C     EDIT_EMSG     BEGSR
- 
+
      C                   Z-ADD     1             C                 2 0
      C     C             DOWLE     75
      C     FldNameArr(C) ANDNE     *BLANKS
      C     LP            ANDLT     MsgArrLenE
- 
+
      C                   MOVEA     FldNameArr(C) FLD
      C                   EXSR      UC_FldName
      C                   MOVEA     FLD           FldNameArr(C)
- 
+
      C                   MOVE      *BLANK        Msg
      C                   MOVEA     FldNameArr(C) FldName          10
      C                   MOVEA     FldName       Msg
@@ -306,7 +311,7 @@
      C     *BLANK        LOOKUP    Msg(D)                                 99
      C                   MOVEA     ':E:'         Msg(D)
      C                   ADD       3             D
- 
+
      C                   IF        RetCode = '*NODATA'                                        CBF011
      C     MsgIdArr(C)   IFNE      *BLANKS                                                    CLE106
      C                   MOVEL     MsgIdArr(C)   @MSGID            7
@@ -327,12 +332,12 @@
      C                   MOVEA     ' '           Msg(D)                                       CBF011
      C                   ENDIF                                                                CBF011
      C                   ENDIF                                                                CBF011
- 
+
      C                   EXSR      AddMsg2Arr
- 
+
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -340,16 +345,16 @@
       * Edit Warning Messages
       ********************************************************************
      C     EDIT_WMSG     BEGSR
- 
+
      C                   Z-ADD     1             C                 2 0
      C     C             DOWLE     75
      C     WFldNamArr(C) ANDNE     *BLANKS
      C     LP            ANDLT     MsgArrLenE
- 
+
      C                   MOVEA     WFldNamArr(C) FLD
      C                   EXSR      UC_FldName
      C                   MOVEA     FLD           WFldNamArr(C)
- 
+
      C                   MOVE      *BLANK        Msg
      C                   MOVEA     WFldNamArr(C) FldName
      C                   MOVEA     FldName       Msg
@@ -372,7 +377,7 @@
      C     *BLANK        LOOKUP    Msg(D)                                 99
      C                   MOVEA     ':W:'         Msg(D)
      C                   ADD       3             D
- 
+
      C                   IF        RetCode = '*NODATA'                                        CBF011
      C                   MOVEL     WMsgIDArr(C)  @MSGID            7
      C                   MOVEL     WMsgDtaArr(C) @MSGDT           45
@@ -390,12 +395,12 @@
      C                   MOVEA     ' '           Msg(D)                                       CBF011
      C                   ENDIF                                                                CBF011
      C                   ENDIF                                                                CBF011
- 
+
      C                   EXSR      AddMsg2Arr
- 
+
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -425,7 +430,7 @@
      C                   If        CompMsg = *Blank
      C                   Eval      CompMsg = MsgNotF
      C                   EndIf
- 
+
       * Replace any colons in the message with semi-colons as the colon
       * will be used as a separator
      C                   MOVEA     CompMsg       CompMsgArr
@@ -435,7 +440,7 @@
      C   99              MOVEL     ';'           CompMsgArr(X)
      C                   ENDDO
      C                   MOVEA     CompMsgArr    CompMsg
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -443,7 +448,7 @@
       * Retrieve Messages From Message File
       ********************************************************************
      C     ZAMSGRTVMS    BEGSR
- 
+
      C                   CALLB     'ZAMSGRTVMS'
      C                   PARM      *BLANK        ReturnCode       10
      C                   PARM      *BLANK        CompMsg        3000
@@ -452,7 +457,7 @@
      C                   PARM                    #MsgFile         10
      C                   PARM      '*LIBL  '     #MsgFLib         10
      C                   PARM      '0'           Level             1
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -471,7 +476,7 @@
      C                   Eval      Posn = MsgLen
      C                   EndIf
      C                   Eval      Msg(Posn) = ':'
- 
+
       *                                                                                     AR218328
       ** Do not add message if it will exceed the total length of string                    AR218328
       *                                                                                     AR218328
@@ -481,7 +486,7 @@
      C                   MOVEA     Msg           MsgArr(LP)
      C                   ADD       Posn          LP
      C                   Endif                                                              AR218328
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -511,6 +516,10 @@
      C                   EVAL      WBinChar = %SUBST(TWMsgDtaArr(1):DCount:2)               MD000091
      C                   EVAL      DDta = %DEC(WBin:2:0)                                    MD000091
      C                   EVAL      DCount = DCount + 2                                      MD000091
+     C                   EVAL      WRem = MsgDtaLen - DCount                                MD061462
+     C                   IF        DCount >  WRem                                           MD061462
+     C                   EVAL      DDta = WRem + 1                                          MD061462
+     C                   ENDIF                                                              MD061462
      C                   EVAL      DtaValue = %SUBST(TWMsgDtaArr(1):DCount:DDta)            MD000091
      C                   MOVE      DDta          CharDta                                    MD000091
      C                   EVAL      TmpDta = %TRIM(TmpDta) + CharDta +                       MD000091

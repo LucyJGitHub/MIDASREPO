@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061841           Date 04Oct23               *
-      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *  Last Amend No. MD062017           Date 29Nov23               *
+      *  Prev Amend No. MD061841           Date 04Oct23               *
+      *                 MD056612           Date 12Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062017 - NY: Issues with Midas Export function Midas to    *
+      *             Meridian upload.                                  *
       *  MD061841 - Export a Format to Meridian function is failing   *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
@@ -220,6 +223,7 @@
      C+ declare FCursor insensitive scroll cursor for                                       MD056612
      C+ select * from MXEXFJW0                                                              MD056612
      C+ where WHFILE = :KeyFile and WHFSQN = :KeySequence                                   MD056612
+     C+ order by WHFILE, WHFSQN, WHIBO, WHFOBO                                              MD062017
      C/END-EXEC                                                                             MD056612
                                                                                             MD056612
      C/EXEC SQL                                                                             MD056612

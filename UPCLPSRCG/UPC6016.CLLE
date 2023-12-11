@@ -12,10 +12,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP044   *CREATE   Date 22May22              */
+/*       Last Amend No. MD62101            Date 15Nov23              */
+/*       Prev Amend No. MD061779           Date 17Aug23              */
+/*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062101 - Add consistent logging level for components      */
+/*       MD061779 - Upgrading deliverable data with full DDS set     */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                                                                   */
@@ -36,6 +40,7 @@
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
 
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(UPCCSITD)                                                  /*MD061779*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2022')
@@ -44,6 +49,9 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
 
+/* Set logging level */                                                                 /*MD062101*/
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)                   /*MD062101*/
+                                                                                        /*MD062101*/
              CHGVAR     VAR(&ERRPGM) VALUE('UPC6016')
 
 /* Update monitor */
@@ -55,19 +63,34 @@
              CALL UP6002 (&LYRPFX &CMPN &ERROR)
              IF         COND(&ERROR *NE '          ') THEN(GOTO ERROR)
 
+
+/* Retrieve flag */                                                                     /*MD061779*/
+             RCVF                                                                       /*MD061779*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD061779*/
+                                                                                        /*MD061779*/
 /* Check if layer is global or not and set *LIBL */
              IF         COND(&GPRFX *EQ &LYRPFX) THEN(DO)
+             IF         COND(&UCADBU *EQ 'Y') THEN(DO)                                  /*MD061779*/
+             CALL       PGM(UPC6018) PARM(&GPRFX &LYRPFX &BRGBRGLIB &RETURN)            /*MD061779*/
+             ENDDO                                                                      /*MD061779*/
+             ELSE       CMD(DO)                                                         /*MD061779*/
              CALL       PGM(UPC0080026) PARM('*PROCESS' +
                           'BrgMidasGlobalPrefix' +
                           'BrgDeliveredBrgLib' 'BrgDeliveredDtaLib' +
                           '*GLOBAL')
+             ENDDO                                                                      /*MD061779*/
              ENDDO
              ELSE CMD(DO)
+             IF         COND(&UCADBU *EQ 'Y') THEN(DO)                                  /*MD061779*/
+             CALL       PGM(UPC6018) PARM(&GPRFX &LYRPFX &BRGBRGLIB &RETURN)            /*MD061779*/
+             ENDDO                                                                      /*MD061779*/
+             ELSE       CMD(DO)                                                         /*MD061779*/
              CALL       PGM(UPC0014) PARM(&LYRPFX)
              CALL       PGM(UPC80026) PARM('*PROCESS' +
                           'BrgMidasSystemPrefix' +
                           'BrgDeliveredBrgLib' 'BrgDeliveredDtaLib' +
                           '*ZONE')
+             ENDDO                                                                      /*MD061779*/
              ENDDO
 
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)

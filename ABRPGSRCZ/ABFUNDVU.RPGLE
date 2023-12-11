@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060158           Date 28Jun22               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. CAP241             Date 19Sep23               *
+      *  Prev Amend No. MD060158           Date 28Jun22               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP241 - Front Office Id in Transactions Input               *
       *  MD060158 - Missing modules delivery.                         *
       *             (Recompile)                                       *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -799,6 +801,19 @@
      C                   PARM      *ZERO         PDateOutZ9
      C                   PARM                    PRetCode
 
+      ** Check if CAP241 is installed                                                    CAP241
+                                                                                         CAP241
+     C                   EVAL      CAP241 = 'N'                                          CAP241
+     C                   CALL      'AOSARDR0'                                            CAP241
+     C                   PARM      *Blanks       @RtCd                                   CAP241
+     C                   PARM      '*VERIFY'     @Optn                                   CAP241
+     C                   PARM      'CAP241'      @SARD                                   CAP241
+     C     SCSARD        PARM      SCSARD        DSFDY                                   CAP241
+                                                                                         CAP241
+     C                   IF        @RtCd = *Blanks                                       CAP241
+     C                   Move      'Y'           CAP241            1                     CAP241
+     C                   ENDIF                                                           CAP241
+
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,ABFUND01
 
@@ -969,6 +984,11 @@
      C                   PARM                    FRNT                                         261140
      C                   PARM                    AFRT                                         261140
                                                                                               261140
+     C     CAP241        Ifeq      'Y'                                                        CAP241
+     C                   Eval      FRNT = PFrntId                                             CAP241
+     C                   Eval      AFRT = PFrntAsId                                           CAP241
+     C                   Endif                                                                CAP241
+                                                                                              CAP241
      C                   ENDSR
       /EJECT
       ******************************************************************

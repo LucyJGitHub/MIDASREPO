@@ -12,6 +12,7 @@
       *                                                               *
       *  Last Amend No. MD062104           Date 14Nov23               *
       *  Prev Amend No. AR316486           Date 14Nov23               *
+      *                 BA5026             Date 07Sep23               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
@@ -84,6 +85,8 @@
       *  MD062104 - Make AR316486 fix configurable by a system value. *
       *  AR316486 - Request to have field 25 on MT210. Fix is to add  *
       *             field 25 in MT210.                                *
+      *  BA5026 - Generate MT202 and MT298 for Nostro Transfers.      *
+      *           Upgrade GLW026.                                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -372,6 +375,11 @@
      I              'F25MT210OurActAtNos 'C         W25OAN                                  MD062104
      I*
      I/COPY WNCPYSRC,FT0656I002
+      *                                                                                       BA5026
+      ** DS for AOSVALR0                                                                      BA5026
+      *                                                                                       BA5026
+     I              'BA5026CentralBankCus'C         SVALK                                     BA5026
+      *                                                                                       BA5026
       ***************************************************************     S01310
       *  NOTE:                                                      *     S01310
       *  The following data structures were originally used as the  *     S01310
@@ -765,6 +773,14 @@
      ISDWLCC    E DSSDWLCCPD                                                                  222385
       ** Watch list checking details                                                          222385
       *                                                                                       222385
+     IFLD77E      DS                                                                          BA5026
+     I                                        1   4 TXT32A                                    BA5026
+     I                                        5  28 DTL32A                                    BA5026
+      **  Data structure containing details for field 77E                                     BA5026
+      *                                                                                       BA5026
+     ISDBANK    E DSSDBANKPD                                                                  BA5026
+      **  Data structure for Bank ICD file                                                    BA5026
+      *                                                                                       BA5026
      I/COPY WNCPYSRC,FT0656I001
       *                                                                   CSW020
      I/EJECT
@@ -1335,6 +1351,94 @@
      C                     MOVELMFLD      TRNO                            S01310
      C                     MOVELMFLD      M1TREF                          S01310
      C/COPY WNCPYSRC,FTH00597
+      *                                                                                       BA5026
+     C                     MOVE 'N'       MT202   1                                           BA5026
+     C                     MOVE 'N'       MT298   1                                           BA5026
+     C           BA5026    IFEQ 'Y'                                                           BA5026
+     C                     SETOF                     7071                                     BA5026
+      *                                                                                       BA5026
+     C                     Z-ADD1         WCTR    10                                          BA5026
+      *                                                                                       BA5026
+      * Access SDNOSTPD and SDCUSTPD twice to obtain Country of location                      BA5026
+      * of the From Nostro and the To Nostro.                                                 BA5026
+     C           WCTR      DOUEQ3                                                             BA5026
+      *                                                                                       BA5026
+     C                     SELEC                                                              BA5026
+      * First Loop obtain From Nostro Country of Location                                     BA5026
+     C           WCTR      WHEQ 1                                                             BA5026
+     C                     MOVELDEST      NNOST                                               BA5026
+      * Second Loop obtain To Nostro Country of Location                                      BA5026
+     C           WCTR      WHEQ 2                                                             BA5026
+     C                     MOVELACBN      NNOST                                               BA5026
+     C                     ENDSL                                                              BA5026
+      *                                                                                       BA5026
+     C           NKEY      CHAINSDNOSTL0             60                                       BA5026
+      *                                                                                       BA5026
+     C           *IN60     IFEQ '1'                        ***************                    BA5026
+     C                     MOVELNNOST     DBKEY            *DB ERROR 072 *                    BA5026
+     C                     MOVE '072'     DBASE            ***************                    BA5026
+     C                     MOVEL'SDNOSTPD'DBFILE                                              BA5026
+     C                     EXSR DBERR                                                         BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     CALL 'AOCUSTR0'             9090                                   BA5026
+     C                     PARM *BLANKS   @RTCD                                               BA5026
+     C                     PARM '*KEY   ' @OPTN                                               BA5026
+     C                     PARM A7CUST    @KEY1  10                                           BA5026
+     C                     PARM *BLANKS   @KYST   7                                           BA5026
+     C           SDCUST    PARM *BLANKS   DSSDY                                               BA5026
+      *                                                                                       BA5026
+     C           @RTCD     IFNE *BLANKS                    ***************                    BA5026
+     C                     MOVELA7CUST    DBKEY            *DB ERROR 073 *                    BA5026
+     C                     MOVE '073'     DBASE            ***************                    BA5026
+     C                     MOVEL'SDCUSTPD'DBFILE                                              BA5026
+     C                     EXSR DBERR                                                         BA5026
+     C                     ELSE                                                               BA5026
+      *                                                                                       BA5026
+     C                     SELEC                                                              BA5026
+     C           WCTR      WHEQ 1                                                             BA5026
+      * First Loop save From Nostro Country of Location                                       BA5026
+     C                     MOVELBBCOLC    WFNLC   2                                           BA5026
+     C           WCTR      WHEQ 2                                                             BA5026
+      * Second Loop save To Nostro Country of Location and Customer Number                    BA5026
+     C                     MOVELBBCOLC    WTNLC   2                                           BA5026
+     C                     MOVELA7CUST    WTNCN   6                                           BA5026
+     C                     ENDSL                                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     ADD  1         WCTR                                                BA5026
+      *                                                                                       BA5026
+     C                     ENDDO                                                              BA5026
+      *                                                                                       BA5026
+      * Output Details required for an MT202 if From Nostro location                          BA5026
+      * not bank country of location and To Nostro Location is Bank                           BA5026
+      * country location and Transfer currency is not local currency                          BA5026
+     C           WFNLC     IFNE BJCNCD                                                        BA5026
+     C           WTNLC     ANDEQBJCNCD                                                        BA5026
+     C           CCY       ANDNEBJLCCY                                                        BA5026
+      *                                                                                       BA5026
+     C                     MOVE 'Y'       MT202                                               BA5026
+     C                     SETON                     70                                       BA5026
+      ** Field :21: - Related Refererence                                                     BA5026
+     C                     ADD  1         Q                                                   BA5026
+     C           Q         OCUR MULT                                                          BA5026
+     C                     MOVEL':21:'    MTAG                                                BA5026
+      *                                                                                       BA5026
+      ** If To Nostro is Not the Central Bank then output reference of                        BA5026
+      ** the MT298 that will also be generated, else output "NONREF" text                     BA5026
+     C           WTNCN     IFNE CBCNUM                                                        BA5026
+     C                     MOVE 'NT'      PAYTP                                               BA5026
+     C                     MOVELREFNO     MFLD                                                BA5026
+     C                     MOVELREFNO     FLD21  20                                           BA5026
+     C                     MOVELREFNO     M1RREF                                              BA5026
+     C                     MOVE 'NP'      PAYTP                                               BA5026
+     C                     ELSE                                                               BA5026
+     C                     MOVEL'NONREF'  MFLD                                                BA5026
+     C                     MOVEL'NONREF'  M1RREF                                              BA5026
+     C                     ENDIF                                                              BA5026
+     C                     ENDIF                                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
       *                                                                   S01310
       ** Field :32A: - Value Date, Currency Code, Amount.  (MT200).       S01310
       *                                                                   S01310
@@ -1357,13 +1461,64 @@
      C                     MOVEAFAMT,S    AMT32A                          S01310
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0656CCP2                                           S01408
+      *                                                                                       BA5026
+     C           BA5026    IFEQ 'Y'                                                           BA5026
+      *                                                                                       BA5026
+      * Scan the position of comma                                                            BA5026
+     C           ','       SCAN AMT32A    CP      20                                          BA5026
+      * Scan the position of first zero after the comma                                       BA5026
+     C           '0'       SCAN AMT32A:CP ZP      20     67                                   BA5026
+      * Check the difference between the comma and first zero                                 BA5026
+     C           ZP        SUB  CP        DP      20                                          BA5026
+      * If there are trailing zeros, then suppress                                            BA5026
+     C           *IN67     IFEQ *ON                                                           BA5026
+      * Formulate starting position for next scan                                             BA5026
+     C           DP        IFGT 1                                                             BA5026
+     C                     MOVE ZP        ZA      20                                          BA5026
+     C                     ELSE                                                               BA5026
+     C           ZP        ADD  1         ZA                                                  BA5026
+     C                     ENDIF                                                              BA5026
+      * Check if there are still zeros after the position of the first zero found             BA5026
+     C           '0'       SCAN AMT32A:ZA ZB      20     68                                   BA5026
+      * If found, then proceed                                                                BA5026
+     C           *IN68     IFEQ *ON                                                           BA5026
+     C                     Z-ADD*ZEROS    DIFF    20                                          BA5026
+      * Subtract the position of zero and the position of comma                               BA5026
+     C           ZP        SUB  CP        DIFF                                                BA5026
+      * Subtract the differece with 1                                                         BA5026
+     C           DIFF      SUB  1         DIFF2   20                                          BA5026
+      * Add the difference to the position of comma                                           BA5026
+     C           CP        ADD  DIFF2     LENGTH  20                                          BA5026
+      * Substring AMT32A with LENGTH                                                          BA5026
+     C                     MOVEL*BLANKS   WMT32A                                              BA5026
+     C           LENGTH    SUBSTAMT32A:1  WMT32A 15                                           BA5026
+      * Move the new value to AMT32A                                                          BA5026
+     C                     MOVE *BLANKS   AMT32A                                              BA5026
+     C                     MOVELWMT32A    AMT32A                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C*                                                                   S01408
      C                     MOVELAMT32A    M1AMNT                          S01310
       *                                                                   S01310
      C                     MOVELFLD32A    MFLD                            S01310
      C/COPY WNCPYSRC,FTH00598
+      *                                                                                       BA5026
+      ** If generating an MT202 save FLD32A details                                           BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C                     MOVELFLD32A    DTL32A                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
       *                                                                                       227364
      C/COPY WNCPYSRC,FTH00599
+      *                                                                                       BA5026
+      ** Only output :53B: if MT202 not being output                                          BA5026
+     C           BA5026    IFEQ 'Y'                                                           BA5026
+     C           MT202     ANDNE'Y'                                                           BA5026
+      *                                                                                       BA5026
       ** Field :53B: - Senders Correspondent    (MT200).                                      227364
       *                                                                                       227364
      C                     MOVELDEST      NNOST   2                                           227364
@@ -1392,6 +1547,20 @@
      C                     ENDIF                                                              227364
       *                                                                   S01310
      C/COPY WNCPYSRC,FT0656C003
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+      ** If generating an MT202 then set up field 52A                                         BA5026
+      ** (First 8 positions of Sender details)                                                BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C                     ADD  1         Q                                                   BA5026
+     C           Q         OCUR MULT                                                          BA5026
+     C                     MOVEL':52A:'   MTAG                                                BA5026
+     C                     MOVELSNWSN     SNWSN8  8                                           BA5026
+     C                     MOVELSNWSN8    MFLD                                                BA5026
+     C                     MOVELSNWSN8    M1OINS                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
       ** Field :56 : - Intermediary.            (MT200).                  S01310
       *                                                                   S01310
      C*  FORMAT INTERMEDIATE BANK
@@ -1467,6 +1636,12 @@
      C           Q         OCUR MULT                                      S01310
      C                     MOVEL'56'      FLDNO                           S01310
      C/COPY WNCPYSRC,FTH00600
+      *                                                                                       BA5026
+      ** If MT202 being generated replace :56: with :57:                                      BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C                     MOVEL'57'      FLDNO                                               BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C                     EXSR FSWAD                                     S01310
      C*
      C                     END                                            089643
@@ -1515,6 +1690,12 @@
      C                     MOVE OSTAG     M3ABTT
      C                     MOVE '57'      FLDNO                           S01310
      C/COPY WNCPYSRC,FTH00601
+      *                                                                                       BA5026
+      ** If MT202 being generated replace :57: with :58:                                      BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C                     MOVEL'58'      FLDNO                                               BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C                     EXSR FSWAD                                     S01310
      C*********************MOVE ':57'     M3TG57                          S01310
      C*********************MOVE ':'       M3CLN                           S01310
@@ -1616,6 +1797,12 @@
       *                                                                   S01310
      C                     MOVE '200'     MTPY                            138077
      C/COPY WNCPYSRC,FTH00602
+      *                                                                                       BA5026
+      ** If MT202 being generated replace 200 with 202                                        BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C                     MOVEL'202'     MTPY                                                BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C                     EXSR OMSG                                      S01310
      C                     EXSR WREF2                                     S01310
      C*
@@ -1629,6 +1816,49 @@
      C*********************MOVELM#TREF    MTWORK                          S01310
      C*
      C/COPY WNCPYSRC,FTH00603
+      *                                                                                       BA5026
+      ** If MT202 being generated and To Nostro is not the Central Bank                       BA5026
+      ** also generate an MT298                                                               BA5026
+     C           MT202     IFEQ 'Y'                                                           BA5026
+     C           WTNCN     ANDNECBCNUM                                                        BA5026
+      *                                                                                       BA5026
+     C                     SETON                     71                                       BA5026
+      *                                                                                       BA5026
+      ** Output Field 20                                                                      BA5026
+     C                     Z-ADD1         Q                                                   BA5026
+     C           Q         OCUR MULT                                                          BA5026
+     C                     MOVEL':20:'    MTAG                                                BA5026
+     C                     MOVELFLD21     MFLD                                                BA5026
+     C                     MOVELFLD21     M1PMSG                                              BA5026
+      *                                                                                       BA5026
+      ** Output Field 12                                                                      BA5026
+     C                     ADD  1         Q                                                   BA5026
+     C           Q         OCUR MULT                                                          BA5026
+     C                     MOVEL':12:'    MTAG                                                BA5026
+     C                     MOVEL'271'     MFLD                                                BA5026
+      *                                                                                       BA5026
+      ** Output Field 77E                                                                     BA5026
+     C                     ADD  1         Q                                                   BA5026
+     C           Q         OCUR MULT                                                          BA5026
+     C                     MOVEL':77E:'   MTAG                                                BA5026
+     C                     MOVEL'32A:'    TXT32A                                              BA5026
+     C                     MOVELFLD77E    MFLD                                                BA5026
+     C                     MOVELFLD77E    M1TRE2                                              BA5026
+      *                                                                                       BA5026
+      ** Use value stored in FLD21 as the Transaction Reference                               BA5026
+     C                     MOVELFLD21     TRNB                                                BA5026
+     C                     MOVELFLD21     TRNO                                                BA5026
+      *                                                                                       BA5026
+      ** Set Message Type to '298'                                                            BA5026
+     C                     MOVEL'298'     MTPY                                                BA5026
+      *                                                                                       BA5026
+     C                     EXSR OMSG                                                          BA5026
+     C                     MOVE 'Y'       MT298                                               BA5026
+     C                     EXSR WREF2                                                         BA5026
+     C                     MOVE 'N'       MT298                                               BA5026
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C*  OUTPUT AN ENTRY TO THE SWIFT MESSAGE REPORT PRTF/FT0656P1     )))
      C*  INCLUDE NARRATIVE 'RECOVERY' IF ROLLBACK INDICATOR
      C*  HAS BEEN SETON IN SUBROUTINE SR08
@@ -2520,6 +2750,62 @@
      C                     MOVE 'N'       CSW215                                              CSW215
      C                     ENDIF                                                              CSW215
       *                                                                                       CSW215
+      **                                                                                      BA5026
+      ** Access SAR details file to determine if BA5026 switchable feature                    BA5026
+      ** is switched on on                                                                    BA5026
+      *                                                                                       BA5026
+     C                     MOVE *BLANK    BA5026  1                                           BA5026
+     C                     CALL 'AOSARDR0'                                                    BA5026
+     C                     PARM *BLANKS   @RTCD                                               BA5026
+     C                     PARM '*VERIFY '@OPTN                                               BA5026
+     C                     PARM 'BA5026'  @SARD                                               BA5026
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA5026
+      *                                                                                       BA5026
+     C           @RTCD     IFEQ *BLANKS                                                       BA5026
+     C                     MOVE 'Y'       BA5026                                              BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C           BA5026    IFEQ 'Y'                                                           BA5026
+     C                     CALL 'AOSVALR0'                                                    BA5026
+     C                     PARM *BLANKS   @RTCD                                               BA5026
+     C                     PARM SVALK     SVALK1 20                                           BA5026
+     C                     PARM           SVAL1 200                                           BA5026
+     C                     PARM *BLANK    SVALK2 20                                           BA5026
+     C                     PARM           SVAL2 200                                           BA5026
+     C                     PARM *BLANK    SVALK3 20                                           BA5026
+     C                     PARM           SVAL3 200                                           BA5026
+     C                     PARM *BLANK    SVALK4 20                                           BA5026
+     C                     PARM           SVAL4 200                                           BA5026
+     C                     PARM *BLANK    SVALK5 20                                           BA5026
+     C                     PARM           SVAL5 200                                           BA5026
+     C                     PARM *BLANK    SVALK6 20                                           BA5026
+     C                     PARM           SVAL6 200                                           BA5026
+     C                     PARM *BLANK    SVALK7 20                                           BA5026
+     C                     PARM           SVAL7 200                                           BA5026
+     C                     PARM *BLANK    SVALK8 20                                           BA5026
+     C                     PARM           SVAL8 200                                           BA5026
+     C                     PARM *BLANK    SVALK9 20                                           BA5026
+     C                     PARM           SVAL9 200                                           BA5026
+     C                     PARM *BLANK    SVALK0 20                                           BA5026
+     C                     PARM           SVAL10200                                           BA5026
+      *                                                                                       BA5026
+     C           @RTCD     IFNE *BLANKS                                                       BA5026
+     C                     MOVEL'077'     DBERR#                                              BA5026
+     C                     MOVEL'SDSVALPD'DBFNAM                                              BA5026
+     C           SVAL1     IFEQ '*NRF'                                                        BA5026
+     C                     MOVELSVALK1    DBERKY                                              BA5026
+     C                     ENDIF                                                              BA5026
+     C                     EXSR DBERR                                                         BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     MOVELSVAL1     CBCNUM  6                                           BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
+     C                     CALL 'AOBANKR0'                                                    BA5026
+     C                     PARM *BLANK    @RTCD   7                                           BA5026
+     C                     PARM '*FIRST ' @OPTN   7                                           BA5026
+     C           SDBANK    PARM SDBANK    DSFDY                                               BA5026
+      *                                                                                       BA5026
       ** Access system value                                                                MD062104
       *                                                                                     MD062104
      C                     CALL 'AOSVALR0'                                                  MD062104
@@ -4283,16 +4569,37 @@
      C                     MOVELSNWRK     NWRK                            S01310
      C                     MOVELSNWSN     NWSN                            S01310
      C/COPY WNCPYSRC,FTH00604
+      *                                                                                       BA5026
+     C           MT298     IFNE 'Y'                                                           BA5026
+      *                                                                                       BA5026
      C                     MOVELSNWDS     NWDS                            S01310
      C                     MOVELSMGST     MGST                            S01310
      C                     MOVELSMGSG     MGSG                            S01310
      C                     MOVELSBICN     SECN                            S01310
      C                     MOVELSCUSNO    DECN                            S01310
      C/COPY WNCPYSRC,FTH00605
+      *                                                                                       BA5026
+      ** Set up Destination Details for MT298 (Should be the To Nostro Details)               BA5026
+     C                     ELSE                                                               BA5026
+     C                     MOVELWTNCN     DECN                                                BA5026
+     C                     MOVELM3AWB1    NWDS                                                BA5026
+     C                     MOVELM3AWB1    M1RAD2                                              BA5026
+     C                     MOVELSMGST     MGST                                                BA5026
+     C                     MOVELSMGSG     MGSG                                                BA5026
+     C                     MOVELSBICN     SECN                                                BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C                     MOVEL*BLANKS   NWBN                            S01310
      C/COPY WNCPYSRC,FTH00606
+      *                                                                                       BA5026
+      ** If generating MT202 or MT298 this is already set up                                  BA5026
+     C           MT202     IFNE 'Y'                                                           BA5026
+      *                                                                                       BA5026
      C                     MOVE '200'     MTPY                            S01310
      C/COPY WNCPYSRC,FTH00607
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C           SWPC      IFEQ 1                                         S01117
      C                     MOVE 'U'       MPRY                            S01117
      C                     ELSE                                           S01117
@@ -4367,8 +4674,16 @@
      C*********************MOVELM1RCCY    CCY                       S01310S01117
      C*********************MOVEL*BLANKS   NSNO                      S01310S01117
      C/COPY WNCPYSRC,FTH00614
+      *                                                                                       BA5026
+     C           MT298     IFNE 'Y'                                                           BA5026
+      *                                                                                       BA5026
      C                     MOVE DEST      NSNO                            S01117
      C/COPY WNCPYSRC,FTH00615
+      *                                                                                       BA5026
+     C                     ELSE                                                               BA5026
+     C                     MOVE ACBN      NSNO                                                BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C                     MOVEL*BLANKS   SACN                            S01310
      C                     MOVEL*BLANKS   AORR                            S01310
      C                     MOVEL*BLANKS   DESI                            S01310
@@ -4577,8 +4892,16 @@
      C*                                                                ***
      C                     ADD  1         PAGEP1
      C/COPY WNCPYSRC,FTH00608
+      *                                                                                       BA5026
+     C           *IN70     IFEQ *ON                                                           BA5026
+     C                     WRITEP1H2                   80                                     BA5026
+     C                     ELSE                                                               BA5026
+      *                                                                                       BA5026
      C                     WRITEP1H1                   80
      C/COPY WNCPYSRC,FTH00609
+      *                                                                                       BA5026
+     C                     ENDIF                                                              BA5026
+      *                                                                                       BA5026
      C   80                DO                              B001
      C*                                                    ))))))))))))))
      C*********************MOVE 'FT0656P1'DBFNAM           )))  DATA  ))) S01310

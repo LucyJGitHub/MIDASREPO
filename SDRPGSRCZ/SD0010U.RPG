@@ -14,8 +14,10 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD025056A          Date 09Sep23               *      
-      *  Prev Amend No. MD060564           Date 30Sep22               *
+      *  Last Amend No. MD035664           Date 20Nov23               *
+      *  Prev Amend No. AR652127           Date 20Nov23               *
+      *                 MD025056A          Date 09Sep23               *
+      *                 MD060564           Date 30Sep22               *
       *                 AR672811           Date 07Mar22               *
       *                 MD022741           Date 16Feb22               *
       *                 MD058285           Date 22Jun21               *
@@ -75,6 +77,9 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD035664 - Failed Component: MRC0210                         *
+      *  AR652127 - Add validation if customer has GL account, do not *
+      *             allow closure. Add new error message.             *
       *  MD025056A - Customer can be closed even if account still has *
       *             balance as long as it is already closed.          *
       *  MD060564 - Unable to close or delete a customer. Allow       *
@@ -1039,6 +1044,24 @@
       *                                                                   CSD023
      C                     ENDIF                                          CSD023
       *                                                                   CSD023
+      ** Check for GL account                                                               AR652127
+      *                                                                                     AR652127
+     C           PACTN     IFEQ 'C'                                                         AR652127
+     C********** ATYP      ANDEQ'G'                                                AR652127 MD035664
+     C           ATYP      IFEQ 'G'                                                         MD035664
+     C                     MOVEL'REJECT'  W0RTN                                             AR652127
+     C                     MOVE 'F'       WUD231                                            AR652127
+     C                     ELSE                                                             MD035664
+     C           ATYP      IFEQ 'R'                                                         MD035664
+     C           ATYP      OREQ 'N'                                                         MD035664
+     C           ATYP      OREQ 'D'                                                         MD035664
+     C           ATYP      OREQ 'C'                                                         MD035664
+     C                     MOVEL'REJECT'  W0RTN                                             MD035664
+     C                     MOVE 'E'       WUD231                                            MD035664
+     C                     ENDIF                                                            MD035664
+     C                     ENDIF                                                            MD035664
+     C                     ENDIF                                                            AR652127
+      *                                                                                     AR652127
      C*****                GOTO ESC99                               077335CSD023
      C                     END                                            077335
       *                                                                   077335
@@ -1109,6 +1132,7 @@
       *                                                                   077335
      C                     MOVE WUD201    SAVFLD  1                       077335
      C                     MOVE WUD211    SVFLD2  1                                         MD052297
+     C                     MOVE WUD231    SAVFL2  1                                         AR652127
      C                     MOVELW0RTN     SAVRTN  7                       143481
       *                                                                   077335
       ** Check references in the securities files by calling SD0340U.     077335
@@ -1147,6 +1171,7 @@
       *                                                                   077335
      C                     MOVE SAVFLD    WUD201                          077335
      C                     MOVE SVFLD2    WUD211                                            MD052297
+     C                     MOVE SAVFL2    WUD231                                            AR652127
       *                                                                   143481
      C           SAVRTN    IFNE *BLANKS                                   143481
      C                     MOVELSAVRTN    W0RTN                           143481

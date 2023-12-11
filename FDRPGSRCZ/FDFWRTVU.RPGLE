@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Added new parameter for FDFWRTAMD and FDFWRTDFT.    *
+      *           Applied fix 241363.                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -80,9 +83,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -101,109 +104,109 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInFwrt    E DS                  EXTNAME(FDFwrtPD)
      D  TranIn1                1    500
      D  TranIn2              501    550
- 
+
       * Valid file layout
      D ValidFWRT     E DS                  EXTNAME(FDVFwrtPD)
      D                                     PREFIX(V_)
- 
+
       * Current transaction record in file format
      D FWRTFilFmt    E DS                  EXTNAME(FWDRTFE)
- 
+
       * Current transaction in screen format
      D CurTrFwrt     E DS                  EXTNAME(FDFwrtPD)
      D                                     PREFIX(@)
- 
+
       * Extra data in file format
      D ExtData       E DS                  EXTNAME(FDFREXPD)
- 
+
       * Previous Forward Rates Detail in File Format
      D PrvFRFilFmt   E DS                  EXTNAME(FDVFWRTPD)
      D                                     PREFIX(P)
- 
+
       * Error indicators
      D OKTrFwrt      E DS                  EXTNAME(FDEFwrtPD)
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status data area
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
       ** Data structure for data area commitment control                                     BUG1056
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                BUG1056
      D  ComitJobs              4    103A                                                     BUG1056
@@ -219,36 +222,36 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
- 
+
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Fields defined for CSC011
- 
+
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PDealNum        S             18A
@@ -269,13 +272,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -285,7 +288,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -293,14 +296,14 @@
      C                   MOVEL     Trans5001     TranIn1
      C                   MOVEL     Trans5002     TranIn2
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
      C                   EXSR      RetPrvScn                                                 BUG3704
@@ -309,7 +312,7 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Call defaulting sub-routine
      C**********         IF        CAP059 = 'Y'                                               241066
      C                   IF        DDACTN = 'I'
@@ -332,27 +335,27 @@
       *
      C                   IF        CAP059 = 'Y'
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         DDACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       * Processing for amends or changes
      C                   WHEN         DDACTN = 'A'
      C                   EXSR      ValidateTr
- 
+
       * Processing for deletes
      C                   WHEN         DDACTN = 'D'
      C                   CLEAR                   ValidFWRT
      C                   MOVEL     FWRTFilFmt    ValidFWRT
      C                   EVAL      V_FWCHTP = DDACTN
      C                   EVAL      V_FWLCD  = BJRDNB
- 
+
      C                   ENDSL
      C                   ENDIF
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
@@ -360,14 +363,14 @@
      C                   EXSR      UpdateDB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       * Remerge buffer with all relevant data structures
      C                   EVAL      Buffer = TranIn1 + TranIn2 + Extdata
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -376,12 +379,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002
@@ -396,12 +399,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SDUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,FDFWRTM02
       *
@@ -411,13 +414,13 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       *
       ** Access SAR details file to determine if Forward Rates API
       ** Switchable feature is switched on
@@ -453,14 +456,14 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
      C                   IN        SDSTAT
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   IF        PRtCd <> '*NRF'
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = 'CSC011'
@@ -469,9 +472,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Determine if enhancement CSC022 is switched on                                      BUG1056
                                                                                              BUG1056
      C                   CALLB     'AOSARDR0'                                                BUG1056
@@ -507,7 +510,7 @@
      C                   EndIf                                                               BUG1056
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,FDFWRT01
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -526,7 +529,7 @@
       *
      C                   MOVEL     *BLANKS       FWRTFilFmt
      C                   MOVEL     *BLANKS       PrvFRFilFmt
- 
+
      C                   CALLB     'FDFWRTRTV'
       * Ensure correct parameters for this RTV function
       *
@@ -570,10 +573,10 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Save previous rate details
      C                   MOVEL     FWRTFilFMT    PrvFRFilFmt
- 
+
      C                   ENDSR
                                                                                              BUG3704
       *****************************************************************                      BUG3704
@@ -608,7 +611,7 @@
                                                                                              BUG3704
      C                   ENDSR                                                               BUG3704
                                                                                              BUG3704
- 
+
       *****************************************************************
       /EJECT
       ******************************************************************
@@ -617,16 +620,17 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
      C                   MOVEL     WDDACTN       @DDACTN                                     BUG3704
      C                   RESET                   ReturnCode
- 
+
      C                   IF         DDACTN = 'A' OR DDACTN = 'I'
- 
+
      C                   CALLB     'FDFWRTAMD'
      C                   PARM                    RetCodeIn
      C                   PARM                    CURTRFWRT
      C                   PARM                    TranInFwrt
+     C                   PARM                    BJCYCD                                       259866
      C                   PARM                    OKTrFwrt
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -634,34 +638,34 @@
      C                   PARM                    Idx
      C                   PARM                    AmendOk           1
      C                   PARM      'N'           ResetErrs         1
- 
+
      C                   ENDIF
                                                                                              BUG3704
       *  If error in validation, fail this input                                             BUG3704
      C     Idx           IFNE      0                                                         BUG3704
      C                   GOTO      EValidTr                                                  BUG3704
      C                   EndIf                                                               BUG3704
- 
+
       * Validate transaction details
      C                   RESET                   ReturnCode
- 
+
       ** Return previous rate details                                                         238595
      C                   MOVEL     FWRTFilFMT    PrvFRFilFmt                                  238595
                                                                                               238595
      C                   CALLB     'FDFWRTVAL'
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Forward Rates Transaction Details
      C                   PARM                    TranInFwrt
- 
+
       * Extra Data
      C                   PARM                    ExtData
      C                   PARM                    PrvFRFilFmt
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKTrFwrt
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -680,14 +684,14 @@
      C                   PARM                    ValidFWRT
       * Update Y/N?                                                                           238595
      C                   PARM                    UpdateYN                                     238595
- 
+
       ***If*error*in*validation,*fail*this*input                                             BUG3704
      C*****Idx**         IFNE      0                                                         BUG3704
      C**********         GOTO      EValidTr                                                  BUG3704
      C**********         EndIf                                                               BUG3704
- 
+
      C     EValidTr      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -696,33 +700,33 @@
       *             updated during each run of this program           *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrFwrt
- 
+
      C                   MOVE      *ALL'Y'       OKTrFwrt
- 
+
      C                   CLEAR                   ValidFWRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -731,17 +735,17 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       * Update
       *
      C                   CALLB     'FDFWRTUPD'
- 
+
       * Ensure correct parameters for this UPD function
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    ValidFWRT
- 
+
       *
       * If there were any errors in the update functions, rollback any
       * updates (done in *PSSR) and end this program. Otherwise commit.
@@ -758,13 +762,13 @@
       *
       * If update not done due to record being updated by another
       * workstation send message to screen.
- 
+
      C     @RTCD         IFEQ      '*RECUPD'
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'USR0015'     MsgIdArr(1)
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -774,13 +778,13 @@
       *                                                               *
       *****************************************************************
      C     SRDFT         BEGSR
- 
+
       ** Call Retrieve Module
- 
+
      C**********         IF        DDACTN = 'I'                                               242215
      C**********         MOVE      *BLANKS       DDRTE1                                       242215
      C**********         ENDIF                                                                242215
- 
+
      C                   CALLB     'FDFWRTDFT'
       * Return Code
      C                   PARM                    RetCodeIn
@@ -791,6 +795,9 @@
       ** First Rate
      C                   PARM                    DDRTE1           14
       * OUTPUTS
+                                                                                              259866
+      ** First Days number                                                                    259866
+     C                   PARM                    DDDYS1                                       259866
       *
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKTrFwrt

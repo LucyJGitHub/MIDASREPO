@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054863           Date 18Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 262292             Date 28Nov23               *      
+      *  Prev Amend No. MD054863           Date 18Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262292 - Corrected part of CSE035 changes.                   *      
       *  MD054863 - Calculate negative yield.                         *
       *             Applied partial fix of 258499.                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -1338,8 +1340,9 @@
      C                   EXSR      *PSSR
      C                   ELSE
      C**********         EVAL      WResult51 = (Wk_Yield / PComFreq) + 1                      CSE035
-     C                   EVAL      WResult51 = (Wk_Yield / (PComFreq *                        CSE035
-     C                             100)) + 1                                                  CSE035
+     C**********         EVAL      WResult51 = (Wk_Yield / (PComFreq *                 CSE035 262292
+     C**********                   100)) + 1                                           CSE035 262292
+     C                   EVAL      WResult51 = (Wk_Yield / PComFreq) + 1                      262292
      C                   ENDIF
      C**********         EVAL      WResult52 = (WResult51 ** (PComFreq /                      CSE035
      C**********                   PCoupYear)) - 1                                            CSE035
@@ -1347,8 +1350,11 @@
      C                   IF        PCoupYear = 0                                              CSE035
      C                   EVAL      WResult5 = WResult51 - 1                                   CSE035
      C                   ELSE                                                                 CSE035
-     C                   EVAL      WResult5 = (WResult51 ** (PComFreq /                       CSE035
-     C                             PCoupYear)) - 1                                            CSE035
+     C**********         EVAL      WResult5 = (WResult51 ** (PComFreq /                CSE035 262292
+     C**********                   PCoupYear)) - 1                                     CSE035 262292
+     C                   EVAL      WResult52 = (WResult51 ** (PComFreq /                      262292
+     C                             PCoupYear)) - 1                                            262292
+     C                   EVAL      WResult5 = WResult52 / (100 * PCoupYear)                   262292
      C                   ENDIF                                                                CSE035
 
      C                   IF        PAccuracy = 8

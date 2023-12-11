@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 238467             Date 16Aug06               *
+      *                 238467             Date 16Aug06               *
       *                 CSD031             Date 10Apr06               *
       *                 BUG6270            Date 23Mar05               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Set first day of the Forward Rates table to zero.   *
+      *           Partially applied fix 241363.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  238467 - MMA1157 appears unnecessarily.  Do not validate the *
       *           first rate since it is defaulted to spot rate.      *
@@ -47,7 +50,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -66,66 +69,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
      D PrvFRScnFmt   E DS                  EXTNAME(FDFWRTPD)
      D                                     PREFIX(@P)
       ** Previous Forward Rates Detail in Screen Format
- 
+
      D CurFRScnFmt   E DS                  EXTNAME(FDFWRTPD)
       ** Current Forward Rates Detail in Screen Format
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FDEFWRTPD)
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                 BUG6270
       ** EXTERNAL DS FOR DEALING DETAILS                                                     BUG6270
                                                                                              BUG6270
@@ -133,7 +136,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
                                                                                              BUG6270
@@ -147,7 +150,7 @@
                                                                                              BUG6270
       ** Amount returned from ZA0840                                                         BUG6270
      D @@AMT           S             15  0                                                   BUG6270
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -169,22 +172,38 @@
       * Access currency data
       * (Database error handling done in access program).
       *
+     C                   CALLB     'AOCURRR0'                                                 259866
+     C                   PARM      *BLANKS       @RTCD                                        259866
+     C                   PARM      '*KEY   '     @OPTN                                        259866
+     C                   PARM      BJCYCD        @KEYCY                                       259866
+     C     SDCURR        PARM      SDCURR        DSSDY                                        259866
+     C     @RTCD         IFNE      *BLANKS                                                    259866
+     C                   MOVEL     'SDCURRPD'    DBFILE                                       259866
+     C                   Z-ADD     3             DBASE                                        259866
+     C                   MOVEL     BJCYCD        DBKEY                                        259866
+     C                   EXSR      *PSSR                                                      259866
+     C                   ENDIF                                                                259866
+                                                                                              259866
+     C                   Z-ADD     A6NBDP        WBsNBDP           1 0                        259866
+                                                                                              259866
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      DDCCY         @KEYCY            3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
- 
+
+     C     A6NBDP        SUB       WBsNBDP       WDiffNDP          1 0                        259866
+     C                   ADD       4             WDiffNDP                                     259866
+
      C                   IF        DDACTN = 'A'  AND
      C                             DDCCY <> *BLANKS AND
      C                             @PDDCCY <> *BLANKS AND
      C                             @PDDACTN<> *BLANKS AND
      C                             DDCCY = @PDDCCY  AND
      C                             DDACTN= @PDDACTN
- 
+
      C                             OR
- 
+
      C                             DDACTN = 'I'  AND
      C                             DDCCY <> *BLANKS
      C
@@ -218,7 +237,7 @@
       *             with those amended.                               *
       *****************************************************************
      C     COMPFLDS      BEGSR
- 
+
       * Screen rates are now left aligned, so right align first before comparing             BUG6270
       * with previous @P* versions.                                                          BUG6270
       *                                                                                      BUG6270
@@ -228,7 +247,7 @@
       * If EMU forward rate changes are on,                 *
       * forward rates maintenance is on and currency is IN  *
       *******************************************************
- 
+
      C                   IF        CEU026 = 'Y' AND
      C                             S01432 = 'Y' AND
      C                             A6INCY = 'Y'
@@ -294,7 +313,7 @@
      C*
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'I'
      C
      C                   IF        DDRTE1   <>  @PDDRTE1   OR
@@ -356,14 +375,14 @@
      C*
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *******************************************************
       * If EMU forward rate changes are on,                 *
       * forward rates maintenance is on and currency is OUT *
       *******************************************************
- 
+
      C**********         IF        CEU026 = 'Y' AND                                           238467
      C**********                   S01432 = 'Y' AND                                           238467
      C**********                   A6INCY <> 'Y'                                              238467
@@ -376,13 +395,50 @@
      C**********                                                                              238467
      C**********         ENDIF                                                                238467
      C**********         ENDIF                                                                238467
- 
- 
+
+      ** Keep first rate as the spot rate, therefore, not amendable.                          259866
+                                                                                              259866
+     C                   SELECT                                                               259866
+     C                   WHEN      WDiffNDP = 1                                               259866
+     C                   Z-ADD     7             ZADIG                                        259866
+     C                   Z-ADD     6             ZADEC                                        259866
+     C                   WHEN      WDiffNDP = 2                                               259866
+     C                   Z-ADD     6             ZADIG                                        259866
+     C                   Z-ADD     7             ZADEC                                        259866
+     C                   OTHER                                                                259866
+     C                   Z-ADD     5             ZADIG                                        259866
+     C                   Z-ADD     8             ZADEC                                        259866
+     C                   ENDSL                                                                259866
+                                                                                              259866
+     C                   MOVE      *BLANKS       ZFIELD                                       259866
+     C                   MOVE      DDRTE1        ZFIELD                                       259866
+     C                   CALLB     'ZALIGN'                                                   259866
+     C                   PARM      *BLANK        ZRTN              1                          259866
+     C                   PARM                    ZFIELD           16                          259866
+     C                   PARM                    ZADEC             1 0                        259866
+     C                   PARM                    ZADIG             2 0                        259866
+                                                                                              259866
+     C                   CALLB     'ZEDIT'                                                    259866
+     C                   PARM                    ZFIELD                                       259866
+     C                   PARM                    ZADEC                                        259866
+     C                   MOVE      ZFIELD        WChr014          14                          259866
+                                                                                              259866
+                                                                                              259866
+      ** Keep first Days as 0 to indicate spot date, therefore, not amendable.                259866
+                                                                                              259866
+     C                   MOVE      *BLANKS       ZFIELD                                       259866
+     C                   MOVE      DDDYS1        ZFIELD                                       259866
+     C                   Z-ADD     0             ZADEC                                        259866
+     C                   CALLB     'ZEDIT'                                                    259866
+     C                   PARM                    ZFIELD                                       259866
+     C                   PARM                    ZADEC                                        259866
+     C                   MOVE      ZFIELD        WChr005           5                          259866
+
       *******************************************************
       * If EMU forward rate changes are on,                 *
       * forward rates maintenance is off and currency is IN *
       *******************************************************
- 
+
      C                   IF        CEU026 = 'Y' AND
      C                             S01432 = 'N' AND
      C                             A6INCY = 'Y'
@@ -447,7 +503,7 @@
      C*
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDACTN = 'I'
      C
      C                   IF        DDRTE1   <>  @PDDRTE1   OR
@@ -509,7 +565,7 @@
      C*
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *--------------------------------------------------------------------------------------------
      C**********         IF        CEU026 = 'N' AND                                           238467
@@ -537,7 +593,7 @@
      C**********                                                                              238467
      C**********         ENDIF                                                                238467
      C**********         ENDIF                                                                238467
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -601,11 +657,15 @@
      C                   EVAL      DDRT25   =   @PDDRT25
      C                   EVAL      DDSF25   =   @PDDSF25
      C                   ENDIF
- 
+
      C                   IF        DDRTE1OK = 'N'
      C                   EVAL      DDRTE1   =   @PDDRTE1
      C                   ENDIF
- 
+                                                                                              259866
+     C                   IF        DDDYS1OK = 'N'                                             259866
+     C                   EVAL      DDDYS1   = @PDDDYS1                                        259866
+     C                   ENDIF                                                                259866
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -903,9 +963,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -920,6 +980,9 @@
      C                   PARM                    CurFRScnFmt
       *
       * OUTPUTS
+                                                                                              259866
+      ** Base currency                                                                        259866
+     C                   PARM                    BJCYCD            3                          259866
       *
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -942,7 +1005,7 @@
       *
      C                   MOVEL     'FDFWRTAMD'   DBPGM
       ** Access SAR details file to see if CSD006 is installed.                 CSD006
- 
+
      C                   CALLB     'AOSARDR0'                                   CSD006
      C                   PARM      *BLANKS       @RTCD                          CSD006
      C                   PARM      '*VERIFY'     @OPTN                          CSD006
@@ -955,14 +1018,14 @@
      C                   MOVEL     'CSD006'      DBKEY                          CSD006
      C                   EXSR      *PSSR                                        CSD006
      C                   ENDIF                                                  CSD006
- 
+
      C                   IF        @RTCD = *Blanks                              CSD006
      C                   MOVEL     'Y'           CSD006            1            CSD006
      C                   ELSE                                                   CSD006
      C                   MOVEL     'N'           CSD006                         CSD006
      C                   ENDIF                                                  CSD006
- 
- 
+
+
       ** Check if switchable feature CEU026 is switched on.
       *
      C                   CALLB     'AOSARDR0'
@@ -979,7 +1042,7 @@
      C                   MOVEL     '902'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CEU026            1
      C                   ELSE

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050863           Date 05Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 262990             Date 18Oct23               *
+      *  Prev Amend No. MD050863           Date 05Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262990 - Allow contract price of zero in Futures & Options.  *
       *  MD050863 - Validation of CAC003 on profit center is set to   *
       *             'not equal to Y' instead of 'equal to N'          *
       *  MD046248 - Finastra Rebranding                               *
@@ -279,6 +281,8 @@
 
       ** Error array index
      D Idx             S              3P 0
+      ** Warning array index                                                                  262990
+     D Widx1           S              3P 0                                                    262990
 
       ** Response mode
      D RespMode        S              1A
@@ -1538,7 +1542,8 @@
       ** Error message data array (<ArrayMax> x 45A)
      C                   PARM                    MsgDtaArr
       ** Warning array index (3,0P)
-     C                   PARM                    WIdx
+     C**********         PARM                    WIdx                                         262990
+     C                   PARM                    WIdx1                                        262990
       ** Field names with warnings array (<ArrayMax> x 10A)
      C                   PARM                    WFldNamArr
       ** Warning message ID array (<ArrayMax> x 7A)
@@ -1772,7 +1777,8 @@
       ** Error message data array (<ArrayMax> x 45A, returned to caller)
      C                   PARM                    MsgDtaArr
       ** Warning array index (3P0) from/to caller
-     C                   PARM                    WIdx
+     C**********         PARM                    WIdx                                         262990
+     C                   PARM                    WIdx1                                        262990
       ** Field names w/warnings array (<ArrayMax> x 10A, returned to caller)
      C                   PARM                    WFldNamArr
       ** Warning message ID array (<ArrayMax> x 7A, returned to caller)

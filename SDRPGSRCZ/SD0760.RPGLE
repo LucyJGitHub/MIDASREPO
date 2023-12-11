@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 252514             Date 19Aug14               *
+      *  Last Amend No. AR962354           Date 28Nov23               *
+      *  Prev Amend No. AR746274           Date 28Nov23               *
+      *                 MD046248           Date 27Oct17               *
+      *                 252514             Date 19Aug14               *
       *                 CSD095             Date 08Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +26,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR962354 - FAILED COMPONENT SDC0602 - File is out of balance.*
+      *             Added condition to check if effective date is less*
+      *             than or equal to run date. (Child: AR962355)      *
+      *  AR746274 - No.of Records and No. of Deleted records is not   *
+      *             updated properly in SDFCTLPA. (Child: AR746275)   *
       *  MD046248 - Finastra Rebranding                               *
       *  252514 - Apply core fix 252050.                              *
       *  252050 - Update SDFCTLPA when BYRECI changed to or from 'D'. *
@@ -41,10 +48,10 @@
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** SD Extended Settlements
      FSDEXSTPD  IP   E           K Disk    InfSR(*PSSR)
- 
+
       ** SD Extended Settlements by CYCD/CUST/TRTY/EFFD
      FSDEXSTLA  UF   E           K Disk    InfSR(*PSSR)
      F                                     Rename(SDEXSTD0:SDEXSTDA)
@@ -61,23 +68,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------------------------------
- 
+
       /EJECT
- 
+
      D @RUN            S              1
- 
+
       ** Define Key Fields
      D K#CUST          S                   Like(BYCUST)
      D K#CYCD          S                   Like(BYCYCD)
      D K#TRTY          S                   Like(BYTRTY)
- 
+      ** External data structures for Bank Details                                          AR962354
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                AR962354
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR962354
+
       /EJECT
       *****************************************************************
       *
@@ -86,31 +96,31 @@
      C                   Eval      K#CUST = BYCUST
      C                   Eval      K#CYCD = BYCYCD
      C                   Eval      K#TRTY = BYTRTY
- 
+
      C     KeyLA         Setll     SDEXSTDA
      C     KeyLA         ReadE     SDEXSTDA
- 
+
       ** Process history and current records
      C                   Dow       Not %Eof
- 
+
      C                   Select
- 
+
      C                   When      LYRECI = '*'
       ** No Action,deleted later
- 
+
      C                   When      LYRECI = 'H'
      C                   Eval      LYRECI = '*'
      C                   Update    SDEXSTDA
- 
+
      C                   When      LYRECI = 'D'
      C                   Eval      LYRECI = 'H'
      C                   Update    SDEXSTDA
-     C                   Eval      AHFLNM = 'SDEXSTPD'                                        252050
-     C     AHFLNM        Chain     SDFCTLL0                                                   252050
-     C                   Eval      AHNORC = AHNORC - 1                                        252050
-     C                   Eval      AHNODL = AHNODL + 1                                        252050
-     C                   Update    @AHREAU                                                    252050
- 
+     C**********         Eval      AHFLNM = 'SDEXSTPD'                               252050 AR746274
+     C*****AHFLNM        Chain     SDFCTLL0                                          252050 AR746274
+     C**********         Eval      AHNORC = AHNORC - 1                               252050 AR746274
+     C**********         Eval      AHNODL = AHNODL + 1                               252050 AR746274
+     C**********         Update    @AHREAU                                           252050 AR746274
+
      C                   When      LYRECI = 'F' and LYEFFD = BYEFFD
      C                   Eval      LYRECI = 'D'
      C                   Update    SDEXSTDA
@@ -119,17 +129,17 @@
      C                   Eval      AHNORC = AHNORC + 1                                        252050
      C                   Eval      AHNOIN = AHNOIN + 1                                        252050
      C                   Update    @AHREAU                                                    252050
- 
+
      C                   Other
- 
+
      C                   EndSl
- 
+
      C     KEYLA         ReadE     SDEXSTDA
      C                   EndDo
- 
+
      CLR                 Exsr      SRDelete
       *****************************************************************
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -141,12 +151,12 @@
       *                                                               *
       *****************************************************************
      C     SRDelete      BegSr
- 
+
       ** Clear Key Fields
      C                   Clear                   K#CUST
      C                   Clear                   K#CYCD
      C                   Clear                   K#TRTY
- 
+
      C     KEYLA         Setll     SDEXSTLA
      C                   Read      SDEXSTLA
       ** Process all records
@@ -154,11 +164,23 @@
       ** Record for deletion
      C                   If        LYRECI = '*'
      C                   Delete    SDEXSTLA
+      *                                                                                     AR962354
+      ** If effective date is less than or equal to run date                                AR962354
+      *                                                                                     AR962354
+     C                   If        BYEFFD <= BJRDNB                                         AR962354
+     C                   Eval      AHFLNM = 'SDEXSTPD'                                      AR746274
+     C     AHFLNM        Chain     SDFCTLL0                                                 AR746274
+     C                   If        %found(SDFCTLL0)                                         AR962354
+     C                   Eval      AHNORC = AHNORC - 1                                      AR746274
+     C                   Eval      AHNODL = AHNODL + 1                                      AR746274
+     C                   Update    @AHREAU                                                  AR746274
+     C                   EndIf                                                              AR962354
+     C                   EndIf                                                              AR962354
      C                   EndIf
- 
+
      C                   Read      SDEXSTLA
      C                   EndDo
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -172,7 +194,7 @@
       *                                                               *
       *****************************************************************
      C     *InzSr        BegSr
- 
+
       ** Define LDA
      C     *Lock         In        LDA
      C                   Eval      DBPGM = 'SD0760'
@@ -180,13 +202,32 @@
      C                   Eval      DBKEY =  *BLANKS
      C                   Eval      DBASE = 0
      C                   Out       LDA
- 
+
       ** Initialise Key Lists
      C     KeyLA         KList
      C                   KFld                    K#CUST
      C                   KFld                    K#CYCD
      C                   KFld                    K#TRTY
- 
+      *                                                                                     AR962354
+      ** Call Access Program for Bank Details - Title, Run Date and                         AR962354
+      ** Run Day Number (BJRDNB).                                                           AR962354
+      *                                                                                     AR962354
+     C                   CALL      'AOBANKR0'                                               AR962354
+     C                   PARM      '*BLANK '     WRTCD             7                        AR962354
+     C                   PARM      '*FIRST '     WOPTN             7                        AR962354
+     C     SDBANK        PARM      SDBANK        DSLDY                                      AR962354
+      *                                                                                     AR962354
+      ** Handle Database Error.                                                             AR962354
+      *                                                                                     AR962354
+     C     WRTCD         IFNE      *BLANKS                                                  AR962354
+     C     *LOCK         IN        LDA                                                      AR962354
+     C                   Eval      DBFILE = 'SDBANKPD'                                      AR962354
+     C                   Eval      DBKEY = @OPTN                                            AR962354
+     C                   Eval      DBASE = 1                                                AR962354
+     C                   OUT       LDA                                                      AR962354
+     C                   EXSR      *PSSR                                                    AR962354
+     C                   ENDIF                                                              AR962354
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -199,7 +240,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BegSr
- 
+
      C                   If        @RUN = *BLANK
      C                   Eval      @RUN = 'Y'
      C                   Seton                                        U7U8LR
@@ -210,7 +251,7 @@
       ** If *PSSR already run, then just end the program here.
      C                   Seton                                        U7U8LR
      C                   Return
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************

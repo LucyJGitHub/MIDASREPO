@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD035399           Date 18Oct23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAAA02             Date 01Dec03              */
+/*                      CAAA02             Date 01Dec03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      190072             Date 09Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -37,6 +38,8 @@
 /*                                                               */
 /*****************************************************************/
 /*                                                               */
+/*       MD035399 - SEC0302 in message wait due to locked SEACKD.    */
+/*                  Fail SEC0302 if SEACKD is locked.                */
 /*       MD046248 - Finastra Rebranding                              */
 /*   CAAA02 - Webfacing. Change the submit of MIDASRMV to use    */
 /*            the *JOBD output queue.                            */
@@ -159,6 +162,8 @@
 /************DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10)      /*049424*076789*/
 /************DCL        VAR(&VALUE) TYPE(*CHAR) LEN(50)        /*049424*076789*/
 /************DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)        /*049424*076789*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                               /*MD035399*/
+             DCL        VAR(&MEM2) TYPE(*CHAR) LEN(102)                                 /*MD035399*/
 /**/                                                                  /*LN1144*/
 /*  GLOBAL MONITOR MESSAGE                                            /*LN1144*/
 /**/                                                                  /*LN1144*/
@@ -168,7 +173,7 @@
 /*                                                                    /*S01408*/
 /*/COPY WNCPYSRC,FCC0202005                                           /*S01408*/
 /*                                                                    /*S01408*/
- 
+
 /**/
 /**CHECK*THAT*PROGRAM*IS*RUNNING*ON*IBM*VERSION*2*****/    /*044847*/ /*049424*/
 /**IF*ONE*OF*THE*FILES*EXISTS,*THEN*ALL*OF*THEM*WILL**/    /*044847*/ /*049424*/
@@ -176,18 +181,18 @@
 /**/                                                                  /*044847*/
 /*********** CHKOBJ     OBJ(QAOKDY01) OBJTYPE(*FILE)       /*044847*/ /*049424*/
 /*********** MONMSG  MSGID(CPF9801) EXEC(GOTO CMDLBL(MAIN))/*044847*/ /*049424*/
- 
+
 /*********** OVRDBF     FILE(QAOKDP01) TOFILE(QAOKDY01)    /*044847*/ /*049424*/
 /*********** MONMSG     MSGID(CPF0000)                     /*044847*/ /*049424*/
- 
+
 /*********** OVRDBF     FILE(QAOKLP02) TOFILE(QAOKLY02)    /*044847*/ /*049424*/
 /*********** MONMSG     MSGID(CPF0000)                     /*044847*/ /*049424*/
- 
+
 /*********** OVRDBF     FILE(QAOKDL01) TOFILE(QAOKDG01)    /*044847*/ /*049424*/
 /*********** MONMSG     MSGID(CPF0000)                     /*044847*/ /*049424*/
- 
+
 /* CHECK FOR RENAMED IBM FILES AND SETUP OVERRIDES IF NECCESSARY */   /*049424*/
- 
+
 /* DETERMINE THE MACHINE OPERATING SYSTEM LEVEL */                    /*049424*/
                                                                       /*049424*/
 /******RTVDTAARA  DTAARA(QSYS/QSS1MRI (1 6)) RTNVAR(&IBMLVL)   /*049424*076789*/
@@ -227,7 +232,7 @@
 /************CHGVAR VAR(&NEWNAME) VALUE(%SST(&VALUE 17 10))    /*049424*076789*/
 /************   OVRDBF     FILE(&OLDNAME) TOFILE(&NEWNAME)     /*049424*076789*/
 /************ENDDO                                             /*049424*076789*/
- 
+
  SKIP:                                                                /*044847*/
 /************RTVDTAARA  DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10) /*S01314*/ /*RT0032*/
 /************RTVDTAARA  DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10) /*S01314*/ /*RT0032*/
@@ -340,7 +345,7 @@
 /*  TO REQUEST THE REPORT AT OTHER LEVELS.                            /*LN1144*/
 /**/                                                                  /*LN1144*/
     /*                                                               */
- 
+
              CALL       PGM(FC0200) PARM(&LEVEL &ENTITY &DISTR &CMD +
                           &PGRPG &NEXSEQ &BRANCH &ACTION)
 /**/                                                                  /*LN1144*/
@@ -367,11 +372,11 @@
 /*  IF THE USER IS NOT AUTHORISID TO SET THESE,                       /*LN1144*/
 /*  THEN NO SCREEN WILL BE DISPLAYED.                                 /*LN1144*/
 /**/                                                                  /*LN1144*/
- 
+
              CALL       PGM(FC0205) PARM(&NEXSEQ &LEVEL &ENTITY +
                           &DISTR &PARAMETERS &CMD &PGRPG &PGCL &CLSEQ +
                           &PHASE &ACTION)
- 
+
 /**/                                                                  /*LN1144*/
 /*  IF A DATABASE ERROR HAS OCCURRED, EXIT PROGRAM USING DATABASE     /*LN1144*/
 /*  ERROR PROCESSING.                                                 /*LN1144*/
@@ -431,11 +436,18 @@
                                                                       /*RT0032*/
              CHGVAR     VAR(%SST(&PARMSTRING 101 1)) VALUE('@')       /*RT0032*/
 /*/COPY WNCPYSRC,FCC0202013                                          */
- 
+
 /*  SUBMIT FCC0200 TO APPLY MULTILANGUAGE OVERRIDES AND  */           /*RT0032*/
 /*  TO CALL THE REPORT PROGRAM IN BATCH                  */           /*RT0032*/
                                                                       /*RT0032*/
 /*/COPY WNCPYSRC,FCC0202006                                          */
+                                                                                        /*MD035399*/
+             IF         COND(&PGRPG = 'SE0370') THEN(DO)                                /*MD035399*/
+             ALCOBJ     OBJ((SEACKD *FILE *SHRRD)) WAIT(0)                              /*MD035399*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MSG))                           /*MD035399*/
+             DLCOBJ     OBJ((SEACKD *FILE *SHRRD))                                      /*MD035399*/
+             ENDDO                                                                      /*MD035399*/
+                                                                                        /*MD035399*/
 /************SBMJOB     CMD(CALL PGM(FCC0200) PARM(&PGCL &NEXSEQ +                        /*CPK014*/
 /************             &LEVEL &ENTITY &PARMSTRING &PGRPG +                             /*CPK014*/
 /************             &CLSEQ)) JOB(&PGCL) JOBD(MBATCH) +                              /*CPK014*/
@@ -445,7 +457,7 @@
                           &CLSEQ)) JOB(&PGCL) JOBD(MBATCH) +
                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
                           INLLIBL(*JOBD)                                                  /*CPK014*/
- 
+
 /*  SUBMIT THE 'MIDASRMV' JOB TO REMOVE THE MESSAGE                   /*LN1144*/
 /*  FROM MSTATUS ONCE THE REPORT JOB HAS COMPLETED                    /*LN1144*/
 /**/                                                                  /*LN1144*/
@@ -461,11 +473,11 @@
 /**********  SBMJOB     CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) +     */
 /**********               JOBD(MBATCH) USER(*JOBD) RTGDTA(*JOBD) +  */
 /**********               INLLIBL(*JOBD)                            */         /*CPK014*/ /*CAAA02*/
- 
+
              SBMJOB     CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) +
                           JOBD(MBATCH) OUTQ(*JOBD) USER(*JOBD) +
                           RTGDTA(*JOBD) INLLIBL(*JOBD)                                    /*CAAA02*/
- 
+
 /************DLTOVR     FILE(QAOKDP01 QAOKLP02 QAOKDL01)       /*044847*076789*/
 /************MONMSG     MSGID(CPF0000)                         /*044847*076789*/
 /*/COPY WNCPYSRC,FCC0202007                                          */
@@ -473,6 +485,18 @@
 /*  EXIT THE PROGRAM IF PROCESSING COMPLETES NORMALLY                 /*LN1144*/
 /**/                                                                  /*LN1144*/
              GOTO       CMDLBL(THEEND)
+ MSG:                                                                                   /*MD035399*/
+             RTVMSG     MSGID(SCM0113) MSGF(MIDASMSG) MSG(&MESSAGE)                     /*MD035399*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                       /*MD035399*/
+             RTVMSG     MSGID(SCM0104) MSGF(MIDASMSG) MSG(&MESSAGE)                     /*MD035399*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)                       /*MD035399*/
+             CHGDTAARA  DTAARA(MIDASMSG (10 1)) VALUE('1')                              /*MD035399*/
+             CALL       PGM(SCC0010) PARM('SEC02  ' 'ENTER' ' ')                        /*MD035399*/
+             CHGVAR VAR(&MEM2) VALUE('SE Account Key List report cannot +
+                        be processed due to file locking. Please submit +
+                        the job again later.')                                          /*MD035399*/
+             SNDPGMMSG  MSG(&MEM2) TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)                    /*MD035399*/
+             GOTO       CMDLBL(THEEND)                                                  /*MD035399*/
     /*                                                               */
     /*                                                               */
 /**/

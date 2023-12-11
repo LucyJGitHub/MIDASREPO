@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046913           Date 30Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -50,6 +51,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046913 - MT202 does not output tag 57A                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
@@ -231,6 +233,7 @@
       *                                                                                       162270
       ** DS to build a key for the NOSTRO codes table                                         162270
       *                                                                                       162270
+     I              'NotIncFld57IfSame58 'C         F57TAG                                  MD046913
      I/COPY WNCPYSRC,SE1710I001
       *
      C/EJECT
@@ -513,6 +516,42 @@
      C*********************MOVE 'N'       BCY001                                      162270 162270A
      C                     MOVE 'N'       CSE099                                             162270A
      C                     ENDIF                                                              162270
+      *                                                                                     MD046913
+      ** Access SDSAVLPD for 'Not Include Field 57 if same as Fld 58 ind (Y/N)'             MD046913
+      *                                                                                     MD046913
+     C                     CALL 'AOSVALR0'                                                  MD046913
+     C                     PARM *BLANKS   RTNCDE  7                                         MD046913
+     C                     PARM F57TAG    SVALK1 20                                         MD046913
+     C                     PARM *BLANKS   SVAL1 200                                         MD046913
+     C                     PARM *BLANKS   SVALK2 20                                         MD046913
+     C                     PARM *BLANKS   SVAL2 200                                         MD046913
+     C                     PARM *BLANKS   SVALK3 20                                         MD046913
+     C                     PARM *BLANKS   SVAL3 200                                         MD046913
+     C                     PARM *BLANKS   SVALK4 20                                         MD046913
+     C                     PARM *BLANKS   SVAL4 200                                         MD046913
+     C                     PARM *BLANKS   SVALK5 20                                         MD046913
+     C                     PARM *BLANKS   SVAL5 200                                         MD046913
+     C                     PARM *BLANKS   SVALK6 20                                         MD046913
+     C                     PARM *BLANKS   SVAL6 200                                         MD046913
+     C                     PARM *BLANKS   SVALK7 20                                         MD046913
+     C                     PARM *BLANKS   SVAL7 200                                         MD046913
+     C                     PARM *BLANKS   SVALK8 20                                         MD046913
+     C                     PARM *BLANKS   SVAL8 200                                         MD046913
+     C                     PARM *BLANKS   SVALK9 20                                         MD046913
+     C                     PARM *BLANKS   SVAL9 200                                         MD046913
+     C                     PARM *BLANKS   SVALK0 20                                         MD046913
+     C                     PARM *BLANKS   SVAL10200                                         MD046913
+      *                                                                                     MD046913
+     C           RTNCDE    IFNE *BLANKS                                                     MD046913
+     C           *LOCK     IN   LDA                                                         MD046913
+     C                     MOVE SVALK1    DBKEY                                             MD046913
+     C                     Z-ADD57        DBASE                                             MD046913
+     C                     MOVE 'SDSVALPD'DBFILE                                            MD046913
+     C                     OUT  LDA                                                         MD046913
+     C                     EXSR *PSSR                                                       MD046913
+     C                     ELSE                                                             MD046913
+     C                     MOVELSVAL1     NINC57  1                                         MD046913
+     C                     ENDIF                                                            MD046913
      C/COPY WNCPYSRC,SE1710C014
       *
      C                     ENDSR
@@ -1023,10 +1062,12 @@
       ** or beneficiary, suppress.
      C**********           MOVELMGAWBN    WK6N    60                                          CSD027
      C                     MOVELMGAWBN    WK6N    6                                           CSD027
+     C           NINC57    IFEQ 'Y'                                                         MD046913
      C           WK6N      IFEQ MGPOBN
      C           MGAWBN    OREQ MGBENN
      C                     MOVE *BLANKS   MGAWBN
      C                     END
+     C                     ENDIF                                                            MD046913
       *                                                                   CEU005
       * Format Original Transaction fields if CEU005 switched on          CEU005
       * and 'In' Ccy field used in PF/TRADSD.                             CEU005

@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060750           Date 18Jan23               *
-      *  Prev Amend No. AR1042801A         DATE 12Jul22               *
+      *  Last Amend No. AR1091719          Date 06Oct23               *
+      *  Prev Amend No. MD060750           Date 18Jan23               *
+      *                 AR1042801A         DATE 12Jul22               *
       *                 AR827298           Date 12Jul22               *
       *                 MD060225           Date 05Jul22               *
       *                 CLE138             Date 02Nov21               *
@@ -224,6 +225,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1091719 - DBErr on LERC13, when loan not found in CLOANCL. *
+      *              Amend program to search records in MCLONCL,      *
+      *              RVLNSL0 and PETEMPL0 if still not found.         *
+      *              Patterned to GEMS 260961.                        *
+      *            - Applied for MD031312.                            *
       *  MD060750 - Duplicate record key in member LEFHSTLB during    *
       *             migration. Rename LEFHST RTCP and RCVD fields.    *
       *  AR1042801A - Modify fix to ensure both facility and loan fees*
@@ -243,7 +249,7 @@
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD057048 - LEFEED.ROBN is being reset to zero for several    *
       *             fees. Remove code moving zeros to LEFEED fields.  *
-      *             Instead of move, zeroise LEFHST fields.           *      
+      *             Instead of move, zeroise LEFHST fields.           *
       *  AR375891A - Fee attached to parts sold posted to the suspense*
       *              account. Move PSTM and PONS to LKSETP and LKOSAC *
       *              (Child: AR375892).                               *
@@ -5816,6 +5822,18 @@
       ** Loan based                                                                           CGL020
       *                                                                                       CGL020
      C           WLNKEY    CHAINCLOAN                15                                       CGL020
+      *                                                                                    AR1091719
+      ** Check if record is existing in matured loans file,                                AR1091719
+      ** reversed loans file or pre-update loans file, before                              AR1091719
+      ** issuing a database error.                                                         AR1091719
+      *                                                                                    AR1091719
+     C           *IN15     IFEQ '1'                                                        AR1091719
+     C           WLNKEY    CHAINMCLONCLF             15                                    AR1091719
+     C                     ENDIF                                                           AR1091719
+      *                                                                                    AR1091719
+     C           *IN15     IFEQ '1'                                                        AR1091719
+     C           FELOAN    CHAINCLOANPE              15                                    AR1091719
+     C                     ENDIF                                                           AR1091719
       *                                                                                       CGL020
       ** Database error                                                                       CGL020
       *                                                                                       CGL020

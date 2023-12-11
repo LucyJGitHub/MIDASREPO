@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas MR Interest Rate Swaps Extract')
+/*EXI *  TEXT('Midas MR Interest Rate Swaps Extract')                 *
       *****************************************************************
       *                                                               *
       *  Midas - MidasPlus Reporting module                           *
@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039909           Date 29Nov23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039909 - Component MRC0210 failed during COB. Prevent      *
+      *             component MRC0210 from failing when a customer is *
+      *             closed/deleted while it is linked to a matured    *
+      *             deal.                                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -1053,6 +1058,8 @@
      C     SDCUST        PARM      *BLANKS       DSSDY
 
      C                   IF        PRetCode <> *BLANKS
+     C                             AND PRetCode <> '*CUSCLS'                                MD039909
+     C                             AND PRetCode <> '*CUSDEL'                                MD039909
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

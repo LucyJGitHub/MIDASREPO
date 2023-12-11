@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 238467             Date 16Aug06               *
+      *                 238467             Date 16Aug06               *
       *                 235720             Date 18Nov03               *
       *                 BUG11740           Date 21Jul06               *
       *                 CSD031             Date 10Apr06               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Set first day of the Forward Rates table to zero.   *
+      *           Default spot as RATE 1 during amendments. Applied   *
+      *           fix 241866                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  238467 - MMA1157 appears unnecessarily.  Do not validate the *
       *           first rate since it is defaulted to spot rate.      *
@@ -53,7 +57,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -72,40 +76,40 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the GL standard declares
      D/COPY GLCPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -114,48 +118,48 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** Difference in Number of decimal places between Fwrd Ccy
       ** and Base Ccy
      D*** DiffNDP         S              1  0                                                 235720
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FDEFWRTPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Idx             S              3P 0
      D DDRTE1          S             14
- 
+
      D*** WKFLD12p6       S             12P 6                                                 235720
      D*** WKFLD12p7       S             12P 7                                                 235720
      D*** WKFLD12p8       S             12P 8                                                 235720
      D WKFLD13p8       S             13P 8                                                    235720
- 
+
       ** Base Currency Number of decimal places
      D BNBDP           S              1  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -168,17 +172,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *  First rate should be defaulted to the screen if:
       *  S01432 is on
       *  Whether values have already been entered into these fields is handled in SIN/CTL
- 
+
      C                   EVAL      DDRTE1 = WKRTE1
- 
-     C                   IF          S01432 = 'Y'
+
+     C**********         IF          S01432 = 'Y'                                             259866
      C                   EXSR      SRDEFLT
-     C                   ENDIF
- 
+     C**********         ENDIF                                                                259866
+
      C**********         IF        DDRTE1 <> WKRTE1  AND                                      238467
      C**********                   DDRTE1 <> *BLANKS                                          238467
      C**********         ADD       1             Idx                                          238467
@@ -186,13 +190,16 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'MMA1157'                                238467
      C**********         EVAL      DDACTNOK        = 'N'                                      238467
      C**********         ENDIF                                                                238467
- 
+
      C                   IF        RESETERRS = 'N'
      C                   EVAL      WKRTE1 = DDRTE1
      C                   ENDIF
- 
+                                                                                              259866
+      ** Default first entry of Days to 0 to indicate spot date                               259866
+     C                   EVAL      P_DYS1 = '    0'                                           259866
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,7 +215,7 @@
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      DDCCY         @KEYCY            3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C**********         EVAL      DiffNDP = A6NBDP - BNBDP + 4                             BUG11740
       **********                                                                            BUG11740
      C**********         SELECT                                                             BUG11740
@@ -221,17 +228,18 @@
       **********                                                                            BUG11740
      C**********         OTHER                                                              BUG11740
      C                   Z-ADD     8             ZADEC
- 
+
      C**********         ENDSL                                                              BUG11740
- 
+
       * If insert and S01432 is on default spot rate into first rate field
- 
-     C                   IF        DDACTN = 'I' AND S01432 = 'Y'
+
+     C**********         IF        DDACTN = 'I' AND S01432 = 'Y'                              259866
+     C                   IF        DDACTN = 'I' OR DDACTN = 'A'                               259866
      C                   MOVE      *BLANKS       ZFIELD
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        WKRTE1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -241,7 +249,7 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C**********         SELECT                                                             BUG11740
       **********                                                                            BUG11740
      C**********         WHEN      DiffNDP = 1                                              BUG11740
@@ -260,13 +268,13 @@
      C                   Z-ADD     A6SPRT        WKFLD13p8                                    235720
      C                   MOVE      WKFLD13p8     ZFIELD                                       235720
      C                   EVAL      ZADEC = 8
- 
+
      C**********         ENDSL                                                              BUG11740
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C**********         SELECT                                                             BUG11740
       **********                                                                            BUG11740
      C**********         WHEN      DiffNDP = 1                                              BUG11740
@@ -281,18 +289,18 @@
      C                   IF        ZFIELD = '      0.00000000'
      C                   EVAL      ZFIELD = *BLANK
      C                   ENDIF
- 
+
      C**********         ENDSL                                                              BUG11740
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Return Code
      C                   PARM                    RetCodeIn
@@ -302,7 +310,9 @@
      C                   PARM                    DDCCY             3
       ** First Rate
      C                   PARM                    WKRTE1           14
- 
+      ** First Days entry                                                                     259866
+     C                   PARM                    P_DYS1            5                          259866
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       *
@@ -317,7 +327,7 @@
       * Reset of Fields in Error Required (Y/N)
      C                   PARM                    ResetErrs         1
       *
- 
+
       *  Move program name into *LDA field.
      C     *LOCK         In        LDA
      C                   Movel     'FDFWRTDFT'   DBPGM
@@ -335,7 +345,7 @@
       *  obtain the messages.
       *
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Check if switchable feature CSD006 is switched on.                     CSD006
       ** Market Data Feeds.                                                     CSD006
       *                                                                         CSD006
@@ -358,7 +368,7 @@
      C                   ELSE                                                   CSD006
      C                   MOVE      'N'           CSD006                         CSD006
      C                   ENDIF                                                  CSD006
- 
+
       ** Check if switchable feature S01432 is switched on.
       ** Forward Ratess Maintenance.
       *
@@ -381,7 +391,7 @@
      C                   ELSE
      C                   MOVE      'N'           S01432
      C                   ENDIF
- 
+
       ** Check if switchable feature CEU026 is switched on.
       *
      C                   CALLB     'AOSARDR0'
@@ -398,7 +408,7 @@
      C                   MOVEL     '902'         DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CEU026            1
      C                   ELSE

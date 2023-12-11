@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE172             Date 01Oct20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD039909           Date 29Nov23               *
+      *  Prev Amend No. CLE172             Date 01Oct20               *
+      *                 CSD103             Date 10Aug20               *
       *                  MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -34,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039909 - Component MRC0210 failed during COB. Prevent      *
+      *             component MRC0210 from failing when a customer is *
+      *             closed/deleted while it is linked to a matured    *
+      *             deal.                                             *
       *  CLE172 - LIBOR Deregulation - Lending (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -1030,6 +1035,8 @@
      C     SDCUST        PARM      *BLANKS       DSSDY
 
      C                   IF        PRetCode <> *BLANKS
+     C                             AND PRetCode <> '*CUSCLS'                                MD039909
+     C                             AND PRetCode <> '*CUSDEL'                                MD039909
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
      C                   EVAL      DBKEY = PCust

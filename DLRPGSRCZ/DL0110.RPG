@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261258             Date 25Sep23               *      
-      *  Prev Amend No. BA5103             Date 07Aug23               *
+      *  Last Amend No. AR701280           Date 13Nov23               *
+      *  Prev Amend No. 263674             Date 25Oct23               *
+      *                 261258             Date 25Sep23               *
+      *                 BA5103             Date 07Aug23               *
       *                 CDL103             Date 07Aug23               *
       *                 MD058815           Date 28Sep21               *
       *                 CIR020             Date 02Aug21               *
@@ -326,6 +328,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR701280 - Ensure that value of OSCA and PBOR will be saved  *
+      *             so that when printing the mail confirmation, it   *
+      *             will populate the correct payment account.        *
+      *             (Child: AR701281)                                 *
+      *  263674 - The phrase "As per your instruction" is being       *
+      *           printed.  Fix is to print from settlement details.  *
       *  261258 - CDL041 introduced *INKG to conditionally add VAT    *
       *           details to Confirmation Print but this indicator    *
       *           was already used by 208051.  Rename to *INKL.       *
@@ -1318,7 +1326,7 @@
       *       KI      Adjust A8BRNM and BBCNA* (BA5103)                                       BA5103
       *       KJ      Do not print TOTAL if Fix base rate is = N (*IN58)                     BUG5093
       *       KK      Print BTBI and Cpy Nostro Town (CDL103)                                 CDL103
-     F*       KL      Control printing of VAT Details                                         261258      
+     F*       KL      Control printing of VAT Details                                         261258
      F*       KS      Print 'VARIABLE RATE WILL BE APPLIED TO THE DEAL'   CDL019
      F*       KT      Print '** EAR-MARKED **' when Blocked               CDL016
       *       KU      Do not print TOTAL if Fix base rate is = N                             BUG5093
@@ -2708,7 +2716,8 @@
      I***************************************23  23 DASH2           S01117E25392
      I***************************************24  26 BRCX            S01117E25392
      I**********                             16  37 CPTN                               E25392 CGL029
-     I                                       16  43 CPTN                                      CGL029
+     I**********                             16  43 CPTN                               CGL029 263674
+     I                                       22  43 CPTN                                      263674
      I                                       22  22 DASH                  E25392
      I                                       23  25 RCCY                  E25392
      I                                       26  26 DASH1                 E25392
@@ -3168,6 +3177,18 @@
      I                                        6   60ICBS                  056425
      I                                        7  177ZIRATE                056425
      I                                        7  177INTR                  056425
+      *                                                                                       263674
+      ** Data Structure for Account details                                                   263674
+      *                                                                                       263674
+     I            DS                                                                          263674
+     I                                        1  24 ACTDTL                                    263674
+     I                                        1   3 A9BRCD                                    263674
+     I                                        4   4 HYPEN1                                    263674
+     I                                        5  10 A9CUST                                    263674
+     I                                       11  11 HYPEN2                                    263674
+     I                                       12  21 A9ACCD                                    263674
+     I                                       22  22 HYPEN3                                    263674
+     I                                       23  24 A9NONB                                    263674
      I*                                                                   CDL018
      I            DS                                                      CDL018
      I                                        1  21 #1ACNT                CDL018
@@ -3188,6 +3209,11 @@
      I                                       26  26 ##SPC4                CDL018
      I                                       27  28 ##ACSQ                CDL018
      I*                                                                   CGL029
+     I            DS                                                                        AR701280
+     I                                        1  18 @@OSCA                                  AR701280
+     I                                        1   6 @@CUST                                  AR701280
+     I                                        7  16 @@ACCD                                  AR701280
+     I                                       17  18 @@ACSQ                                  AR701280
      I*                                                                   056425
      I/COPY ZSRSRC,ZINTDYZ1                                               056425
      I*                                                                   056425
@@ -7121,7 +7147,7 @@
      C           BBPCNB    ANDNECPPRNT                                                        CDL041
      C**********           MOVE *ON       *INKG                                        CDL041 261258
      C                     MOVE *ON       *INKL                                               261258
-     C                     ENDIF                                                              CDL041     
+     C                     ENDIF                                                              CDL041
       *                                                                                       CDL041
      C                     ENDIF                                                              CDL041
      C                     ENDIF                                                              CDL041
@@ -9906,7 +9932,8 @@
      C           *IN53     IFEQ '1'                                                           CDL033
      C           WIN55     OREQ '1'                                                           CDL033
      C                     MOVELPEROUR    AWCPNM                                              CDL033
-     C                     MOVELASPER     AWCPNM                                              CDL033
+     C**********           MOVELASPER     AWCPNM                                       CDL033 263674
+     C                     EXSR ACTRTN                                                        263674
      C                     ENDIF                                                              CDL033
 1365 C   54
 1366 C*R*57*               MOVELDRTOAC    CPNM                            S01194
@@ -9927,6 +9954,15 @@
 1370 C*
 1371 C*         - PAY NARRATIVE
 1372 C           QPAY      TAG                             **QPAY TAG **
+      *                                                                                     AR701280
+     C                     MOVEL@@POBR    A9BRCD                                            AR701280
+     C                     MOVE '-'       HYPEN1                                            AR701280
+     C                     MOVEL@@CUST    A9CUST                                            AR701280
+     C                     MOVE '-'       HYPEN2                                            AR701280
+     C                     MOVEL@@ACCD    A9ACCD                                            AR701280
+     C                     MOVE '-'       HYPEN3                                            AR701280
+     C                     MOVEL@@ACSQ    A9NONB                                            AR701280
+      *                                                                                     AR701280
 1373 C***52*               MOVELSENDR     CPNM                            S01194
 1373 C***52*****           MOVELSENDR     AWCPNM                                       S01194 CDL033
 1374 C***52*               MOVELSEND      CPNM                            S01194
@@ -9940,7 +9976,9 @@
 1376 C*R*55*****           MOVELPERYOR    AWCPNM                                       S01194 CDL033
      C           *IN53     IFEQ '1'                                                           CDL033
      C           WIN55     OREQ '1'                                                           CDL033
-     C                     MOVELPERYOR    AWCPNM                                              CDL033
+     C**********           MOVELPERYOR    AWCPNM                                       CDL033 263674
+     C**********           EXSR ACTRTN                                               263674 AR701280
+     C                     MOVELACTDTL    AWCPNM    P                                       AR701280
      C                     ENDIF                                                              CDL033
 1377 C   54
 1378 C*R*57*               MOVELCRTOAC    CPNM                            S01194
@@ -9973,6 +10011,22 @@
      C/COPY WNCPYSRC,DL0110CP34                                           S01408
       *                                                                   S01408
 1388 C                     ENDSR
+      *                                                                                       263674
+      *****************************************************************                       263674
+      *  ACTRTN - SubRoutine to set-up Account Details for the report *                       263674
+      *****************************************************************                       263674
+     C           ACTRTN    BEGSR                                                              263674
+      *                                                                                       263674
+     C                     MOVELBRC       A9BRCD                                              263674
+     C                     MOVE '-'       HYPEN1                                              263674
+     C                     MOVELCUSTNO    A9CUST                                              263674
+     C                     MOVE '-'       HYPEN2                                              263674
+     C                     MOVELAC        A9ACCD                                              263674
+     C                     MOVE '-'       HYPEN3                                              263674
+     C                     MOVELSEQ       A9NONB                                              263674
+     C                     MOVELACTDTL    AWCPNM    P                                         263674
+      *                                                                                       263674
+     C                     ENDSR                                                              263674
 1389 C*
 1390 C********************************************************************
 1391 C*    SUBROUTINE TO GET THEIR NOSTRO AND FOR A/C OF DETAILS
@@ -10360,6 +10414,10 @@ TA06 CORN62 51             MOVELPAY       ADD
      C                     EXSR *PSSR                                     180665
      C                     GOTO END                                       180665
      C                     END                                            180665
+      *                                                                                     AR701280
+     C                     MOVELOSCA      @@OSCA 18 P                                       AR701280
+     C                     MOVELPOBR      @@POBR  3 P                                       AR701280
+      *                                                                                     AR701280
      C***04******DRID      IFEQ 'Y'                                S01129 134314
      C   04      DRID      IFEQ 'R'                                       134314
      C                     MOVE '1'       *IN83                           S01129

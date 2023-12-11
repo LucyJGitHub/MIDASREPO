@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL101             Date 01Dec22               *
-      *  Prev Amend No. CDL063             Date 02Nov21               *      
+      *  Last Amend No. MD061665           Date 28Nov23               *
+      *  Prev Amend No. CDL101             Date 01Dec22               *
+      *       Amend No. CDL063             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061665 - Correct the validatio on Bank/NonBank Ind. for    *
+      *             IP/IT Deal Types.                                 *
       *  CDL101   - Remove validation on Bank/NonBank Ind. for IP/IT  *
       *             Deal Types                                        *
       *  CDL063 - Allow non-bank/bank counterparty on certain         *
@@ -271,7 +274,8 @@
       ** If CDL063 is on, bypass the validation for non-bank                                  CDL063
       *                                                                                       CDL063
      C     CDL063        IFNE      'Y'                                                        CDL063
-     C     CDL101        OREQ      'N'                                                        CDL101
+     C*****CDL101        OREQ      'N'                                               CDL101 MD061665
+     C     CDL101        ANDEQ     'N'                                                      MD061665
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound

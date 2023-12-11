@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSE119             Date 08Aug23               *
-      *  Prev Amend No. MD057753           Date 07Jul21               *
+      *  Last Amend No. 262246             Date 11Dec23               *
+      *  Prev Amend No. CSE119             Date 08Aug23               *
+      *                 MD057753           Date 07Jul21               *
       *                 MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
@@ -132,6 +133,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262246 - Allow amend of Front Office Id.                     *
       *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
@@ -872,6 +874,10 @@
      C                   MOVEL     TranInExt1    TranInExtA
      C                   MOVEL     TranInExt2    TranInExtB
      C                   MOVEL     TransQ        StampTax                                     CER049
+      *                                                                                       262246
+      **  Front Office ID.                                                                    262246
+      *                                                                                       262246
+     C                   EVAL      APFOTranID = DDFRNT                                        262246
 
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
@@ -3063,6 +3069,7 @@
 
       ** If any errors overwrite previous error information
 
+     C                   EVAL      DDFRNT = APFOTranID                                        262246
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
@@ -5176,8 +5183,8 @@
       ** Set Front Office ID = User ID
      C**********         EVAL      APFOTranID = %SUBST(PUSRID:1:3) +                          249422
      C**********                                %SUBST(WorkTime:3:17)                         249422
-      ** Front Office ID                                                                   AR698195B
-     C                   EVAL      APFOTranID = DDFRNT                                     AR698195B
+      ***Front*Office*ID**********************************************              AR698195B 262246
+     C**********         EVAL      APFOTranID = DDFRNT                              AR698195B 262246
       *                                                                                       CSC022
       ** Access Switchable Features File, for CSC022                                          CSC022
       *                                                                                       CSC022

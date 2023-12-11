@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. MD056768           Date 08Oct20               *
+      *  Last Amend No. MD061933           Date 24Nov23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 MD056768           Date 08Oct20               *
       *                 MD056904           Date 08Oct20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -63,6 +64,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061933 - Unsettled Position Settlements already passed the *
+      *             Retention Period were Purged. Fix is to allow     *
+      *             unsettled/live position settlements to retain     *
+      *             using system value. If Y, then retain. Otherwise, *
+      *             drop.                                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  MD056768 - File out of balance in SEC0612E 00001 component.  *
       *             Ensure that POSETA audit file is updated with the *
@@ -327,6 +333,7 @@
      I*
      IDSFDY     E DSDSFDY                                                                     CRE020
       *                                                                                       CRE020
+     I              'RetainUnsettledPosit'C         WRUPOS                                  MD061933
       /EJECT
      C           *LIKE     DEFN PSSH      SPSSH                                               095907
      C*================================================================
@@ -590,6 +597,36 @@
      C* CHECK IF MT5XX FEATURE IS ACTIVE                                                      095907
      C*                                                                                       095907
      C                     EXSR AOSARD                                                        095907
+      *                                                                                     MD061933
+      ** Access system value for 'RetainUnsettledPosit'                                     MD061933
+      *                                                                                     MD061933
+     C                     CALL 'AOSVALR0'                                                  MD061933
+     C                     PARM *BLANKS   @RTCD                                             MD061933
+     C                     PARM WRUPOS    P@OP01 20                                         MD061933
+     C                     PARM *BLANKS   P@VL01200                                         MD061933
+     C                     PARM *BLANKS   P@OP02 20                                         MD061933
+     C                     PARM *BLANKS   P@VL02200                                         MD061933
+     C                     PARM *BLANKS   P@OP03 20                                         MD061933
+     C                     PARM *BLANKS   P@VL03200                                         MD061933
+     C                     PARM *BLANKS   P@OP04 20                                         MD061933
+     C                     PARM *BLANKS   P@VL04200                                         MD061933
+     C                     PARM *BLANKS   P@OP05 20                                         MD061933
+     C                     PARM *BLANKS   P@VL05200                                         MD061933
+     C                     PARM *BLANKS   P@OP06 20                                         MD061933
+     C                     PARM *BLANKS   P@VL06200                                         MD061933
+     C                     PARM *BLANKS   P@OP07 20                                         MD061933
+     C                     PARM *BLANKS   P@VL07200                                         MD061933
+     C                     PARM *BLANKS   P@OP08 20                                         MD061933
+     C                     PARM *BLANKS   P@VL08200                                         MD061933
+     C                     PARM *BLANKS   P@OP09 20                                         MD061933
+     C                     PARM *BLANKS   P@VL09200                                         MD061933
+     C                     PARM *BLANKS   P@OP10 20                                         MD061933
+     C                     PARM *BLANKS   P@VL10200                                         MD061933
+      *                                                                                     MD061933
+     C                     MOVEL'N'       WWRUPO  1                                         MD061933
+     C           @RTCD     IFEQ *BLANK                                                      MD061933
+     C                     MOVELP@VL01    WWRUPO                                            MD061933
+     C                     ENDIF                                                            MD061933
      C                     END
      C*
       /EJECT
@@ -698,6 +735,12 @@
      C           PSVL      ORLE RTNTDT                                    085990
      C           S01512    ANDEQ'Y'                                       085990
      C***********RECIX     OREQ 'M'                                E14884 085990
+      ** If date is passed the retention date and system value                              MD061933
+      ** 'RetainUnsettledPosit' is N, drop record.                                          MD061933
+      *                                                                                     MD061933
+     C           WWRUPO    IFEQ 'N'                                                         MD061933
+     C           WWRUPO    OREQ 'Y'                                                         MD061933
+     C           RECIX     ANDNE'D'                                                         MD061933
      C*
      C* Get dec places tabtg10
      C*
@@ -712,6 +755,8 @@
      C*
      C                     EXSR PRINTD
      C*
+     C                     ENDIF                                                            MD061933
+      *                                                                                     MD061933
      C                     END
      C                     END
      C*                                                                                       095907

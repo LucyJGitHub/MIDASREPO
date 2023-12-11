@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060084           Date 29Sep22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061038           Date 01Dec23               *
+      *  Prev Amend No. AR666005           Date 01Dec23               *
+      *                 MD060084           Date 29Sep22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD026333           Date 29Apr14               *
       *                 MD046248           Date 27Oct17               *
       *                 MD021337           Date 25May16               *
@@ -68,6 +70,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061038 - AR666005 additional fix                           *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the beneficiary field.       *
+      *           Applied fix 229380, and corrected the error         *
+      *           message displayed.                                  *
       *  MD060084 - Error is returned when using an account line in   *
       *             line one and input is 6 characters which is an    *
       *             invalid customer number in line 2                 *
@@ -611,7 +618,12 @@
      C                   Add       1             Idx
      C**********         Movel     'DDBnc'       FldNamXAr(Idx)                             BUG10107
      C                   MOVEL     'SBNC1 '      FldNamXAr(Idx)                             BUG10107
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
      C                   END                                                                MD060084
      C                   End
      C                   End
@@ -628,12 +640,14 @@
      C     WIND2         ANDEQ     'Y'                                                      MD027201
                                                                                             MD027201
       *  Call to access pgm for Customer details
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
-     C     SDCUST        Parm      *Blanks       DSSDY
+     C*****SDCUST        Parm      *Blanks       DSSDY                                      AR666005
+     C     SDCUST        PARM      *BLANKS       DSLDY                                      AR666005
 
      C*****              If        C#RTCD = *Blanks or                                        243531
      C*****                        C#KYST <> '*CSHT  '                                        243531
@@ -695,7 +709,9 @@
      C                   If        ADSLSH = '/'and *IN31=*Off and *IN32=*Off                AR924684
      C                             or ADSLSH <> '/'                                         AR924684
 
-     C                   If        *IN31 = *On
+     C**********         If        *IN31 = *On                                              AR666005
+     C     *IN31         IFEQ      '1'                                                      AR666005
+     C     WCUSTC        OREQ      'Y'                                                      AR666005
       * Send error to screen
      C                   If        ADSLSH <> '/'
      C**********         Move      'N'           OKBnc1                                       CSD089
@@ -708,8 +724,13 @@
      C**********         Movel     'DDBnc'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1055'     MsgIdXAr(Idx)                                CSD089
      C                   Add       1             WIx                                          CSD089
-     C                   Movel     'DDBnc'       WFldNmXAr(WIx)                               CSD089
+     C**********         Movel     'DDBnc'       WFldNmXAr(WIx)                      CSD089 AR666005
+     C                   Movel     'SBNC1'       WFldNmXAr(WIx)                             AR666005
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVEL     'FTM7140'     WMsgIdXAr(WIx)                             MD061038
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1055'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              AR666005
 
      C                   Else
      C                   Eval      @BNCT = 'S'
@@ -746,6 +767,7 @@
 
      C                   If        OKBnc1 <> 'N' and
      C                             @BNCT = *Blanks
+     C                             AND WCUSTC <> 'Y'                                        MD061038
 
       * Invalid customer number or shortname.
      C                   If        ADCH26 = *Blanks and
@@ -771,7 +793,12 @@
      C**********         Move      'N'           OKBnc2                                      BUG7778
      C**********         Movel     'SBNC2'       FldNamXAr(Idx)                              BUG7778
      C**********         End                                                                 BUG7778
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
      C                   End                                                                 BUG7778
      C                   END                                                                MD060084
 

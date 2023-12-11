@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CAP241             Date 19Sep23               *
-      *  Prev Amend No. 252024             Date 14Feb08               *
-      *                 MD059304           Date 26Jan22               *
+      *  Last Amend No. 252024             Date 14Feb08               *
+      *  Prev Amend No. MD059304           Date 26Jan22               *
       *                 MD059321           Date 21Dec21               *
       *                 MD059368           Date 17Dec21               *
       *                 MD058975           Date 20Oct21               *
@@ -150,12 +149,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CAP241 - Front Office Id in Transactions Input               *
       *  252024 - Ensure std settl inst are defaulted.                *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
       *             Pay-our account) now validates and requires       *
-      *             the Beneficiary.                                  *
+      *             the Beneficiary.                                  *      
       *  MD059321 - Changed Processing to RepoFlag before reaching    *
       *             main validation module.                           *
       *  MD058368 - Inhibit the LIBOR Deregulation fields if CDL102   *
@@ -1245,7 +1243,6 @@
      C                   MOVEL     RegData500    RegData                                      CER001
      C**********         EVAL      APFOTranID = DDFOID                             259924A AR971184A
      C                   IF        APFOTranID <> *BLANKS                                   AR971184A
-     C                             and CAP241 <> 'Y'                                          CAP241
      C                   EVAL      DDFOID = APFOTranID                                     AR971184A
      C                   ENDIF                                                             AR971184A
                                                                                               CAP087
@@ -2185,19 +2182,6 @@
      C                   If        PRTCD = *Blanks                                          MD054028
      C                   Eval      CER050 = 'Y'                                             MD054028
      C                   Endif                                                              MD054028
-      *                                                                                       CAP241
-      ** Check if CAP241 is enabled.                                                          CAP241
-     C                   Movel     'N'           CAP241            1                          CAP241
-     C                   Call      'AOSARDR0'                                                 CAP241
-     C                   Parm      *BLANKS       @RTCD                                        CAP241
-     C                   Parm      '*VERIFY'     @OPTN                                        CAP241
-     C                   Parm      'CAP241'      @SARD                                        CAP241
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CAP241
-      *                                                                                       CAP241
-     C     @RTCD         Ifeq      *BLANK                                                     CAP241
-     C                   Movel     'Y'           CAP241                                       CAP241
-     C                   Endif                                                                CAP241
-      *
      C/COPY WNCPYSRC,MMLDNIXC03
 
      C                   ENDSR
@@ -3697,24 +3681,16 @@
      C**********         IF        DDACTN = 'I'                                     244537 AR971184A
      C                   IF        APFOTranID <> *BLANKS                                   AR971184A
                                                                                               244537
-     C                   If        CAP241 <> 'Y'                                              CAP241
      C                   EVAL      IKFRNT = APFOTranID
-     C                   Endif                                                                CAP241
      C                   EVAL      IKAFRT = APFOAsocID
      C                   EVAL      IKREPA = APRprLocn
      C**********         IF        DDFOID <> *BLANKS                                239400 AR971184A
      C**********         EVAL      IKFRNT = DDFOID                                  239400 AR971184A
      C**********         END                                                        239400 AR971184A
-     C                   If        CAP241 <> 'Y'                                              CAP241
      C                   EVAL      DDFOID = APFOTranID                                     AR971184A
-     C                   Endif                                                                CAP241
                                                                                               244537
      C                   ENDIF                                                                244537
 
-     C                   If        CAP241 = 'Y'                                               CAP241
-     C                   Eval      IKFRNT = DDFOID                                            CAP241
-     C                   Endif                                                                CAP241
-                                                                                              CAP241
       * Information needed to broken down
      C                   IF        CDL007 = 'Y'
      C                                AND DDACTN = 'A'
@@ -4316,11 +4292,7 @@
       * Set Valid file field(s) that are needed for all Action Codes                         BUG9827
       * Include Header fields that need to be o/p to the Valid file                          BUG9827
      C                   EVAL      IKLACT = DDACTN                                           BUG9827
-     C                   If        CAP241 = 'Y'                                               CAP241
-     C                   Eval      IKFRNT = DDFOID                                            CAP241
-     C                   else                                                                 CAP241
      C                   EVAL      IKFRNT = APFOTranID                                       BUG9827
-     C                   Endif                                                                CAP241
      C                   EVAL      IKAFRT = APFOAsocID                                       BUG9827
      C                   EVAL      IKREPA = APRprLocn                                        BUG9827
      C                   EndIf                                                               BUG9827

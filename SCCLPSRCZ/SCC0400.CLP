@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CDL104             Date 02Oct23              */
+/*       Last Amend No. AR1052011          Data 29Nov23              */
 /*       Prev Amend No. 258347             Date 04Apr12              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD046737           Date 15Aug17              */
@@ -78,7 +78,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       CDL104   - Principal Decrease events on Fixed Term MM Deals */
+/*       AR1052011 - Midas Export drip feed jobs are not ended.      */
+/*                   Amend program to automatically end              */
+/*                   drip feed jobs. (Child: AR1052012)              */
+/*                 - Amended original fix for MONMSG.                */
+/*                 - Applied for MD-39061.                           */
 /*       258347   - SCKOBJLCB failed. End job CM_GAC_REP.            */
 /*                - Applied for AR927020 (Child: AR927022)           */
 /*       MD046248 - Finastra Rebranding                              */
@@ -266,7 +270,6 @@
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(7)                                   /*CCB023*/
              DCL        VAR(&MSGSTAT) TYPE(*CHAR) LEN(5)                                  /*CCB023*/
              DCL        VAR(&LOCK) TYPE(*CHAR) LEN(1) VALUE('N')                          /*CCB023*/
-             DCL        VAR(&LRTCD) TYPE(*CHAR) LEN(7)                                    /*CDL104*/
 /*/COPY WNCPYSRC,SCH00004                                            */
 
 /*/COPY WNCPYSRC,SCC0400011                                          */
@@ -980,6 +983,58 @@ TAGUSC01:                                                                       
              IF         COND(&SRTCD *EQ '       ') THEN(DO)                               /*CGL030*/
              CALL CBC0042                                                                 /*CGL030*/
              ENDDO                                                                        /*CGL030*/
+/**/
+/* Access switchable features file to check if CMX001 is on */                         /*AR1052011*/
+/**/                                                                                   /*AR1052011*/
+             CHGVAR     VAR(&SRTCD) VALUE('       ')                                   /*AR1052011*/
+             CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                                   /*AR1052011*/
+             CHGVAR     VAR(&SSARD) VALUE('CMX001')                                    /*AR1052011*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
+                           &SSCSARD)                                                   /*AR1052011*/
+/**/                                                                                   /*AR1052011*/
+/* If CMX001 is on */                                                                  /*AR1052011*/
+/**/                                                                                   /*AR1052011*/
+             IF         COND(&SRTCD *EQ '       ') THEN(DO)                            /*AR1052011*/
+/**/                                                                                   /*AR1052011*/
+/* End job MXC0610 and MXC0620 */                                                      /*AR1052011*/
+/**/                                                                                   /*AR1052011*/
+                ALCOBJ     OBJ((MXDTA610 *DTAARA *SHRRD))                              /*AR1052011*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                      /*MD039061*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD039061*/
+                ENDDO                                                                   /*MD039061*/
+                RTVDTAARA  DTAARA(MXDTA610 (1 10)) RTNVAR(&JOB)                        /*AR1052011*/
+                RTVDTAARA  DTAARA(MXDTA610 (11 10)) RTNVAR(&USR)                       /*AR1052011*/
+                RTVDTAARA  DTAARA(MXDTA610 (21 6)) RTNVAR(&NBR)                        /*AR1052011*/
+                ENDJOB     JOB(&NBR/&USR/&JOB) OPTION(*IMMED) +
+                                 LOGLMT(0)                                             /*AR1052011*/
+                MONMSG     MSGID(CPF0001 CPF1321 CPF1362)                               /*MD039061*/
+                CHGDTAARA  DTAARA(MXDTA610 (1 10)) +
+                              VALUE('          ')                                      /*AR1052011*/
+                CHGDTAARA  DTAARA(MXDTA610 (11 10)) +
+                              VALUE('          ')                                      /*AR1052011*/
+                CHGDTAARA  DTAARA(MXDTA610 (21 6)) +
+                              VALUE('      ')                                          /*AR1052011*/
+                DLCOBJ     OBJ((MXDTA610 *DTAARA *SHRRD))                              /*AR1052011*/
+                                                                                       /*AR1052011*/
+                ALCOBJ     OBJ((MXDTA620 *DTAARA *SHRRD))                              /*AR1052011*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                      /*MD039061*/
+                GOTO       CMDLBL(ABNOR)                                                /*MD039061*/
+                ENDDO                                                                   /*MD039061*/
+                RTVDTAARA  DTAARA(MXDTA620 (1 10)) RTNVAR(&JOB)                        /*AR1052011*/
+                RTVDTAARA  DTAARA(MXDTA620 (11 10)) RTNVAR(&USR)                       /*AR1052011*/
+                RTVDTAARA  DTAARA(MXDTA620 (21 6)) RTNVAR(&NBR)                        /*AR1052011*/
+                ENDJOB     JOB(&NBR/&USR/&JOB) OPTION(*IMMED) +
+                                 LOGLMT(0)                                             /*AR1052011*/
+                MONMSG     MSGID(CPF0001 CPF1321 CPF1362)                               /*MD039061*/
+                CHGDTAARA  DTAARA(MXDTA620 (1 10)) +
+                              VALUE('          ')                                      /*AR1052011*/
+                CHGDTAARA  DTAARA(MXDTA620 (11 10)) +
+                              VALUE('          ')                                      /*AR1052011*/
+                CHGDTAARA  DTAARA(MXDTA620 (21 6)) +
+                              VALUE('      ')                                          /*AR1052011*/
+                DLCOBJ     OBJ((MXDTA620 *DTAARA *SHRRD))                              /*AR1052011*/
+             ENDDO                                                                     /*AR1052011*/
+                                                                                       /*AR1052011*/
 /************************************************************************/                /*CPK014*/
 /*                                                                      */                /*CPK014*/
 /* The following processing has been replaced by CoB component SDC1400. */                /*CPK014*/
@@ -1005,51 +1060,6 @@ TAGUSC01:                                                                       
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,SCC0400002                                          /*S01408*/
 /*                                                                   /*S01408*/
-/*                                                                   /*S01408*/
-                                                                                          /*CDL104*/
-     /* Check if feature CDL104 is switched on   */                                       /*CDL104*/
-                                                                                          /*CDL104*/
-             CHGVAR     VAR(&SSARD) VALUE('CDL104')                                       /*CDL104*/
-                                                                                          /*CDL104*/
-             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
-                          &SSCSARD)                                                       /*CDL104*/
-                                                                                          /*CDL104*/
-             IF         COND(&SRTCD *EQ '      ') THEN(DO)                                /*CDL104*/
-                                                                                          /*CDL104*/
-/*  Call report to check if any fixed term deals are overdrawn  */                        /*CDL104*/
-             CALL       PGM(DLC0104) PARM(&LRTCD &RSEQ &RLEV &RENT)                       /*CDL104*/
-                                                                                          /*CDL104*/
-/*  Inform operator that COB Cannot continue if any deal overdrawn  */                    /*CDL104*/
-             IF         COND(&LRTCD *EQ '*OVRDRW') THEN(DO)                               /*CDL104*/
-                CHGVAR     VAR(&MESSAGE) VALUE('Close of Business +
-                          cannot proceed.')                                               /*CDL104*/
-                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                      /*CDL104*/
-                CHGVAR   VAR(&MESSAGE) VALUE('Fixed Term Deals exist +
-                          which are overdrawn.')                                          /*CDL104*/
-                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                      /*CDL104*/
-                CHGVAR     VAR(&MESSAGE) VALUE('See report DL0104P1  +
-                          for details.')                                                  /*CDL104*/
-                CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)                      /*CDL104*/
-                  CALL       PGM(SCC0010) PARM('SCC0400' 'ENTER' +
-                                   &NOREPLY)                                              /*CDL104*/
-                GOTO       CMDLBL(EXIT)                                                   /*CDL104*/
-              ENDDO                                                                       /*CDL104*/
-                                                                                          /*CDL104*/
-/*  Inform operator that error has occurred on call to DLC0104  */                        /*CDL104*/
-             IF         COND(&LRTCD *EQ '*ERROR ') THEN(DO)                               /*CDL104*/
-                CHGVAR     VAR(&MESSAGE) VALUE('Close of Business +
-                          cannot proceed.')                                               /*CDL104*/
-                                                                                          /*CDL104*/
-                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)                      /*CDL104*/
-                CHGVAR   VAR(&MESSAGE) VALUE('Error has occurred in +
-                          DL0104')                                                        /*CDL104*/
-                CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                      /*CDL104*/
-                  CALL       PGM(SCC0010) PARM('SCC0400' 'ENTER' +
-                                   &NOREPLY)                                              /*CDL104*/
-                GOTO       CMDLBL(EXIT)                                                   /*CDL104*/
-              ENDDO                                                                       /*CDL104*/
-              ENDDO                                                                       /*CDL104*/
-                                                                                          /*CDL104*/
 /** Check if Compliance Watch - Watch List Checking is installed */                       /*CSD015*/
                                                                                           /*CSD015*/
              CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CSD015*/

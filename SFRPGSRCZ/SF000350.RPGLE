@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. AR635878           Date 14Jul22               *
-      *  Prev Amend No. MD050150           Date 12Oct18               *
+      *  Last Amend No. AR812504           Date 29Nov23               *
+      *  Prev Amend No. AR648157           Date 24Nov23               *
+      *                 AR635878           Date 14Jul22               *
+      *                 MD050150           Date 12Oct18               *
       *                 MD046248           Date 27Oct17               *
       *                 CFB001             Date 12Nov14               *
       *                 AR805470           Date 27Jul11               *
@@ -39,6 +41,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR812504 - Incorrect/missing action codes in SF00350P1 and   *
+      *             and Midas User Maintenance. Fix is to introduce   *
+      *             a global counterpart of SFMENUJ0 used by AMUS.    *
+      *             (Child: AR812505)                                 *
+      *  AR648157 - Reinitialise report fields to prevent printing of *
+      *             erroneous records.                                *
       *  AR635878 - Request to apply fix SC263737 and AR576681.       *
       *  AR576681 - User not printed consistently on a specific line  *
       *             (for optical reporting): Skip a line when Dep't   *
@@ -119,6 +127,7 @@
      F                                     RENAME(MUSERDDF:MUSER6DF)                          244592
      FMUSER     IF   E           K DISK                                                       246097
      F                                     RENAME(MUSERDDF:MUSERLDF)                          246097
+     FGZSFMENUJ0IF   E           K DISK                                                     AR812504
       *
       ** Midas SF Midas users by Department
       *
@@ -272,7 +281,8 @@
      D RCOUNT          S              5  0
      D RCTR            S              5  0                                                    247020
      D*PREVITEM*       S                   LIKE(MIINAR)                                       248436
-     D PREVITEM        S                   LIKE(SITEMS)                                       248436
+     D*PREVITEM*       S                   LIKE(SITEMS)                              248436 AR812504
+     D PREVITEM        S                   LIKE(MIINAR)                                     AR812504
      D PREVMENCO       S                   LIKE(MLMENUCODE)                                   248436
      D PREVHIER        S                   LIKE(SHIER)                                        248436
      D PREVDEP         S                   LIKE(DPPT)
@@ -605,8 +615,48 @@
      C                   EVAL      BACOL3 = 'N'
      C                   EVAL      ITMOK    = 'N'
       *
+      *                                                                                     AR648157
+      ** Initialize printer file fields.                                                    AR648157
+      *                                                                                     AR648157
+     C                   EVAL      SBRCH3 = *BLANKS                                         AR648157
+     C                   EVAL      ACR21 = *BLANKS                                          AR648157
+     C                   EVAL      ACR22 = *BLANKS                                          AR648157
+     C                   EVAL      ACR23 = *BLANKS                                          AR648157
+     C                   EVAL      ACR24 = *BLANKS                                          AR648157
+     C                   EVAL      ACR25 = *BLANKS                                          AR648157
+     C                   EVAL      ACR26 = *BLANKS                                          AR648157
+     C                   EVAL      ACR27 = *BLANKS                                          AR648157
+     C                   EVAL      ACR28 = *BLANKS                                          AR648157
+     C                   EVAL      ACR29 = *BLANKS                                          AR648157
+     C                   EVAL      ACR30 = *BLANKS                                          AR648157
+     C                   EVAL      SBRCH2 = *BLANKS                                         AR648157
+     C                   EVAL      ACR11 = *BLANKS                                          AR648157
+     C                   EVAL      ACR12 = *BLANKS                                          AR648157
+     C                   EVAL      ACR13 = *BLANKS                                          AR648157
+     C                   EVAL      ACR14 = *BLANKS                                          AR648157
+     C                   EVAL      ACR15 = *BLANKS                                          AR648157
+     C                   EVAL      ACR16 = *BLANKS                                          AR648157
+     C                   EVAL      ACR17 = *BLANKS                                          AR648157
+     C                   EVAL      ACR18 = *BLANKS                                          AR648157
+     C                   EVAL      ACR19 = *BLANKS                                          AR648157
+     C                   EVAL      ACR20 = *BLANKS                                          AR648157
+     C                   EVAL      SBRCH = *BLANKS                                          AR648157
+     C                   EVAL      ACR1 = *BLANKS                                           AR648157
+     C                   EVAL      ACR2 = *BLANKS                                           AR648157
+     C                   EVAL      ACR3 = *BLANKS                                           AR648157
+     C                   EVAL      ACR4 = *BLANKS                                           AR648157
+     C                   EVAL      ACR5 = *BLANKS                                           AR648157
+     C                   EVAL      ACR6 = *BLANKS                                           AR648157
+     C                   EVAL      ACR7 = *BLANKS                                           AR648157
+     C                   EVAL      ACR8 = *BLANKS                                           AR648157
+     C                   EVAL      ACR9 = *BLANKS                                           AR648157
+     C                   EVAL      ACR10 = *BLANKS                                          AR648157
+                                                                                            AR648157
      C     KMACBR        SETLL     GZMACBRL2
      C     KMACBRP       READE     GZMACBRL2                              51
+     C                   IF        Not *IN51                                                AR812504
+     C     INDX          CHAIN(N)  GZSFMENUJ0                         51                    AR812504
+     C                   ENDIF                                                              AR812504
 
      C                   DOW       *IN51 = *OFF
       *
@@ -751,8 +801,9 @@
      C                   EVAL      BACOL2 = 'N'
      C                   EVAL      BACOL3 = 'N'
      C                   EVAL      PREVMENCO = MLMENUCODE                                     248436
-     C                   EVAL      PREVITEM  = SITEMS                                         248436
-     C                   EVAL      PREVINDX  = INDX                                         AR576681
+     C**********         EVAL      PREVITEM  = SITEMS                                248436 AR812504
+     C                   EVAL      PREVITEM  = MIINAR                                       AR812504
+     C                   EVAL      PREVINDX  = INDX                                         AR854481
      C                   EVAL      PREVHIER  = SHIER                                          248436
      C                   EVAL      *IN43 = *OFF                                             AR576681
      C                   CLEAR                   SF000350D0                                 AR576681

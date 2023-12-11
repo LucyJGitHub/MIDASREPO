@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD027697           Date 24Jun14               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD027697           Date 24Jun14               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 261791             Date 19Aug14               *
@@ -66,6 +67,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents SWIFT IDs         *
+      *           referring to closed customers from being inserted   *
+      *           in the sender field. Applied fix 229380.            *
       *  MD027697 - Program should not report a DB error if RE101901  *
       *             returns *NOREC as it is just an observation.      *
       *             Patterned after fix AR855545.                     *
@@ -688,6 +692,12 @@
       *
      C                   IF        ##CSID = 'Y'
       *
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVE      'N'           OKSND1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'DDSND1'      FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   If        ##CSID = 'Y' and
      C                             *In31 = *On or
      C                             *In32 = *On and
@@ -701,6 +711,7 @@
      C                   MOVEL     ##011         PSNDCSID                       CFT014
      C                   EndIf
       *
+     C                   ENDIF                                                              AR666005
      C                   ENDIF
       *
      C                   ENDIF

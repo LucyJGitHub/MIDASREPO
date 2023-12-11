@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD050405           Date 03Jun20               *
       *                 MD055570           Date 15May20               *
       *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents SWIFT IDs         *
+      *           referring to closed customers from being inserted   *
+      *           in the beneficiary field. Applied fix               *
+      *           229380.                                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *
@@ -850,6 +855,12 @@
      C                   MOVEL     *BLANKS       MsgIdXAr(Idx)                              MD023025
      C                   SUB       1             Idx                                        MD023025
       *
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVE      'N'           OKBNC1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'DDBNC1'      FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   If        ##CSID = 'Y' and
      C                             *IN31 = *On or
      C                             *IN32 = *On and
@@ -864,6 +875,7 @@
      C                   Else
      C                   MOVE      'S'           WBNCT
      C                   EndIf
+     C                   ENDIF                                                              AR666005
       *
      C                   GOTO      GA500
       *
@@ -888,8 +900,15 @@
                                                                                             AR901277
      C                   IF        ##CSID = 'Y'                                             AR901277
      C                             and *IN31 = *OFF and *IN32 = *OFF                        AR901277
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+     C                   MOVE      'N'           OKBNC1                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   MOVEL     'DDBNC1'      FldNamXAr(Idx)                             AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   MOVE      'S'           WBNCT                                      AR901277
      C                   GOTO      GA500                                                    AR901277
+     C                   ENDIF                                                              AR666005
      C                   EndIf                                                              AR901277
       *
       ***No*SWIFT*address*record*but*format*is*valid*******************                     AR901277

@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CFT167             Date 25Sep23               *
-      *  Prev Amend No. MD060110           Date 15Sep22               *
-      *                 257943             Date 22May20               *
+      *  Last Amend No. MD060110           Date 15Sep22               *
+      *  Prev Amend No. 257943             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -106,7 +105,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT167 - Remove FT Payment Authorisation function            *
       *  MD060110 - Payments can be amended and authorised by the     *
       *             same user. Use the MSWINPUSER value from T_MSWIP  *
       *             to populate Input Officer 1 and Input Officer 2.  *
@@ -985,7 +983,6 @@
      D PPYTY           S              2A                                                    MD034973
      D PPYST           S              2A                                                    MD034973
      D InputUser       S             10A                                                    MD042042
-     D ApprvUser       S             10A                                                      CFT167
       ** +--------------------------------------+
       ** ¦ /COPYs                               ¦
       ** ¦ ======                               ¦
@@ -1229,11 +1226,8 @@
      C                                      BtnPressed +                                   AR1090283
      C                                      ExtData +                                       MD042042
      C                                      InputUser +                                     MD042042
-     C                                      StopFTDta +                                       CFT167
-     C                                      ApprvUser +                                       CFT167
-     C**********                            RegData +                                MD050928 CFT167
-     C                                      RegData                                           CFT167
-     C**********                            StopFTDta                                MD050928 CFT167
+     C                                      RegData +                                       MD050928
+     C                                      StopFTDta                                       MD050928
      C**********                            RegData                                MD042042 MD050928
      C**********                            RegData +                                CER001 MD042042
      C**********                            ExtData                                         MD042042
@@ -6905,17 +6899,7 @@
      C                   ENDIF
 
       /COPY WNCPYSRC,FTIPAYV017
-     C                   If        CFT167 = 'Y' and AAuth = 'Y'                               CFT167
-     C                   If        ApprvUser <> *Blanks                                       CFT167
-     C                   Eval      IPAUP1 = ApprvUser                                         CFT167
-     C                   Eval      IPAUP2 = APUSERID                                          CFT167
-     C                   else                                                                 CFT167
-     C                   Eval      IPAUP1 = APUSERID                                          CFT167
-     C                   Eval      IPAUP2 = *Blanks                                           CFT167
-     C                   Endif                                                                CFT167
-     C                   Eval      IPAUIN = 'Y'                                               CFT167
-     C                   Endif                                                                CFT167
-                                                                                              CFT167
+                                                                                             BUG4196
       * Restore Timestamp from the original record                                           BUG4196
      C                   IF        DDACTN <> 'I'                                             BUG4196
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
@@ -7154,7 +7138,6 @@
      C                   PARM                    NewButton         3                          255190
      C                   PARM                    AAuth             1                        BUG22146
      C                   PARM                    InputUser                                  MD042042
-     C                   PARM                    ApprvUser                                    CFT167
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -7761,35 +7744,7 @@
      C                   ELSE                                                                 CFT157
      C                   EVAL      CFT157 = 'N'                                               CFT157
      C                   ENDIF                                                                CFT157
-                                                                                              CFT167
-      ** Check if enhancement CFT167 is on                                                    CFT167
-                                                                                              CFT167
-     C                   CALLB     'AOSARDR0'                                                 CFT167
-     C                   Parm      *BLANKS       PRTCD                                        CFT167
-     C                   Parm      '*VERIFY'     POPTN                                        CFT167
-     C                   Parm      'CFT167'      PSARD                                        CFT167
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CFT167
-                                                                                              CFT167
-     C                   If        PRTCD = *BLANKS                                            CFT167
-     C                   Movel     'Y'           CFT167            1                          CFT167
-     C                   Else                                                                 CFT167
-     C                   Eval      CFT167 = 'N'                                               CFT167
-     C                   Endif                                                                CFT167
-
-      ** Access SAR file to determine if S01494
-      ** (BLI FT Enhancements Feature) is installed.
-
-     C                   CALLB     'AOSARDR0'
-     C                   PARM      *BLANKS       PRtCd
-     C                   PARM      '*VERIFY'     POptn
-     C                   PARM      'S01494'      PSard
-     C     SCSARD        PARM      SCSARD        DSFDY
-
-     C                   IF        PRtCd = *BLANKS
-     C                   MOVEL     'Y'           S01494
-     C                   ELSE
-     C                   MOVEL     'N'           S01494
-     C                   ENDIF
+                                                                                              CFT157
       **********                                                                             BUG7029
       ***Retrieve*ZMUSER*details.                                                            BUG7029
       **********                                                                             BUG7029

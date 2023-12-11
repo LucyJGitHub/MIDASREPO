@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL104             Date 02Oct23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
-      *                 CSD103             Date 10Aug20               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 AR806147           Date 21May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -84,7 +83,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL104 - Principal Decrease events on Fixed Term MM Deals    *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -873,8 +871,6 @@
      C                   PARM                    DDINTR                                       CDL017
       ** Base Rate code                                                                       CDL017
      C                   PARM                    DDBSRT                                       CDL017
-      ** Capitalisaction Indicator                                                            CDL104
-     C                   PARM                    H@CPTI                                       CDL104
 
       /COPY WNCPYSRC,MMDEAMV012
 

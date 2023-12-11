@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT167             Date 17Oct23               *
-      *  Prev Amend No  263630             Date 13Sep23               *
-      *                 MD057739           Date 28Apr22               *
+      *  Last Amend No  263630             Date 13Sep23               *
+      *  Prev Amend No. MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
@@ -241,7 +240,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT167 - Remove FT Payment Authorisation function            *
       *  263630 -  Error in DEAMS for the new MQ API's processing.    *
       *            Amended so that system can get the associated      *
       *            front office ID from JAVA.                         *
@@ -1308,7 +1306,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   CLEAR                   InputUser                                  MD042042
      C                   CLEAR                   InCDL099                                     CDL099
      C                   CLEAR                   AuthUsers                                    CFT163
-     C                   CLEAR                   ApprvUser                                    CFT167
      C/COPY OFCPYSRCZ,CGL135_042                                                             CGL135A
      C/COPY OFCPYSRCZ,CRE101_002                                                              CRE101
      C/COPY OFCPYSRCZ,CGL158_002                                                              CGL158
@@ -1592,12 +1589,6 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                     MD042042
      C     10            SUBST     BUFFER:Bfp    InputUser                                  MD042042
      C                   ADD       10            Bfp                                        MD042042
-                                                                                              CFT167
-     C     StopIPLen     SUBST     BUFFER:Bfp    StopFTDta                                    CFT167
-     C                   ADD       StopIPLen     Bfp                                          CFT167
-                                                                                              CFT167
-     C     10            SUBST     BUFFER:Bfp    ApprvUser                                    CFT167
-     C                   ADD       10            Bfp                                          CFT167
      C/COPY WNCPYSRC,APH00058
       *                                                                                       CER049
      C     IPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
@@ -1608,8 +1599,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER:Bfp    AAuth                            BUG22140 AR1002463
      C**********         ADD       1             Bfp                              BUG22140 AR1002463
      C/COPY WNCPYSRC,APH00060
-     C*****StopIPLen     SUBST     BUFFER:Bfp    StopFTDta                           MD050928 CFT167
-     C**********         ADD       StopIPLen     Bfp                                 MD050928 CFT167
+     C     StopIPLen     SUBST     BUFFER:Bfp    StopFTDta                                  MD050928
+     C                   ADD       StopIPLen     Bfp                                        MD050928
 
      C                   CALL      'FTIPAYVU'
       * Common header information (DS) from source system
@@ -1649,7 +1640,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    NewButton                                    255190
      C                   PARM                    AAuth                                      BUG22140
      C                   PARM                    InputUser                                  MD042042
-     C                   PARM                    ApprvUser        10                          CFT167
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'FTIPAYUPD'                                       CRE020
@@ -1739,12 +1729,6 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                     MD042042
      C     10            SUBST     BUFFER2:Bfp2  InputUser                                  MD042042
      C                   ADD       10            Bfp2                                       MD042042
-      *                                                                                       CFT167
-     C                   EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)                 CFT167
-     C                   ADD       StopOPLen     Bfp2                                         CFT167
-      *                                                                                       CFT167
-     C     10            SUBST     BUFFER2:Bfp2  ApprvUser                                    CFT167
-     C                   ADD       10            Bfp2                                         CFT167
       *                                                                                    AR1002463
      C*****2****         SUBST     BUFFER:Bfp    TempData#3                         CSF011 AR1005984
      C/COPY WNCPYSRC,APH00061
@@ -1770,8 +1754,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER2:Bfp2  AAuth                              CSF011 AR1002463
      C**********         ADD       1             Bfp2                               CSF011 AR1002463
      C/COPY WNCPYSRC,APH00063
-     C**********         EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)        MD050928 CFT167
-     C**********         ADD       StopOPLen     Bfp2                                MD050928 CFT167
+     C                   EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)               MD050928
+     C                   ADD       StopOPLen     Bfp2                                       MD050928
 
      C                   CALL      'FTOPAYVU'
       * Common header information (DS) from source system
@@ -1817,7 +1801,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    AAuth                                      BUG22140
      C                   PARM                    InputUser                                  MD042042
-     C                   PARM                    ApprvUser                                    CFT167
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'FTOPAYUPD'                                       CRE020

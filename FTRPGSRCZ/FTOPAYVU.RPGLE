@@ -32,9 +32,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT167             Date 25Sep23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
-      *                 MD054059           Date 28Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -110,7 +109,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CFT167 - Remove FT Payment Authorisation function            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD054059 - Missing outgoing payment reference in the         *
@@ -748,8 +746,6 @@
      D TimeStampC      S             26A   INZ('0001-01-01-00.00.00.000000')                BUG18500
      D TimeStampZ      S             26Z                                                    BUG18500
      D BtnPressed      S             10A                                                   AR1090283
-
-     D ApprvUser       S             10A                                                      CFT167
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1008,10 +1004,8 @@
      C                                        + BtnPressed                                  MD042042
      C                                        + ExtData                                     MD042042
      C                                        + InputUser                                   MD042042
-     C                                        + StopFTDta                                     CFT167
-     C                                        + ApprvUser                                     CFT167
      C                                        + RegData                                     MD042042
-     C**********                              + StopFTDta                            MD050928 CFT167
+     C                                        + StopFTDta                                   MD050928
                                                                                               CSF011
      C                   RETURN
 
@@ -2072,17 +2066,6 @@
      C                   MOVEL     @TimeStamp    OTTMESTMP                                   BUG4196
      C                   ENDIF                                                               BUG4196
 
-     C                   If        CFT167 = 'Y' and AAuth = 'Y'                               CFT167
-     C                   If        ApprvUser <> *Blanks                                       CFT167
-     C                   Eval      OTAUP1 = ApprvUser                                         CFT167
-     C                   Eval      OTAUP2 = APUSERID                                          CFT167
-     C                   else                                                                 CFT167
-     C                   Eval      OTAUP1 = APUSERID                                          CFT167
-     C                   Eval      OTAUP2 = *Blanks                                           CFT167
-     C                   Endif                                                                CFT167
-     C                   Eval      OTAUIN = 'Y'                                               CFT167
-     C                   Endif                                                                CFT167
-                                                                                              CFT167
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2953,7 +2936,6 @@
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    AAuth             1                        BUG22150
      C                   PARM                    InputUser                                  MD042042
-     C                   PARM                    ApprvUser                                    CFT167
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -3422,20 +3404,6 @@
      C                   ELSE                                                                 CFT157
      C                   EVAL      CFT157 = 'N'                                               CFT157
      C                   ENDIF                                                                CFT157
-                                                                                              CFT167
-      ** Check if enhancement CFT167 is on                                                    CFT167
-                                                                                              CFT167
-     C                   CALLB     'AOSARDR0'                                                 CFT167
-     C                   Parm      *BLANKS       @RTCD                                        CFT167
-     C                   Parm      '*VERIFY'     @OPTN                                        CFT167
-     C                   Parm      'CFT167'      @SARD                                        CFT167
-     C     SCSARD        Parm      SCSARD        DSFDY                                        CFT167
-                                                                                              CFT167
-     C                   If        @RTCD = *BLANKS                                            CFT167
-     C                   Movel     'Y'           CFT167            1                          CFT167
-     C                   Else                                                                 CFT167
-     C                   Eval      CFT167 = 'N'                                               CFT167
-     C                   Endif                                                                CFT167
 
       * Set up User id
      C                   Eval      PSUSER = WUSRID

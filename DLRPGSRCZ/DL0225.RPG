@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 258435             Date 19Aug14               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 258435             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -45,6 +46,8 @@
 0011 F*                                                               *
 0012 F*---------------------------------------------------------------*
      F*                                                               *
+      *  259866 - Spot rate is defaulted as 1st rate written in       *
+      *           FWDRTFE file. Applied fix 148772.                   *
       *  MD046248 - Finastra Rebranding                               *
      F*  258435 - Allow user to define parameter for calculation of   *
      F*           forward days. Use new system value ForwardDays,     *
@@ -457,7 +460,19 @@
      C/COPY WNCPYSRC,DL0225C004
      C*                                                                   129805
 0148 C*    LOOP TO ACCESS DAYS/RATE ARRAYS.
-0149 C                     Z-ADD0         N       20
+      *                                                                                       259866
+      ** Write out spot date record now.                                                      259866
+      *                                                                                       259866
+0149 C**********           Z-ADD0         N       20                                          259866
+     C                     Z-ADD1         N       20                                          259866
+      *                                                                                       259866
+      **  Convert date to DDMMMYY format for spot element.                                    259866
+      *                                                                                       259866
+     C                     Z-ADDZDYNBR    ZDAYNO                                              259866
+     C                     EXSR ZDATE2                                                        259866
+     C                     MOVE ZADATE    DATE    7                                           259866
+     C                     SETON                         31                                   259866
+     C                     EXSR EXCEPT                                                        259866
 0150 C           NEXT      TAG
 0151 C           N         ADD  1         N
 0152 C*
@@ -794,6 +809,8 @@
 0313 O        E  1     OFNLR                                              BHF243
 0312 O********E  1     02 06                                       BHF243 E24383
 0312 O       OR  1     02 06                                              E24383
+     O                N50                63 'FR. SPOT'                                        259866
+     O                 50                57 'FR. SPOT'                                        259866
 0314 O********                           99 'DATE    TYPE'                089129
 0314 O                                  101 'DATE    TYPE'                089129
 0315 O********H 00     OFNLR                                              E47227
@@ -830,7 +847,8 @@
      O                 50      SFW,N     72                               089129
      O                 50      RFW,N 3   87                               089129
      O        EF 1     23                                                 CSD006
-     O                 51                79 'TIMESTAMP:'                  CSD006
+     O**********       51                79 'TIMESTAMP:'                               CSD006 259866
+     O                 51N30             79 'TIMESTAMP:'                                      259866
      O                 51      WKDATE    91                               CSD006
      O                 51      WKTIME   100                               CSD006
      O*****************50      DFW,N Z   57                        087890 089129

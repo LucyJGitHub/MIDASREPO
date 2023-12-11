@@ -23,9 +23,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL104             Date 02Oct23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL102             Date 01Jun21               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 AR704846           Date 15Feb11               *
       *                 CRE073             Date 06Dec10               *
@@ -49,7 +48,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL104 - Principal Decrease events on Fixed Term MM Deals    *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
@@ -209,9 +207,6 @@
       ** Warning message code 1 received as a parameter                                       CGL011
      D WMSGID1         S                   LIKE(#MSGID)                                       CGL011
                                                                                               CGL011
-      ** Capitalisaton indicator                                                              CDL104
-     D H@CPTI          S              1A                                                      CDL104
-
       ** Currency number of decimal places (from SDCURRPD)
       ** received as a parameter
      D A6NBDP          S              1S 0
@@ -269,9 +264,6 @@
      D Errorflag       S              1A
      D DDVDATN         S              5P 0
      D @DMVDTN         S              5P 0
-
-     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                  CDL104
-     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDL104
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -649,19 +641,10 @@
      C                   END
      C*
      C** New principle must be = or > 0.
-     C     H@AMNP        IFLT      *ZERO                                                      CDL104
-     C     CDL104        IFEQ      'N'                                                        CDL104
-     C     H@CPTI        ORNE      'Y'                                                        CDL104
-     C     CDL104        ANDEQ     'Y'                                                        CDL104
-     C     H@MTYP        ORNE      'TI'                                                       CDL104
-     C     H@MTYP        ANDNE     'IP'                                                       CDL104
-     C     H@MTYP        ANDNE     'TD'                                                       CDL104
-     C     H@MTYP        ANDNE     'IT'                                                       CDL104
-     C     CDL104        ANDEQ     'Y'                                                        CDL104
+     C     H@AMNP        IFLT      *ZERO
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0295'     Msgid1
      C                   GOTO      #ZQ9
-     C                   ENDIF                                                                CDL104
      C                   END
      C                   END
      C                   END
@@ -676,12 +659,8 @@
      C     H@AMNP        SUB       ThisDMAmt     H@AMNP
      C*
      C     H@AMNP        IFLT      *ZERO
-     C     CDL104        IFEQ      'N'                                                        CDL104
-     C     H@CPTI        ORNE      'Y'                                                        CDL104
-     C     CDL104        ANDEQ     'Y'                                                        CDL104
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM0295'     Msgid1
-     C                   ENDIF                                                                CDL104
      C                   END
      C                   END
      C*
@@ -734,8 +713,6 @@
      C                   PARM                    DDINTR                                       CDL017
       ** Base Rate code                                                                       CDL017
      C                   PARM                    DDBSRT                                       CDL017
-      ** Capitalisaction Indicator                                                            CDL104
-     C                   PARM                    H@CPTI                                       CDL104
      C** Define work fields
      C     *LIKE         DEFINE    @@Amt         ThisDMAmt
 
@@ -755,18 +732,6 @@
      C*******            PARM                    BJDFIN                         CAP004
      C*******            PARM                    Errorflag                      CAP004
      C*******            Z-ADD     DaynoOut      DDVDATN                        CAP004
-
-      ** Determine if feature CDL104 is switched ON                                           CDL104
-     C                   MOVE      'N'           CDL104            1                          CDL104
-     C                   CALL      'AOSARDR0'                                                 CDL104
-     C                   PARM      *BLANKS       PRTCD             7                          CDL104
-     C                   PARM      '*VERIFY'     POPTN             7                          CDL104
-     C                   PARM      'CDL104'      PSARD             6                          CDL104
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL104
-                                                                                              CDL104
-     C     PRTCD         IFEQ      *BLANKS                                                    CDL104
-     C                   MOVE      'Y'           CDL104                                       CDL104
-     C                   ENDIF                                                                CDL104
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

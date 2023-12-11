@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR547730           Date 28Aug23               *
-      *  Prev Amend No. CLE138             Date 02Nov21               *
+      *  Last Amend No. MD037814           Date 17Nov23               *
+      *  Prev Amend No. AR547730           Date 28Aug23               *
+      *                 CLE138             Date 02Nov21               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
@@ -151,6 +152,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037814 - Incorrect rate passed from moving string DDPEXR/  *
+      *             DDREXR to number CL_PEXR/CL_REXR. Do ZALIGN first *
+      *             before moving to file field. Enhance fix MD034643.*
       *  AR547730 -Loan settlement should not be validated upon       *
       *            reversal                                           *
       *  CLE138 - Class Codes for Facilities (Recompile)              *
@@ -1024,6 +1028,7 @@
      D WKMCCY          S                   LIKE(FCMCCY)                                       CLE031
      D ZFIELD          S             16                                                       CLE106
      D ZADEC           S              1  0                                                    CLE106
+     D ZADIG           S              2  0                                                  MD037814
      D WCustomer       S             10                                                      CSF011A
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
@@ -3594,9 +3599,24 @@
      C                   MOVE      DDRSCY        CL_SCCY                                    AR804863
       *                                                                                     MD034643
      C                   MOVE      DDPEXI        CL_PEXI                                    MD034643
-     C                   MOVE      DDPEXR        CL_PEXR                                    MD034643
+     C**********         MOVE      DDPEXR        CL_PEXR                           MD034643 MD037814
+     C                   MOVE      *BLANKS       ZFIELD                                     MD037814
+     C                   CALLB     'ZALIGN'                                                 MD037814
+     C                   PARM      *BLANK        PRTCD                                      MD037814
+     C                   PARM      DDPEXR        ZFIELD                                     MD037814
+     C                   PARM      8             ZADEC                                      MD037814
+     C                   PARM      5             ZADIG                                      MD037814
+     C                   MOVE      ZFIELD        CL_PEXR                                    MD037814
+      *                                                                                     MD037814
      C                   MOVE      DDREXI        CL_REXI                                    MD034643
-     C                   MOVE      DDREXR        CL_REXR                                    MD034643
+     C**********         MOVE      DDREXR        CL_REXR                           MD034643 MD037814
+     C                   MOVE      *BLANKS       ZFIELD                                     MD037814
+     C                   CALLB     'ZALIGN'                                                 MD037814
+     C                   PARM      *BLANK        PRTCD                                      MD037814
+     C                   PARM      DDREXR        ZFIELD                                     MD037814
+     C                   PARM      8             ZADEC                                      MD037814
+     C                   PARM      5             ZADIG                                      MD037814
+     C                   MOVE      ZFIELD        CL_REXR                                    MD037814
       *                                                                                     MD034643
       ** Retrieve settlement branch                                                         MD034643
       *                                                                                     MD034643

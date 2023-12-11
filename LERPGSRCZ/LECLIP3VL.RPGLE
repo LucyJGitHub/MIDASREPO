@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA5015             Date 16Aug23               *
-      *  Prev Amend No. MD060234           Date 05Nov22               *
-      *                 CLE123             Date 02Nov21               *
+      *  Last Amend No. MD060234           Date 05Nov22               *
+      *  Prev Amend No. CLE123             Date 02Nov21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057191           Date 02Dec20               *
@@ -76,7 +75,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  BA5015 - Grading of Loans                                    *
       *  MD060234 - Cannot amend loan due to error 45021370. Reverse  *
       *             fix MD054707.                                     *
       *  CLE123 - Commitment and Outstanding Report by Account Officer*
@@ -184,10 +182,6 @@
      F                                     IGNORE(FCLTYHHF)                                   CLE123
      F                                     IGNORE(FCLTYFNF)                                   CLE123
      F                                     IGNORE(FCLTYZZF)                                   CLE123
-      *
-     FA5FRBCV0  IF   E           K DISK    INFSR(*PSSR)                                       BA5015
-      ** Midas LE FRB Codes - Retrieve                                                        BA5015
-      *
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIP3V01
       *
@@ -1215,20 +1209,6 @@ E1   C                   ENDIF                                                  
      C     DDFRBCOK      IFNE      'N'
      C                   MOVE      DDFRBC        CCLFRBC
      C                   ENDIF
-      *
-      ** Check if BA5015 is installed                                                         BA5015
-      *                                                                                       BA5015
-     C     BA5015        IFEQ      'Y'                                                        BA5015
-     C     DDFRBCOK      ANDNE     'N'                                                        BA5015
-     C                   MOVE      DDFRBC        wDDFRBC           5 0                        BA5015
-     C     wDDFRBC       CHAIN     A5FRBCV0                           86                      BA5015
-     C     *IN86         IFEQ      '1'                                                        BA5015
-     C                   MOVE      'N'           DDFRBCOK                                     BA5015
-     C                   ADD       1             Idx                                          BA5015
-     C                   MOVEL     'DDFRBC'      FldNamXAr(Idx)                               BA5015
-     C                   MOVEL     'LEC0007'     MsgIDXAr(Idx)                                BA5015
-     C                   ENDIF                                                                BA5015
-     C                   ENDIF                                                                BA5015
       *
      C                   ENDSR
       *****************************************************************
@@ -3259,18 +3239,6 @@ E004 C                   ENDIF
       ***  set the message file
       *
      C                   EVAL      #MsgFile = 'LERMSGF'
-      *
-      ** Check if BA5015 is installed                                                         BA5015
-      *                                                                                       BA5015
-     C                   MOVE      'N'           BA5015            1                          BA5015
-     C                   CALLB     'AOSARDR0'                                                 BA5015
-     C                   PARM      *BLANKS       @RTCD                                        BA5015
-     C                   PARM      '*VERIFY'     @OPTN                                        BA5015
-     C                   PARM      'BA5015'      @SARD                                        BA5015
-      *                                                                                       BA5015
-     C                   IF        @RTCD = *BLANKS                                            BA5015
-     C                   MOVE      'Y'           BA5015                                       BA5015
-     C                   ENDIF                                                                BA5015
       *
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LECLIP3V25

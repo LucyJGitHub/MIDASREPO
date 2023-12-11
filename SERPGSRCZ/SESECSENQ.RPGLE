@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSF015             Date 17Oct23               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
-      *                 CSD103             Date 10Aug20               *
+      *  Last Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CRE073             Date 10Dec06               *
@@ -38,7 +37,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSF015 - Show Customer Number of Issuer on Securities        *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -737,18 +735,7 @@
      C                   EVAL      PEINKJ  = 'N'
      C                   EVAL      PEINKP  = 'Y'
      C                   EVAL      PEINKL  = 'Y'
-      *                                                                                       CSF015
-      ** Populate Issuer with the customer number instead of customer shortname               CSF015
-      *                                                                                       CSF015
-     C                   movel     *Blanks       @DISSR           10                          CSF015
-     C     CSF015        IFEQ      'Y'                                                        CSF015
-     C     DDISSR        ANDNE     *BLANKS                                                    CSF015
-     C     DDISSR        ANDNE     *ZEROS                                                     CSF015
-     C                   movel     DDISSR        @DISSR                                       CSF015
-     C                   movel     *Blanks       DDISSR                                       CSF015
-     C                   movel     ISSR          DDISSR                                       CSF015
-     C                   ENDIF                                                                CSF015
-                                                                                              CSF015
+
       ** Process 1st screen
 
      C                   CALLB     'SESECS1DP'
@@ -830,12 +817,7 @@
       ** Private Banking
 
      C                   PARM                    BGN4ST
-      *                                                                                       CSF015
-     C     CSF015        Ifeq      'Y'                                                        CSF015
-     C     @DISSR        ANDNE     *BLANKS                                                    CSF015
-     C                   movel     @DISSR        DDISSR                                       CSF015
-     C                   Endif                                                                CSF015
-      *                                                                                       CSF015
+
       ** Reset error fields
 
      C                   EXSR      SRResetErr
@@ -938,18 +920,7 @@
       ** Process defaulting of 1st screen details before going to 1st screen
 
      C                   EXSR      SRDefScn1
-                                                                                              CSF015
-      ** Populate Issuer with the customer number instead of customer shortname               CSF015
-      *                                                                                       CSF015
-     C                   movel     *Blanks       @DISSR           10                          CSF015
-     C     CSF015        IFEQ      'Y'                                                        CSF015
-     C     DDISSR        ANDNE     *BLANKS                                                    CSF015
-     C     DDISSR        ANDNE     *ZEROS                                                     CSF015
-     C                   movel     DDISSR        @DISSR                                       CSF015
-     C                   movel     *Blanks       DDISSR                                       CSF015
-     C                   movel     ISSR          DDISSR                                       CSF015
-     C                   ENDIF                                                                CSF015
-                                                                                              CSF015
+
       ** Process 1st screen
 
      C                   CALLB     'SESECS1DP'
@@ -1031,12 +1002,7 @@
       ** Private Banking
 
      C                   PARM                    BGN4ST
-      *                                                                                       CSF015
-     C     CSF015        Ifeq      'Y'                                                        CSF015
-     C     @DISSR        ANDNE     *BLANKS                                                    CSF015
-     C                   movel     @DISSR        DDISSR                                       CSF015
-     C                   Endif                                                                CSF015
-      *                                                                                       CSF015
+
      C                   SELECT
 
       ** F3 - end program
@@ -2710,20 +2676,6 @@
      C                   ELSE                                                                 CGL035
      C                   EVAL      CGL032 = 'N'                                               CGL035
      C                   ENDIF                                                                CGL035
-                                                                                              CSF015
-      ** Check if enhancement CSF015 is on                                                    CSF015
-                                                                                              CSF015
-     C                   CALLB     'AOSARDR0'                                                 CSF015
-     C                   PARM      *BLANKS       PRtcd                                        CSF015
-     C                   PARM      '*VERIFY'     POptn                                        CSF015
-     C                   PARM      'CSF015'      PSARd                                        CSF015
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CSF015
-                                                                                              CSF015
-     C                   IF        PRtcd = *BLANKS                                            CSF015
-     C                   move      'Y'           CSF015            1                          CSF015
-     C                   ELSE                                                                 CSF015
-     C                   EVAL      CSF015 = 'N'                                               CSF015
-     C                   ENDIF                                                                CSF015
       **********                                                                             BUG7029
       ***Retrieve*ZMUSER*details                                                             BUG7029
       **********                                                                             BUG7029

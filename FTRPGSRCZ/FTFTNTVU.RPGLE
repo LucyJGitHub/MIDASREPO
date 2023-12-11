@@ -33,16 +33,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. BA5026             Date 07Sep23               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 CFT163             Date 04May18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CFT163             Date 04May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  BA5026 - Generate MT202 and MT298 for FT Nostro Transfers.   *
-      *           Upgrade GLW026.                                     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CFT163 - FT Nostro Transfer Authorisation (RPG)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -174,12 +171,6 @@
       * Data structure for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  SCLCD        E                     EXTFLD(LCD)
-                                                                                              BA5026
-      ** Externally described DS for Nostro details                                           BA5026
-     D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  BA5026
-                                                                                              BA5026
-      ** Externally described DS for Bank details                                             BA5026
-     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  BA5026
 
       * Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -240,15 +231,6 @@
      D Buffer          S           6000
      D APIRetc         S              1
      D ModeofOp        S              6
-                                                                                              BA5026
-      ** BA5026 Switchable Feature                                                            BA5026
-     D BA5026          S              1A                                                      BA5026
-      *                                                                                       BA5026
-      ** System value for BA5026                                                              BA5026
-      *                                                                                       BA5026
-     D CBSVAL          C                   CONST('BA5026CentralBankCus')                      BA5026
-     D RBSVAL          C                   CONST('BA5026BanktoBankBOK')                       BA5026
-     D RFSVAL          C                   CONST('BA5026BanktoBankNBOK')                      BA5026
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -295,7 +277,6 @@
       * Processing for inserts
      C                   WHEN      NTACTN = 'I'
      C                   EXSR      ValidateTr
-     C                   EXSR      SrBA5026                                                   BA5026
 
       * Processing for amends
      C                   WHEN      NTACTN = 'A'
@@ -436,156 +417,6 @@
      C                   EVAL      CFT163 = 'N'                                               CFT163
      C                   ENDIF                                                                CFT163
                                                                                               CFT163
-      *                                                                                       BA5026
-      ** Access Midas SD Bank details ICD file                                                BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOBANKR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRTCD                                        BA5026
-     C                   PARM      '*FIRST '     POPTN                                        BA5026
-     C     SDBANK        PARM      SDBANK        DSFDY                                        BA5026
-      *                                                                                       BA5026
-     C                   IF        PRTCD <> *BLANKS                                           BA5026
-     C     *LOCK         IN        LDA                                                        BA5026
-     C                   EVAL      DBKey = POPTN                                              BA5026
-     C                   EVAL      DBFile = 'SDBANKPD'                                        BA5026
-     C                   EVAL      DBase = 43                                                 BA5026
-     C                   OUT       LDA                                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ENDIF                                                                BA5026
-                                                                                              BA5026
-      ** Check if enhancement BA5026 is installaed.                                           BA5026
-     C                   CALLB     'AOSARDR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRTCD                                        BA5026
-     C                   PARM      '*VERIFY'     POPTN                                        BA5026
-     C                   PARM      'BA5026'      PSARD                                        BA5026
-     C     SCSARD        PARM      SCSARD        DSFDY                                        BA5026
-                                                                                              BA5026
-     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  BA5026
-     C                   EVAL      DBFILE = 'SCSARDPD'                                        BA5026
-     C                   EVAL      DBKEY  = 'BA5026'                                          BA5026
-     C                   EVAL      DBASE  = 44                                                BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ENDIF                                                                BA5026
-     C                   IF        PRTCD = *BLANKS                                            BA5026
-     C                   EVAL      BA5026 = 'Y'                                               BA5026
-     C                   ELSE                                                                 BA5026
-     C                   EVAL      BA5026 = 'N'                                               BA5026
-     C                   ENDIF                                                                BA5026
-                                                                                              BA5026
-      ** If BA5026 is switched on.                                                            BA5026
-     C                   IF        BA5026 = 'Y'                                               BA5026
-      *                                                                                       BA5026
-      ** Access System value 'BA5026CentralBankCus'                                           BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOSVALR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRetCode          7                          BA5026
-     C                   PARM      CBSVAL        P@OP01           20                          BA5026
-     C                   PARM      *BLANKS       P@VL01          200                          BA5026
-     C                   PARM      *BLANKS       P@OP02           20                          BA5026
-     C                   PARM      *BLANKS       P@VL02          200                          BA5026
-     C                   PARM      *BLANKS       P@OP03           20                          BA5026
-     C                   PARM      *BLANKS       P@VL03          200                          BA5026
-     C                   PARM      *BLANKS       P@OP04           20                          BA5026
-     C                   PARM      *BLANKS       P@VL04          200                          BA5026
-     C                   PARM      *BLANKS       P@OP05           20                          BA5026
-     C                   PARM      *BLANKS       P@VL05          200                          BA5026
-     C                   PARM      *BLANKS       P@OP06           20                          BA5026
-     C                   PARM      *BLANKS       P@VL06          200                          BA5026
-     C                   PARM      *BLANKS       P@OP07           20                          BA5026
-     C                   PARM      *BLANKS       P@VL07          200                          BA5026
-     C                   PARM      *BLANKS       P@OP08           20                          BA5026
-     C                   PARM      *BLANKS       P@VL08          200                          BA5026
-     C                   PARM      *BLANKS       P@OP09           20                          BA5026
-     C                   PARM      *BLANKS       P@VL09          200                          BA5026
-     C                   PARM      *BLANKS       P@OP10           20                          BA5026
-     C                   PARM      *BLANKS       P@VL10          200                          BA5026
-      *                                                                                       BA5026
-     C                   IF        PRetCode  <> *BLANKS                                       BA5026
-     C     *LOCK         IN        LDA                                                        BA5026
-     C                   EVAL      DBKey = CBSVAL                                             BA5026
-     C                   EVAL      DBFile = 'SDSVALPD'                                        BA5026
-     C                   EVAL      DBase = 45                                                 BA5026
-     C                   OUT       LDA                                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ELSE                                                                 BA5026
-     C                   MOVEL     P@VL01        CBCUS             6                          BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-      ** Access System value 'BA5026BanktoBankBOK'                                            BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOSVALR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRetCode          7                          BA5026
-     C                   PARM      RBSVAL        P@OP01           20                          BA5026
-     C                   PARM      *BLANKS       P@VL01          200                          BA5026
-     C                   PARM      *BLANKS       P@OP02           20                          BA5026
-     C                   PARM      *BLANKS       P@VL02          200                          BA5026
-     C                   PARM      *BLANKS       P@OP03           20                          BA5026
-     C                   PARM      *BLANKS       P@VL03          200                          BA5026
-     C                   PARM      *BLANKS       P@OP04           20                          BA5026
-     C                   PARM      *BLANKS       P@VL04          200                          BA5026
-     C                   PARM      *BLANKS       P@OP05           20                          BA5026
-     C                   PARM      *BLANKS       P@VL05          200                          BA5026
-     C                   PARM      *BLANKS       P@OP06           20                          BA5026
-     C                   PARM      *BLANKS       P@VL06          200                          BA5026
-     C                   PARM      *BLANKS       P@OP07           20                          BA5026
-     C                   PARM      *BLANKS       P@VL07          200                          BA5026
-     C                   PARM      *BLANKS       P@OP08           20                          BA5026
-     C                   PARM      *BLANKS       P@VL08          200                          BA5026
-     C                   PARM      *BLANKS       P@OP09           20                          BA5026
-     C                   PARM      *BLANKS       P@VL09          200                          BA5026
-     C                   PARM      *BLANKS       P@OP10           20                          BA5026
-     C                   PARM      *BLANKS       P@VL10          200                          BA5026
-      *                                                                                       BA5026
-     C                   IF        PRetCode  <> *BLANKS                                       BA5026
-     C     *LOCK         IN        LDA                                                        BA5026
-     C                   EVAL      DBKey = RBSVAL                                             BA5026
-     C                   EVAL      DBFile = 'SDSVALPD'                                        BA5026
-     C                   EVAL      DBase = 46                                                 BA5026
-     C                   OUT       LDA                                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ELSE                                                                 BA5026
-     C                   MOVEL     P@VL01        RBSBTB           35                          BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-      ** Access System value 'BA5026BanktoBankNBOK'                                           BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOSVALR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRetCode          7                          BA5026
-     C                   PARM      RFSVAL        P@OP01           20                          BA5026
-     C                   PARM      *BLANKS       P@VL01          200                          BA5026
-     C                   PARM      *BLANKS       P@OP02           20                          BA5026
-     C                   PARM      *BLANKS       P@VL02          200                          BA5026
-     C                   PARM      *BLANKS       P@OP03           20                          BA5026
-     C                   PARM      *BLANKS       P@VL03          200                          BA5026
-     C                   PARM      *BLANKS       P@OP04           20                          BA5026
-     C                   PARM      *BLANKS       P@VL04          200                          BA5026
-     C                   PARM      *BLANKS       P@OP05           20                          BA5026
-     C                   PARM      *BLANKS       P@VL05          200                          BA5026
-     C                   PARM      *BLANKS       P@OP06           20                          BA5026
-     C                   PARM      *BLANKS       P@VL06          200                          BA5026
-     C                   PARM      *BLANKS       P@OP07           20                          BA5026
-     C                   PARM      *BLANKS       P@VL07          200                          BA5026
-     C                   PARM      *BLANKS       P@OP08           20                          BA5026
-     C                   PARM      *BLANKS       P@VL08          200                          BA5026
-     C                   PARM      *BLANKS       P@OP09           20                          BA5026
-     C                   PARM      *BLANKS       P@VL09          200                          BA5026
-     C                   PARM      *BLANKS       P@OP10           20                          BA5026
-     C                   PARM      *BLANKS       P@VL10          200                          BA5026
-      *                                                                                       BA5026
-     C                   IF        PRetCode  <> *BLANKS                                       BA5026
-     C     *LOCK         IN        LDA                                                        BA5026
-     C                   EVAL      DBKey = RFSVAL                                             BA5026
-     C                   EVAL      DBFile = 'SDSVALPD'                                        BA5026
-     C                   EVAL      DBase = 47                                                 BA5026
-     C                   OUT       LDA                                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ELSE                                                                 BA5026
-     C                   MOVEL     P@VL01        RFSBTB           35                          BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-     C                   MOVE      *Blanks       DftBBI            1                          BA5026
-     C                   ENDIF                                                                BA5026
-                                                                                              BA5026
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -863,113 +694,6 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *                                                               *                       BA5026
-      * SRBA5026 - Processing for BA5026                              *                       BA5026
-      *                                                               *                       BA5026
-      *****************************************************************                       BA5026
-                                                                                              BA5026
-     C     SrBA5026      BEGSR                                                                BA5026
-      *                                                                                       BA5026
-     C                   If        BA5026 = 'Y'                                               BA5026
-     C                             and OKCCY <> 'N' and OKFNOS <> 'N'                         BA5026
-     C                             and OKTNOS <> 'N'                                          BA5026
-     C                             and NVCCY <> BJLCCY                                        BA5026
-     C                             and NTBBI1 = *Blanks and NTBBI2 = *Blanks                  BA5026
-     C                             and NTBBI3 = *Blanks and NTBBI4 = *Blanks                  BA5026
-     C                             and DftBBI <> 'Y'                                          BA5026
-      *                                                                                       BA5026
-      ** From Nostro                                                                          BA5026
-     C                   CALLB     'AONOSTR0'                                                 BA5026
-     C                   PARM      *Blanks       PNRtCd            7                          BA5026
-     C                   PARM      '*KEY   '     PNOptn            7                          BA5026
-     C                   PARM      *Blanks       PNCust            6                          BA5026
-     C                   PARM      NVCCY         PNCyCd            3                          BA5026
-     C                   PARM      *BLANKS       PNAccN           10                          BA5026
-     C                   PARM      *Blanks       PNAcSN            2                          BA5026
-     C                   PARM      NTFNOS        PNNoNb            2                          BA5026
-     C                   PARM      *Blanks       PNBrCd            3                          BA5026
-     C                   PARM      *Blanks       PNCsSN           10                          BA5026
-     C                   PARM      *Blanks       PNPNOI            1                          BA5026
-     C     SDNOST        PARM      SDNOST        DSFDY                                        BA5026
-      *                                                                                       BA5026
-     C                   IF        PNRTCD <> *BLANKS                                          BA5026
-     C                   MOVEL     NVCCY         WNOST             5                          BA5026
-     C                   MOVE      NTFNOS        WNOST                                        BA5026
-     C                   MOVEL     WNOST         DBKey                                        BA5026
-     C                   MOVEL     'SDNOSTPD'    DBFile                                       BA5026
-     C                   Z-ADD     048           DBase                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ELSE                                                                 BA5026
-     C                   MOVE      A7CUST        PCNUM                                        BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOCUSTR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRTCD                                        BA5026
-     C                   PARM      '*KEY   '     POPTN                                        BA5026
-     C                   PARM                    PCNUM                                        BA5026
-     C                   PARM      *BLANKS       PKYST                                        BA5026
-     C     SDCUST        PARM      *BLANKS       DSSDY                                        BA5026
-      *                                                                                       BA5026
-     C                   IF        PRTCD = *BLANKS                                            BA5026
-     C                   MOVE      BBCOLC        FRCOLC            2                          BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-      ** To Nostro                                                                            BA5026
-     C                   CALLB     'AONOSTR0'                                                 BA5026
-     C                   PARM      *Blanks       PNRtCd            7                          BA5026
-     C                   PARM      '*KEY   '     PNOptn            7                          BA5026
-     C                   PARM      *Blanks       PNCust            6                          BA5026
-     C                   PARM      NVCCY         PNCyCd            3                          BA5026
-     C                   PARM      *BLANKS       PNAccN           10                          BA5026
-     C                   PARM      *Blanks       PNAcSN            2                          BA5026
-     C                   PARM      NTTNOS        PNNoNb            2                          BA5026
-     C                   PARM      *Blanks       PNBrCd            3                          BA5026
-     C                   PARM      *Blanks       PNCsSN           10                          BA5026
-     C                   PARM      *Blanks       PNPNOI            1                          BA5026
-     C     SDNOST        PARM      SDNOST        DSFDY                                        BA5026
-      *                                                                                       BA5026
-     C                   IF        PNRTCD <> *BLANKS                                          BA5026
-     C                   MOVEL     NVCCY         WNOST             5                          BA5026
-     C                   MOVE      NTFNOS        WNOST                                        BA5026
-     C                   MOVEL     WNOST         DBKey                                        BA5026
-     C                   MOVEL     'SDNOSTPD'    DBFile                                       BA5026
-     C                   Z-ADD     048           DBase                                        BA5026
-     C                   EXSR      *PSSR                                                      BA5026
-     C                   ELSE                                                                 BA5026
-     C                   MOVE      A7CUST        PCNUM                                        BA5026
-     C                   MOVE      A7CUST        TOCUST            6                          BA5026
-      *                                                                                       BA5026
-     C                   CALL      'AOCUSTR0'                                                 BA5026
-     C                   PARM      *BLANKS       PRTCD                                        BA5026
-     C                   PARM      '*KEY   '     POPTN                                        BA5026
-     C                   PARM                    PCNUM                                        BA5026
-     C                   PARM      *BLANKS       PKYST                                        BA5026
-     C     SDCUST        PARM      *BLANKS       DSSDY                                        BA5026
-      *                                                                                       BA5026
-     C                   IF        PRTCD = *BLANKS                                            BA5026
-     C                   MOVE      BBCOLC        TOCOLC            2                          BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-     C                   ENDIF                                                                BA5026
-      *                                                                                       BA5026
-     C                   If        FRCOLC <> BJCNCD and TOCOLC <> BJCNCD                      BA5026
-     C                   Eval      DftBBI = 'Y'                                               BA5026
-      *                                                                                       BA5026
-     C                   If        TOCUST = CBCUS                                             BA5026
-     C                   Eval      NTBBI1 = RBSBTB                                            BA5026
-     C                   Else                                                                 BA5026
-     C                   Eval      NTBBI1 = RFSBTB                                            BA5026
-     C                   Endif                                                                BA5026
-      *                                                                                       BA5026
-     C                   Endif                                                                BA5026
-      *                                                                                       BA5026
-     C                   Endif                                                                BA5026
-                                                                                              BA5026
-     C                   ENDSR                                                                BA5026
-      *****************************************************************                       BA5026
-      /EJECT                                                                                  BA5026
-      *****************************************************************                       BA5026
       * The following /COPY contains the standard program status
       * subroutine, including a bound call to the DBERRCTL module.
       *****************************************************************

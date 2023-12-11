@@ -12,19 +12,24 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2022                     */
 /*                                                                   */
-/*       Last Amend No. CUP047             Date 27Aug23              */
-/*       Prev Amend No. MD060488           Date 08Sep22              */
+/*       Last Amend No. MD062083           Date 09Nov23              */
+/*       Prev Amend No. MD061880           Date 14Sep23              */
+/*                      CUP047             Date 27Aug23              */
+/*                      MD060488           Date 08Sep22              */
 /*                      CUP044   *CREATE   Date 22May22              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062083 - Missing process when upgrade is done with aDBU   */
+/*       MD061880 - Include Fix package installation                 */
 /*       CUP047 - Alternative OWNER and AUTL for Bridge upgrade      */
 /*       MD060488 - Deliverable Data Split for UTMENUPD              */
 /*       CUP044 - One Touch Bridge Automation Changes - Release/     */
 /*                Patch Upgrade                                      */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&LAYER)
+/**********  PGM        PARM(&LAYER) */                                                 /*MD062083*/
+             PGM        PARM(&LAYER &UCADBU)                                            /*MD062083*/
 
              DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
 
@@ -60,6 +65,7 @@
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CUP047*/
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CUP047*/
              DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)                                /*CUP047*/
+             DCL        VAR(&UCADBU) TYPE(*CHAR) LEN(1)                                 /*MD062083*/
 
              DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
@@ -149,6 +155,9 @@
              CHGVAR     VAR(&MENUOPT) VALUE('DatabaseUpgrade')
              CHGVAR     VAR(&OWNER) VALUE(&PFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&PFX *TCAT 'DATABASE')
+                                                                                        /*MD062083*/
+/* If upgrade uses aDBU, this part can be skipped */                                    /*MD062083*/
+             IF         COND(&UCADBU *NE 'Y') THEN(DO)                                  /*MD062083*/
                                                                                           /*CUP047*/
 /*  Check if feature CUP047 is on */                                                      /*CUP047*/
                                                                                           /*CUP047*/
@@ -207,8 +216,22 @@
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
 
+/* If no source library has been provided, skip and go to RUNUPGPGMA */                 /*MD061880*/
+             IF         COND(&BRGSRCLIB *EQ ' ') THEN(DO)                               /*MD061880*/
+/* No need to setup LIBL with aDBU */                                                   /*MD062083*/
+                IF         COND(&UCADBU *NE 'Y') THEN(DO)                               /*MD062083*/
+             CALLSUBR   SUBR(SETUPLIBL)                                                 /*MD061880*/
+                ENDDO                                                                   /*MD062083*/
+             GOTO       CMDLBL(RUNUPGPGMA)                                              /*MD061880*/
+             ENDDO                                                                      /*MD061880*/
+                                                                                        /*MD061880*/
+             ENDDO                                                                      /*MD062083*/
+                                                                                        /*MD062083*/
 /* Set up library list. */
+/* No need to setup LIBL with aDBU */                                                   /*MD062083*/
+                IF         COND(&UCADBU *NE 'Y') THEN(DO)                               /*MD062083*/
              CALLSUBR   SUBR(SETUPLIBL)
+                ENDDO                                                                   /*MD062083*/
 
 /* Run Upgrade Programs before actual database upgrade. */
 RUNUPGPGMB:
@@ -252,6 +275,10 @@ UPGRADEFRF:
                 ENDDO
              ENDDO
 
+/* If upgrade uses aDBU, this part will be replaced by .../                             /*MD062083*/
+             IF         COND(&UCADBU *EQ 'Y') THEN(GOTO +
+                          CMDLBL(ADBU))                                                 /*MD062083*/
+                                                                                        /*MD062083*/
 /* Run check of existing database. */
 CHECKDB:
              CHGVAR     VAR(&SUBOPT) VALUE('CheckDatabase')
@@ -457,8 +484,30 @@ UPGOTHER:
                 ENDDO
              ENDDO
 
+             GOTO       CMDLBL(RUNUPGPGMA)                                              /*MD062083*/
+                                                                                        /*MD062083*/
+/* This process is for aDBU only */                                                     /*MD062083*/
+aDBU:                                                                                   /*MD062013*/
+/** C O M P A R E **/                                                                   /*MD062013*/
+             CALL       PGM(UPC4900) PARM(&LAYER)                                       /*MD062013*/
+                                                                                        /*MD062013*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD062013*/
+                                                                                        /*MD062013*/
+/** U P D A T E **/                                                                     /*MD062013*/
+             CALL       PGM(UPC4910) PARM(&LAYER)                                       /*MD062013*/
+                                                                                        /*MD062013*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                        /*MD062013*/
+                                                                                        /*MD062013*/
+                                                                                        /*MD062083*/
 /* Run Upgrade Programs after database upgrade. */
 RUNUPGPGMA:
+/* Add back The Bridge library on top as UPDLVCPD in the Bridge library */              /*MD062083*/
+             IF         COND(&UCADBU *EQ 'Y') THEN(DO)                                  /*MD062083*/
+                RMVLIBLE   LIB(&BRGBRGLIB)                                              /*MD062083*/
+                MONMSG     MSGID(CPF0000)                                               /*MD062083*/
+                ADDLIBLE   LIB(&BRGBRGLIB) POSITION(*FIRST)                             /*MD062083*/
+             ENDDO                                                                      /*MD062083*/
+                                                                                        /*MD062083*/
              CHGVAR     VAR(&SUBOPT) VALUE('RunUpgradePgmsAfter')
              CHGVAR     VAR(&ERRPGM) VALUE('UP000012')
              CALL       PGM(UP000009) PARM('*CHK' &MENUOPT &SUBOPT +
@@ -478,6 +527,11 @@ RUNUPGPGMA:
                 ENDDO
              ENDDO
 
+/* If no data library has been provided, skip and go to RESET */                        /*MD061880*/
+             IF         COND(&BRGDTALIB *EQ ' ') THEN(DO)                               /*MD061880*/
+             GOTO       CMDLBL(RESET)                                                   /*MD061880*/
+             ENDDO                                                                      /*MD061880*/
+                                                                                        /*MD061880*/
 /* Take on Action File data. */
 TAKEON:
              CHGVAR     VAR(&SUBOPT) VALUE('TakeOn')
@@ -563,6 +617,7 @@ CPYEXTF:                                                                        
                 ENDDO                                                                     /*CUP042*/
              ENDDO                                                                        /*CUP042*/
 
+RESET:                                                                                  /*MD061880*/
 /* Reset settings from the start of the program. */
              CALL       PGM(UP000009) PARM('*RST' ' ' ' ' ' ' &STATUS)
              IF         COND(&STATUS *EQ 'E') THEN(DO)
@@ -739,13 +794,15 @@ ENDPGM:
                       CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                    ENDDO
                    IF         COND(&SVAL5 *EQ ' ') THEN(DO)
-                      CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredSrcLib can be blank if Fix package */                                    /*MD061880*/
+/**********           CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                          /*MD061880*/
                    ENDDO
                    IF         COND(%SST(&SVAL6 1 1) *EQ '*') THEN(DO)
                       CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                    ENDDO
                    IF         COND(&SVAL6 *EQ ' ') THEN(DO)
-                      CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredDtaLib can be blank if Fix package */                                    /*MD061880*/
+/**********           CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                          /*MD061880*/
                    ENDDO
                 ENDDO
              ENDDO
@@ -783,13 +840,15 @@ ENDPGM:
                    CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                 ENDDO
                 IF         COND(&SVAL5 *EQ ' ') THEN(DO)
-                   CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredSrcLib can be blank if Fix package */                                    /*MD061880*/
+/**********           CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                          /*MD061880*/
                 ENDDO
                 IF         COND(%SST(&SVAL6 1 1) *EQ '*') THEN(DO)
                    CHGVAR     VAR(&ERRORFLAG) VALUE('E')
                 ENDDO
                 IF         COND(&SVAL6 *EQ ' ') THEN(DO)
-                   CHGVAR     VAR(&ERRORFLAG) VALUE('B')
+/* BrgDeliveredDtaLib can be blank if Fix package */                                    /*MD061880*/
+/**********           CHGVAR     VAR(&ERRORFLAG) VALUE('B') */                          /*MD061880*/
                 ENDDO
              ENDDO
 

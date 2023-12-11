@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058880           Date 12Oct21               *
-      *  Prev Amend No. UUC107             Date 18Nov20               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD058880           Date 12Oct21               *
+      *                 UUC107             Date 18Nov20               *
       *                 251687             Date 17May12               *
       *                 MD057650           Date 31Mar21               *
       *                 MD056477           Date 22Sep20               *
@@ -89,6 +90,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD058880 - FM is recalculating GBP amount for EUR/GBP and    *
       *             not respecting the values sent from FPM/DS.       *
       *             Amend to condition inverse if UUC107.             *

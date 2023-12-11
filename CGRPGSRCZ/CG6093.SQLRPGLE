@@ -16,10 +16,14 @@
      F*                                                               *
       *  (c) Finastra International Limited 2021                      *
      F*                                                               *
-      *  Last Amend No. MD059367 *CREATE   Date 24Dec21               *
+      *  Last Amend No. MD061615           Date 10Nov23               *
+      *  Prev Amend No. MD059367 *CREATE   Date 24Dec21               *
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
+      *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
+      *             field lenght was increased from 15,0 to 16,0.     *
       *  MD059367 - CDL102 - LIBOR Dealing - Correspondence Manager   *
      F*                                                               *
      F*****************************************************************

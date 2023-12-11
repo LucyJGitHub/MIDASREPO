@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. CUP041   *CREATE   Date 11Sep13              */
+/*       Last Amend No. MD061906           Date 23Sep23              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      CUP041   *CREATE   Date 11Sep13              */
 /*                      xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061906 - Bridge journalling improvement                   */
 /*       CSD101 - Password Encryption                                */
 /*       CUP041 - New Bridge methodology to combine menu options     */
 /*                                                                   */
@@ -101,8 +103,40 @@ CRTOBJ:
              ENDDO
 
              GOTO       CMDLBL(ENDPGM)
-ERROR:
-             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+/***ERROR: */                                                                           /*MD061906*/
+/**********  CHGVAR     VAR(&RTNFLAG) VALUE('E') */                                     /*MD061906*/
 
 ENDPGM:
+/* Start journalling for DTAARA and DTAQ */                                             /*MD061906*/
+             CHKOBJ     OBJ(&OBJLIB/&MEMBER) OBJTYPE(&OBJTYPE)                          /*MD061906*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ERROR))                         /*MD061906*/
+/* DTAARA */                                                                            /*MD061906*/
+             IF         COND(&OBJTYPE *EQ '*DTAARA') THEN(DO)                           /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'D') THEN(DO)                  /*MD061906*/
+             STRJRNOBJ  OBJ(&OBJLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                          JRN(ICJRN) IMAGES(*BOTH)                                      /*MD061096*/
+             ENDDO                                                                      /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'G') THEN(DO)                  /*MD061906*/
+             STRJRNOBJ  OBJ(&OBJLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                          JRN(GPJRN) IMAGES(*BOTH)                                      /*MD061096*/
+             ENDDO                                                                      /*MD061906*/
+             ENDDO                                                                      /*MD061906*/
+                                                                                        /*MD061906*/
+/* DTAQ */                                                                              /*MD061906*/
+             IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)                             /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'D') THEN(DO)                  /*MD061906*/
+             STRJRNOBJ  OBJ(&OBJLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                          JRN(ICJRN)                                                    /*MD061096*/
+             ENDDO                                                                      /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'G') THEN(DO)                  /*MD061906*/
+             STRJRNOBJ  OBJ(&OBJLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                          JRN(GPJRN)                                                    /*MD061096*/
+             ENDDO                                                                      /*MD061906*/
+             ENDDO                                                                      /*MD061906*/
+                                                                                        /*MD061906*/
+             GOTO       CMDLBL(ENDPGM2)                                                 /*MD061906*/
+                                                                                        /*MD061906*/
+ERROR:                                                                                  /*MD061906*/
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')                                        /*MD061906*/
+ENDPGM2:                                                                                /*MD061906*/
              ENDPGM

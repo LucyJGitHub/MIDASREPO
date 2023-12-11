@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD061004           Date 02Feb23              */
-/*       Prev Amend No. MD056633           Date 07Sep20              */
+/*       Last Amend No. MD061906           Date 23Sep23              */
+/*       Prev Amend No. MD061004           Date 02Feb23              */
+/*                      MD056633           Date 07Sep20              */
 /*                      CUP041   *CREATE   Date 23Aug13              */
 /*                      xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061906 - Bridge journalling improvement                   */
 /*       MD061004 - Adding CCSID for database objects                */
 /*       MD056633 - Deliverable Data Split for SDFACCTD (re-work)    */
 /*       CUP041 - New Bridge methodology to combine menu options     */
@@ -277,8 +279,25 @@ NOCHK:
              ENDDO
 
              GOTO       CMDLBL(ENDPGM)
-ERROR:
-             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+/***ERROR: */                                                                           /*MD061906*/
+/**********  CHGVAR     VAR(&RTNFLAG) VALUE('E') */                                     /*MD061906*/
 
 ENDPGM:
+/* Start journalling for files/tables */                                                /*MD061906*/
+             CHKOBJ     OBJ(&OBJLIB/&FILE) OBJTYPE(*FILE)                               /*MD061906*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ERROR))                         /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'D') THEN(DO)                  /*MD061906*/
+             STRJRNPF   FILE(&OBJLIB/&FILE) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)                                              /*MD061906*/
+             ENDDO                                                                      /*MD061906*/
+             IF         COND(%SUBSTRING(&OBJLIB 3 1) *EQ 'G') THEN(DO)                  /*MD061906*/
+             STRJRNPF   FILE(&OBJLIB/&FILE) JRN(GPJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)                                              /*MD061906*/
+             ENDDO                                                                      /*MD061906*/
+                                                                                        /*MD061906*/
+             GOTO       CMDLBL(ENDPGM2)                                                 /*MD061906*/
+                                                                                        /*MD061906*/
+ERROR:                                                                                  /*MD061906*/
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')                                        /*MD061906*/
+ENDPGM2:                                                                                /*MD061906*/
              ENDPGM

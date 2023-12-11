@@ -10,14 +10,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD061706           Date 01Aug23              */
-/*       Prev Amend No. MD060709           Date 08Nov22              */
+/*       Last Amend No. MD062160           Date 06Dec23              */
+/*       Prev Amend No. MD061880           Date 14Sep23              */
+/*                      MD061706           Date 01Aug23              */
+/*                      MD060709           Date 08Nov22              */
 /*                      MD059751           Date 25Mar22              */
 /*                      MD058585           Date 17Aug21              */
 /*                      CUT017 *CREATE     Date 17Mar20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062160 - Prevent OTB_DBU component failure                */
+/*       MD061880 - Include Fix package installation                 */
 /*       MD061706 - Various changes for transition to aDBU           */
 /*       MD060709 - Change in LF dynamic selection is omitted        */
 /*                  File is not deleted when both DTAARA and file    */
@@ -70,6 +74,9 @@
 /** Global Monitor Message */
 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+                                                                                        /*MD062160*/
+/* Set logging level */                                                                 /*MD062160*/
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)                   /*MD062160*/
 
 /* Update Compare Work File Job Number */
              CHGVAR        VAR(&PFX) VALUE(%SUBSTRING(&LIB1 1 2))
@@ -112,7 +119,9 @@
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 Library' +
                              *BCAT &LIB2 *BCAT 'does not exist.') MSGTYPE(*DIAG)
-                GOTO       CMDLBL(ABNOR)
+/* In case of Fix package installation, &LIB2 may not exist */                          /*MD061880*/
+/**********     GOTO       CMDLBL(ABNOR) */                                             /*MD061880*/
+                GOTO       CMDLBL(DONE)                                                 /*MD061880*/
              ENDDO
 
 /* Clear log file */
@@ -156,6 +165,8 @@
 /* List &LIB2 files */
                 DLTF       FILE(QTEMP/SMC000034F)
              MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/UPMBRLT)                                          /*MD062160*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD062160*/
              CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(UPMBRLT)
                 DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
@@ -293,6 +304,8 @@ NEXT:
 /* List &LIB2 files */
                 DLTF       FILE(QTEMP/SMC000034F)
              MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/UPMBRLT)                                          /*MD062160*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD062160*/
              CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(UPMBRLT)
                 DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +
@@ -373,6 +386,8 @@ DSPFDRF2:                                                                       
 /* List &LIB2 files */                                                                  /*MD060709*/
                 DLTF       FILE(QTEMP/SMC000034F)                                       /*MD060709*/
              MONMSG     MSGID(CPF0000)                                                  /*MD060709*/
+                DLTF       FILE(QTEMP/UPMBRLT)                                          /*MD062160*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD062160*/
              CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) NEWOBJ(UPMBRLT)                                  /*MD060709*/
                 DSPFD      FILE(&LIB2/*ALL) TYPE(*MBRLIST) +

@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061706           Date 01Aug23               *
-      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061706           Date 01Aug23               *
+      *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061706 - Various changes for transition to aDBU            *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
@@ -45,8 +47,10 @@
      DADBU             S              1                                                     MD061706
      DGLOB             S              2                                                     MD061706
      DPFX              S              2                                                     MD061706
-     DGLOBREF          S              2                                                     MD061706
-     DZONEREF          S              2                                                     MD061706
+     D*GLOBREF*        S              2                                            MD061706 MD061992
+     D*ZONEREF*        S              2                                            MD061706 MD061992
+     DGLOBREF          S              3                                                     MD061992
+     DZONEREF          S              3                                                     MD061992
      DBRIDGE           S             10                                                     MD061706
      DERROR            S             10                                                     MD061706
      DCMP4             S              1                                                     MD061706

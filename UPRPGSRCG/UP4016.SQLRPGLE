@@ -16,11 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD058089             Date 01Sep21             *
-      *  Last Amend No. CUT017 *CREATE       Date 17Mar20             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD058089             Date 01Sep21             *
+      *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD058089 - Deliverable Data Split for SM and UP              *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
@@ -67,7 +69,8 @@
      **************************************************************************
      C     *ENTRY        PLIST
      C                   PARM                    Lib1              2
-     C                   PARM                    Lib2              2
+     C**********         PARM                    Lib2              2                        MD061992
+     C                   PARM                    Lib2              3                        MD061992
      C                   PARM                    LAYER             7
       *
      C*    *LIKE         DEFINE    SOSRCF        WSRCF

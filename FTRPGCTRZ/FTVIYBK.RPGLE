@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -55,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents SWIFT IDs         *
+      *           referring to closed customers from being inserted   *
+      *           in the intermediary bank field. Applied fix         *
+      *           229380.                                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -202,6 +207,7 @@
 
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   AR666005
 
      D/COPY FTCPYSRC,SFTADDRILE
 
@@ -481,12 +487,14 @@
      C                   End
       *
       *  Call to access pgm for Customer details
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               AR666005
+     C                   CALLB     'AOCUSTR1'                                               AR666005
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
-     C     SDCUST        Parm      *Blanks       DSSDY
+     C*****SDCUST        Parm      *Blanks       DSSDY                                      AR666005
+     C     SDCUST        PARM      *Blanks       DSLDY                                      AR666005
 
      C                   If        C#RTCD = *Blanks
 
@@ -531,6 +539,20 @@
 
      C                   If        ##CSID = 'Y'
 
+     C     WCUSTC        IFEQ      'Y'                                                      AR666005
+      *                                                                                     AR666005
+      ** Send error to screen                                                               AR666005
+      *                                                                                     AR666005
+     C                   ADD       1             Idx                                        AR666005
+     C                   IF        ADSLSH <> '/'                                            AR666005
+     C                   MOVE      'N'           OKInb1                                     AR666005
+     C                   MOVEL     'SINB1'       FldNamXAr(Idx)                             AR666005
+     C                   ELSE                                                               AR666005
+     C                   MOVE      'N'           OKInb2                                     AR666005
+     C                   MOVEL     'SINB2'       FldNamXAr(Idx)                             AR666005
+     C                   ENDIF                                                              AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   If        *IN31 = *On
       * Send error to screen
      C**********         Add       1             Idx                                          CSD089
@@ -576,6 +598,7 @@
 
      C                   End
      C                   End
+     C                   ENDIF                                                              AR666005
      C                   End
      C                   End
      C                   End
@@ -605,7 +628,12 @@
      C                   Move      'N'           OKInb2
      C                   Movel     'SINB2'       FldNamXAr(Idx)
      C                   End
+     C     C#RTCD        IFEQ      '*CUSDEL'                                                AR666005
+     C     BBCLST        ANDEQ     'Y'                                                      AR666005
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              AR666005
+     C                   ELSE                                                               AR666005
      C                   Movel     'MMA1079'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              AR666005
 
      C                   Else
       * Validate as an address

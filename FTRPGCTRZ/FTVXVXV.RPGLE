@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058899           Date 30Sep21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD058899           Date 30Sep21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 262674             Date 14Nov09               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the account with bank field. *
+      *           Applied fix 229380. (Recompile)                     *
       *  MD058899 - Changed error displayed when validating /ACC/     *
       *             and other related keywords                        *
       *  MD046248 - Finastra Rebranding                               *

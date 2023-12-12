@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD051679           Date 09Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the account with bank field. *
+      *           Applied fix 229380. (Recompile)                     *
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

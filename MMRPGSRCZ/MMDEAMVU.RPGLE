@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 263630             Date 13Sep23               *
-      *  Prev Amend No. MD060284           Date 26Aug22               *
+      *  Last Amend No. CAP241             Date 19Sep23               *
+      *  Prev Amend No. 263630             Date 13Sep23               *
+      *                 MD060284           Date 26Aug22               *
       *                 MD059304           Date 11Nov21               *
       *                 CDL102             Date 01Jun21               *
       *                 MD053472           Date 27Oct20               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CAP241 - Front Office ID in Transactions Input               *
       *  263630 -  Error in DEAMS for the new MQ API's processing.    *
       *            Amended so that system can get the associated      *
       *            front office ID from JAVA.                         *
@@ -702,6 +704,7 @@
      C                   ADD       49            eBfp                                         CDL102
                                                                                               CDL102
      C                   IF        APFOTRANID <> *BLANKS                                   AR971184A
+     C                             and CAP241 <> 'Y'                                          CAP241
      C                   EVAL      DDFOID = APFOTRANID                                     AR971184A
      C                   ENDIF                                                             AR971184A
       * Reset variables gradually updated
@@ -1864,15 +1867,23 @@
      C**********         IF        DDACTN = 'I'                                     244537 AR971184A
      C                   IF        APFOTranID <> *BLANKS                                   AR971184A
                                                                                               244537
+     C                   If        CAP241 <> 'Y'                                              CAP241
      C                   EVAL      IGFRNT = APFOTranID
+     C                   Endif                                                                CAP241
      C                   EVAL      IGAFRT = APFOAsocID
      C                   EVAL      IGREPA = APRprLocn
      C**********         IF        DDFOID <> *BLANKS                                239400 AR971184A
      C**********         EVAL      IGFRNT = DDFOID                                  239400 AR971184A
      C**********         END                                                        239400 AR971184A
+     C                   If        CAP241 <> 'Y'                                              CAP241
      C                   EVAL      DDFOID = APFOTranID                                     AR971184A
+     C                   Endif                                                                CAP241
                                                                                               244537
      C                   ENDIF                                                                244537
+                                                                                              CAP241
+     C                   If        CAP241 = 'Y'                                               CAP241
+     C                   Eval      IGFRNT = DDFOID                                            CAP241
+     C                   Endif                                                                CAP241
 
       * Automatic Authorisation flag
      C                   IF        CAP051 = 'Y'
@@ -2318,6 +2329,19 @@
       *                                                                                       CDL051
      C                   ENDIF                                                                CDL051
       *                                                                                       CDL051
+      ** Check for CAP241 feature                                                             CAP241
+      *                                                                                       CAP241
+     C                   MOVEL     'N'           CAP241            1                          CAP241
+     C                   CALL      'AOSARDR0'                                                 CAP241
+     C                   PARM      *BLANKS       @RTCD                                        CAP241
+     C                   PARM      '*VERIFY'     @OPTN                                        CAP241
+     C                   PARM      'CAP241'      @SARD                                        CAP241
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CAP241
+      *                                                                                       CAP241
+     C     @RTCD         IFEQ      *BLANK                                                     CAP241
+     C                   MOVEL     'Y'           CAP241                                       CAP241
+     C                   ENDIF                                                                CAP241
+      *                                                                                       CAP241
      C                   ENDSR
       ********************************************************************
       *                                                               *                     MD059304

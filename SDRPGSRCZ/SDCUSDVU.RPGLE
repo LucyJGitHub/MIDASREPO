@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *      
-      *  Prev Amend No. MD058090           Date 12May21               *
+      *  Last Amend No. MD062003           Date 15Nov23               *
+      *  Prev Amend No. MD056548           Date 10Sep20               *      
+      *                 MD058090           Date 12May21               *
       *                 MD053345           Date 01Jun20               *
       *                 MD057294           Date 03Dec20               *
       *                 MD050526           Date 27Oct20               *
@@ -161,6 +162,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062003 - Cannot delete customer due to error message       *
+      *             'This account is closed' and 'Settlement Account  *
+      *              does not exist'.                                 *
+      *           - Add DDACTN parameter for transaction mode to      *
+      *             pass to SDCUSDBVL module.                         *
       *  MD056548 - Customer Fees Maintenance is missing              *      
       *  MD058090 - Reinstate /COPY SDCUSDVU03 with correct starting  *
       *             position (pos 7).                                 *
@@ -5256,6 +5262,7 @@
       ** Valid Service Fees (DS) from/to caller                                               CSD079
                                                                                               CSD079
      C                   PARM                    ValidSfee                                    CSD079
+     C                   PARM                    DDACTN                                     MD062003
      C                   ENDSR                                                                CSD079
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

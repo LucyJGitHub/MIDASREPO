@@ -14,8 +14,9 @@
       *    /COPY, Service Fees amendments must not be                 *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062003           Date 15Nov23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062003 - Cannot delete customer due to error message       *
+      *             'This account is closed' and 'Settlement Account  *
+      *              does not exist'.                                 *
+      *           - Add DDACTN parameter for transaction mode.        *
+      *           - Do not validate USR2012 and USR1899 for DELETE.   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -149,6 +155,7 @@
      D  PRTCD          S              7A
      D  POPTN          S              7A
      D  #1CUSA         S             12A
+     D  WDDACTN        S              1A                                                    MD062003
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
@@ -328,6 +335,8 @@
      C                   END
      C                   END
      C                   MOVEL     *BLANK        W0RTN
+     C                   IF        WDDACTN <> 'D'                                            MD62003
+     C                             AND WDDACTN <> 'C'                                        MD62003
       ** Access Accounts file - Customer Fees Detail  *
       ** Call to Access Program - AOACCTR0 Check Account Number
       ** Access Account Details file for the file fields
@@ -369,6 +378,7 @@
 
      C                   MOVEL     'N'           WUACEX
      C                   END
+     C                   ENDIF                                                               MD62003
       ** Call AOACCTR0 with *FREE to close files
       ** Access Accounts file - Customer Fees Detail  *
       ** Call to Access Program - AOACCTR0 Check Account Number
@@ -613,6 +623,7 @@
      C                   PARM                    DDSCCYOK
      ** Settlement Branch
      C                   PARM                    SFSBCH
+     C                   PARM                    WDDACTN                                    MD062003
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

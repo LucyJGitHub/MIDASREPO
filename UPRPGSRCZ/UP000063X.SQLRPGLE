@@ -11,11 +11,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060709             Date 08Nov22             *
-      *  Prev Amend No. MD050666 *CREATE     Date 17Mar20             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061880             Date 14Sep23             *
+      *                 MD060709             Date 08Nov22             *
+      *                 MD050666 *CREATE     Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *  MD061880 - Include Fix package installation                  *
       *  MD060709 - Change in LF dynamic selection is omitted         *
       *             File is not deleted when both DTAARA and file     *
       *             have the same name.                               *
@@ -53,7 +57,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    Prefix            2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
      C                   PARM                    Library          10
      C                   PARM                    ERROR
 
@@ -102,7 +107,8 @@
 
      C/exec SQL
      C+ update UPZDRVTD set DRUPDD = 'S'
-     C+ where DRFILE = :SavFile and DRLIB = :Library
+     C*+*where*DRFILE = :SavFile and DRLIB = :Library                                       MD061880
+     C+ where DRFILE = :SCFILE  and DRLIB = :Library                                        MD061880
      C/end-exec
      C                   Endif
 

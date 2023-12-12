@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061211           Date 17May23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062000           Date 10Nov23               *
+      *  Prev Amend No. MD061211           Date 17May23               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -36,6 +37,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *   MD062000 - Unable to close GL Account attached to a valid   *
+      *              closed Portfolio where the GL account's ACOD     *
+      *              has a blank PM Instrument Code.                  *
+      *            - Do not issue the closed Portfolio error 45015763 *
+      *              if the action code is delete.                    *
       *   MD061211 - Cannot close GL Account attached to a valid      *
       *              closed Portfolio.                                *
       *            - Do not issue the closed Portfolio error if the   *
@@ -452,6 +458,7 @@
       * to the account.
      C     A5INNR        IFEQ      *BLANKS
      C     DDPTFR        ANDNE     *BLANKS
+     C     DDACTN        ANDNE     'D'                                                      MD062000
      C                   Move      'N'           DDPTFROK
      C                   Add       1             Idx
      C                   Movel     'DDPTFR'      FldNamXAr(Idx)

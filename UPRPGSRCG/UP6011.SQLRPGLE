@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. CUP044 *CREATE     Date 22May22               *
+      *  Last Amend No. MD061880           Date 14Sep23               *
+      *  Prev Amend No. CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061880 - Include Fix package installation                  *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
       *           Patch Upgrade                                       *
       *                                                               *
@@ -124,9 +126,9 @@
      C                   eval      R_GIVAL = XVAL
      C                   WRITE     DETAIL
      C                   If        SQLCode = 0 and XVAL = *blanks
-     C                   eval      R_ERR = 'System Value not set.'
-     C                   WRITE     ERROR
-     C                   eval      RETURN = '*INVALID'
+     C**********         eval      R_ERR = 'System Value not set.'                          MD061880
+     C**********         WRITE     ERROR                                                    MD061880
+     C**********         eval      RETURN = '*INVALID'                                      MD061880
      C                   ENDIF
      C                   If        SQLCode = 100
      C                   eval      R_ERR = 'System Value not found.'
@@ -151,9 +153,9 @@
      C                   eval      R_GIVAL = XVAL
      C                   WRITE     DETAIL
      C                   If        SQLCode = 0 and XVAL = *blanks
-     C                   eval      R_ERR = 'System Value not set.'
-     C                   WRITE     ERROR
-     C                   eval      RETURN = '*INVALID'
+     C**********         eval      R_ERR = 'System Value not set.'                          MD061880
+     C**********         WRITE     ERROR                                                    MD061880
+     C**********         eval      RETURN = '*INVALID'                                      MD061880
      C                   ENDIF
      C                   If        SQLCode = 100
      C                   eval      R_ERR = 'System Value not found.'
@@ -209,9 +211,9 @@
      C                   eval      R_GIVAL = XVAL
      C                   WRITE     DETAIL
      C                   If        SQLCode = 0 and XVAL = *blanks
-     C                   eval      R_ERR = 'System Value not set.'
-     C                   WRITE     ERROR
-     C                   eval      RETURN = '*INVALID'
+     C**********         eval      R_ERR = 'System Value not set.'                          MD061880
+     C**********         WRITE     ERROR                                                    MD061880
+     C**********         eval      RETURN = '*INVALID'                                      MD061880
      C                   ENDIF
      C                   If        SQLCode = 100
      C                   eval      R_ERR = 'System Value not found.'
@@ -236,9 +238,9 @@
      C                   eval      R_GIVAL = XVAL
      C                   WRITE     DETAIL
      C                   If        SQLCode = 0 and XVAL = *blanks
-     C                   eval      R_ERR = 'System Value not set.'
-     C                   WRITE     ERROR
-     C                   eval      RETURN = '*INVALID'
+     C**********         eval      R_ERR = 'System Value not set.'                          MD061880
+     C**********         WRITE     ERROR                                                    MD061880
+     C**********         eval      RETURN = '*INVALID'                                      MD061880
      C                   ENDIF
      C                   If        SQLCode = 100
      C                   eval      R_ERR = 'System Value not found.'

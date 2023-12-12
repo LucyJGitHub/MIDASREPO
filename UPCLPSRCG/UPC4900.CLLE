@@ -9,10 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD061706 *CRATE    Date 01Aug23              */
+/*       Last Amend No. MD061992           Date 23Oct23              */
+/*       Prev Amend No. MD061880           Date 14Sep23              */
+/*                      MD061706 *CREATE   Date 01Aug23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061992 - Allow 3 char prefix for reference libraries      */
+/*       MD061880 - Include Fix package installation                 */
 /*       MD061706 - Various changes for transition to aDBU           */
 /*                                                                   */
 /*********************************************************************/
@@ -22,9 +26,12 @@
 
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&BRGREFER) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&BRGREFER) TYPE(*CHAR) LEN(2) */                            /*MD061992*/
+             DCL        VAR(&BRGREFER) TYPE(*CHAR) LEN(3)                               /*MD061992*/
+/**********  DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2) */                               /*MD061992*/
+             DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(3)                                  /*MD061992*/
+/**********  DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(2) */                               /*MD061992*/
+             DCL        VAR(&ZONEP) TYPE(*CHAR) LEN(3)                                  /*MD061992*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
@@ -80,13 +87,23 @@
              If         COND(&RTNCODE *EQ '*NRF   ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
              ENDDO
-             CHGVAR     VAR(&GTALIBR) VALUE((%SST(&SVAL1 1 2)) *TCAT 'GTALIB')
+                                                                                        /*MD061880*/
+/* If Fix package installation, either the global ref prefix can be blank */            /*MD061880*/
+/* or UPEXCCTD may not be delivered */                                                  /*MD061880*/
+             IF         COND(%SST(&SVAL1 1 2) *EQ '  ') THEN(GOTO +
+                          ADBUCHK)                                                      /*MD061880*/
+/**********  CHGVAR     VAR(&GTALIBR) VALUE((%SST(&SVAL1 1 2)) *TCAT 'GTALIB') */       /*MD061992*/
+             CHGVAR     VAR(&GTALIBR) VALUE((%SST(&SVAL1 1 3)) *TCAT 'GTALIB')          /*MD061992*/
+             CHKOBJ     OBJ(&GTALIBR/UPEXCCTD) OBJTYPE(*FILE)                           /*MD061880*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(GOTO ADBUCHK)                       /*MD061880*/
+                                                                                        /*MD061880*/
              CHGVAR     VAR(&GTALIB) VALUE((%SST(&SVAL2 1 2)) *TCAT 'GTALIB')
              CPYF       FROMFILE(&GTALIBR/UPEXCCTD) TOFILE(UPEXCCTD) +
                           MBROPT(*REPLACE)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
              CALL       PGM(UP000701) PARM(&ERRORFLAG 'UPEXCCTD' &GTALIB)
 
+ADBUCHK:                                                                                /*MD061880*/
 /* Check if ADBU is installed in the system*/
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
              CHGVAR     VAR(&SVALK1) VALUE('BrgADBUGlobalRefer')
@@ -303,7 +320,8 @@ ERROR:
              CALLSUBR   SUBR(CHECKSVAL)
              CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
              CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
-             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2))
+/**********  CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2)) */                       /*MD061992*/
+             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 3))                          /*MD061992*/
              ENDDO
 
              IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
@@ -319,7 +337,8 @@ ERROR:
              CALLSUBR   SUBR(CHECKSVAL)
              CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
              CHGVAR     VAR(&BRGBRGLIB) VALUE(%SST(&SVAL2 1 10))
-             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2))
+/**********  CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 2)) */                       /*MD061992*/
+             CHGVAR     VAR(&BRGREFER) VALUE(%SST(&SVAL3 1 3))                          /*MD061992*/
              ENDDO
 
 

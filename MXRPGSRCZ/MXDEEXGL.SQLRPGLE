@@ -8,7 +8,8 @@
 /*CRT *  MODULE(**********/**********)                                *                       260324
 /*CRT *  SRCFILE(**********/**********)                               *                       260324
 /*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
-/*CRT *  INDENT(*NONE) TGTRLS(V5R3M0)                                 *                       260324
+/********INDENT(*NONE) TGTRLS(V5R3M0)                                 *              260324 MD061560
+/*CRT *  INDENT(*NONE) TGTRLS(V7R2M0)                                 *                     MD061560
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************
       *                                                               *
@@ -20,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061560           Date 22Nov23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061560 - OS7.4 Compatibility Patch                         *
+      *             Applied for MD-61333                              *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *

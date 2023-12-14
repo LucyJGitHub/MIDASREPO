@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060709             Date 08Nov22             *
-      *  Prev Amend No. CUT017 *CREATE     Date 17Mar20               *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD060709             Date 08Nov22             *
+      *                 CUT017 *CREATE     Date 17Mar20               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD060709 - Change in LF dynamic selection is omitted         *
       *             File is not deleted when both DTAARA and file     *
       *             have the same name.                               *
@@ -131,10 +133,12 @@
      C                   If        DSP1 = 'DSPFFD1'
      C                             or DSP2 = 'DSPFFD2'
      C                   eval      LIB1 = %SUBST(CFDATA:11:10)
-     C                   eval      LIB2 = %SUBST(LIB2:1:2) + %SUBST(CFDATA:13:8)
+     C**********         eval      LIB2 = %SUBST(LIB2:1:2) + %SUBST(CFDATA:13:8)            MD061992
+     C                   eval      LIB2 = %SUBST(LIB2:1:3) + %SUBST(CFDATA:13:8)            MD061992
      C                   Else
      C                   eval      LIB1 = %SUBST(CFDATA:24:10)
-     C                   eval      LIB2 = %SUBST(LIB2:1:2) + %SUBST(CFDATA:26:8)
+     C**********         eval      LIB2 = %SUBST(LIB2:1:2) + %SUBST(CFDATA:26:8)            MD061992
+     C                   eval      LIB2 = %SUBST(LIB2:1:3) + %SUBST(CFDATA:26:8)            MD061992
      C                   Endif
      C                   Endif
 
@@ -231,7 +235,8 @@
       * or if 'file not found' when compare is for *BASATR for PF, do not report
       * as this was already reported for DSPFFD
      C                             or (DSP1 = 'DSPFDBA1' and
-     C                              %subst(LIB2:4:1) <> 'V')
+     C**********                    %subst(LIB2:4:1) <> 'V')                                MD061992
+     C                              %subst(LIB2:5:1) <> 'V')                                MD061992
       * or if 'file not found' when compare is for *ACCPTH for PF, do not report            MD060709
       * as this was already reported for DSPFFD                                             MD060709
      C                             or DSP1 = 'DSPFDAC1'                                     MD060709

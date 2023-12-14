@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD060994             Date 01Feb23             *
-      *  Prev Amend No. MD059742             Date 23Mar22             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD060994             Date 01Feb23             *
+      *                 MD059742             Date 23Mar22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
+      *             Recompiled                                        *
       *  MD060994 - Missing character is label                        *
       *  MD059742 - Cope with change in Alternative field name        *
       *  CUT017 - Adaptive Database Upgrade                           *

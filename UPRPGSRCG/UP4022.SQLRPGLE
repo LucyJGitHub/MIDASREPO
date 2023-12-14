@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CUT017 *CREATE     Date 17Mar20               *
+      *  Last Amend No. MD061992           Date 23Oct23               *
+      *  Prev Amend No. CUT017 *CREATE     Date 17Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  CUT017 - Adaptive Database Upgrade                           *
       *                                                               *
       *****************************************************************
@@ -270,15 +272,16 @@
      C                   seton                                        3599
      C                   eval      ERR_L1 = 'Prefix cannot be blank'
      C                   Else
-      * Prefix cannot be existing prefix
-     C                   EVAL      Idx = 1
-     C     G_REF         LOOKUP    ZoneArr(Idx)                           40
-     C                   IF        *IN40 = *ON
-     C                   seton                                        3599
-     C                   eval      ERR_L1 = 'Prefix is used for an existing' +
-     C                             ' layer'
-     C                   goto      EndVal
-     C                   ENDIF
+      **Prefix*cannot be existing prefix                                                    MD061992
+      * This can be removed now as reference system is 3 characters                         MD061992
+     C**********         EVAL      Idx = 1                                                  MD061992
+     C*****G_REF         LOOKUP    ZoneArr(Idx)                           40                MD061992
+     C**********         IF        *IN40 = *ON                                              MD061992
+     C**********         seton                                        3599                  MD061992
+     C**********         eval      ERR_L1 = 'Prefix is used for an existing' +              MD061992
+     C**********                   ' layer'                                                 MD061992
+     C**********         goto      EndVal                                                   MD061992
+     C**********         ENDIF                                                              MD061992
       * Check global libraires exist
      C                   eval      @LIB = G_REF + 'GMLIB'
      C                   CALL      'UTCHKOBJ'
@@ -341,15 +344,16 @@
      C                   seton                                        3699
      C                   eval      ERR_L3 = 'Prefix cannot be blank'
      C                   Else
-      * Prefix cannot be existing prefix
-     C                   EVAL      Idx = 1
-     C     Z_REF         LOOKUP    ZoneArr(Idx)                           40
-     C                   IF        *IN40 = *ON
-     C                   seton                                        3699
-     C                   eval      ERR_L1 = 'Prefix is used for an existing' +
-     C                             ' layer'
-     C                   goto      EndVal
-     C                   ENDIF
+      **Prefix*cannot be existing prefix                                                    MD061992
+      * This can be removed now as reference system is 3 characters                         MD061992
+     C**********         EVAL      Idx = 1                                                  MD061992
+     C*****Z_REF         LOOKUP    ZoneArr(Idx)                           40                MD061992
+     C**********         IF        *IN40 = *ON                                              MD061992
+     C**********         seton                                        3699                  MD061992
+     C**********         eval      ERR_L1 = 'Prefix is used for an existing' +              MD061992
+     C**********                   ' layer'                                                 MD061992
+     C**********         goto      EndVal                                                   MD061992
+     C**********         ENDIF                                                              MD061992
       * Check zone libraires exist
      C                   eval      @LIB = Z_REF + 'DMLIB'
      C                   CALL      'UTCHKOBJ'
@@ -425,8 +429,10 @@
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
-     C                   PARM                    GPFX              2
-     C                   PARM                    ZPFX              2
+     C**********         PARM                    GPFX              2                        MD061992
+     C                   PARM                    GPFX              3                        MD061992
+     C**********         PARM                    ZPFX              2                        MD061992
+     C                   PARM                    ZPFX              3                        MD061992
      C                   PARM                    Mode              1
      C                   PARM                    Error            10
 

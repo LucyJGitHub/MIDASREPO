@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD060960 *CREATE     Date 16Jan23             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD060960 *CREATE     Date 16Jan23             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD060960 - Some dependents do not exist yet as their         *
       *             CRTDUPOBJ has not been executed yet. Fix is to    *
       *             rebuild the order.                                *
@@ -24,7 +26,8 @@
      D SQLOK           C                   Const( 0 )
 
      D SQLDynStmt      S           2000A
-     D SYS             S              2A
+     D*SYS******       S              2A                                                    MD061992
+     D SYS             S              3A                                                    MD061992
      D ERROR           S             10A
      D GMlib           S             10A
      D GPlib           S             10A

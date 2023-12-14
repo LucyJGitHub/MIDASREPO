@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD061706             Date 01Aug23             *
-      *  Prev Amend No. MD061705             Date 01Aug23             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061706             Date 01Aug23             *
+      *                 MD061705             Date 01Aug23             *
       *                 MD061690             Date 27Jul23             *
       *                 MD060709             Date 08Nov22             *
       *                 MD060961             Date 23Jan23             *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061705 - Take into account *ACCPTH where attribute APKSIN  *
       *             can be reported as a consequence of a field type  *
@@ -61,7 +63,8 @@
      D @FileC          S              1
      D RcdCount        S              5  0
      D RcdCount2       S              5  0
-     D @Like           S              3
+     D*@Like****       S              3                                                     MD061992
+     D @Like           S              4                                                     MD061992
      D @LikeP          S              3                                                     MD060961
      D RcdCount3       S              5  0                                                  MD060961
      D @DTAQ           S              1
@@ -76,7 +79,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    Lib1              2
-     C                   PARM                    RefSys            2
+     C**********         PARM                    RefSys            2                        MD061992
+     C                   PARM                    RefSys            3                        MD061992
 
      C                   eval      @Like = RefSys + '%'
      C                   eval      @LikeP = Lib1  + '%'                                     MD060961

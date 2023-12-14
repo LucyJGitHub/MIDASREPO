@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061706             Date 01Aug23             *
-      *  Prev Amend No. MD060271             Date 21Jul22             *
+      *  Last Amend No. MD061992             Date 23Oct23             *
+      *  Prev Amend No. MD061706             Date 01Aug23             *
+      *                 MD060271             Date 21Jul22             *
       *                 CUT017 *CREATE       Date 17Mar20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD060271 - Dashed line appeared trimmed                      *
       *  CUT017 - Adaptive Database Upgrade                           *
@@ -62,7 +64,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    PREFIX            2
-     C                   PARM                    REFSYS            2
+     C**********         PARM                    REFSYS            2                        MD061992
+     C                   PARM                    REFSYS            3                        MD061992
      C                   PARM                    BRIDGELIB        10
      C                   PARM                    ERROR            10
      C                   PARM                    OTBU              1                        MD061706
@@ -411,7 +414,8 @@
 
       * Compare Status
      C                   If        UPCMSS = 'I'
-     C                   eval      ##CMSS = 'Initialing...'
+     C**********         eval      ##CMSS = 'Initialing...'                                 MD061992
+     C                   eval      ##CMSS = 'Initializing...'                               MD061992
      C                   else
      C                   If        UPCMSS = 'R'
      C                   eval      ##CMSS = 'Running...'
@@ -432,7 +436,8 @@
      C                   eval      ##RPSS = 'Not submitted'
      C                   else
      C                   If        UPRPSS = 'I'
-     C                   eval      ##RPSS = 'Initialing...'
+     C**********         eval      ##RPSS = 'Initialing...'                                 MD061992
+     C                   eval      ##RPSS = 'Initializing...'                               MD061992
      C                   else
      C                   If        UPRPSS = 'R'
      C                   eval      ##RPSS = 'Running...'

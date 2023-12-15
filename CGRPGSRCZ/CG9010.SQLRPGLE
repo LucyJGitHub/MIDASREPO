@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058069           Date 11May21               *
-      *  Prev Amend No. MD059080           Date 15Oct21               *
+      *  Last Amend No. MD061836           Date 22Nov23               *
+      *  Prev Amend No. MD058069           Date 11May21               *
+      *                 MD059080           Date 15Oct21               *
       *                 MD057512           Date 08Feb21               *
       *                 MD056543           Date 15Sep20               *
       *                 MD054955           Date 16Dec19               *
@@ -63,6 +64,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061836 - GLStatement Normal not printed for link           *
+      *             correspondent issue.                              *
+      *           - In sr/SRSECO and sr/SRCSEC, change the field      *
+      *             CPCORR to CPPCOR in SQL statement of CGCSHJW0.    *
       *  MD058069 - Deliverable Data Split for Correspondence Mgr 2   *
       *  MD059080 - CGC2050 00002 fails when retail account is used.  *
       *  MD057512 - CGC2050 00001 component loops during COB          *
@@ -656,7 +661,8 @@
      C/EXEC SQL                                                                             MD054955
      C+ declare ACursor insensitive scroll cursor for                                       MD054955
      C+ select * from CGCSHJW0                                                              MD054955
-     C+ where CPCORR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP                    MD054955
+     C***+*where CPCORR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP        MD054955 MD061836
+     C+ where CPPCOR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP                    MD061836
      C+ and CPRECI = 'D'                                                                    MD054955
      C+ order by CPPCOR, CPPTYP, CPPSTP, CPCORR, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955
@@ -857,7 +863,8 @@
      C/EXEC SQL                                                                             MD054955
      C+ declare CCursor insensitive scroll cursor for                                       MD054955
      C+ select * from CGCSHJW0                                                              MD054955
-     C+ where CPCORR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP                    MD054955
+     C***+*where CPCORR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP        MD054955 MD061836
+     C+ where CPPCOR = :S#PRIM and CPPTYP = :S#PTYP and CPPSTP = :S#PSTP                    MD061836
      C+ and CPRECI = 'D'                                                                    MD054955
      C+ order by CPPCOR, CPPTYP, CPPSTP, CPCORR, CPSEQN                                     MD054955
      C/END-EXEC                                                                             MD054955

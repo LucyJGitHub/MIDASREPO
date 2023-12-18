@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062186           Date 18Dec23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062186 - Sequence field is not updated                     *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes                                   *
@@ -295,6 +297,7 @@
      C+   WHINEX = :P_WHINEX                                                                MD056612
      C+  ,WHMFNM = :P_WHMFNM                                                                MD056612
      C+  ,WHFOBO = :P_WHFOBO                                                                MD056612
+     C+  ,WHIBO  = :P_WHIBO                                                                 MD062186
      C+  ,WHSREF = :P_WHSREF                                                                MD056612
      C+  ,WHDS01 = :P_WHDS01                                                                MD056612
      C+  ,WHDS02 = :P_WHDS02                                                                MD056612

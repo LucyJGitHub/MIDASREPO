@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 14Nov22               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. 263335             Date 29Nov23               *
+      *  Prev Amend No. MD060620           Date 14Nov22               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057871           Date 30Apr21               *
       *                 CLE172             Date 01Oct20               *
       *                 CSD103             Date 10Aug20               *
@@ -127,6 +128,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263335 - Failed to amend the date and rate with back value.  *
+      *           Fix is to allow input of next interest payment date *
+      *           that is equal to loan interest payment date when    *
+      *           performing a loan rollover event.                   *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD057871 - Allow a blank Floor when calling ARR Calculator   *
       *  CLE172 - LIBOR Deregulation - Lending                        *
@@ -4449,8 +4454,10 @@
      C                   EVAL      MsgIDArr(Idx) = 'LEV0601'
      C                   MOVE      'N'           DDNipdOK
       *
-      **  Must be later than the loan interest payment date.
-     C     ZDAYNO        WHENLE    NIDT
+      ** Must not be earlier than the loan interest payment date.                             263335
+      ****Must*be*later*than*the*loan*interest*payment*date.***********                       263335
+     C*****ZDAYNO        WHENLE    NIDT                                                       263335
+     C     ZDAYNO        WHENLT    NIDT                                                       263335
      C     ZDAYNO        ORLT      WRLDT
      C     IPFR          ANDEQ     'R'
      C                   ADD       1             Idx

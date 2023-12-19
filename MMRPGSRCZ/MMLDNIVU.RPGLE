@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR819780           Date 05Oct23               *
-      *  Prev Amend No. AR816445           Date 05Oct23               *
+      *  Last Amend No. MD062153           Date 13Dec23               *
+      *  Prev Amend No. AR819780           Date 05Oct23               *
+      *                 AR816445           Date 05Oct23               *
       *                 AR816464           Date 05Oct23               *
       *                 MD061485           Date 13Jun23               *
       *                 MD048034           Date 31May23               *
@@ -157,6 +158,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062153 - Pay & Receipts Settlement Method defaulted to '00'*
+      *             on insert even without CCY & customer. Reinstate  *
+      *             checking for DDCUST & DDCCY so it will not default*
+      *             to '00' when CCY & customer is not supplied.      *
       *  AR819780 - Amendment done on Meridian to cater for multiple  *
       *             delete for same Front office. Build Back office   *
       *             number from Meridian. (Child: AR819781)           *
@@ -2399,6 +2404,8 @@
      C                             AND (DDPSTM = *blank)                                    MD027337
      C**********                   AND DDCcy  <> *BLANK                                241685 252024
      C**********                   AND DDCust <> *BLANK                                241685 252024
+     C                             AND DDCcy  <> *BLANK                                     MD062153
+     C                             AND DDCust <> *BLANK                                     MD062153
      C                             AND OKCUST = 'Y'                                           252024
      C                             AND OKCCY = 'Y'                                            252024
      C                             AND DDACTN = 'I'                                        MD027337A

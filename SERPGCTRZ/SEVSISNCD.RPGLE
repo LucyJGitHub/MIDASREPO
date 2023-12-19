@@ -22,7 +22,8 @@
       *    applied to this source.                                    *
       *                                                               *
       *  Last Amend No. MD061462           Date 04Dec23               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Prev Amend No. MD060664           Date 04Dec23               *
+      *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
@@ -48,11 +49,13 @@
       *           - Concatenate the value of Security Report Name.    *
       *             Maximum warning message is only 45 characters in  *
       *             length. This is a system limitation.              *
-      *           - Reinstated message ID SEA0252.                    *
       *           - Concatenate the value of Security Report Name.    *
       *             Maximum warning message is only 45 characters in  *
       *             length. This is a system limitation. Added close  *
       *             parenthesis ')' on position 45 of warning message.*
+      *  MD060664 - Unexpected warning messages in SECS maintenance   *
+      *             Correct some code change of MD000091.             *
+      *           - Applied for MD061462.                             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -328,7 +331,7 @@
      C                   ADD       1             WIx
      C                   MOVEL     'DDISIN'      WFldNmXAr(WIx)
      C**********         MOVEL     'SEA0252'     WMsgIdXAr(WIx)                             MD000091
-     C                   MOVEL     'SEA0252'     WMsgIdXAr(WIx)                             MD061462
+     C                   MOVEL     'SEA0252'     WMsgIdXAr(WIx)                             MD060664
      C                   EVAL      WMsgDtXAr(WIx) = ISIN + SESN + '(' +                     MD000091
      C                                              SRPN + ')'                              MD000091
      C                   EVAL      BLen = %Len(%Trim(ISIN))                                 MD000091

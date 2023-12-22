@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *  Last Amend No. CLE175             Date 11Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 06Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,8 @@
 0008 F*                                                                  *
 0008 F*----------------------------------------------------------------  *
 0008 F*                                                                  *
+      *  CLE175 - Exclude LE Interbranch Entries from Outstanding     *
+      *           Delivery Instructions Report                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE148 - Alpha Loan Reference                                *
@@ -386,6 +389,25 @@
      C                     ENDIF                            End If        184053
      C                     ENDIF                           End If         184053
       *                                                                   184053
+      ** Determine if the CLE175 feature is installed                                         CLE175
+      *                                                                                       CLE175
+     C                     CALL 'AOSARDR0'                                                    CLE175
+     C                     PARM *BLANKS   @RTCD                                               CLE175
+     C                     PARM '*VERIFY' @OPTN                                               CLE175
+     C                     PARM 'CLE175'  @SARD                                               CLE175
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE175
+     C           @RTCD     IFEQ *BLANKS                                                       CLE175
+     C                     MOVE 'Y'       CLE175  1                                           CLE175
+     C                     ELSE                                                               CLE175
+     C                     MOVE 'N'       CLE175                                              CLE175
+     C           @RTCD     IFNE '*NRF    '                                                    CLE175
+     C                     MOVEL'SCSARDPD'DBFILE           ************                       CLE175
+     C                     Z-ADD9         DBASE            * DBERR 09 *                       CLE175
+     C                     MOVEL'CLE175'  DBKEY            ************                       CLE175
+     C                     SETON                     U7U8LR                                   CLE175
+     C                     GOTO ENDDET                                                        CLE175
+     C                     ENDIF                                                              CLE175
+     C                     ENDIF                                                              CLE175
      C*
 0161 C*
 0162 C**      KEEP A COUNT OF RECORDS INPUT
@@ -674,8 +696,10 @@
      C*       NO CHECKING ON THE CONTROL TOTAL                            S01117
      C**                                                                  S01117
      C           MBIN      IFEQ 'N'                                       S01117
+     C           CLE175    ANDNE'Y'                                                           CLE175
      C           MBIN      OREQ 'Y'                                       S01117
      C           BRNCH     ANDEQ'ALL'                                     S01117
+     C           CLE175    ANDNE'Y'                                                           CLE175
 0215 C           NUMREC    ADD  1         NUMREC
 0216 C           NUMREC    COMP NORE                     42
 0217 C   42      HRWN      COMP EAMTI                    42

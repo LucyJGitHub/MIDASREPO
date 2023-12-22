@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059667           Date 09Mar22               *
-      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *  Last Amend No. MD062206           Date 19Dec23               *
+      *  Prev Amend No. MD059667           Date 09Mar22               *
+      *                 MD058986           Date 11Oct21               *
       *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -25,6 +26,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD062206 - Validation of mutually exclusive is causing       *
+      *             duplicate key error. Make sure unique number      *
+      *             (DKMEUN) is unique whether the record is logically*
+      *             delete or not.                                    *
       *  MD059667 - Inconsistent DHCMEF field in CBCMPXTD.            *
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
@@ -63,7 +68,8 @@
      C**********         READ      CBMEXCL1                             6920                MD055891
      C/EXEC SQL                                                                             MD055891
      C+ declare ACursor insensitive scroll cursor for                                       MD055891
-     C+ select * from CBMEXJW0                                                              MD055891
+     C*+*select** from CBMEXJW0                                                    MD055891 MD062206
+     C+ select * from CBMEXJW1                                                              MD062206
      C+ order by DKCOTT, DKCSEQ, DKMEUN                                                     MD055891
      C/END-EXEC                                                                             MD055891
                                                                                             MD055891

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. CDL103             Date 15Dec23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR960398           Date 30Apr12               *
@@ -323,6 +324,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL103 - Add Bank to Bank Information in DL I/C Confirmations*
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -1308,6 +1310,7 @@
      F*       KG      Control printing of total interest as -ve           208051
      F*       KH      Indicator for CGL031                                                    241600
       *       KJ      Do not print TOTAL if Fix base rate is = N (*IN58)                     BUG5093
+      *       KK      Print Bank to Bank Information (CDL103)                                 CDL103
      F*       KS      Print 'VARIABLE RATE WILL BE APPLIED TO THE DEAL'   CDL019
      F*       KT      Print '** EAR-MARKED **' when Blocked               CDL016
       *       KU      Do not print TOTAL if Fix base rate is = N                             BUG5093
@@ -4268,6 +4271,20 @@
      C                     MOVELSVAL1     DLCANC  1                                         MD049357
      C                     ENDIF                                                            MD049357
       *                                                                                     MD049357
+      **  Check for CDL103 feature                                                            CDL103
+      *                                                                                       CDL103
+     C                     MOVE 'N'       CDL103                                              CDL103
+     C                     MOVE '0'       *INKK                                               CDL103
+     C                     CALL 'AOSARDR0'                                                    CDL103
+     C                     PARM *BLANKS   @RTCD                                               CDL103
+     C                     PARM '*VERIFY' @OPTN                                               CDL103
+     C                     PARM 'CDL103'  @SARD                                               CDL103
+      *                                                                                       CDL103
+     C           @RTCD     IFEQ *BLANK                                                        CDL103
+     C                     MOVE 'Y'       CDL103  1                                           CDL103
+     C                     MOVE '1'       *INKK                                               CDL103
+     C                     ENDIF                                                              CDL103
+      *                                                                                       CDL103
      C/COPY WNCPYSRC,DLH00021
      C           *LIKE     DEFN PCPL      DIFF                            S01434
      C           *LIKE     DEFN PCPL      DFPCPL                          079771
@@ -17604,6 +17621,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      O*******AND      N87                                          S01354 S01373
      O       AND      N87N08                                              S01373
      O       AND      NKY                                                                   MD049357
+     O       AND      NKK                                                                     CDL103
 1925 O****                     CNA2   B  44                               S01129
 1925 O******          N83      CNA2   B  44                        S01129 S01194
      O/COPY WNCPYSRC,DL0110OP57                                           S01408
@@ -17616,11 +17634,35 @@ TA06 CORN62 51             MOVELPAY       ADD
      O                 83      RODN      32                               S01129
      O                 83                33 ')'                           S01129
      O/COPY WNCPYSRC,DL0110O238
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2     101                                                   CDL103
+      *                                                                                       CDL103
 1889 O******  E  1     69N38                                              S01117
 1889 O        E  1     69N38 07                                           S01117
      O*******AND      N87                                          S01354 S01373
      O       AND      N87N08                                              S01373
      O       AND      NKY                                                                   MD049357
+     O       AND      NKK                                                                     CDL103
 1927 O****                     CNA3   B  44                               S01129
 1927 O******          N83      CNA3   B  44                        S01129 S01194
      O/COPY WNCPYSRC,DL0110OP59                                           S01408
@@ -17629,6 +17671,23 @@ TA06 CORN62 51             MOVELPAY       ADD
      O*                  N25 31RNNA      68                               S01129
      O                N83N25 31RNNA      68                               S01129
      O/COPY WNCPYSRC,DL0110O239
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3     104                                                   CDL103
+      *                                                                                       CDL103
 1889 O******  E  1     69N38                                              S01117
 1889 O        E  1     69N38 07                                           S01117
      O*******AND      N87                                          S01354 S01373
@@ -19867,6 +19926,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      O        E  1     69N38 07                                           S01373
      O       AND      N87 08                                              S01373
      O       AND      NKY                                                                   MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP69                                           S01408
      O                N83      BBCNA2 B  44                               S01373
      O/COPY WNCPYSRC,DL0110OP70                                           S01408
@@ -19877,15 +19937,56 @@ TA06 CORN62 51             MOVELPAY       ADD
      O                 83      RODN      32                               S01373
      O                 83                33 ')'                           S01373
      O/COPY WNCPYSRC,DL0110O244
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2     101                                                   CDL103
+      *                                                                                       CDL103
      O        E  1     69N38 07                                           S01373
      O       AND      N87 08                                              S01373
      O       AND      NKY                                                                   MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP71                                           S01408
      O                N83      BBCNA3 B  44                               S01373
      O/COPY WNCPYSRC,DL0110OP72                                           S01408
      O*                  N25 31RNNA      68                               S01373
      O                N83N25 31RNNA      68                               S01373
      O/COPY WNCPYSRC,DL0110O245
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08                                                                  CDL103
+     O       AND      NKY                                                                     CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3     104                                                   CDL103
+      *                                                                                       CDL103
      O        E  1     69N38 07                                           S01373
      O       AND      N87 08                                              S01373
      O       AND      NKY                                                                   MD049357
@@ -21818,6 +21919,7 @@ TA06 CORN62 51             MOVELPAY       ADD
 1923 O                   N24N38SPI       83                                                 MD049357
 1889 O        E  1     69N38 07                                                             MD049357
      O       AND      N87N08 KY                                                             MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP57                                                             MD049357
 1925 O                N83      BBCNA2 B  44                                                 MD049357
      O/COPY WNCPYSRC,DL0110OP58                                                             MD049357
@@ -21828,14 +21930,49 @@ TA06 CORN62 51             MOVELPAY       ADD
      O                 83      RODN      32                                                 MD049357
      O                 83                33 ')'                                             MD049357
      O/COPY WNCPYSRC,DL0110O238                                                             MD049357
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08 KY                                                               CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08 KY                                                               CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2     101                                                   CDL103
 1889 O        E  1     69N38 07                                                             MD049357
      O       AND      N87N08 KY                                                             MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP59                                                             MD049357
 1927 O                N83      BBCNA3 B  44                                                 MD049357
      O/COPY WNCPYSRC,DL0110OP60                                                             MD049357
      O*                  N25 31RNNA      68                                                 MD049357
      O                N83N25 31RNNA      68                                                 MD049357
      O/COPY WNCPYSRC,DL0110O239                                                             MD049357
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08 KY                                                               CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87N08 KY                                                               CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3     104                                                   CDL103
+      *                                                                                       CDL103
 1889 O        E  1     69N38 07                                                             MD049357
      O       AND      N87N08 KY                                                             MD049357
      O/COPY WNCPYSRC,DL0110OP61                                                             MD049357
@@ -23653,6 +23790,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      O                   N24N38SPI       83                                                 MD049357
      O        E  1     69N38 07                                                             MD049357
      O       AND      N87 08 KY                                                             MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP69                                                             MD049357
      O                N83      BBCNA2 B  44                                                 MD049357
      O/COPY WNCPYSRC,DL0110OP70                                                             MD049357
@@ -23663,14 +23801,51 @@ TA06 CORN62 51             MOVELPAY       ADD
      O                 83      RODN      32                                                 MD049357
      O                 83                33 ')'                                             MD049357
      O/COPY WNCPYSRC,DL0110O244                                                             MD049357
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08 KY                                                               CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08 KY                                                               CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA2 B  44                                                   CDL103
+     O                N83N25 31TITL7  B  65                                                   CDL103
+     O                 83                26 'REPURCHASE AGREEMENT ('                          CDL103
+     O                 83      RODN      32                                                   CDL103
+     O                 83                33 ')'                                               CDL103
+     O                   N24N38BTB2     101                                                   CDL103
+      *                                                                                       CDL103
      O        E  1     69N38 07                                                             MD049357
      O       AND      N87 08 KY                                                             MD049357
+     O       AND      NKK                                                                     CDL103
      O/COPY WNCPYSRC,DL0110OP71                                                             MD049357
      O                N83      BBCNA3 B  44                                                 MD049357
      O/COPY WNCPYSRC,DL0110OP72                                                             MD049357
      O*                  N25 31RNNA      68                                                 MD049357
      O                N83N25 31RNNA      68                                                 MD049357
      O/COPY WNCPYSRC,DL0110O245                                                             MD049357
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08 KY                                                               CDL103
+     O       AND       KKN31                                                                  CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3      83                                                   CDL103
+      *                                                                                       CDL103
+     O        E  1     69N38 07                                                               CDL103
+     O       AND      N87 08 KY                                                               CDL103
+     O       AND       KKN25 31                                                               CDL103
+     O                N83      BBCNA3 B  44                                                   CDL103
+     O                N83N25 31RNNA      68                                                   CDL103
+     O                   N24N38BTB3     104                                                   CDL103
+      *                                                                                       CDL103
      O        E  1     69N38 07                                                             MD049357
      O       AND      N87 08 KY                                                             MD049357
      O/COPY WNCPYSRC,DL0110OP73                                                             MD049357

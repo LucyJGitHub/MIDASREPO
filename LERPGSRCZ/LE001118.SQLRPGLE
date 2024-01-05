@@ -126,7 +126,7 @@
 000257231218                   exec sql
 000258231218                      set option
 000259231218                         Naming    = *Sys,
-000260231218                         Commit    = *Chg,
+000260240105                         Commit    = *None,
 000261231218                         UsrPrf    = *Owner,
 000262231218                         DynUsrPrf = *Owner,
 000263231218                         Datfmt    = *iso,

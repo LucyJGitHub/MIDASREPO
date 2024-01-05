@@ -25,9 +25,11 @@
 
 /* Global monitor message */
 
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ERR_CDE))
 
              CHGJOB     SWS(XXXXXX00)
+
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)
 
 /* Mode 1 - First call */
 
@@ -41,18 +43,23 @@
                 CALL       PGM(LE001118)
              ENDDO
 
-/* Check if program call is successful */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
 
-             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
-                GOTO       CMDLBL(ABNOR)
-             ENDDO
+/** Commit Database Changes */
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)
 
-             GOTO       CMDLBL(END)
-
-/* Program abnormal processing */
- ABNOR:
+ ERR_CDE:
+             CHGJOB     SWS(XXXXXX11)
              CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
              SNDPGMMSG  MSG('Program LEC001118 ended abnormally') TOMSGQ(MOPERQ)
+             ROLLBACK
+             GOTO       CMDLBL(ENDPGM)
 
- END:
+/** Termination Process */
+ ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             ENDCMTCTL
+
              ENDPGM

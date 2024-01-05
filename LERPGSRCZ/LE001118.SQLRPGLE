@@ -37,7 +37,7 @@
      D    pReturnCode                 7A
      D    pOption                     7A
      D    pDSFDY                    200A
-	
+
       *  +----------------+
       ** |Parameter lists |
       ** +----------------+
@@ -205,7 +205,7 @@
        /EJECT
        //*************************************************************
        //                                                            *
-       // processThisRecord - Process current fee record             *	
+       // processThisRecord - Process current fee record             *
        //                                                            *
        // Called by: takeOnProgram                                   *
        //                                                            *
@@ -217,7 +217,7 @@
        begsr processThisRecord;
 
                    exsr loadArray;
-	
+
        endsr;
 
        //*************************************************************
@@ -234,7 +234,7 @@
        //*************************************************************
 
        begsr loadArray;
-	
+
                    clear arrHist;
                    clear wSQLStr;
                    prevSQLMAI = SQLCOD;
@@ -314,8 +314,8 @@
        //                                                            *
        //*************************************************************
 
-       begsr insertHistoryRecord;	
-	
+       begsr insertHistoryRecord;
+
                    prevSQLCOD = SQLCOD;
 
                    exec sql insert into LEFHST
@@ -440,7 +440,7 @@
                         dsLEFHST.HIAMT5 = dsLEFEED.FEAMT5;
                    else;
                         dsLEFHST.HIFRT1 = arrHist(01).HIFRT1;
-                        dsLEFHST.HIFRT2 = arrHist(01).HIFRT2;	
+                        dsLEFHST.HIFRT2 = arrHist(01).HIFRT2;
                         dsLEFHST.HIFRT3 = arrHist(01).HIFRT3;
                         dsLEFHST.HIFRT4 = arrHist(01).HIFRT4;
                         dsLEFHST.HIFRT5 = arrHist(01).HIFRT5;

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040422           Date 21Jun23               *
-      *  Prev Amend No. CMX016             Date 04Aug23               *
+      *  Last Amend No. MD062212           Date 19Dec23               *
+      *  Prev Amend No. MD040422           Date 21Jun23               *
+      *                 CMX016             Date 04Aug23               *
       *                 AR902158           Date 04May23               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
@@ -27,6 +28,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062212 - Error in LIKE/NLIKE Selection                     *
+      *              Fix to selection criteria to reverse change for  *
+      *              GSH022 - Allow selection on any field size -     *
+      *              which is no longer applicable in Fusion Midas.   *
+      *            - Move AOSARDR0 call to *INZSR                     *
+      *            - Apply for MD062228.                              *
       *  MD040422 - 1 cent difference PPCA+MPCA <--> SIRONL           *
       *             transactions                                      *
       *  CMX016 - Allow LIKE and NLIKE selection                      *
@@ -173,19 +180,19 @@
      C                   PARM                    ReferID
      C                   PARM                    Select_EXP
  
-      ** ACCESS SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED                          CMX016
-      *                                                                                       CMX016
-     C                   CALL      'AOSARDR0'                                                 CMX016
-     C                   PARM      *BLANKS       @RTCD             7                          CMX016
-     C                   PARM      '*VERIFY'     @OPTN             7                          CMX016
-     C                   PARM      'CMX016'      @SARD             6                          CMX016
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CMX016
-      *                                                                                       CMX016
-     C     @RTCD         IFEQ      *BLANK                                                     CMX016
-     C                   MOVEL     'Y'           CMX016            1                          CMX016
-     C                   ELSE                                                                 CMX016
-     C                   MOVEL     'N'           CMX016                                       CMX016
-     C                   ENDIF                                                                CMX016
+      ***ACCESS*SAR*DETAILS*FILE*TO*DETERMINE*IF*CMX016*IS*INSTALLED                 CMX016 MD062212
+      **********                                                                     CMX016 MD062212
+     C**********         CALL      'AOSARDR0'                                        CMX016 MD062212
+     C**********         PARM      *BLANKS       @RTCD             7                 CMX016 MD062212
+     C**********         PARM      '*VERIFY'     @OPTN             7                 CMX016 MD062212
+     C**********         PARM      'CMX016'      @SARD             6                 CMX016 MD062212
+     C*****SCSARD        PARM      SCSARD        DSFDY                               CMX016 MD062212
+      **********                                                                     CMX016 MD062212
+     C*****@RTCD         IFEQ      *BLANK                                            CMX016 MD062212
+     C**********         MOVEL     'Y'           CMX016            1                 CMX016 MD062212
+     C**********         ELSE                                                        CMX016 MD062212
+     C**********         MOVEL     'N'           CMX016                              CMX016 MD062212
+     C**********         ENDIF                                                       CMX016 MD062212
 
       * Clear outputs
  
@@ -678,13 +685,15 @@
      C                   CALL      'QCLSCAN'                                                  CMX016
      C                   PARM                    Fld_Value                                    CMX016
       * Length                                                                                CMX016
-     C                   PARM      30            WQA3N             3 0                        CMX016
+     C*******************PARM      30            WQA3N             3 0               CMX016 MD062212
+     C                   PARM      10            WQA3N             3 0                      MD062212
       * Start                                                                                 CMX016
      C                   PARM      1             WQB3N             3 0                        CMX016
       * Mask                                                                                  CMX016
      C                   PARM                    ESSCPV                                       CMX016
       * Length                                                                                CMX016
-     C                   PARM      30            WQC3N             3 0                        CMX016
+     C*******************PARM      30            WQC3N             3 0               CMX016 MD062212
+     C                   PARM      10            WQC3N             3 0                      MD062212
       * Translate                                                                             CMX016
      C                   PARM      '1'           WQD1              1                          CMX016
       * Trim                                                                                  CMX016
@@ -709,6 +718,20 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
+      *                                                                                     MD062212
+      ** Access SAR Details file to determine if CMX016 is installed                        MD062212
+      *                                                                                     MD062212
+     C                   CALL      'AOSARDR0'                                               MD062212
+     C                   PARM      *BLANKS       @RTCD             7                        MD062212
+     C                   PARM      '*VERIFY'     @OPTN             7                        MD062212
+     C                   PARM      'CMX016'      @SARD             6                        MD062212
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD062212
+      *                                                                                     MD062212
+     C     @RTCD         IFEQ      *BLANK                                                   MD062212
+     C                   MOVEL     'Y'           CMX016            1                        MD062212
+     C                   ELSE                                                               MD062212
+     C                   MOVEL     'N'           CMX016                                     MD062212
+     C                   ENDIF                                                              MD062212
  
      C                   ENDSR
       ********************************************************************

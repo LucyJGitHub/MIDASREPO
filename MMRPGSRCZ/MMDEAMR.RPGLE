@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR323768           Date 07Dec23               *
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR323768 - Error in DEAMS for the new MQ API's processing.   *
+      *             Amended so that system can get the associated     *
+      *             front office ID from JAVA.                        *
+      *           - Applied for MD-62032.                             *
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -202,6 +207,8 @@
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
 
+      ** Deal Associated Front Office ID                                                    AR323768
+     D DDAFID          S             20                                                     AR323768
       **-----------------------------------------------------------------------
 
      C                   CLEAR                   DealFilFmt
@@ -304,6 +311,7 @@
      C                                           + TranIncust                                 CER043
      C                                           + LONDEP                                     CER043
      C                                           + DDFOID                                     239400
+     C                                           + DDAFID                                   AR323768
      C                                           + ##RECS  + ##PAYS
      C                                           + InfData                                   BUG6012
      C                                           + DeamScnBlrt                                CDL102

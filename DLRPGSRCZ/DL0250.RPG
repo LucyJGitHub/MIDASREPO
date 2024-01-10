@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD060198           Date 25Jul22               *
-      *  Prev Amend No. MD059512           Date 12Feb22               *
+      *  Last Amend No. MD062149           Date 19Dec23               *
+      *  Prev Amend No. MD060198           Date 25Jul22               *
+      *                 MD059512           Date 12Feb22               *
       *                 MD059326           Date 10Dec21               *
       *                 MD059329           Date 03Dec21               *
       *                 MD059317           Date 29Nov21               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062149 - CI Deals at Fusion Midas not Picking up Base Rate *
+      *             Changes.                                          *
       *  MD060198 - DLC0606B failed due to missing DAMBR record.      *
       *           - Recompile due to changes in LF/DEALSBRC.          *
       *  MD059512 - DLC0606B failed, FOOB                             *
@@ -895,6 +898,7 @@
       *                                                                                     MD031283
      I              'UseHistRateforBVDeal'C         SVBVAL                                  MD031283
      I              'ARRCalculationFreq'  C         SVBVA2                                  MD059326
+     I              'AllowBaseRatChgCI'   C         SVFCI                                   MD062149
       *                                                                                     MD031283
      ISDGELR    E DSSDGELRPD                                              S01194
      I** EXTERNAL DS FOR GENERAL LEDGER DETAILS                           S01194
@@ -1162,6 +1166,34 @@
      C                     KFLD           BACYCD                                            MD031283
      C                     KFLD           BRTT                                              MD031283
       *                                                                                     MD031283
+      *                                                                                     MD062149
+     C                     CALL 'AOSVALR0'                                                  MD062149
+     C                     PARM           PRTCDA  7                                         MD062149
+     C                     PARM SVFCI     POP01A 20                                         MD062149
+     C                     PARM           PVL01A200                                         MD062149
+     C                     PARM *BLANK    POP02A 20                                         MD062149
+     C                     PARM           PVL02A200                                         MD062149
+     C                     PARM *BLANK    POP03A 20                                         MD062149
+     C                     PARM           PVL03A200                                         MD062149
+     C                     PARM *BLANK    POP04A 20                                         MD062149
+     C                     PARM           PVL04A200                                         MD062149
+     C                     PARM *BLANK    POP05A 20                                         MD062149
+     C                     PARM           PVL05A200                                         MD062149
+     C                     PARM *BLANK    POP06A 20                                         MD062149
+     C                     PARM           PVL06A200                                         MD062149
+     C                     PARM *BLANK    POP07A 20                                         MD062149
+     C                     PARM           PVL07A200                                         MD062149
+     C                     PARM *BLANK    POP08A 20                                         MD062149
+     C                     PARM           PVL08A200                                         MD062149
+     C                     PARM *BLANK    POP09A 20                                         MD062149
+     C                     PARM           PVL09A200                                         MD062149
+     C                     PARM *BLANK    POP10A 20                                         MD062149
+     C                     PARM           PVL10A200                                         MD062149
+      *                                                                                     MD062149
+     C           PRTCDA    IFEQ *BLANKS                                                     MD062149
+     C                     MOVELPVL01A    WCIFLG  1                                         MD062149
+     C                     ENDIF                                                            MD062149
+      *                                                                                     MD062149
 0374 C*    ACCESS INSTALLATION CONTROL DATA RECORD 1.
 0375 C***                  EXSR ZSYSTM                                    S01125
 0544 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01125
@@ -1387,11 +1419,20 @@
      C           DTYP      OREQ 'IT'                                                        AR755195
      C           DTYP      OREQ 'TD'                                                        AR755195
      C           DTYP      OREQ 'TI'                                                        AR755195
-     C           DTYP      OREQ 'CI'                                                        AR755195
+     C********** DTYP      OREQ 'CI'                                               AR755195 MD062149
      C                     GOTO END                                                         AR755195
      C                     ENDIF                                                            AR755195
      C                     ENDIF                                                            AR755195
       *                                                                                     AR755195
+      *                                                                                     MD062149
+      ** If AllowBRCforCI is 'N', do not process any CI deal                                MD062149
+      ** Regardless if CDL033 is OFF or ON                                                  MD062149
+      *                                                                                     MD062149
+     C           WCIFLG    IFEQ 'N'                                                         MD062149
+     C           DTYP      ANDEQ'CI'                                                        MD062149
+     C                     GOTO END                                                         MD062149
+     C                     ENDIF                                                            MD062149
+      *                                                                                     MD062149
      C*                                                                   S01119
      C* IF FRA/IRS DEAL ENCOUNTERED, PROCESS ACCORDINGLY AND SKIP THIS    S01119
      C*                                                                   S01119

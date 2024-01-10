@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057498           Date 26Jan21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR574707           Date 23Nov23               *
+      *  Prev Amend No. MD057498           Date 26Jan21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR574707 - Send MT202 field not defaulting properly.         *
       *  MD057498 - Unable to complete OPAY transaction due error     *
       *             MMA0932 in SWIFT MT202 indicator field. Change    *
       *             error displayed to be a warning if sender's       *
@@ -501,6 +503,11 @@
      C* AND EQUAL
      C                   If        SSTTP = '01' or                                           BUG3918
      C                             SSTTP = '08'                                              BUG3918
+                                                                                            AR574707
+     C                   If        SSNCO <> *Blanks and                                     AR574707
+     C                             WDSADD <> SSADD                                          AR574707
+     C                   Eval      SSNMT = 'Y'                                              AR574707
+     C                   Endif                                                              AR574707
                                                                                              BUG3918
      C                   If        SSNMT = 'N'
 

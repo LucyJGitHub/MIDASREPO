@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD042877           Date 10Nov23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 02Jun08              */
+/*                      BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CGP001  *CREATE    Date 23May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD042877-SCKOBJLCB 00001 failed due to GPUTU* job not ended */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGP001 - Global Processing                                  */
 /*                                                                   */
@@ -39,6 +41,12 @@
              DCL        VAR(&ZODNWD) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&ZOBCCY) TYPE(*CHAR) LEN(3)
              DCL        VAR(&ZONJOB) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&RETRY) TYPE(*DEC) LEN(3 0)                                 /*MD042877*/ 
+             DCL        VAR(&MAXRETDTQ) TYPE(*DEC) LEN(3 0) VALUE(200)                  /*MD042877*/
+             DCL        VAR(&PLOOP) TYPE(*CHAR) LEN(1)                                  /*MD042877*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                  /*MD042877*/
+             DCL        VAR(&GLBSBS) TYPE(*CHAR) LEN(10)                                /*MD042877*/
+             DCL        VAR(&GPGJLIB) TYPE(*CHAR) LEN(10)                               /*MD042877*/  
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
@@ -103,11 +111,40 @@
                 CALL       PGM(GPCSNDJRNE) PARM('UT' &MSG)
                 IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                              CMDLBL(ABNOR))
-                GOTO       CMDLBL(END)
+/**********     GOTO       CMDLBL(END)                 */                               /*MD042877*/
              ENDDO
  
              DLCOBJ     OBJ((GPUTJSPD *FILE *EXCL))
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+                                                                                        /*MD042877*/
+             IF         COND(&INST *EQ 'END') THEN(DO)                                  /*MD042877*/
+                                                                                        /*MD042877*/
+                CHGVAR     VAR(&RETRY) VALUE(0)                                         /*MD042877*/
+LOOP:                                                                                   /*MD042877*/
+                RTVOBJD    OBJ(GPJRN) OBJTYPE(*JRN) RTNLIB(&GPGJLIB)                    /*MD042877*/
+                CHGVAR     VAR(&SYSID) VALUE(%SST(&GPGJLIB 1 2))                        /*MD042877*/
+                CHGVAR     VAR(&GLBSBS) VALUE('M' *CAT &SYSID *CAT 'GSBS')              /*MD042877*/
+                WRKACTJOB  SBS(&GLBSBS) OUTPUT(*PRINT)                                  /*MD042877*/
+                DLTF       FILE(QTEMP/DSPSBJ)                                           /*MD042877*/
+                MONMSG     MSGID(CPF0000)                                               /*MD042877*/
+                CRTPF      FILE(QTEMP/DSPSBJ) RCDLEN(132)                               /*MD042877*/
+                CPYSPLF    FILE(QPDSPAJB) TOFILE(QTEMP/DSPSBJ) +
+                          SPLNBR(*LAST)                                                 /*MD042877*/
+                OVRDBF     FILE(DSPSBJ) TOFILE(QTEMP/DSPSBJ)                            /*MD042877*/
+
+                CHGVAR      VAR(&PLOOP) VALUE('N')                                      /*MD042877*/
+                CALL       PGM(SCC000302) PARM(&PLOOP)                                  /*MD042877*/
+                DLTF       FILE(QTEMP/DSPSBJ)                                           /*MD042877*/
+                IF         COND(&PLOOP  *EQ 'Y') THEN(DO)                               /*MD042877*/
+                   CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)                             /*MD042877*/
+                   IF         COND(&RETRY *LE &MAXRETDTQ) THEN(DO)                      /*MD042877*/
+                      DLYJOB     DLY(5)                                                 /*MD042877*/
+                      GOTO       CMDLBL(LOOP)                                           /*MD042877*/ 
+                   ENDDO                                                                /*MD042877*/
+                   GOTO       CMDLBL(ABNOR)                                             /*MD042877*/
+                ENDDO                                                                   /*MD042877*/ 
+                GOTO       CMDLBL(END)                                                  /*MD042877*/  
+             ENDDO                                                                      /*MD042877*/              
  
              GOTO       CMDLBL(END)
  

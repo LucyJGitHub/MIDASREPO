@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL102             Date 01Jun21               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD031397           Date 04Dec23               *      
+      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031397 - Allow negative interest. Partially applied        *
+      *             MD020393.                                         *      
       *  CDL102 - LIBOR Deregulation - Dealing                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -551,7 +554,8 @@
      C                   ENDIF
 
      C                   EXSR      SRFmtAmt
-     C                   MOVE      PAmtOutS      DDBCXR
+     C**********         MOVE      PAmtOutS      DDBCXR                                     MD031397
+     C                   MOVE      PAmtOutU      DDBCXR                                     MD031397
      C                   ENDIF
 
      C                   ENDIF
@@ -567,16 +571,16 @@
 
      C                   IF        DDBRTT = *BLANKS
 
-     C                   IF        D1IIRT < 0
-     C                   Z-SUB     D1IIRT        D1IIRT
-     C                   ENDIF
+     C**********         IF        D1IIRT < 0                                               MD031397
+     C**********         Z-SUB     D1IIRT        D1IIRT                                     MD031397
+     C**********         ENDIF                                                              MD031397
      C                   MOVE      D1IIRT        PAmtIn
 
      C                   ELSE
 
-     C                   IF        D1SPRD < 0
-     C                   Z-SUB     D1SPRD        D1SPRD
-     C                   ENDIF
+     C**********         IF        D1SPRD < 0                                               MD031397
+     C**********         Z-SUB     D1SPRD        D1SPRD                                     MD031397
+     C**********         ENDIF                                                              MD031397
      C                   MOVE      D1SPRD        PAmtIn
 
      C                   ENDIF
@@ -585,7 +589,8 @@
 
      C                   Z-ADD     7             PNoOfDecPl
      C                   EXSR      SRFmtAmt
-     C                   MOVE      PAmtOutS      DDRTSP
+     C**********         MOVE      PAmtOutS      DDRTSP                                     MD031397
+     C                   MOVE      PAmtOutU      DDRTSP                                     MD031397
 
       ** Interest Calculation Method
 
@@ -608,15 +613,16 @@
 
       ** Total interest amount
 
-     C     D1MTTI        IFLT      0
-     C                   Z-SUB     D1MTTI        PAmtIn
-     C                   ELSE
+     C*****D1MTTI        IFLT      0                                                        MD031397
+     C**********         Z-SUB     D1MTTI        PAmtIn                                     MD031397
+     C**********         ELSE                                                               MD031397
      C                   Z-ADD     D1MTTI        PAmtIn
-     C                   ENDIF
+     C**********         ENDIF                                                              MD031397
 
      C                   Z-ADD     D1CYDP        PNoOfDecPl
      C                   EXSR      SRFmtAmt
-     C                   MOVE      PAmtOutS      DDTOTI
+     C**********         MOVE      PAmtOutS      DDTOTI                                     MD031397
+     C                   MOVE      PAmtOutU      DDTOTI                                     MD031397
 
       ** Interest Frequency Day in Month .
 

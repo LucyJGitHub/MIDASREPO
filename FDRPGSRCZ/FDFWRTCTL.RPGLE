@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 04May09               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Set first day of the Forward Rates table to zero.   *
+      *           Default spot as RATE 1 during amendments. Applied   *
+      *           fix 241363.                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  241919 - Recompiled due to changes done to FDVFWRTPD.        *
@@ -72,11 +76,11 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Valid Forward Rates
      FFDVFWRTPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
       * Invalid Forward Rates                                                   CAP059
      FFDIFWRTPD UF A E             DISK    INFSR(*pssr)                         CAP059
      F                                     COMMIT                               CAP059
@@ -85,117 +89,117 @@
      FFDVFWRTL0 IF   E           K DISK    RENAME(FDVFWRTD0:FDVFWRTCH0)         CAP059
                                                                                 CAP059
      FFDVFWRTL1 IF   E           K DISK    RENAME(FDVFWRTD0:FDVFWRTCHK)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FDFWRTC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes definitions for thefields
       ** #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member.
      D/COPY ZACPYSRC,PROCPARMS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Commitment Control Job Array                                                        BUG1056
      D WJobs           S             10A   Dim(10)                                           BUG1056
       **                                                                                     BUG1056
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Forward Rates Record
      D TranIn        E DS                  EXTNAME(FDFWRTPD)
      D  TranIn1                1    484                                         CAP059
      D  TranIn2              485    551                                         CAP059
- 
+
       * Valid Forward Rates layout
      D ValidFWRT     E DS                  EXTNAME(FDVFWRTPD)
- 
+
      D PrvFRFilFmt   E DS                  EXTNAME(FDVFWRTPD)                   CAP059
      D                                     PREFIX(P_)                           CAP059
       ** Previous Forward Rates Detail in File Format                           CAP059
- 
+
       * (Current) Forward Rates record in File Format
      D FWRTFilFmt    E DS                  EXTNAME(FWDRTFE)
                                                                                 CAP059
       * (Current) Transaction in Screen Format - Main Details                   CAP059
      D CURTRFWRT     E DS                  EXTNAME(FDFWRTPD)                    CAP059
      D                                     PREFIX(C_)                           CAP059
- 
- 
+
+
       ** Flags to indicate whether forward rates fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FDEFWRTPD)
- 
- 
+
+
       * Forward Rates Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(FDFREXPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
                                                                                 CAP059
@@ -205,10 +209,10 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP059
      D                                     PREFIX(S_)                           CAP059
       ** External DS for API ICD                                                CAP059
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -218,44 +222,44 @@
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                BUG1056
      D  WDSJobs                4    103A                                                     BUG1056
       **                                                                                     BUG1056
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Field (500A) to receive the incoming forward rates record
      D*Trans500********S            500A                                        CAP059
      D Trans5001       S            500A                                        CAP059
      D Trans5002       S            500A                                        CAP059
- 
- 
+
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** The transaction's status
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A   INZ('FD')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Update Y/N?                                                                          238595
      D UpdateYN        S              1A   INZ(*BLANK)                                        238595
                                                                                               238595
@@ -268,20 +272,20 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Parameters and work fields for ZAMSGTOOPR
      D LongError       S            132A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** Flags to indicate whether substitution is required in                  CAP059
       ** each of the various parts the transaction                              CAP059
      D RepFWRT         S              1A   inz('N')                             CAP059
@@ -307,31 +311,31 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FDFWRTC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,FDFWRTC003
- 
+
       * Incoming forward rates rec is in a 500A field, so that a common CLP
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break that 500A by loading it into the
@@ -340,14 +344,14 @@
      C                   MOVEL     Trans5001     TranIn1                        CAP059
      C                   MOVEL     Trans5002     TranIn2                        CAP059
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
                                                                                 CAP059
       *  Check if forward rates record exists for Front Office Id               CAP059
@@ -361,11 +365,11 @@
      C     Idx           IFNE      0                                            CAP059
      C                   GOTO      INVALID                                      CAP059
      C                   END                                                    CAP059
- 
+
       /COPY WNCPYSRC,FDFWRTC004
- 
+
       *  Check if forward rates record is valid
- 
+
      C                   EXSR      ChkValFWRT
       *
       *  If valid fwd rates do exist (even after delay), fail this input
@@ -373,18 +377,18 @@
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       * Reset variables again in case the details have been corrupted
       * by previous chain to valid forward rates file.
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,FDFWRTC005
       *
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
- 
+
       *  If error in validation of action code, fail this input                 CAP059
       *                                                                         CAP059
      C     Idx           IFNE      0                                            CAP059
@@ -402,21 +406,21 @@
      C                   ENDIF                                                  CAP059
       *
       /COPY WNCPYSRC,FDFWRTC006
- 
+
       *  If error in validation of action code, fail this input
       *
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       ** Validate the main details of the transaction
- 
+
       /COPY WNCPYSRC,FDFWRTC007
      C                   IF        CAP059 = 'N'                                 CAP059
      C                   EXSR      ValidateTr
      C                   ENDIF                                                  CAP059
       /COPY WNCPYSRC,FDFWRTC008
- 
+
       *  Processing depends upon Action Code                                    CAP059
                                                                                 CAP059
      C                   IF        CAP059 = 'Y'                                 CAP059
@@ -462,41 +466,41 @@
      C                   ENDIF                                                  CAP059
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       ** prompting the database update program (LogError SR
       ** includes a RETURN).
      C                   IN        APDUMP
- 
+
       /COPY WNCPYSRC,FDFWRTC009
- 
+
      C                   IF        ARERRMOD <> *blank
      C                   EXSR      LogError
      C                   ENDIF
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,FDFWRTC010
      C                   EXSR      CheckWrite
- 
+
       /COPY WNCPYSRC,FDFWRTC011
- 
+
       ** If valid, send data queue entry to prompt DB update program
      C                   IF        Idx = 0
      C                   EXSR      SndPrompt
      C                   ENDIF
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FDFWRTC012
- 
+
       *****************************************************************
       /EJECT                                                                    CAP059
       *****************************************************************         CAP059
@@ -518,6 +522,9 @@
       ** First Rate                                                             CAP059
      C                   PARM                    DDRTE1           14            CAP059
       * OUTPUTS                                                                 CAP059
+                                                                                              259866
+      ** First Days number                                                                    259866
+     C                   PARM                    DDDYS1                                       259866
       *                                                                         CAP059
       * Field OK flags (DS) from/to caller                                      CAP059
      C                   PARM                    OKFLAGSDS                      CAP059
@@ -534,7 +541,10 @@
      C                   PARM      'Y'           ResetErrs         1            CAP059
      C                   IF        IDX = 0  AND                                 CAP059
      C                             DDACTN = 'I'                                 CAP059
+     C                             OR IDX = 0 AND                                             259866
+     C                             DDACTN = 'A'                                               259866
      C                   EVAL      C_DDRTE1 = DDRTE1                            CAP059
+     C                   EVAL      C_DDDYS1 = DDDYS1                                          259866
      C                   ENDIF                                                  CAP059
      C                   ENDSR                                                  CAP059
       *****************************************************************         CAP059
@@ -576,20 +586,20 @@
       *              exists for currency.                             *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkValFWRT    BEGSR
- 
+
       * Check for forward rates record on Valid file
      C     DDCCY         CHAIN     FDVFWRTL1                          99
- 
+
       * If record found...
      C     *IN99         IFEQ      '0'
- 
+
       * ..delay, then repeat check
      C                   CALLB     'ZACDELAY'
- 
+
      C     DDCCY         CHAIN     FDVFWRTL1                          99
- 
+
       * Error if still present
      C     *IN99         IFEQ      '0'
      C                   ADD       1             Idx
@@ -597,7 +607,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -609,7 +619,7 @@
       *              Implied action code is always 'I', therefore,    *
       *              simply validate that currency exists.            *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
       *                                                                         CAP059
       * Set retrieve mode to '*FRONT' (Access using Front Office ID)            CAP059
@@ -641,58 +651,58 @@
      C                   ELSE                                                   CAP059
      C                   MOVEL     '*FRONT'      ModeofOp                       CAP059
      C                   ENDIF                                                  CAP059
- 
+
       * Validate action code versus currency code supplied.
       * The forward rates record in file format from the FD database is
       * retrieved as well.
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FDFWRTRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
      C***********        PARM      '*FRONT'      ModeofOp          6            CAP059
      C                   PARM                    ModeofOp          6            CAP059
       *
       * Response mode
      C                   PARM                    APRESPMODE
- 
+
       * Action Code
      C                   PARM                    DDACTN
- 
+
       * Currency
      C                   PARM                    DDCCY
                                                                                  CAP059
       * Front Office Transaction ID                                              CAP059
      C                   PARM                    APFOTranID                      CAP059
- 
+
       * OUTPUTS
- 
+
       * (Current) forward rates record in file format
      C                   PARM                    FWRTFilFmt
- 
+
       * OK - Action code
      C                   PARM                    DDActnOK
- 
+
       * OK - Currency
      C                   PARM                    DDCcyOK
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
                                                                                 CAP059
      C                   IF        DDACTN = 'A'                                 CAP059
      C                   MOVEL     FWRTFilFmt    PrvFRFilFmt                    CAP059
      C                   ENDIF                                                  CAP059
- 
+
      C                   ENDSR
       *****************************************************************         CAP059
       /EJECT                                                                    CAP059
@@ -735,19 +745,20 @@
       * ValidateTr - Routine to validate the main fwd rates details   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
      C                   IF        DDACTN = 'A' AND CSD006 = 'Y'                             196570
      C                   EVAL      C_DDACTN = 'A'                                            196570
      C                   ENDIF                                                               196570
- 
+
      C                   IF         DDACTN = 'A' OR DDACTN = 'I'                CAP059
                                                                                 CAP059
      C                   CALLB     'FDFWRTAMD'                                  CAP059
      C                   PARM                    RetCodeIn                      CAP059
      C                   PARM                    CURTRFWRT                      CAP059
      C                   PARM                    TRANIN                         CAP059
+     C                   PARM                    BJCYCD                                       259866
      C                   PARM                    OKFLAGSDS                      CAP059
      C                   PARM                    FldNameArr                     CAP059
      C                   PARM                    MsgIdArr                       CAP059
@@ -756,7 +767,7 @@
      C                   PARM                    AmendOk           1            CAP059
      C                   PARM      'N'           ResetErrs         1            CAP059
      C                   ENDIF                                                  CAP059
- 
+
      C                   CALLB     'FDFWRTVAL'
       * Response mode (1A), from source system common header
      C                   PARM                    APRespMode
@@ -782,7 +793,7 @@
      C                   PARM                    ValidFWRT
       * Update Y/N                                                                            238595
      C                   PARM                    UpdateYN                                     238595
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -791,9 +802,9 @@
       * SndPrompt - Send a message to prompt the database updater     *
       *                                                               *
       *****************************************************************
- 
+
      C     SndPrompt     BEGSR
- 
+
       ** Check if update program active using Allocate Object API
       ** No prompting necessary if program is running
      C                   CLEAR                   Return
@@ -806,20 +817,20 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
      C                   IF        Return = *blank
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -828,9 +839,9 @@
       *    sending of messgaes/writing to the database                *
       *                                                               *
       *****************************************************************
- 
+
      C     CheckWrite    BEGSR
- 
+
       *  If no errors were found:
       *   - set up additional data
       *   - write a record to the Valid file
@@ -872,13 +883,13 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
      C                   WRITE     FDVFWRTD0
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
      C     Idx           IFGT      0
      C     CAP059        IFNE      'Y'                                          CAP059
      C                   EVAL      TranStatus = 'F'
@@ -927,7 +938,7 @@
       *
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
       **                                                                                     BUG1056
       ** Execute commit if SAR CSC022 is not enrolled or                                     BUG1056
       **   job is not currently running in batch mode                                        BUG1056
@@ -936,7 +947,7 @@
      C                             Or (CSC022 = 'Y' and WSkpComtRolbk = 'N')                 BUG1056
      C                   COMMIT
      C                   EndIf                                                               BUG1056
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -947,28 +958,28 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
      C                   CLEAR                   ValidFWRT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -978,9 +989,9 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      FWREPA = APRprLocn
                                                                                 CAP059
@@ -993,14 +1004,14 @@
      C     CAP059        IFEQ      'Y'                                          CAP059
      C                   EVAL      FWFRNT = APFOTranID                          CAP059
      C                   ENDIF                                                  CAP059
- 
+
      C     DDDFTS        IFEQ      *BLANK                                       CSD006
      C                   EVAL      FWDFTS = 0                                   CSD006
      C                   ENDIF                                                  CSD006
      C                   EVAL      TranStatus = 'S'
- 
+
       /COPY WNCPYSRC,FDFWRTC013
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CAP059
@@ -1030,29 +1041,29 @@
       *                                                               *
       *****************************************************************
      C     LogError      BEGSR
- 
+
       ** Set up the message to send to the operator
      C                   CLEAR                   LongError
      C                   RESET                   ReturnCode
      C                   EVAL      LongError = ProcErr + '   ' + ARERRMOD
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    ReturnCode
      C                   PARM                    LongError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
       ** Indicate the failing module to the caller
      C                   EVAL      APRETCODE = ARERRMOD
- 
+
       ** Remove the failing module's details from the dump information
       ** data area.
      C     *LOCK         IN        APDUMP
      C                   CLEAR                   ARERRMOD
      C                   OUT       APDUMP
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1062,33 +1073,33 @@
       *                                                               *
       *****************************************************************
      C     CallMsgHdl    BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C     FldNameArr(Ix)IFNE      *BLANKS
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   MOVE      *BLANKS       CCY6A
      C                   MOVEL     DDCCY         CCY6A             6
- 
+
      C                   MOVEL     CCY6A         PTranID          20                          CAP033
                                                                                               CAP033
      C                   CALLB     'ZAMSGHNDLE'
@@ -1139,7 +1150,7 @@
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CAP059
@@ -1197,7 +1208,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1210,18 +1221,18 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *                                                                         CAP059
       ** Access SAR details file to determine if Forward Rates API              CAP059
       ** Switchable feature is switched on                                      CAP059
@@ -1324,19 +1335,19 @@
      C                   PARM      '*FIRST '     @OPTN                          CAP059
      C     SDAPI         PARM      SDAPI         DSFDY                          CAP059
                                                                                 CAP059
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APFWRTDTQ'
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FDFWRTC014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

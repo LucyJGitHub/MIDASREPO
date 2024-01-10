@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD050405           Date 03Jun20               *
+      *  Last Amend No. AR666005           Date 01Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD050405           Date 03Jun20               *
       *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
@@ -119,6 +120,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR666005 - Add a validation which prevents closed customers  *
+      *           from being inserted in the account with bank field. *
+      *           Applied fix 229380. (Recompile)                     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD050405 - Fusion Midas 2.1 Platform Upgrade                 *

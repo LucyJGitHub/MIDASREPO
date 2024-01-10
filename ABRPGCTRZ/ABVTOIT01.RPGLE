@@ -17,8 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058448           Date 14Jul21               *
-      *  Prev Amend No. MD058379           Date 12Jul21               *
+      *  Last Amend No. MD031397           Date 04Dec23               *      
+      *  Prev Amend No. MD037749           Date 17Nov23               *
+      *                 MD058448           Date 14Jul21               *
+      *                 MD058379           Date 12Jul21               *
       *                 CDL102             Date 01Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -42,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031397 - Allow negative rate. Partially applied MD020393.  *      
+      *  MD037749 - Incorrect interest calculation                    *
       *  MD058448 - Total Interest is not zero when backward          *
       *             looking rate is entered                           *
       *  MD058379 - Serious midas error encountered in FUND. Correct  *
@@ -80,7 +84,7 @@
       *                                                               *
       * SRValTOTI - Validate Total Interest Amount                    *
       * SRCalcInt - Calculate Interest                                *
-      * SRCNoDays - Calculate No. of interest Days                    *
+      **SRCNoDays*-*Calculate No.*of*interest*Days*********************                     MD037749
       * SRZA0921  - Convert numeric amount to edited alpha            *
       * SRZA0840  - Validate field is numeric                         *
       * SRZDate9  - Convert Midas Day number to YYYYMMDD date format  *
@@ -220,15 +224,15 @@
      D***WVERR           S             15  9                                                MD026042
      D WVERR           S             23  9                                                  MD026042
 
-      ** SR/CNoDays Work Variables
-     D WVLPNM          S              5  0
-     D WVWDAT          S              5  0
-     D WVMDNO          S              5  0
-     D WVP1            S              5  0
-     D WVP2            S              5  0
-     D WVP3            S              5  0
-     D WVWN5           S              5  0
-     D WVWN5A          S              5  0
+      ***SR/CNoDays*Work*Variables*                                                         MD037749
+     D***WVLPNM*         S              5  0                                                MD037749
+     D***WVWDAT*         S              5  0                                                MD037749
+     D***WVMDNO*         S              5  0                                                MD037749
+     D***WVP1***         S              5  0                                                MD037749
+     D***WVP2***         S              5  0                                                MD037749
+     D***WVP3***         S              5  0                                                MD037749
+     D***WVWN5**         S              5  0                                                MD037749
+     D***WVWN5A*         S              5  0                                                MD037749
 
       ** Work Parameters
      D PValDate        S              5P 0
@@ -271,6 +275,14 @@
       *(WVCALC)
      D WVINDY          S              5  0
 
+      ** Input/Output fields for ZINTDY                                                     MD037749
+     D PvBeg           S              5  0                                                  MD037749
+     D PvEnd           S              5  0                                                  MD037749
+     D PvCalc          S              1                                                     MD037749
+     D PvInDy          S              5  0                                                  MD037749
+     D PInt6Dy         S             15  9                                                  MD037749
+     D PNLeap          S              5P 0 INZ(0)                                           MD037749
+     D PLeap50         S              5P 0 INZ(0)                                           MD037749
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
                                                                                             MD000091
@@ -375,7 +387,8 @@
      C                   Z-ADD     *Zero         POAmount
      C                   MOVE      'N'           PIMTID
 
-     C                   EXSR      SRZA0840
+     C**********         EXSR      SRZA0840                                                 MD031397
+     C                   EXSR      SRZA0841                                                 MD031397
 
      C                   IF        POErrCde <> 0
 
@@ -492,7 +505,8 @@
 
      C                   EXSR      SRZA0921
 
-     C                   MOVE      WAmountOS     DDTOTI
+     C**********         MOVE      WAmountOS     DDTOTI                                     MD031397
+     C                   MOVE      WAmountOU     DDTOTI                                     MD031397
 
      C                   ENDIF
 
@@ -524,7 +538,17 @@
 
      C     SRCalcInt     BEGSR
 
-     C                   EXSR      SRCNoDays
+     C**********         EXSR      SRCNoDays                                                MD037749
+     C                   CALLB     'ZINTDY'                                                 MD037749
+     C                   PARM                    RetCodeIn                                  MD037749
+     C                   PARM      *ZERO         PvInDy                                     MD037749
+     C                   PARM      WVBEG         PvBeg                                      MD037749
+     C                   PARM      WVEND         PvEnd                                      MD037749
+     C                   PARM      WVCALC        PvCalc                                     MD037749
+     C                   PARM      *ZERO         PInt6Dy                                    MD037749
+     C                   PARM                    PNLeap                                     MD037749
+     C                   PARM                    PLeap50                                    MD037749
+     C                   Z-ADD     PvInDy        WVINDY                                     MD037749
 
       ** Method 2 or 3 or 5
 
@@ -579,203 +603,207 @@
 
       **  Multiply by the period to obtain the interest
 
+     C                   IF        WVCALC = '6'                                             MD037749
+     C     WVW155        MULT(H)   PINT6DY       WVINTR                                     MD037749
+     C                   ELSE                                                               MD037749
      C     WVW155        MULT(H)   WVINDY        WVINTR
+     C                   ENDIF                                                              MD037749
 
      C                   ENDSR
 
       *****************************************************************
       /EJECT
       *****************************************************************
-      *                                                               *
-      *  SRCNoDays - Calculate the number of interest days            *
-      *                                                               *
-      *  Input  : WVBEG  5,0   Start date of period                   *
-      *           WVEND  5,0   End date of period                     *
-      *           WVCALC 1     Interest Calculation method            *
-      *  Output : WVINDY 5,0   Number of Interest Days                *
-      *                                                               *
+      *****************************************************************                     MD037749
+      ***SRCNoDays*-*Calculate*the*number*of*interest*days*************                     MD037749
+      *****************************************************************                     MD037749
+      ***Input**:*WVBEG**5,0***Start*date*of*period********************                     MD037749
+      ************WVEND**5,0***End*date*of*period**********************                     MD037749
+      ************WVCALC*1*****Interest*Calculation*method*************                     MD037749
+      ***Output*:*WVINDY*5,0***Number*of*Interest*Days*****************                     MD037749
+      *****************************************************************                     MD037749
       *****************************************************************
-
-     C     SRCNoDays     BEGSR
-
-     C                   Z-ADD     *Zeros        WVINDY
-     C                   Z-ADD     *Zeros        WVLPNM
-
-      ** Actual days - no special processing
-
-     C                   IF        WVCALC = '1' OR
-     C                             WVCALC = '2' OR
-     C                             WVCALC = '6'
-
-     C                   EVAL      WVINDY = WVEND - WVBEG
-     C                   GOTO      SREXIT
-
-     C                   ENDIF
-
-     C                   EVAL      WVWDAT = WVEND - WVBEG
-
-     C                   Z-ADD     WVBEG         PDaynoIn
-     C                   EXSR      SRZDate9
-     C                   MOVE      PDateOutZ9    DSBegDate
-
-     C                   Z-ADD     WVEND         PDaynoIn
-     C                   EXSR      SRZDate9
-     C                   MOVE      PDateOutZ9    DSEndDAte
-
-      ** If in same month
-
-     C                   IF        WVYY1 = WVYY2
-
-     C                   IF        WVMM1 = WVMM2
-
-     C                   EVAL      WVINDY = WVDD2 - WVDD1
-     C                   GOTO      SREXIT
-
-     C                   ENDIF
-     C                   ENDIF
-
-     C                   IF        WVCALC = '3'
-
-      ** Calculate no. of days in first month
-
-     C                   EVAL      WVP1 = 30 - WVDD1
-
-      ** If < 0, initialise to 0
-
-     C                   IF        WVP1 < 0
-
-     C                   Z-ADD     *Zeros        WVP1
-
-     C                   ENDIF
-
-      ** Calculate  no. of days in last month
-
-     C                   IF        WVDD2 <= 30
-
-     C                   Z-ADD     WVDD2         WVP2
-
-     C                   ELSE
-
-     C                   Z-ADD     30            WVP2
-
-     C                   ENDIF
-
-      ** Calculate no. of days in intervening months
-
-     C                   IF        WVYY2 = WVYY1
-
-     C                   EVAL      WVP3 = WVMM2 - WVMM1
-     C                   SUB       1             WVP3
-     C                   MULT      30            WVP3
-
-     C                   ELSE
-
-     C                   EVAL      WVP3 = WVYY2 - WVYY1
-     C                   SUB       1             WVP3
-     C                   MULT      360           WVP3
-
-      ** Find no. of months for the two partial years
-
-     C                   EVAL      WVWN5A = 12 - WVMM1
-     C                   MULT      30            WVWN5A
-
-     C                   EVAL      WVWN5 = WVMM2 - 1
-     C                   EVAL      WVWN5 = WVWN5 * 30
-
-      ** Accumulate
-
-     C                   EVAL      WVWN5A = WVWN5A + WVWN5
-     C                   EVAL      WVP3 = WVP3 + WVWN5A
-
-     C                   ENDIF
-
-      ** Final sum
-
-     C                   EVAL      WVINDY = WVP1 + WVP2
-     C                   ADD       WVP3          WVINDY
-
-     C                   ENDIF
-
-      ** For methods 4 and 5
-
-     C                   IF        WVCALC = '4' OR
-     C                             WVCALC = '5'
-
-      **  Calculate number of leap years between start and end dates
-
-     C                   IF        WVMM1 <= 2
-
-     C     WVYY1         DIV       4             WVWN5             5 0
-     C                   MVR                     WVWN5                    07
-
-      ** Add 1 if leap year
-
-     C                   IF        ZeroIn = True
-
-     C                   EVAL      WVLPNM = 90 + 1
-
-     C                   ENDIF
-
-     C                   ENDIF
-
-      ** Bypass if years are the same
-
-     C                   IF        WVYY1 = WVYY2
-
-     C                   EVAL      WVINDY = WVWDAT - WVLPNM
-     C                   GOTO      SREXIT
-
-     C                   ENDIF
-
-      ** Loop to calculate no. leap years
-
-     C                   DOW       WVYY1 <> WVYY2
-
-      ** Increment start year
-
-     C                   ADD       1             WVYY1
-
-     C                   IF        WVYY1 = WVYY2
-
-     C                   IF        WVMM2 > 2
-
-     C     WVYY2         DIV       4             WVWN5
-     C                   MVR                     WVWN5                    07
-
-      ** Increment if leap year
-
-     C                   IF        ZeroIn = True
-
-     C                   EVAL      WVLPNM = 90 + 1
-
-     C                   ENDIF
-
-     C                   ENDIF
-
-     C                   EVAL      WVINDY = WVWDAT - WVLPNM
-
-     C                   ENDIF
-
-     C                   IF        WVYY1 <> WVYY2
-
-     C     WVYY1         DIV       4             WVWN5
-     C                   MVR                     WVWN5                    07
-
-      ** Add 1 if leap year
-
-     C                   IF        ZeroIn = True
-
-     C                   EVAL      WVLPNM = 90 + 1
-
-     C                   ENDIF
-
-     C                   ENDIF
-
-     C                   ENDDO
-
-     C                   ENDIF
-
-     C     SREXIT        ENDSR
+      *****************************************************************                     MD037749
+     C*****SRCNoDays     BEGSR                                                              MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     *Zeros        WVINDY                                     MD037749
+     C**********         Z-ADD     *Zeros        WVLPNM                                     MD037749
+      **********                                                                            MD037749
+      ***Actual*days*-*no*special*processing*                                               MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVCALC = '1' OR                                          MD037749
+     C**********                   WVCALC = '2' OR                                          MD037749
+     C**********                   WVCALC = '6'                                             MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVINDY = WVEND - WVBEG                                   MD037749
+     C**********         GOTO      SREXIT                                                   MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVWDAT = WVEND - WVBEG                                   MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     WVBEG         PDaynoIn                                   MD037749
+     C**********         EXSR      SRZDate9                                                 MD037749
+     C**********         MOVE      PDateOutZ9    DSBegDate                                  MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     WVEND         PDaynoIn                                   MD037749
+     C**********         EXSR      SRZDate9                                                 MD037749
+     C**********         MOVE      PDateOutZ9    DSEndDAte                                  MD037749
+      **********                                                                            MD037749
+      ***If*in*same*month*                                                                  MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVYY1 = WVYY2                                            MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVMM1 = WVMM2                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVINDY = WVDD2 - WVDD1                                   MD037749
+     C**********         GOTO      SREXIT                                                   MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVCALC = '3'                                             MD037749
+      **********                                                                            MD037749
+      ***Calculate*no.*of*days*in*first*month*                                              MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVP1 = 30 - WVDD1                                        MD037749
+      **********                                                                            MD037749
+      ***If*<*0,*initialise*to*0*                                                           MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVP1 < 0                                                 MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     *Zeros        WVP1                                       MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***Calculate**no.*of*days*in*last*month*                                              MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVDD2 <= 30                                              MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     WVDD2         WVP2                                       MD037749
+      **********                                                                            MD037749
+     C**********         ELSE                                                               MD037749
+      **********                                                                            MD037749
+     C**********         Z-ADD     30            WVP2                                       MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***Calculate*no.*of*days*in*intervening*months*                                       MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVYY2 = WVYY1                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVP3 = WVMM2 - WVMM1                                     MD037749
+     C**********         SUB       1             WVP3                                       MD037749
+     C**********         MULT      30            WVP3                                       MD037749
+      **********                                                                            MD037749
+     C**********         ELSE                                                               MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVP3 = WVYY2 - WVYY1                                     MD037749
+     C**********         SUB       1             WVP3                                       MD037749
+     C**********         MULT      360           WVP3                                       MD037749
+      **********                                                                            MD037749
+      ***Find*no.*of months*for*the*two*partial years*                                      MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVWN5A = 12 - WVMM1                                      MD037749
+     C**********         MULT      30            WVWN5A                                     MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVWN5 = WVMM2 - 1                                        MD037749
+     C**********         EVAL      WVWN5 = WVWN5 * 30                                       MD037749
+      **********                                                                            MD037749
+      ***Accumulate*                                                                        MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVWN5A = WVWN5A + WVWN5                                  MD037749
+     C**********         EVAL      WVP3 = WVP3 + WVWN5A                                     MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***Final*sum*                                                                         MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVINDY = WVP1 + WVP2                                     MD037749
+     C**********         ADD       WVP3          WVINDY                                     MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***For*methods*4*and*5*                                                               MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVCALC = '4' OR                                          MD037749
+     C**********                   WVCALC = '5'                                             MD037749
+      **********                                                                            MD037749
+      ****Calculate*number*of*leap*years*between*start*and*end*dates*                       MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVMM1 <= 2                                               MD037749
+      **********                                                                            MD037749
+     C*****WVYY1         DIV       4             WVWN5             5 0                      MD037749
+     C**********         MVR                     WVWN5                    07                MD037749
+      **********                                                                            MD037749
+      ***Add*1*if*leap*year*                                                                MD037749
+      **********                                                                            MD037749
+     C**********         IF        ZeroIn = True                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVLPNM = 90 + 1                                          MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***Bypass*if*years*are*the*same*                                                      MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVYY1 = WVYY2                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVINDY = WVWDAT - WVLPNM                                 MD037749
+     C**********         GOTO      SREXIT                                                   MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+      ***Loop*to*calculate*no.*leap*years*                                                  MD037749
+      **********                                                                            MD037749
+     C**********         DOW       WVYY1 <> WVYY2                                           MD037749
+      **********                                                                            MD037749
+      ***Increment*start*year*                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ADD       1             WVYY1                                      MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVYY1 = WVYY2                                            MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVMM2 > 2                                                MD037749
+      **********                                                                            MD037749
+     C*****WVYY2         DIV       4             WVWN5                                      MD037749
+     C**********         MVR                     WVWN5                    07                MD037749
+      **********                                                                            MD037749
+      ***Increment*if*leap*year*                                                            MD037749
+      **********                                                                            MD037749
+     C**********         IF        ZeroIn = True                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVLPNM = 90 + 1                                          MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVINDY = WVWDAT - WVLPNM                                 MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         IF        WVYY1 <> WVYY2                                           MD037749
+      **********                                                                            MD037749
+     C*****WVYY1         DIV       4             WVWN5                                      MD037749
+     C**********         MVR                     WVWN5                    07                MD037749
+      **********                                                                            MD037749
+      ***Add*1*if*leap*year*                                                                MD037749
+      **********                                                                            MD037749
+     C**********         IF        ZeroIn = True                                            MD037749
+      **********                                                                            MD037749
+     C**********         EVAL      WVLPNM = 90 + 1                                          MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ENDDO                                                              MD037749
+      **********                                                                            MD037749
+     C**********         ENDIF                                                              MD037749
+      **********                                                                            MD037749
+     C*****SREXIT        ENDSR                                                              MD037749
 
       *****************************************************************
       /EJECT
@@ -820,6 +848,28 @@
      C                   ENDSR
 
       *****************************************************************
+      /EJECT                                                                                MD031397
+      *****************************************************************                     MD031397
+      *                                                               *                     MD031397
+      *  SRZA0841 - Validate field is numeric, or negative            *                     MD031397
+      *                                                               *                     MD031397
+      *****************************************************************                     MD031397
+                                                                                            MD031397
+     C     SRZA0841      BEGSR                                                              MD031397
+                                                                                            MD031397
+     C                   CALLB     'ZA0841'                                                 MD031397
+     C                   PARM                    PRetCode                                   MD031397
+     C                   PARM                    PAlpha                                     MD031397
+     C                   PARM                    PIDP                                       MD031397
+     C                   PARM                    PIINT                                      MD031397
+     C                   PARM                    PIMTID                                     MD031397
+     C                   PARM                    POErrCde                                   MD031397
+     C                   PARM                    POAmount                                   MD031397
+     C                   PARM                    BNDCSP                                     MD031397
+                                                                                            MD031397
+     C                   ENDSR                                                              MD031397
+                                                                                            MD031397
+      *****************************************************************                     MD031397
       /EJECT
       *****************************************************************
       *                                                               *

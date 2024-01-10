@@ -1,0 +1,107 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Initialisation program for CSE040')           *
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SD00040 - Initialisation program for CSE040                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2023                      *
+      *                                                               *
+      *  Last Amend No. 259902 *CREATE     Date 09Oct23               *
+      *  Prev Amend No. Xnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  259902 - Fields SDDTAQ and SDLIB in SDSESTPD are not         *
+      *           initialised when switchable feature CSE040 is       *
+      *           switched ON.                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      * Midas SD ICD for Securities Statement
+     FSDSESTPDUF  E                    DISK                      A
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      ** *LOCK IN LDA IMMEDIATELY BEFORE AND OUT LDA IMMEDIATELY
+      ** AFTER EACH DATABASE ERROR HANDLING.
+      **
+      **                                    134 141 DBFILE
+      **       DEFINES:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Named Constant
+      *
+     I              'MS_MIX2MMM'          C         XXDTAQ
+     I              '*LIBL'               C         XXLIB
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   Main Routine
+      *****************************************************************
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Insert record for SDSESTPD file for CSE040 enhancement
+      *
+     C                     READ SDSESTPD                 86
+      *
+     C           *IN86     IFEQ *ON                        B1
+      *
+     C                     MOVELXXDTAQ    SDDTAQ
+     C                     MOVELXXLIB     SDLIB
+      *
+     C                     WRITESDSESTD0               87
+      *
+     C           *IN87     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDSESTPD'DBFILE
+     C                     MOVEL'*WRITE  'DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SD00040' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF                           E1
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Standard DB Error processing                      *
+      *  Called By: Main Routine                                      *
+      *  Calls    : DBERRCTL - DB Error Control                       *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************

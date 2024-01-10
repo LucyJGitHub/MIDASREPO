@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259866             Date 25Oct23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 257192             Date 14Oct08               *
+      *                 257192             Date 14Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 245294             Date 28Feb07               *
       *                 241919             Date 22Dec06               *
@@ -45,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259866 - Set first day of the Forward Rates table to zero.   *
+      *           Default spot as RATE 1 during amendments. Applied   *
+      *           fix 241363.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  257192 - If not a valid rate, do not reset to zero.          *
       *  245294 - Issue correct error message when problem with       *
@@ -87,85 +91,85 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Forward Days - signed decimal format.
      D FWDFWDS         DS
      D  DAY                    1     75P 0 INZ(*ZERO)
      D                                     DIM(25)
- 
+
       ** Forward Rates - signed decimal format.
      D FWRFWDS         DS
      D  RAT                    1    175P 8 INZ(*ZERO)
      D                                     DIM(25)
- 
+
       ** Forward Days - alpha format.
      D DYSA            S              5    DIM(25)
- 
+
       ** Forward Days Error Indicators
      D DYSEI           S              1    DIM(25)
- 
+
       ** Forward Rates - alpha format.
      D RTEA            S             14    DIM(25)
- 
+
       ** Forward Rates Error Indicators
      D RTEEI           S              1    DIM(25)
- 
+
       ** Forward Points - alpha format.                                                       CAP059
      D PNFA            S             14    DIM(25)                                            CAP059
                                                                                               CAP059
@@ -185,28 +189,28 @@
                                                                                               CAP059
      D WDATEDD         S               D   DATFMT(*DMY)                                       CAP059
      D WDATEMM         S               D   DATFMT(*MDY)                                       CAP059
- 
+
       * Valid Forward Rates record layout
      D ValidFWRT     E DS                  EXTNAME(FDVFWRTPD)
- 
+
       * Forward Rates Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(FDFREXPD)
- 
+
       * Previous Forward Rates Detail in File Format
      D PrvFRFilFmt   E DS                  EXTNAME(FDVFWRTPD)
      D                                     PREFIX(P)                                          CAP059
      D  PrvFR                 80    254P 8 DIM(25)                                            CAP059
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                               CAP059
@@ -259,19 +263,19 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message IDs etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FDEFWRTPD)
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** Update Y/N?                                                                          238595
      D UpdateYN        S              1A                                                      238595
                                                                                               238595
@@ -349,21 +353,21 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,FDFWRTV001
- 
+
       * Initial processing to be executed on each call.
- 
+
      C                   EXSR      INIT
- 
+
       * Do Validation
      C                   EXSR      VFWDRATES
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,FDFWRTV002
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -392,11 +396,23 @@
       *
       * Validate first number of days
       *
-     C                   EXSR      VAL_DAYS
-      *
-      * Validate first rate
-      *
-     C                   EXSR      VAL_RATE
+     C**********         EXSR      VAL_DAYS                                                   259866
+      **********                                                                              259866
+      **Validate*first*rate***                                                                259866
+      **********                                                                              259866
+     C**********         EXSR      VAL_RATE                                                   259866
+      *                                                                                       259866
+     C                   Z-ADD     5             ZADIG                                        259866
+     C                   Z-ADD     8             ZADEC                                        259866
+     C                   MOVE      *BLANKS       ZFIELD                                       259866
+     C                   MOVE      RTEA(N)       ZFIELD                                       259866
+     C                   CALLB     'ZALIGN'                                                   259866
+     C                   PARM      *BLANKS       ZRTN              1                          259866
+     C                   PARM                    ZFIELD           16                          259866
+     C                   PARM                    ZADEC             1 0                        259866
+     C                   PARM                    ZADIG             2 0                        259866
+     C                   MOVE      ZFIELD        RAT(N)                                       259866
+     C                   Z-ADD     0             DAY(N)                                       259866
       *                                                                                       CAP059
       * If EMU Forward Rates are switched on and Ccy is In, rates are                         CAP059
       * not amendable. Allow blanks in the rate field.                                        CAP059
@@ -453,25 +469,25 @@
      C                   ENDIF                                                                CAP059
      C                   ENDIF                                                                CAP059
      C                   ENDIF                                                                CAP059
-      *
-      *  If rate is OK, check that it is within 10% of spot rate.
-      *
-     C     RTEEI(1)      IFNE      'N'
-     C     RTEA(1)       ANDNE     *BLANKS                                                    CAP059
-      *
-     C     RAT(1)        SUB       A6SPRT        WK12             12 8
-     C     WK12          IFLT      0
-     C                   Z-SUB     WK12          WK12
-     C                   ENDIF
-     C     WK12          DIV       A6SPRT        DIFF             15 8
-      *
-     C     DIFF          IFGT      .1
-     C                   ADD       1             WIdx
-     C                   EVAL      WMsgIDXAr(WIdx) = 'MMA0696'
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDRTE1'
-     C                   EVAL      RTEEI(1) = 'W'
-     C                   ENDIF
-     C                   ENDIF
+      **********                                                                              259866
+      ***If*rate*is*OK, check that it is within 10% of spot rate.                             259866
+      **********                                                                              259866
+     C*****RTEEI(1)      IFNE      'N'                                                        259866
+     C*****RTEA(1)       ANDNE     *BLANKS                                             CAP059 259866
+      **********                                                                              259866
+     C*****RAT(1)        SUB       A6SPRT        WK12             12 8                        259866
+     C*****WK12*         IFLT      0                                                          259866
+     C**********         Z-SUB     WK12          WK12                                         259866
+     C**********         ENDIF                                                                259866
+     C*****WK12*         DIV       A6SPRT        DIFF             15 8                        259866
+      **********                                                                              259866
+     C*****DIFF*         IFGT      .1                                                         259866
+     C**********         ADD       1             WIdx                                         259866
+     C**********         EVAL      WMsgIDXAr(WIdx) = 'MMA0696'                                259866
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDRTE1'                                 259866
+     C**********         EVAL      RTEEI(1) = 'W'                                             259866
+     C**********         ENDIF                                                                259866
+     C**********         ENDIF                                                                259866
                                                                                               213563
       ** Check if rate does not exceed forward rate tolerance                                 213563
                                                                                               213563
@@ -487,13 +503,13 @@
      C                   ENDIF                                                                213563
      C                   ENDIF                                                                213563
                                                                                               CAP084
-      ** Format Rate for First rate.                                                          CAP084
-     C     RTEEI(1)      IFNE      'N'                                                        257192
-     C                   EVAL      WAMTNUM = *ZERO                                            CAP084
-     C                   MOVE      RAT(1)        WAMTNUM                                      CAP084
-     C                   EXSR      SrFMTDET                                                   CAP084
-     C                   MOVE      WAMTCHR       RTEA(1)                                      CAP084
-     C                   ENDIF                                                                257192
+      ***Format*Rate*for First rate.                                                   CAP084 259866
+     C*****RTEEI(1)      IFNE      'N'                                                 257192 259866
+     C**********         EVAL      WAMTNUM = *ZERO                                     CAP084 259866
+     C**********         MOVE      RAT(1)        WAMTNUM                               CAP084 259866
+     C**********         EXSR      SrFMTDET                                            CAP084 259866
+     C**********         MOVE      WAMTCHR       RTEA(1)                               CAP084 259866
+     C**********         ENDIF                                                         257192 259866
       *
       * VALIDATE REST OF DATA
       * =====================
@@ -937,9 +953,9 @@ E01  C*******            ENDIF                                                  
      C                   IF        RAT(N) <> *ZERO                                            CSD006
      C                   EVAL      WACTRDIF = WDIFF/RAT(N) * 100                              CSD006
      C                   ENDIF                                                                CSD006
- 
+
      C                   ELSE                                                                 CSD006
- 
+
      C                   IF        PrvFR(N) <> *ZERO                                          CSD006
      C                   EVAL      WACTRDIF = WDIFF/PrvFR(N) * 100                            CSD006
      C                   ENDIF                                                                CSD006
@@ -1253,7 +1269,7 @@ E01  C*******            ENDIF                                                  
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1263,7 +1279,7 @@ E01  C*******            ENDIF                                                  
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1612,7 +1628,7 @@ E01  C*******            ENDIF                                                  
      C     SDCURR        PARM      SDCURR        DSSDY
                                                                                               CAP059
      C**********         EVAL      DiffNDP = A6NBDP - BNBDP + 4                        CAP059 235720
- 
+
      C                   IF        CAP059 = 'Y' AND                                           CAP059
      C                             CEU026 = 'Y' AND                                           CAP059
      C                             A6INCY = 'Y' AND                                           CAP059
@@ -1638,10 +1654,10 @@ E01  C*******            ENDIF                                                  
       *
      C                   EVAL      FWRECI = 'D'
      C                   EVAL      FWCCY  = DDCCY
- 
+
      C                   EVAL      FWDFW = FWDFWDS
      C                   EVAL      FWRFW = FWRFWDS
- 
+
      C                   EVAL      FWLCD  = BJRDNB
      C***********        EVAL      FWCHTP = 'A'                                               CAP059
      C                   EVAL      FWCHTP = DDACTN                                            CAP059
@@ -1654,9 +1670,9 @@ E01  C*******            ENDIF                                                  
      C                   EVAL      FWSFW  = *BLANKS
      C                   EVAL      FWPNF  = *BLANKS
      C                   ENDIF                                                                CAP059
- 
+
       * Update days error indicatos
- 
+
      C                   EVAL      DDDYS1OK = DYSEI(1)
      C                   EVAL      DDDYS2OK = DYSEI(2)
      C                   EVAL      DDDYS3OK = DYSEI(3)
@@ -1682,9 +1698,9 @@ E01  C*******            ENDIF                                                  
      C                   EVAL      DDDY23OK = DYSEI(23)
      C                   EVAL      DDDY24OK = DYSEI(24)
      C                   EVAL      DDDY25OK = DYSEI(25)
- 
+
       * Update rate error indicatos
- 
+
      C                   EVAL      DDRTE1OK = RTEEI(1)
      C                   EVAL      DDRTE2OK = RTEEI(2)
      C                   EVAL      DDRTE3OK = RTEEI(3)
@@ -1818,7 +1834,7 @@ E01  C*******            ENDIF                                                  
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1869,7 +1885,7 @@ E01  C*******            ENDIF                                                  
       *  obtain the messages.
       *
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Check if switchable feature CAP029 is switched on.                                   CSD006
       ** Forward Fx rate and MM Interest Rate API                                             CSD006
       *                                                                                       CSD006
@@ -2086,7 +2102,7 @@ E01  C*******            ENDIF                                                  
       *                                                                                       CAP059
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FDFWRTV004
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE CLE071 Takeon program for calculated fees')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       Midas - Midas LE CLE071 Takeon program for calculated fees  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*        Last Amend No. MD062082 *CREATE   Date 24Dec23             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*         MD062082 - CLE071 Takeon program for calculated fees      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE)   TYPE(*CHAR) LEN(7)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2023')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             CHGJOB     SWS(XXXXXX00)
+
+/* Mode 1 - First call */
+
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+                CALL       PGM(LE001118)
+             ENDDO
+
+/* Mode 2 - Second call */
+
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+                CALL       PGM(LE001118)
+             ENDDO
+
+/* Check if program call is successful */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/* Program abnormal processing */
+ ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+             SNDPGMMSG  MSG('Program LEC001118 ended abnormally') TOMSGQ(MOPERQ)
+
+ END:
+             ENDPGM

@@ -97,6 +97,25 @@
      C                             XXTMT)
      C                   endif
 
+      * With reference prefix being 3 char, need to scan for ' ,' or ', '                   MD062077
+     C                   EVAL      pos = %scan(' ,':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(' ,':',':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
+     C                   EVAL      pos = %scan(', ':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(', ':',':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
+     C                   EVAL      pos = %scan(' )':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(' )':')':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
       * Replace CR and LF by blank                                                          MD061992
      C                   EVAL      XXTMT= %scanrpl(CR:BL:XXTMT)                             MD061992
      C                   EVAL      XXTMT= %scanrpl(LF:BL:XXTMT)                             MD061992
@@ -111,6 +130,25 @@
      C                   EVAL      XXTMT= %scanrpl('  ':' ':XXTMT)                          MD061992
      C                   endif                                                              MD060271
                                                                                             MD060271
+      * With reference prefix being 3 char, need to scan for ' ,' or ', '                   MD062077
+     C                   EVAL      pos = %scan(' ,':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(' ,':',':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
+     C                   EVAL      pos = %scan(', ':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(', ':',':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
+     C                   EVAL      pos = %scan(' )':XXTMT)                                  MD062077
+     C                   if        pos > 0                                                  MD062077
+     C                   EVAL      UPD = 'Y'                                                MD062077
+     C                   EVAL      XXTMT= %scanrpl(' )':')':XXTMT)                          MD062077
+     C                   endif                                                              MD062077
+                                                                                            MD062077
      C                   if        UPD = 'Y'
      C                   eval      DATAX = XXTMT
      C                   Update    UPSQLSTD      DATAX

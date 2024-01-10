@@ -12,18 +12,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2023                     */
 /*                                                                   */
-/*       Last Amend No. MD061992           Date 23Oct23              */
-/*       Prev Amend No. MD061954 *CREATE   Date 08Oct23              */
+/*       Last Amend No. MD062077           Date 08Nov23              */
+/*       Prev Amend No. MD061992           Date 23Oct23              */
+/*                      MD061954 *CREATE   Date 08Oct23              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062077 - Include reference BFLIB                          */
 /*       MD061992 - Allow 3 char prefix for reference libraries      */
 /*       MD061954 - Include restore of reference libraries for aDBU  */
 /*                                                                   */
 /*********************************************************************/
-             PGM        PARM(&LIBDM &LIBDP &LIBDT &LIBDV &LIBGM +
+/*********   PGM        PARM(&LIBDM &LIBDP &LIBDT &LIBDV &LIBGM +
                           &LIBGP &LIBGT &LIBGV &GLOBP &ZONEP +
-                          &BRGBRGLIB &RETURN)
+                          &BRGBRGLIB &RETURN) */                                        /*MD062077*/
+             PGM        PARM(&LIBDM &LIBDP &LIBDT &LIBDV &LIBGM +
+                          &LIBGP &LIBGT &LIBGV &LIBBF &GLOBP &ZONEP +
+                          &BRGBRGLIB &RETURN)                                           /*MD062077*/
 
 
              DCL        VAR(&LIBDM) TYPE(*CHAR) LEN(10)
@@ -34,6 +39,7 @@
              DCL        VAR(&LIBGP) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIBGT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LIBGV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBBF) TYPE(*CHAR) LEN(10)                                 /*MD062077*/
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(2) */                               /*MD061992*/
              DCL        VAR(&GLOBP) TYPE(*CHAR) LEN(3)                                  /*MD061992*/
@@ -104,6 +110,15 @@
              CHGVAR     VAR(&COUNTG) VALUE(&COUNTG + 1)
              ENDDO
 
+/* Submit BFLIB restore if needed */                                                    /*MD062077*/
+             IF         COND(&LIBBF *NE ' ') THEN(DO)                                   /*MD062077*/
+             CHGVAR     VAR(&LIB) VALUE(&GLOBP *CAT 'BFLIB')                            /*MD062077*/
+             SBMJOB     CMD(CALL PGM(UPC6007) PARM(&LIBBF +
+                          &LIB &BRGBRGLIB &IASP_YN &IASP)) JOB(RST_BF) +
+                          JOBQ(&BRGBRGLIB/SMJOBQNM)                                     /*MD062077*/
+             CHGVAR     VAR(&COUNTG) VALUE(&COUNTG + 1)                                 /*MD062077*/
+             ENDDO                                                                      /*MD062077*/
+                                                                                        /*MD062077*/
 LOOPG:
 /* If jobs are complete but at least one FAIL, exit */
              IF         COND((&COUNTG *EQ 0) *AND (&FAIL *EQ 'Y')) +
@@ -154,6 +169,12 @@ LOOPG:
                           VAR(&COUNTG) VALUE(&COUNTG - 1))
              IF         COND(&MSGDATA *EQ 'GT-FAIL') THEN(CHGVAR +
                           VAR(&FAIL) VALUE('Y'))
+             IF         COND(&MSGDATA *EQ 'BF-DONE') THEN(CHGVAR +
+                          VAR(&COUNTG) VALUE(&COUNTG - 1))                              /*MD062077*/
+             IF         COND(&MSGDATA *EQ 'BF-FAIL') THEN(CHGVAR +
+                          VAR(&COUNTG) VALUE(&COUNTG - 1))                              /*MD062077*/
+             IF         COND(&MSGDATA *EQ 'BF-FAIL') THEN(CHGVAR +
+                          VAR(&FAIL) VALUE('Y'))                                        /*MD062077*/
              GOTO       CMDLBL(LOOPG)
              ENDDO
 

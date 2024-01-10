@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061779           Date 17Aug23               *
-      *  Prev Amend No. MD061992           Date 23Oct23               *
+      *  Last Amend No. MD062077           Date 08Nov23               *
+      *  Prev Amend No. MD061779           Date 17Aug23               *
+      *                 MD061992           Date 23Oct23               *
       *                 MD061954           Date 08Oct23               *
       *                 MD061951           Date 06Oct23               *
       *                 MD061927           Date 28Sep23               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062077 - Include reference BFLIB                           *
       *  MD061779 - Upgrading deliverable data with full DDS set      *
       *  MD061992 - Allow 3 char prefix for reference libraries       *
       *             Recompiled                                        *
@@ -1774,6 +1776,7 @@
      C                   eval      #LIBRGP = XPACK  + 'F'                                   MD061954
      C                   eval      #LIBRGT = XPACK  + 'F'                                   MD061954
      C                   eval      #LIBRGV = XPACK  + 'F'                                   MD061954
+     C                   eval      #LIBRBF = XPACK  + 'F'                                   MD062077
      C                   WHEN      XCUM = '2'                                               MD061954
      C                   eval      #LIBRDM = XPACK2 + 'F'                                   MD061954
      C                   eval      #LIBRDP = XPACK2 + 'F'                                   MD061954
@@ -1783,6 +1786,7 @@
      C                   eval      #LIBRGP = XPACK2 + 'F'                                   MD061954
      C                   eval      #LIBRGT = XPACK2 + 'F'                                   MD061954
      C                   eval      #LIBRGV = XPACK2 + 'F'                                   MD061954
+     C                   eval      #LIBRBF = XPACK2 + 'F'                                   MD062077
      C                   WHEN      XCUM = '3'                                               MD061954
      C                   eval      #LIBRDM = 'MISYSFIXES'                                   MD061954
      C                   eval      #LIBRDP = 'MISYSFIXES'                                   MD061954
@@ -1792,6 +1796,7 @@
      C                   eval      #LIBRGP = 'MISYSFIXES'                                   MD061954
      C                   eval      #LIBRGT = 'MISYSFIXES'                                   MD061954
      C                   eval      #LIBRGV = 'MISYSFIXES'                                   MD061954
+     C                   eval      #LIBRBF = 'MISYSFIXES'                                   MD062077
      C                   ENDSL                                                              MD061954
                                                                                             MD061954
       * Protect aDBU and prefixes                                                           MD061954
@@ -1814,6 +1819,8 @@
      C                             's global delivered data'                                MD061954
      C                   eval      #LIBGVN = GLOBP + 'GVLIB - BankFusion Midas'+            MD061954
      C                             ' global logicals/views/indexes'                         MD061954
+     C                   eval      #LIBBFN = GLOBP + 'BFLIB - BankFusion Globa'+            MD062077
+     C                             'l Master Schema'                                        MD062077
                                                                                             MD061954
      C                   DOW       *INKC = *OFF                                             MD061954
      C                             and ErrInd = 'Y'                                         MD061954
@@ -2255,6 +2262,59 @@
      C                   ENDIF                                                              MD061954
      C                   ENDIF                                                              MD061954
                                                                                             MD061954
+      * BFLIB                                                                               MD062077
+      * Validate that library entered is non blank                                          MD062077
+     C                   If        #LIBRBF = *blanks                                        MD062077
+      * optional for type '3'                                                               MD062077
+     C                             and XCUM <> '3'                                          MD062077
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD062077
+     C                   EVAL      ZAMSID = 'UPM6005'                                       MD062077
+     C                   EVAL      ErrInd = 'Y'                                             MD062077
+     C                   seton                                        59                    MD062077
+     C                   EXSR      ZASNMS                                                   MD062077
+     C                   else                                                               MD062077
+                                                                                            MD062077
+     C                   If        #LIBRBF <> *blanks                                       MD062077
+      * Check that library exists                                                           MD062077
+     C                   CALL      'UTCHKOBJ'                                               MD062077
+     C                   PARM      *BLANK        RTNCOD                                     MD062077
+     C                   PARM      #LIBRBF       P2OBNM                                     MD062077
+     C                   PARM      '*LIBL'       P2TLIB                                     MD062077
+     C                   PARM      '*LIB'        P2OBTP                                     MD062077
+     C                   PARM      *blanks       CHKMBR                                     MD062077
+      *                                                                                     MD062077
+      * If libary does not exist in the library list, send message                          MD062077
+     C     RTNCOD        IFNE      'Exist'                                                  MD062077
+     C                   seton                                        58                    MD062077
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD062077
+     C                   EVAL      ZAMSID = 'UPM6004'                                       MD062077
+     C                   EVAL      ZAMSDA = #LIBRBF                                         MD062077
+     C                   EVAL      ErrInd = 'Y'                                             MD062077
+     C                   EXSR      ZASNMS                                                   MD062077
+     C                   else                                                               MD062077
+                                                                                            MD062077
+      * Check that SAVF exists in the library                                               MD062077
+     C                   eval      SAVF = GLOBP + 'BFLIB'                                   MD062077
+     C                   CALL      'UTCHKOBJ'                                               MD062077
+     C                   PARM      *BLANK        RTNCOD                                     MD062077
+     C                   PARM      SAVF          P2OBNM                                     MD062077
+     C                   PARM      #LIBRBF       P2TLIB                                     MD062077
+     C                   PARM      '*FILE'       P2OBTP                                     MD062077
+     C                   PARM      *blanks       CHKMBR                                     MD062077
+                                                                                            MD062077
+      * If libary does not exist in the library list, send message                          MD062077
+     C     RTNCOD        IFNE      'Exist'                                                  MD062077
+     C                   seton                                        58                    MD062077
+     C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD062077
+     C                   EVAL      ZAMSID = 'UPM6006'                                       MD062077
+     C                   EVAL      ZAMSDA = SAVF                                            MD062077
+     C                   EVAL      ErrInd = 'Y'                                             MD062077
+     C                   EXSR      ZASNMS                                                   MD062077
+     C                   ENDIF                                                              MD062077
+     C                   ENDIF                                                              MD062077
+     C                   ENDIF                                                              MD062077
+     C                   ENDIF                                                              MD062077
+                                                                                            MD062077
      C                   ENDDO                                                              MD061954
                                                                                             MD061954
      C                   ENDSR                                                              MD061954
@@ -2291,6 +2351,7 @@
      C+  ,LRSTGP                                                                            MD061954
      C+  ,LRSTGT                                                                            MD061954
      C+  ,LRSTGV                                                                            MD061954
+     C+  ,LRSTBF                                                                            MD062077
      C+ )                                                                                   MD061954
      C+ Values                                                                              MD061954
      C+ (                                                                                   MD061954
@@ -2302,6 +2363,7 @@
      C+  ,' '                                                                               MD061954
      C+  ,' '                                                                               MD061954
      C+  ,' '                                                                               MD061954
+     C+  ,' '                                                                               MD062077
      C+ )                                                                                   MD061954
      C/END-EXEC                                                                             MD061954
      C                   If        SQLCode <> 0                                             MD061954
@@ -2326,6 +2388,7 @@
      C                   setoff                                       515253                MD061954
      C                   setoff                                       54                    MD061954
      C                   eval      %Subarr(*IN : 71 : 8) = *OFF                             MD061954
+     C                   setoff                                       81                    MD062077
                                                                                             MD061954
       ** End program if F3 is pressed.                                                      MD061954
      C                   IF        *INKC = *ON                                              MD061954
@@ -2380,6 +2443,12 @@
       + update UPRSTRTD set LRSTGV = ' '                                                    MD061954
      C/end-exec                                                                             MD061954
      C                   Endif                                                              MD061954
+      * As BFLIB must be restore before GVLIB, set status to Submitted                      MD062077
+     C                   If        #LIBRBF <> ' '                                           MD062077
+     C/exec SQL                                                                             MD062077
+      + update UPRSTRTD set LRSTBF = 'S'                                                    MD062077
+     C/end-exec                                                                             MD062077
+     C                   Endif                                                              MD062077
       ** submit restore in SBSD for each SAVF having a library inserted                     MD061954
      C                   CALL      'UPC6006'                                                MD061954
      C                   PARM                    #LIBRDM                                    MD061954
@@ -2390,6 +2459,7 @@
      C                   PARM                    #LIBRGP                                    MD061954
      C                   PARM                    #LIBRGT                                    MD061954
      C                   PARM                    #LIBRGV                                    MD061954
+     C                   PARM                    #LIBRBF                                    MD062077
      C                   PARM                    GLOBP                                      MD061954
      C                   PARM                    ZONEP                                      MD061954
      C                   PARM                    BRGLIB           10                        MD061954
@@ -2421,6 +2491,7 @@
       * Check if all complete                                                               MD061954
      C                   eval      pos = %LOOKUP(*ON: *IN: 70 : 8)                          MD061954
      C                   If        pos > 0                                                  MD061954
+     C                             or *IN81 = *ON                                           MD062077
      C                   eval      ErrInd = 'Y'                                             MD061954
      C                   ITER                                                               MD061954
      C                   Endif                                                              MD061954
@@ -2543,6 +2614,18 @@
      C                   eval      #GVSTS = 'Complete'                                      MD061954
      C                   ENDSL                                                              MD061954
                                                                                             MD061954
+     C                   SELECT                                                             MD062077
+     C                   WHEN      LRSTBF = 'S'                                             MD062077
+     C                   eval      #BFSTS = 'Submitted'                                     MD062077
+     C                   WHEN      LRSTBF = 'F'                                             MD062077
+     C                   eval      #bFSTS = 'Failed'                                        MD062077
+     C                   seton                                        81                    MD062077
+     C                   WHEN      LRSTBF = 'R'                                             MD062077
+     C                   eval      #BFSTS = 'Running'                                       MD062077
+     C                   WHEN      LRSTBF = 'C'                                             MD062077
+     C                   eval      #BFSTS = 'Complete'                                      MD062077
+     C                   ENDSL                                                              MD062077
+                                                                                            MD062077
      C                   eval      WAIT = 'NO'                                              MD061954
       ** If at least one is submitted or running, wait                                      MD061954
      C                   IF        LRSTDM = 'S' or LRSTDM = 'R'                             MD061954
@@ -2553,6 +2636,7 @@
      C                             or LRSTGP = 'S' or LRSTGP = 'R'                          MD061954
      C                             or LRSTGT = 'S' or LRSTGT = 'R'                          MD061954
      C                             or LRSTGV = 'S' or LRSTGV = 'R'                          MD061954
+     C                             or LRSTBF = 'S' or LRSTBF = 'R'                          MD062077
      C                   eval      WAIT = 'YES'                                             MD061954
      C                   Endif                                                              MD061954
                                                                                             MD061954

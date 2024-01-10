@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061774           Date 23Nov23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
@@ -64,6 +65,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD058815 - Dealing interest Calculation type 6 have different*

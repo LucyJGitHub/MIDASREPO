@@ -15,13 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058221           Date 25Jun21               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD058221           Date 25Jun21               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
-      *                 MD035545           Date 11Sep15               *      
+      *                 MD035545           Date 11Sep15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -66,7 +71,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *

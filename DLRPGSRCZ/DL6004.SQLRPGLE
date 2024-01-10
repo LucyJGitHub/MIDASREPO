@@ -17,8 +17,9 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 MD058815           Date 28Sep21               *
       *                 MD058285           Date 22Jun21               *
       *                 MD055733           Date 03Jul20               *
       *                 MD055146           Date 04Feb20               *
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  MD058815 - Dealing interest Calculation type 6 have different*

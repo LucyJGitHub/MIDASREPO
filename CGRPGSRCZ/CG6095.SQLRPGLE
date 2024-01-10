@@ -16,10 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059369 *CREATE   Date 24Dec21               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. MD059369 *CREATE   Date 24Dec21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  MD059369 - CIR020 - LIBOR IRS - Correspondence Manager       *
       *                                                               *
       *****************************************************************

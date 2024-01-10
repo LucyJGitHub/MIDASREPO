@@ -11,8 +11,9 @@
 0006 F*                                                                  *LE0340
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                                  *LE0340
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD062185           Date 18Dec23               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,9 @@
 0010 F*                                                                  *LE0340
 0011 F********************************************************************
      F*                                                               *
+      *  MD062185 - Add insert, amend and authorising user in LE0340P1*
+      *           - Amended number of records to be displayed to max  *
+      *             15 per page. 3 detail lines are needed per record *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  245795 - Include branch in the key fields.                   *
@@ -62,7 +66,8 @@
      F***SAIAD** IPE F     208 16AI     2 DISK                                         CAC001 CAS005
      F***SAIAD** IPE F     216 16AI     2 DISK                                         CAS005 CLE106
      F***LEADINL0IPE F  228            DISK                                            CLE106 245795
-     FLEADINL0IPE F     228  3AI    25 DISK                                                   245795
+     F***LEADINL0IPE F     228  3AI    25 DISK                                       245795 MD062185
+     FLEADINL0IPE F     262  3AI    25 DISK                                                 MD062185
 0014 F*TABLE***IF**F      96 12AI     2 DISK                              S01194
 0016 F*E0340P1O***F     132            PRINTER                   S01124   S01117
 0016 F***LE0340AUO***F*****132            PRINTER      KINFDS SPOOLU                   S01117 CLE106
@@ -174,6 +179,9 @@
      I                                    P 206 2120MAAN                                      CLE106
      I                                      213 213 MASN                                      CLE106
      I                                      214 228 PCRF                                      CLE106
+     I                                      233 242 IUSR                                    MD062185
+     I                                      243 252 AUSR                                    MD062185
+     I                                      253 262 XUSR                                    MD062185
 0096 I*                                                                   LE0340
 0097 I* CATCHALL                                                          LE0340
 0098 I        NS  06                                                      LE0340
@@ -353,13 +361,21 @@
 0175 C*                                                                   LE0340
 0176 C                     EXSR JCALC                                     LE0340
 0177 C* CHECK FOR PAGE OVERFLOW.25=NEW PAGE                               LE0340
-0178 C           LINE      COMP 1                        25               LE0340
+0178 C********** LINE      COMP 1                        25                          LE0340 MD062185
 0179 C***********          EXCPT                                          S01117
-     C           *IN25     IFEQ '1'                                       S01117
-     C           PAGE      ANDGT1                                         S01117
-     C                     EXCPTHEADER                                    S01117
-     C                     END                                            S01117
-0180 C        N25LINE      COMP 24                       26               LE0340
+     C********** *IN25     IFEQ '1'                                                  S01117 MD062185
+     C********** PAGE      ANDGT1                                                    S01117 MD062185
+     C**********           EXCPTHEADER                                               S01117 MD062185
+     C**********           END                                                       S01117 MD062185
+0180 C********N25LINE      COMP 24                       26                          LE0340 MD062185
+      *                                                                                     MD062185
+      ** Print new header once the 15th record is already printed;                          MD062185
+      ** this will also prevent printing on 60th line (overflow)                            MD062185
+      *                                                                                     MD062185
+     C           LINE      COMP 14                   26                                     MD062185
+     C           *IN26     IFEQ '1'                                                         MD062185
+     C                     EXCPTHEADER                                                      MD062185
+     C                     ENDIF                                                            MD062185
 0181 C         26          Z-ADD0         LINE                            LE0340
 0182 C         26          SETOF                     26                   LE0340
 0183 C      25             SETOF                     25                   LE0340
@@ -921,7 +937,8 @@
      O                 11               117 'COST OF FUNDS/SIGN'          CAC001
      O                 11               125 'TIME'                        CAC001
 0466 O*E0340P1E*11     05N50                                     S01124   S01117
-     OLE0340P1E 11             DETAIL                                     S01117
+     O***LE0340P1E 11             DETAIL                                             S01117 MD062185
+     OLE0340P1E 1              DETAIL                                                       MD062185
 0467 O***********              CNUM      14                        LE0340 CAC001
 0468 O***********              CRNM      37                        LE0340 CAC001
 0469 O***********              CTWN      48                        LE0340 CAC001
@@ -973,6 +990,13 @@
      O                 11    35ACAJ     117 ' ,   ,   , 0 .   '           CAC001
      O                 11      CASN     118                               CAC001
      O                 11      UDTM     127 '  .  .  '                    CAC001
+     O        E 11             DETAIL                                                       MD062185
+     O                                   28 'INSERTING USER:'                               MD062185
+     O                         IUSR      39                                                 MD062185
+     O                                   56 'AMENDING USER:'                                MD062185
+     O                         AUSR      67                                                 MD062185
+     O                                   89 'AUTHORISING USER:'                             MD062185
+     O                         XUSR     100                                                 MD062185
 0479 O        T 31     LR U7 U8                                           LE0340
 0480 O                                   42 '*** REFERENCE'               LE0340
 0481 O                                   51 'LE0340'                      LE0340

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR316457           Date 16Oct23               *
-      *  Prev Amend No. 230214             Date 03Jul23               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. AR316457           Date 16Oct23               *
+      *                 230214             Date 03Jul23               *
       *                 AR987344           Date 18Sep23               *
       *                 MD015646           Date 18Sep23               *
       *                 AR947177           Date 18Sep23               *
@@ -441,6 +442,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  AR316457 - Next interest payment date does not consider      *
       *             holidays.                                         *
       *             Move value of SCCYA or PSCYA to ZCCY only when    *

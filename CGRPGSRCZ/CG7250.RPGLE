@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD061774           Date 22Nov23               *
+      *  Prev Amend No. MD058815           Date 28Sep21               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR847818           Date 26Apr13               *
       *                 AR996895           Date 06Jul12               *
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061774 - Deal Accrual Posting Difference for Deals with    *
+      *           - Value Date 28th Feb.                              *
+      *           - Recompile due to changes in ZINTDYZ2LE.           *
+      *           - Applied for MD062031.                             *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *

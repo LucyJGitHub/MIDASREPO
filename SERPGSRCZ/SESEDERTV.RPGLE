@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR660635           Date 16Jul21               *
-      *  Prev Amend No. 260191A            Date 22May20               *
+      *  Last Amend No. AR700336           Date 09Jan24               *
+      *  Prev Amend No. AR660635           Date 16Jul21               *
+      *                 260191A            Date 22May20               *
       *                 260191             Date 22May20               *
       *                 259978             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
@@ -52,6 +53,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR700336 - Error message SEA0333 appears when trying to      *
+      *             delete an 'IR' Security Diary Event. Fix is to    *
+      *             consider the Long Term Maturity of the security.  *
+      *             (Child: AR700337)                                 *
       *  AR660635 - Deletion of Diary Event of a matured security     *
       *             causes SEC0602 to fail. Prevent deletion.         *
       *             (Child Artifact: AR660636)                        *
@@ -1144,6 +1149,12 @@
      C                   ELSE
      C                   Z-ADD     WMYr          WMYrC
      C                   ENDIF
+      *                                                                                     AR700336
+      ** If Long Term Maturity = 'Y' add another 100 to WMYrC                               AR700336
+      *                                                                                     AR700336
+     C                   IF        F1LTMI = 'Y'                                             AR700336
+     C     WMYr          ADD       100           WMYrC                                      AR700336
+     C                   ENDIF                                                              AR700336
 
      C                   IF        WIYr < 72
      C     WIYr          ADD       100           WIYrC

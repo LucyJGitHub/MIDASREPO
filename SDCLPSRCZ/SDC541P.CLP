@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR636440           Date 10Jan24              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG7198            Date 30May05              */
+/*                      BUG7198            Date 30May05              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      195963             Date 13May02              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -28,6 +29,9 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       AR636440 - No report for deleted items in Extended Std.     */
+/*                  Settlement Instructions. Need to ensure that     */
+/*                  deleted records are printed. Applied fix 256965. */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG7198 - SDC541P 10007 failed component                    */
 /*       195963 - Deleted broker codes not shown in SD0070P audit.   */
@@ -69,6 +73,13 @@ PGM  PARM(&PGM &SEQ &LEVEL &ENTITY)
    CLRPFM FILE(SDBRKDPD)                                              /*195963*/
    ENDDO                                                                                 /*BUG7198*/
  
+/**/                                                                                    /*AR636440*/
+/* Extended settlement */                                                               /*AR636440*/
+/**/                                                                                    /*AR636440*/
+   IF  (&PGM *EQ 'SD0400P') THEN(DO)                                                    /*AR636440*/
+             CLRPFM     FILE(SDEXSDEL)                                                  /*AR636440*/
+   ENDDO                                                                                /*AR636440*/
+                                                                                        /*AR636440*/
    CALL  PGM(&PGM)  PARM(&RTNCD  &MODE  &SEQ  &LEVEL  &ENTITY)        /*E26585*/
    MONMSG  MSGID(CPF0001)  EXEC(DO)
       CHGVAR  VAR(&MSG)  VALUE('Error on call to program' *BCAT &PGM)

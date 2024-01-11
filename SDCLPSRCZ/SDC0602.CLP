@@ -11,8 +11,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. AR636440           Date 10Jan24              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -41,6 +42,9 @@
 /*                    RT      Drop SD0310 for RT test               */
 /********************************************************************/
 /*                                                                  */
+/*       AR636440 - No report for deleted items in Extended Std.     */
+/*                  Settlement Instructions. Need to ensure that     */
+/*                  deleted records are printed. Applied fix 256965. */
 /*       MD046248 - Finastra Rebranding                              */
 /*     CCB020 - COB Restructure - Secondary COB Infrastructure      */
 /*     CGL018 - Risk Weighted Assets                                */
@@ -200,6 +204,12 @@
 /************   ENDDO                                       *S01146*/ /*LN0220*/
 /************ENDDO                                          *S01146*/ /*LN0220*/
  
+/**/                                                                                    /*AR636440*/
+/* Clear file for standing data report before copying records into */                   /*AR636440*/
+/* them for reporting so as to avoid duplicated records copied. */                      /*AR636440*/
+/**/                                                                                    /*AR636440*/
+             CLRPFM     FILE(SDEXSDEL)                                                  /*AR636440*/
+                                                                                        /*AR636440*/
 /* Optical Disk and/or                                        *LN0381*/
 /* Microfiche Processing -                                    *LN0381*/
 /*                        Set up Collation Frequency Dataara  *LN0381*/

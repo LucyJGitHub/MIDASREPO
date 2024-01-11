@@ -15,12 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD061992             Date 23Oct23             *
-      *  Prev Amend No. MD061706           Date 01Aug23               *
+      *  Last Amend No. MD062236             Date 11Jan24             *
+      *  Prev Amend No. MD061992             Date 23Oct23             *
+      *                 MD061706           Date 01Aug23               *
       *                 CUP044 *CREATE     Date 22May22               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062236 - 1. UDF tables are selected for upgrade            *
+      *             2. RSTP wrongly shows 'Restore complete'          *
+      *             3. Incorrect zone reference system displayed      *
       *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061706 - Various changes for transition to aDBU            *
       *  CUP044 - One Touch Bridge Automation Changes - Release/      *
@@ -191,7 +195,8 @@
      C                   IF        RcdCount > 0                                             MD061706
      C                   CALL      'UP4015'                                                 MD061706
      C                   PARM                    PFX                                        MD061706
-     C                   PARM                    GLOBREF                                    MD061706
+     C**********         PARM                    GLOBREF                           MD061706 MD062236
+     C                   PARM                    ZONEREF                                    MD062236
      C                   PARM                    ERROR                                      MD061706
      C                   PARM                    ADBU                                       MD061706
      C                   ELSE                                                               MD061706

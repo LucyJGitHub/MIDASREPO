@@ -494,6 +494,7 @@
                         dsLEFHST.HIRCTP = RATE_CHANGE;
                         dsLEFHST.HILCHD = BJRDNB;
                         dsLEFHST.HILCHT = 'I';
+                        dsLEFHST.HIFCOD = 0;
                         dsLEFHST.HIAMTS = 0;
                         dsLEFHST.HIHDAT = 0;
                         dsLEFHST.HIAMTD = 0;

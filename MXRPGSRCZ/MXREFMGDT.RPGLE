@@ -32,7 +32,8 @@
       *              Fix to selection criteria to reverse change for  *
       *              GSH022 - Allow selection on any field size -     *
       *              which is no longer applicable in Fusion Midas.   *
-      *           - Move AOSARDR0 call to *INZSR                      *
+      *            - Move AOSARDR0 call to *INZSR                     *
+      *            - Apply for MD062228.                              *
       *  MD040422 -  1 cent difference PPCA+MPCA <--> SIRONL          *
       *              transactions                                     *
       *  CMX016 - Allow LIKE and NLIKE selection                      *
@@ -179,7 +180,7 @@
      C                   PARM                    ReferID
      C                   PARM                    Select_EXP
 
-      ***ACCESS*SAR DETAILS FILE TO DETERMINE IF CMX016 IS INSTALLED                 CMX016 MD062212
+      ***ACCESS*SAR*DETAILS*FILE*TO*DETERMINE*IF*CMX016*IS*INSTALLED                 CMX016 MD062212
       **********                                                                     CMX016 MD062212
      C**********         CALL      'AOSARDR0'                                        CMX016 MD062212
      C**********         PARM      *BLANKS       @RTCD             7                 CMX016 MD062212

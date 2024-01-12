@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061779           Date 17Aug23               *
-      *  Prev Amend No. MD061992           Date 23Oct23               *
+      *  Last Amend No. MD062158           Date 12Jan24               *
+      *  Prev Amend No. MD061779           Date 17Aug23               *
+      *                 MD061992           Date 23Oct23               *
       *                 MD061951           Date 06Oct23               *
       *                 MD061880           Date 14Sep23               *
       *                 MD061927           Date 28Sep23               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062158 - Validation of prefixes to be done if flag is 'Y'  *
       *  MD061779 - Upgrading deliverable data with full DDS set      *
       *  MD061992 - Allow 3 char prefix for reference libraries       *
       *             Recompiled                                        *
@@ -731,8 +733,10 @@
      C                   seton                                        52                    MD061706
      C                   ENDIF                                                              MD061706
       ** if *in22 was already on, then validate references                                  MD061706
-     C                   If        *IN22 = '1'                                              MD061706
-     C                             or XADBU = 'Y'                                           MD061706
+      ** only validate in case XADBU = 'Y'                                                  MD062158
+     C**********         If        *IN22 = '1'                                     MD061706 MD062158
+     C**********                   or XADBU = 'Y'                                  MD061706 MD062158
+     C                   If        XADBU = 'Y'                                              MD062158
       ** Validate Reference prefixes                                                        MD061706
      C                   If        XREFG = *blanks                                          MD061706
      C                   EVAL      ZAMSGF = 'UTMSGF'                                        MD061706

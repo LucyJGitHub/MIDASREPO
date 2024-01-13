@@ -101,7 +101,6 @@
      D keyLNRF         s              6a   inz(*blanks)
      D keyFSEQ         s              2s 0 inz(0)
      D keyRCVD         s              5S 0 inz(0)
-     D keyAMTS         s             13p 0 inz(0)
      D wTotal          s              6s 0 inz(0)
      D pReturnCode     s              7a   inz(*blanks)
      D pOption         s              7a   inz(*blanks)

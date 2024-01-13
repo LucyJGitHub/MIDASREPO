@@ -101,7 +101,6 @@
      D keyLNRF         s              6a   inz(*blanks)
      D keyFSEQ         s              2s 0 inz(0)
      D keyRCVD         s              5S 0 inz(0)
-     D keyAMTS         s             13p 0 inz(0)
      D wTotal          s              6s 0 inz(0)
      D pReturnCode     s              7a   inz(*blanks)
      D pOption         s              7a   inz(*blanks)
@@ -359,8 +358,7 @@
                          HILNRF = :keyLNRF and
                          HIFSEQ = :keyFSEQ and
                          HIRCTP = :keyRCTP and
-                         HIRCVD = :keyRCVD and
-                         HIAMTS = :keyAMTS;
+                         HIRCVD = :keyRCVD;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                         dBase    = 006;
@@ -400,7 +398,6 @@
                    keyFACL =  dsLEFEED.FEFACL;
                    keyLNRF =  dsLEFEED.FELOAN;
                    keyFSEQ =  dsLEFEED.FEFSEQ;
-                   keyAMTS = 0;
 
                   exsr checkDuplicate;
 
@@ -479,7 +476,6 @@
                         keyFACL =  arrHist(Ix).HIFACL;
                         keyLNRF =  arrHist(Ix).HILNRF;
                         keyFSEQ =  arrHist(Ix).HIFSEQ;
-                        keyAMTS =  arrHist(Ix).HIAMTS;
 
                         exsr checkDuplicate;
 

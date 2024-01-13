@@ -359,8 +359,7 @@
                          HILNRF = :keyLNRF and
                          HIFSEQ = :keyFSEQ and
                          HIRCTP = :keyRCTP and
-                         HIRCVD = :keyRCVD and
-                         HIAMTS = :keyAMTS;
+                         HIRCVD = :keyRCVD;
 
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                         dBase    = 006;
@@ -400,7 +399,6 @@
                    keyFACL =  dsLEFEED.FEFACL;
                    keyLNRF =  dsLEFEED.FELOAN;
                    keyFSEQ =  dsLEFEED.FEFSEQ;
-                   keyAMTS = 0;
 
                   exsr checkDuplicate;
 
@@ -479,7 +477,6 @@
                         keyFACL =  arrHist(Ix).HIFACL;
                         keyLNRF =  arrHist(Ix).HILNRF;
                         keyFSEQ =  arrHist(Ix).HIFSEQ;
-                        keyAMTS =  arrHist(Ix).HIAMTS;
 
                         exsr checkDuplicate;
 

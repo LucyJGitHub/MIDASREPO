@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD060412           Date 13Jan24               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *
       *                 222088             Date 28May12               *
       *                 216936             Date 28May12               *
       *                 212319             Date 28May12               *
@@ -49,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060412 - MT942 not generated since yesterday afternoon.    *
+      *           - Reset next page number to 0 if current page       *
+      *             number is 99999.                                  *
+      *           - Applied for MD062209.                             *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
@@ -895,7 +900,13 @@
      C                   EVAL      MGMIO5 = N42MI5                              Default MT942 messag
      C                   EVAL      MGMIO6 = N42MI6                              Default MT942 messag
      C                   ENDSL
+      *                                                                                     MD060412
+     C                   IF        N42LSP < 99999                                           MD060412
      C                   EVAL      MGSTNO = N42LSP + 1                          Last Statement Page
+     C                   ELSE                                                               MD060412
+     C                   EVAL      MGSTNO = 1                                               MD060412
+     C                   ENDIF                                                              MD060412
+      *                                                                                     MD060412
      C                   EVAL      MGDFLM = MR2FLD                              Debit Floor Limit
      C                   EVAL      MGCFLM = MR2FLC                              Credit Floor Limit
      C                   EVAL      MGNBDB = WkNbDebit                           Number of Debit Post
@@ -917,7 +928,12 @@
 
       ** Process MT942 Details.
 
+     C                   IF        N42LSP < 99999                                           MD060412
      C                   EVAL      N42LSP = N42LSP + 1                          Last Statement Page
+     C                   ELSE                                                               MD060412
+     C                   EVAL      N42LSP = 0                                               MD060412
+     C                   ENDIF                                                              MD060412
+      *                                                                                     MD060412
      C                   EVAL      N42LSD = BJRDNB                              Last Statement Date
      C                   TIME                    N42LST                         Last Statement Time
      C                   EVAL      N42LDN = WkNbDebit                           Number of Debit Post

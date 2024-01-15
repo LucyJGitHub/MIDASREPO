@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 259924             Date 14Dec23               *
+      *  Prev Amend No. 260568             Date 14Dec23               *
+      *                 MD056602           Date 04Sep20               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -63,6 +65,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259924 - Amended so that program will check front office ID  *
+      *           in all deals.                                       *
+      *  260568 - Amended so that program will check front office ID  *
+      *           when transactions are from SOAP.                    *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -168,6 +174,13 @@
                                                                                               CAP185
       ** Midas AP API Configuration                                                           CAP185
      F*APICFGL0* IF   E           K DISK    INFSR(*PSSR)                             CAP185 MD056602
+     FFRNTOFCL1 IF   E           K DISK    INFSR(*PSSR)                                       259924
+     F                                     RENAME(MMDELDP0:MMDELDX0)                          259924
+     F                                     RENAME(MMDENBP0:MMDENBX0)                          259924
+     F                                     RENAME(MMDENSP0:MMDENSX0)                          259924
+     F                                     RENAME(ABDEALP0:ABDEALX0)                          259924
+     F                                     RENAME(FXDEALP0:FXDEALX0)                          259924
+     F                                     RENAME(DEALSDGF:DEALSGX0)                          259924
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -368,7 +381,10 @@
       ** If the mode is 'Front Office Transaction Interface',
       ** perform validation for Front Office Transaction Interface
 
-     C                   IF        ModeofOp = '*FRONT'
+     C**********         IF        ModeofOp = '*FRONT'                                        260568
+     C                   IF        ModeofOp = '*FRONT' OR                                     260568
+     C                             ModeofOp = ' ' AND                                         260568
+     C                             PFOTrId <> ' ' AND PAcCd = 'I'                             260568
      C                   EXSR      SRValFront
 
       ** Carry out no further validation if errors have occurred.
@@ -490,7 +506,8 @@
 
       ** Access Deal with Front Office Transaction ID
 
-     C     PFOTrId       CHAIN     IRFRAL0
+     C*****PFOTrId       CHAIN     IRFRAL0                                                    259924
+     C     PFOTrId       CHAIN     FRNTOFCL1                                                  259924
 
       ** If Insert
 
@@ -498,7 +515,8 @@
 
       ** Front Office Transaction ID cannot be present already
 
-     C                   IF        %FOUND(IRFRAL0)
+     C**********         IF        %FOUND(IRFRAL0)                                            260568
+     C                   If        %FOUND(FRNTOFCL1)                                          260568
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#0ACCD'

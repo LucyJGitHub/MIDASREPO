@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260191A            Date 22May20               **
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD062147           Date 09Jan24               *
+      *  Prev Amend No. 260191A            Date 22May20               **
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
@@ -63,6 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062147 - MPOA xU SESEDECTL - Error in CTL is due to decimal*
+      *             data error.                                       *
+      *             Align the input parameter when calling SESEDE1VL. *
       *  260191A- System should not allow deletion of LIVE/MATURED    *
       *           security diary event if ALL generated position      *
       *           settlements are still unsettled/live records.       *
@@ -1105,6 +1109,9 @@
       *
       ** SDBANK - Date Format Indicator
      C                   PARM                    BJDFIN
+      *                                                                                     MD062147
+      ** SDBANK - Rundate                                                                   MD062147
+     C                   PARM                    BJRDNB                                     MD062147
       *
       ** MMODF - Strategic risk management indicator
      C                   PARM                    RMFL

@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 30May14               *
+      *  Last Amend No. AR636440           Date 10Jan24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 30May14               *
       *                 CSD095             Date 08Apr14               *
       *                 AR993239A          Date 27Jun12               *
       *                 AR993366           Date 21Jun12               *
@@ -49,6 +50,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR636440 - Include deleted extended settlements in the audit *
+      *             SD0400PM report. Patterned fix with 256965.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM FX SSI's      *
@@ -111,9 +114,24 @@
      M* Maintenance   :
      F*****************************************************************
      F/COPY WNCPYSRC,SDH00173
-     FSDEXSTL1IF  E           K        DISK
-      * RTV: Extended Settlements      Retrieval index
+     F***SDEXSTL1IF  E           K        DISK                                              AR636440
+      **RTV:*Extended*Settlements******Retrieval*index*****************                     AR636440
       *
+     FSDEXDEL1IF  E           K        DISK                                                 AR636440
+     F            @BYDEL                            KRENAME@BYREFY                          AR636440
+      ** RTV: Extended Settlements                                                          AR636440
+      *                                                                                     AR636440
+     FSDEXSTPDIF  E           K        DISK                                                 AR636440
+     F            SDEXSTD0                          KRENAMESDEXSTD1                         AR636440
+      ** RTV: Extended Settlements Retrieval index                                          AR636440
+      *                                                                                     AR636440
+     FSDEXSDE1IF  E           K        DISK                                                 AR636440
+     F            SDEXSTD0                          KRENAMESDEXSTD2                         AR636440
+      ** RTV: Deleted Extd. Settlements Retrieval index                                     AR636440
+      *                                                                                     AR636440
+     FSDEXSDELO   E           K        DISK                                                 AR636440
+      ** RTV: Deleted Extd. Settlements Retrieval index                                     AR636440
+      *                                                                                     AR636440
      F/COPY WNCPYSRC,SDH00174
      FSDFCTLL1IF  E           K        DISK
       * RTV: Standing Data Controls    Retrieval index
@@ -218,6 +236,34 @@
       * Initialise
      C/COPY WNCPYSRC,SD0400PC17
      C                     EXSR ZZINIT
+      *                                                                                     AR636440
+      ** Use new LF/SDEXDEL1 instead of LF/SDEXSTL1.  Merge all amended                     AR636440
+      ** and inserted extended settlements to PF/SDEXSDEL which contain                     AR636440
+      ** all extended settlements to be referred to by the new LF.                          AR636440
+      *                                                                                     AR636440
+      ** Copy Insert and Amend Record from SDEXSTPD to SDEXSDEL.                            AR636440
+      *                                                                                     AR636440
+     C                     MOVE '0'       @COPY   1                                         AR636440
+     C           @COPY     DOWEQ'0'                                                         AR636440
+     C                     READ SDEXSTD1                 97                                 AR636440
+     C           *IN97     IFEQ '0'                                                         AR636440
+     C                     WRITESDEXSTD0                                                    AR636440
+     C                     ELSE                                                             AR636440
+     C                     MOVE *IN97     @COPY                                             AR636440
+     C                     ENDIF                                                            AR636440
+     C                     ENDDO                                                            AR636440
+      *                                                                                     AR636440
+      ** Copy Deleted Record from SDEXSDE1 to SDEXSDEL.                                     AR636440
+      *                                                                                     AR636440
+     C                     MOVE '0'       @COPY                                             AR636440
+     C           @COPY     DOWEQ'0'                                                         AR636440
+     C                     READ SDEXSTD2                 97                                 AR636440
+     C           *IN97     IFEQ '0'                                                         AR636440
+     C                     WRITESDEXSTD0                                                    AR636440
+     C                     ELSE                                                             AR636440
+     C                     MOVE *IN97     @COPY                                             AR636440
+     C                     ENDIF                                                            AR636440
+     C                     ENDDO                                                            AR636440
       *
       * Clear overflow indicator.
      C                     SETOF                     97
@@ -756,7 +802,11 @@
       * USER: Process detail record
      C                     MOVELP1ARSI    WUARSI           Audit/Request S
       * Process Detail Rec PRTFIL
+     C           BYTYLC    IFNE 'D'                        *IF                              AR636440
+     C           BYRECI    ANDNE'F'                                                         AR636440
+     C           BYRECI    ANDNE'*'                                                         AR636440
      C                     ADD  1         WUWKNB           work number
+     C                     ENDIF                           *FI                              AR636440
       *CASE:     PAR.Audit/Request Status Ind is Audit Mode
      C           WUARSI    IFEQ @CN,01                     *IF
       *CASE:     PAR.Last Change Date NE WRK.run day number

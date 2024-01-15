@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL027             Date 04Apr17              */
+/*       Last Amend No. AR636440           Date 10Jan24              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL027             Date 04Apr17              */
 /*                      MD031966           Date 27Jul15              */
 /*                      CGL158            Date 20Aug14               */
 /*                      CSC056            Date 06Aug12               */
@@ -55,6 +56,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       AR636440 - Clear introduced files to avoid duplicate record */
+/*                  in file. Patterned from fix 233678.              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL027 - Shadow Postings and Sufficient Funds Check        */
 /*       MD031966 - BFM GL3572P1 issue                              */
@@ -259,6 +262,8 @@
              CLRPFM     FILE(GEAA2HH)                               /* 122794*/
              CLRPFM     FILE(GEAA2PD)                               /* 122794*/
              CLRPFM     FILE(GEAA2ZZ)                               /* 122794*/
+             CLRPFM     FILE(SDEXSDE1)                                                  /*AR636440*/
+             CLRPFM     FILE(SDEXSDEL)                                                  /*AR636440*/
 /*/COPY WNCPYSRC,SCCLRGL010                                          */
 /************                                               /*S10736* *048237*/
 /************DLTF       FILE(GLPOSTL5X)                     /*S10736* *048237*/

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060683           Date 15Feb23               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. 260568             Date 14Dec23               *
+      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *                 MD059304           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260568 - Amended program to cater amendments made on JAVA.   *
       *  MD060683 - Unable to Authorize newly inserted Single         *
       *             Currency IRS deal                                 *
       *  MD059304 - Changing the Pay settlement method in from        *
@@ -694,6 +696,7 @@ RGC  D DWMsgDtaArr     S             45A   DIM(ArrayMax)                        
      C                   EVAL      SUINFD=%SUBST(Buffer:273)                                  CDL038
      C                   EVAL      STINFD=%SUBST(Buffer:279)                                  CDL038
      C                   EVAL      DDSTS=%SUBST(Buffer:285)                                   CDL038
+     C                   EVAL      FOTRID = APFOTranID                                        260568
                                                                                               CSW213
      C                   EVAL      DLRPIFScn1Fmt = DLRPIFS1In                                 CSW213
      C                   EVAL      DLRPIFScn2Fmt = DLRPIFS2In                                 CSW213

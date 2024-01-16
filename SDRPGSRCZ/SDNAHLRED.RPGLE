@@ -29,7 +29,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< Upstream, based on branch 'bugfix/MD-62115A' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD062115 - Deleted record still displayed if mulitiple       *
+=======
+      *  MD062115A -Deleted record still displayed if mulitiple       *
+>>>>>>> 1f1f291 [MD-62115] Reopen - Fusion Midas non-account holders maintenance  
       *             succession of deleted records. Use DOW instead.   *
       *  MD061332 - Holders tagged as deleted can still be amended    *
       *             through F8. Do not retrieve deleted records.      *

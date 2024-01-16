@@ -30,10 +30,14 @@
       *---------------------------------------------------------------*
       *                                                               *
 <<<<<<< Upstream, based on branch 'bugfix/MD-62115A' of http://blrvslalm0006:7990/scm/md/midasrpg.git
+<<<<<<< Upstream, based on branch 'bugfix/MD-62115A' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD062115 - Deleted record still displayed if mulitiple       *
 =======
       *  MD062115A -Deleted record still displayed if mulitiple       *
 >>>>>>> 1f1f291 [MD-62115] Reopen - Fusion Midas non-account holders maintenance  
+=======
+      *  MD062115A -Deleted record still displayed if mulitiple       *
+>>>>>>> b99b9a5 [MD-62115] Reopen - Fusion Midas non-account holders maintenance.  
       *             succession of deleted records. Use DOW instead.   *
       *  MD061332 - Holders tagged as deleted can still be amended    *
       *             through F8. Do not retrieve deleted records.      *
@@ -193,8 +197,10 @@
 
      C                   READ      NAHOREF                                99
      C**********         IF        NHNAHO <> *BLANKS and                          MD061332 MD062115A
+     C**********                   NHCHTP =  'D'                                  MD061332 MD062115A
      C                   DOW       NHNAHO <> *BLANKS and                                   MD062115A
-     C                             NHCHTP =  'D'                                            MD061332
+     C                             NHCHTP =  'D'     and                                   MD062115A
+     C                             *IN99  =  *Off                                          MD062115A
      C                   READ      NAHOREF                                99                MD061332
      C**********         ENDIF                                                    MD061332 MD062115A
      C                   ENDDO                                                             MD062115A
@@ -240,8 +246,10 @@
 
      C                   READP     NAHOREF                                99
      C**********         IF        NHNAHO <> *BLANKS and                          MD061332 MD062115A
+     C**********                   NHCHTP =  'D'                                  MD061332 MD062115A
      C                   DOW       NHNAHO <> *BLANKS and                                   MD062115A
-     C                             NHCHTP =  'D'                                            MD061332
+     C                             NHCHTP =  'D'     and                                   MD062115A
+     C                             *IN99  =  *Off                                          MD062115A
      C                   READP     NAHOREF                                99                MD061332
      C**********         ENDIF                                                    MD061332 MD062115A
      C                   ENDDO                                                             MD062115A

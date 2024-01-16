@@ -50,14 +50,18 @@
       *
       ** LEFEED
      D SDLEFEED      e ds                  extname(LEFEED)
+     D  wFENLAI      e                     extfld(FENLAI)
      D dsLEFEED        ds                  likeds(SDLEFEED)
 
       ** LEFHST
-     D HistoryFile   e ds                  extname(LEFHST)
-     D  wFENLAI      e                     extfld(FENLAI)
-     D arrHist         ds                  likeds(HistoryFile)
+     D HistoryFile1  e ds                  extname(LEFHST)
+     D                                     prefix(A_)
+     D   RECNO                        8s 0
+     D HistoryFile2  e ds                  extname(LEFHST)
+     D                                     prefix(B_)
+     D arrHist         ds                  likeds(HistoryFile1)
      D                                     dim(100)
-     D dsLEFHST        ds                  likeds(HistoryFile)
+     D dsLEFHST        ds                  likeds(HistoryFile2)
 
       ** Core data structures
      D dsfdy         e ds                  extname(DSFDY)
@@ -239,21 +243,32 @@
                    prevSQLMAI = SQLCOD;
 
                    wSQLStr =
-                   'select DISTINCT * from LEFHST B' +
-                   ' where B.HIRECI = '  + QUO + ACTIVE_RECORD + QUO +
-                   ' and B.HIRCTP = '    + QUO + '  ' + QUO +
-                   ' and B.HIBRCA = '    + QUO + dsLEFEED.FEBRCA + QUO +
-                   ' and B.HICNUM = '    + QUO + dsLEFEED.FECNUM + QUO +
-                   ' and B.HIFACL = '    + %TRIM(%CHAR(dsLEFEED.FEFACL)) +
-                   ' and B.HILNRF = '    + QUO + dsLEFEED.FELOAN + QUO +
-                   ' and B.HIFCOD = '    + %TRIM(%CHAR(dsLEFEED.FEFCOD)) +
-                   ' and B.HIFSEQ = '    + %TRIM(%CHAR(dsLEFEED.FEFSEQ)) +
-                   ' order by B.HIBRCA,' +
-                   ' B.HICNUM,' +
-                   ' B.HIFACL,' +
-                   ' B.HILNRF,' +
-                   ' B.HIFSEQ,' +
-                   ' B.HIHDAT';
+                   'SELECT * FROM ' +
+                   '(SELECT LEFHST.*, ' +
+                   'ROW_NUMBER() OVER (PARTITION BY '  +
+                   'HIBRCA, ' +
+                   'HICNUM, ' +
+                   'HIFACL, ' +
+                   'HILNRF, ' +
+                   'HIFSEQ, ' +
+                   'HIHDAT ' +
+                   'ORDER BY HILCHD DESC ) AS SEQNO ' +
+                   'FROM LEFHST) AS RECNO ' +
+                   'WHERE HIRECI = '  + QUO + ACTIVE_RECORD + QUO +
+                   ' AND HIRCTP = '    + QUO + '  ' + QUO +
+                   ' AND HIBRCA = '    + QUO + dsLEFEED.FEBRCA + QUO +
+                   ' AND HICNUM = '    + QUO + dsLEFEED.FECNUM + QUO +
+                   ' AND HIFACL = '    + %TRIM(%CHAR(dsLEFEED.FEFACL)) +
+                   ' AND HILNRF = '    + QUO + dsLEFEED.FELOAN + QUO +
+                   ' AND HIFCOD = '    + %TRIM(%CHAR(dsLEFEED.FEFCOD)) +
+                   ' AND HIFSEQ = '    + %TRIM(%CHAR(dsLEFEED.FEFSEQ)) +
+                   ' AND SEQNO = 1 ' +
+                   ' ORDER by HIBRCA, ' +
+                   ' HICNUM,' +
+                   ' HIFACL,' +
+                   ' HILNRF,' +
+                   ' HIFSEQ,' +
+                   ' HIHDAT';
 
                    exec sql prepare P2 from :wSQLStr;
                    exec sql declare P2 cursor for P2;
@@ -407,45 +422,45 @@
 
                   clear dsLEFHST;
 
-                  dsLEFHST.HIRECI = ACTIVE_RECORD;
-                  dsLEFHST.HIPIND = dsLEFEED.FEPIND;
-                  dsLEFHST.HIRCTP = IN_RECORD;
-                  dsLEFHST.HILCHD = BJRDNB;
-                  dsLEFHST.HIRECI = dsLEFEED.FERECI;
-                  dsLEFHST.HIBRCA = dsLEFEED.FEBRCA;
-                  dsLEFHST.HICNUM = dsLEFEED.FECNUM;
-                  dsLEFHST.HIFACL = dsLEFEED.FEFACL;
-                  dsLEFHST.HILNRF = dsLEFEED.FELOAN;
-                  dsLEFHST.HIFSEQ = dsLEFEED.FEFSEQ;
-                  dsLEFHST.HIFCCY = dsLEFEED.FEFCCY;
-                  dsLEFHST.HILCHT = 'I';
+                  dsLEFHST.B_HIRECI = ACTIVE_RECORD;
+                  dsLEFHST.B_HIPIND = dsLEFEED.FEPIND;
+                  dsLEFHST.B_HIRCTP = IN_RECORD;
+                  dsLEFHST.B_HILCHD = BJRDNB;
+                  dsLEFHST.B_HIRECI = dsLEFEED.FERECI;
+                  dsLEFHST.B_HIBRCA = dsLEFEED.FEBRCA;
+                  dsLEFHST.B_HICNUM = dsLEFEED.FECNUM;
+                  dsLEFHST.B_HIFACL = dsLEFEED.FEFACL;
+                  dsLEFHST.B_HILNRF = dsLEFEED.FELOAN;
+                  dsLEFHST.B_HIFSEQ = dsLEFEED.FEFSEQ;
+                  dsLEFHST.B_HIFCCY = dsLEFEED.FEFCCY;
+                  dsLEFHST.B_HILCHT = 'I';
 
        // If there are no records in history file LEFHST, retrieve details from fee record
        // otherwise get the details from the first record of the array retrieved from the
        // history file
 
                    if wRowsReturned = 0;
-                        dsLEFHST.HIFRT1 = dsLEFEED.FEFRT1;
-                        dsLEFHST.HIFRT2 = dsLEFEED.FEFRT2;
-                        dsLEFHST.HIFRT3 = dsLEFEED.FEFRT3;
-                        dsLEFHST.HIFRT4 = dsLEFEED.FEFRT4;
-                        dsLEFHST.HIFRT5 = dsLEFEED.FEFRT5;
-                        dsLEFHST.HIAMT1 = dsLEFEED.FEAMT1;
-                        dsLEFHST.HIAMT2 = dsLEFEED.FEAMT2;
-                        dsLEFHST.HIAMT3 = dsLEFEED.FEAMT3;
-                        dsLEFHST.HIAMT4 = dsLEFEED.FEAMT4;
-                        dsLEFHST.HIAMT5 = dsLEFEED.FEAMT5;
+                        dsLEFHST.B_HIFRT1 = dsLEFEED.FEFRT1;
+                        dsLEFHST.B_HIFRT2 = dsLEFEED.FEFRT2;
+                        dsLEFHST.B_HIFRT3 = dsLEFEED.FEFRT3;
+                        dsLEFHST.B_HIFRT4 = dsLEFEED.FEFRT4;
+                        dsLEFHST.B_HIFRT5 = dsLEFEED.FEFRT5;
+                        dsLEFHST.B_HIAMT1 = dsLEFEED.FEAMT1;
+                        dsLEFHST.B_HIAMT2 = dsLEFEED.FEAMT2;
+                        dsLEFHST.B_HIAMT3 = dsLEFEED.FEAMT3;
+                        dsLEFHST.B_HIAMT4 = dsLEFEED.FEAMT4;
+                        dsLEFHST.B_HIAMT5 = dsLEFEED.FEAMT5;
                    else;
-                        dsLEFHST.HIFRT1 = arrHist(01).HIFRT1;
-                        dsLEFHST.HIFRT2 = arrHist(01).HIFRT2;
-                        dsLEFHST.HIFRT3 = arrHist(01).HIFRT3;
-                        dsLEFHST.HIFRT4 = arrHist(01).HIFRT4;
-                        dsLEFHST.HIFRT5 = arrHist(01).HIFRT5;
-                        dsLEFHST.HIAMT1 = arrHist(01).HIAMT1;
-                        dsLEFHST.HIAMT2 = arrHist(01).HIAMT2;
-                        dsLEFHST.HIAMT3 = arrHist(01).HIAMT3;
-                        dsLEFHST.HIAMT4 = arrHist(01).HIAMT4;
-                        dsLEFHST.HIAMT5 = arrHist(01).HIAMT5;
+                        dsLEFHST.B_HIFRT1 = arrHist(01).A_HIFRT1;
+                        dsLEFHST.B_HIFRT2 = arrHist(01).A_HIFRT2;
+                        dsLEFHST.B_HIFRT3 = arrHist(01).A_HIFRT3;
+                        dsLEFHST.B_HIFRT4 = arrHist(01).A_HIFRT4;
+                        dsLEFHST.B_HIFRT5 = arrHist(01).A_HIFRT5;
+                        dsLEFHST.B_HIAMT1 = arrHist(01).A_HIAMT1;
+                        dsLEFHST.B_HIAMT2 = arrHist(01).A_HIAMT2;
+                        dsLEFHST.B_HIAMT3 = arrHist(01).A_HIAMT3;
+                        dsLEFHST.B_HIAMT4 = arrHist(01).A_HIAMT4;
+                        dsLEFHST.B_HIAMT5 = arrHist(01).A_HIAMT5;
                    endif;
 
                    exsr insertHistoryRecord;
@@ -470,12 +485,12 @@
                    for Ix = 1 to wRowsReturned;
 
                         keyRCTP =  'RC';
-                        keyRCVD =  arrHist(Ix).HIHDAT;
-                        keyBRCA =  arrHist(Ix).HIBRCA;
-                        keyCNUM =  arrHist(Ix).HICNUM;
-                        keyFACL =  arrHist(Ix).HIFACL;
-                        keyLNRF =  arrHist(Ix).HILNRF;
-                        keyFSEQ =  arrHist(Ix).HIFSEQ;
+                        keyRCVD =  arrHist(Ix).A_HIHDAT;
+                        keyBRCA =  arrHist(Ix).A_HIBRCA;
+                        keyCNUM =  arrHist(Ix).A_HICNUM;
+                        keyFACL =  arrHist(Ix).A_HIFACL;
+                        keyLNRF =  arrHist(Ix).A_HILNRF;
+                        keyFSEQ =  arrHist(Ix).A_HIFSEQ;
 
                         exsr checkDuplicate;
 
@@ -485,60 +500,60 @@
 
                         clear dsLEFHST;
                         dsLEFHST = arrHist(Ix);
-                        dsLEFHST.HIPIND = dsLEFEED.FEPIND;
-                        dsLEFHST.HIRCVD= dsLEFHST.HIHDAT;
-                        dsLEFHST.HIRCTP = RATE_CHANGE;
-                        dsLEFHST.HILCHD = BJRDNB;
-                        dsLEFHST.HILCHT = 'I';
-                        dsLEFHST.HIFCOD = 0;
-                        dsLEFHST.HIAMTS = 0;
-                        dsLEFHST.HIHDAT = 0;
-                        dsLEFHST.HIAMTD = 0;
-                        dsLEFHST.HIHDAT = 0;
-                        dsLEFHST.HIOSBR = *Blanks;
-                        dsLEFHST.HISTTL = 0;
-                        dsLEFHST.HIOURS = *Blanks;
-                        dsLEFHST.WFENLAI = *Blanks;
-                        dsLEFHST.HISAMT = 0;
-                        dsLEFHST.HIAMRI = *Blanks;
-                        dsLEFHST.HISTPD = 0;
-                        dsLEFHST.HIENPD = 0;
-                        dsLEFHST.HIOSDB = *Blanks;
-                        dsLEFHST.HIOMDB = *Blanks;
-                        dsLEFHST.HIRSTM = 0;
-                        dsLEFHST.HIRONS = *Blanks;
-                        dsLEFHST.HIRIBN = *Blanks;
-                        dsLEFHST.HIRIBA = *Blanks;
-                        dsLEFHST.HIROBN = 0;
-                        dsLEFHST.HIROCN = 0;
-                        dsLEFHST.HIPSTM = 0;
-                        dsLEFHST.HIPONS = *Blanks;
-                        dsLEFHST.HIPIBN = *Blanks;
-                        dsLEFHST.HIPIBA = *Blanks;
-                        dsLEFHST.HIPOBN = 0;
-                        dsLEFHST.HIPOCN = 0;
-                        dsLEFHST.HIRCRN = *Blanks;
-                        dsLEFHST.HIRCRA = *Blanks;
-                        dsLEFHST.HIRVNO = *Blanks;
-                        dsLEFHST.HIAWBN = *Blanks;
-                        dsLEFHST.HIAWBA = *Blanks;
-                        dsLEFHST.HIBENN = *Blanks;
-                        dsLEFHST.HIBENA = *Blanks;
-                        dsLEFHST.HIDTP1 = *Blanks;
-                        dsLEFHST.HIDTP2 = *Blanks;
-                        dsLEFHST.HIDTP2 = *Blanks;
-                        dsLEFHST.HIDTP4 = *Blanks;
-                        dsLEFHST.HIDCHG = *Blanks;
-                        dsLEFHST.HIBTB1 = *Blanks;
-                        dsLEFHST.HIBTB2 = *Blanks;
-                        dsLEFHST.HIBTB3 = *Blanks;
-                        dsLEFHST.HIBTB4 = *Blanks;
-                        dsLEFHST.HIBTB5 = *Blanks;
-                        dsLEFHST.HIBTB6 = *Blanks;
-                        dsLEFHST.HICVMR = *Blanks;
-                        dsLEFHST.HIFSCY = *Blanks;
-                        dsLEFHST.HIFICY = *Blanks;
-                        dsLEFHST.HIPSCY = *Blanks;
+                        dsLEFHST.B_HIPIND = dsLEFEED.FEPIND;
+                        dsLEFHST.B_HIRCVD= dsLEFHST.B_HIHDAT;
+                        dsLEFHST.B_HIRCTP = RATE_CHANGE;
+                        dsLEFHST.B_HILCHD = BJRDNB;
+                        dsLEFHST.B_HILCHT = 'I';
+                        dsLEFHST.B_HIFCOD = 0;
+                        dsLEFHST.B_HIAMTS = 0;
+                        dsLEFHST.B_HIHDAT = 0;
+                        dsLEFHST.B_HIAMTD = 0;
+                        dsLEFHST.B_HIHDAT = 0;
+                        dsLEFHST.B_HIOSBR = *Blanks;
+                        dsLEFHST.B_HISTTL = 0;
+                        dsLEFHST.B_HIOURS = *Blanks;
+                        dsLEFHST.B_FENLAI = *Blanks;
+                        dsLEFHST.B_HISAMT = 0;
+                        dsLEFHST.B_HIAMRI = *Blanks;
+                        dsLEFHST.B_HISTPD = 0;
+                        dsLEFHST.B_HIENPD = 0;
+                        dsLEFHST.B_HIOSDB = *Blanks;
+                        dsLEFHST.B_HIOMDB = *Blanks;
+                        dsLEFHST.B_HIRSTM = 0;
+                        dsLEFHST.B_HIRONS = *Blanks;
+                        dsLEFHST.B_HIRIBN = *Blanks;
+                        dsLEFHST.B_HIRIBA = *Blanks;
+                        dsLEFHST.B_HIROBN = 0;
+                        dsLEFHST.B_HIROCN = 0;
+                        dsLEFHST.B_HIPSTM = 0;
+                        dsLEFHST.B_HIPONS = *Blanks;
+                        dsLEFHST.B_HIPIBN = *Blanks;
+                        dsLEFHST.B_HIPIBA = *Blanks;
+                        dsLEFHST.B_HIPOBN = 0;
+                        dsLEFHST.B_HIPOCN = 0;
+                        dsLEFHST.B_HIRCRN = *Blanks;
+                        dsLEFHST.B_HIRCRA = *Blanks;
+                        dsLEFHST.B_HIRVNO = *Blanks;
+                        dsLEFHST.B_HIAWBN = *Blanks;
+                        dsLEFHST.B_HIAWBA = *Blanks;
+                        dsLEFHST.B_HIBENN = *Blanks;
+                        dsLEFHST.B_HIBENA = *Blanks;
+                        dsLEFHST.B_HIDTP1 = *Blanks;
+                        dsLEFHST.B_HIDTP2 = *Blanks;
+                        dsLEFHST.B_HIDTP2 = *Blanks;
+                        dsLEFHST.B_HIDTP4 = *Blanks;
+                        dsLEFHST.B_HIDCHG = *Blanks;
+                        dsLEFHST.B_HIBTB1 = *Blanks;
+                        dsLEFHST.B_HIBTB2 = *Blanks;
+                        dsLEFHST.B_HIBTB3 = *Blanks;
+                        dsLEFHST.B_HIBTB4 = *Blanks;
+                        dsLEFHST.B_HIBTB5 = *Blanks;
+                        dsLEFHST.B_HIBTB6 = *Blanks;
+                        dsLEFHST.B_HICVMR = *Blanks;
+                        dsLEFHST.B_HIFSCY = *Blanks;
+                        dsLEFHST.B_HIFICY = *Blanks;
+                        dsLEFHST.B_HIPSCY = *Blanks;
 
        // Get the value of rates and amount from next element in the array if the
        // current index  is not yet equal to total records in the array, otherwise
@@ -550,17 +565,17 @@
                              Nxt = wRowsReturned;
                        endif;
 
-                       dsLEFHST.HIFRT1 =  arrHist(Nxt).HIFRT1;
-                       dsLEFHST.HIFRT2 =  arrHist(Nxt).HIFRT2;
-                       dsLEFHST.HIFRT3 =  arrHist(Nxt).HIFRT3;
-                       dsLEFHST.HIFRT4 =  arrHist(Nxt).HIFRT4;
-                       dsLEFHST.HIFRT5 =  arrHist(Nxt).HIFRT5;
+                       dsLEFHST.B_HIFRT1 =  arrHist(Nxt).A_HIFRT1;
+                       dsLEFHST.B_HIFRT2 =  arrHist(Nxt).A_HIFRT2;
+                       dsLEFHST.B_HIFRT3 =  arrHist(Nxt).A_HIFRT3;
+                       dsLEFHST.B_HIFRT4 =  arrHist(Nxt).A_HIFRT4;
+                       dsLEFHST.B_HIFRT5 =  arrHist(Nxt).A_HIFRT5;
 
-                       dsLEFHST.HIAMT1 =  arrHist(Nxt).HIAMT1;
-                       dsLEFHST.HIAMT2 =  arrHist(Nxt).HIAMT2;
-                       dsLEFHST.HIAMT3 =  arrHist(Nxt).HIAMT3;
-                       dsLEFHST.HIAMT4 =  arrHist(Nxt).HIAMT4;
-                       dsLEFHST.HIAMT5 =  arrHist(Nxt).HIAMT5;
+                       dsLEFHST.B_HIAMT1 =  arrHist(Nxt).A_HIAMT1;
+                       dsLEFHST.B_HIAMT2 =  arrHist(Nxt).A_HIAMT2;
+                       dsLEFHST.B_HIAMT3 =  arrHist(Nxt).A_HIAMT3;
+                       dsLEFHST.B_HIAMT4 =  arrHist(Nxt).A_HIAMT4;
+                       dsLEFHST.B_HIAMT5 =  arrHist(Nxt).A_HIAMT5;
 
                        exsr insertHistoryRecord;
 

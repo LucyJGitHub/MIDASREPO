@@ -536,6 +536,7 @@
      D PNWSP           S                   LIKE(BRTEDM)                                       CRE073
      D PFRAT           S                   LIKE(BRTEDM)                                     AR847249
      D CRE073          S              1A                                                      CRE073
+     D HUT113          S              1A                                                    MD061168
      D*CFC006***       S              1A                                          AR1097176 MD020563
      D VdatDMW         S                   LIKE(VDATDM)                                     MD031283
      D DlnoDMSV        S                   LIKE(DLNODM)                                     MD031283
@@ -3170,6 +3171,27 @@
      C                   IF        PRTCD = *BLANKS                                            CRE073
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                     MD061168
+      ** Check if HUT113 is installed.                                                      MD061168
+      *                                                                                     MD061168
+     C                   EVAL      HUT113 = 'N'                                             MD061168
+     C                   CALL      'AOSARDR0'                                               MD061168
+     C                   PARM      *BLANKS       PRTCD                                      MD061168
+     C                   PARM      '*VERIFY'     POPTN                                      MD061168
+     C                   PARM      'HUT113'      PSARD                                      MD061168
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD061168
+      *                                                                                     MD061168
+     C                   IF        PRTCD <> *BLANKS                                         MD061168
+     C                             AND PRTCD <> '*NRF'                                      MD061168
+     C                   EVAL      DBFILE = 'SCSRDXTD'                                      MD061168
+     C                   EVAL      DBASE  = '061'                                           MD061168
+     C                   EVAL      DBOPTN = POPTN                                           MD061168
+     C                   EXSR      *PSSR                                                    MD061168
+     C                   ENDIF                                                              MD061168
+      *                                                                                     MD061168
+     C                   IF        PRTCD = *BLANKS                                          MD061168
+     C                   EVAL      HUT113 = 'Y'                                             MD061168
+     C                   ENDIF                                                              MD061168
                                                                                               CGL165
       ** Check if CGL165 is installed                                                         CGL165
      C                   MOVE      'N'           CGL165            1                          CGL165
@@ -5519,6 +5541,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
      C                   EXSR      SRREPI                                                      CPB00
       *                                                                   CPB001
       ** If any error occurred while executing subroutine REPLIC.         CPB001
@@ -8108,6 +8131,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
      C                   EXSR      SRREPI                                                      CPB00
       *                                                                   CPB001
      C                   ENDIF                                                  End REPLIC     CPB00
@@ -8161,6 +8185,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
      C                   EXSR      SRREPI                                                      CPB00
       *                                                                   CPB001
      C                   ENDIF                                                  End REPLIC     CPB00
@@ -8384,6 +8409,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
      C                   EXSR      SRREPI                                                      CPB00
       *                                                                   CPB001
       ** If any error occurred while executing subroutine REPLIC.         CPB001
@@ -8620,6 +8646,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
      C                   EXSR      SRREPI                                                      CPB00
       *                                                                   CPB001
       ** If any error occurred while executing subroutine REPLIC.         CPB001
@@ -10902,6 +10929,7 @@
       *                                                                   CPB001
       **  If Replication Processing required.                             CPB001
      C     REPLIC        IFEQ      'Y'                                          Begin REPLIC   CPB00
+     C     HUT113        ANDEQ     'N'                                                      MD061168
       *                                                                   CPB001
       **  If Amendment Type is Base Rate Change.                          CPB001
      C     AMTP          IFEQ      'BR'                                         Begin 'BR'     CPB00

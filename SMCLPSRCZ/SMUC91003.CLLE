@@ -1,0 +1,123 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CL Program to call SMU91003')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       SMUC91003 - CL program to call datapatch PGM/SMU91003       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. MD061168  *CREATE  Date 14Dec23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061168 - Matured Deals not showing in FX Deals Screens    */
+/*                - Update old FX deals Replication Indicator (field */
+/*                  REPI in DEALSDB) to blank in order for the sys-  */
+/*                  tem to move them in historic files.              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2023')
+/**/
+/* Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR1))
+
+/**/
+/* Start of program */
+/**/
+             SNDPGMMSG  MSG('SMUC91003 - MD-61168 Data Patch Program') +
+                          TOMSGQ(MRUNQ MOPERQ)
+
+/**/
+/* Create LDA if it doesn't exist */
+/**/
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+
+/**/
+/* Get system prefix */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+
+/**/
+/* Check if YYXXXXXXXX exists */
+/**/
+FLECHK:
+             CHKOBJ     OBJ(&DPLIB/YYDEALSDB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+             DLTF       FILE(YYDEALSDB)
+
+/**/
+/* Create backup */
+/**/
+BACKUP:
+             CPYF       FROMFILE(&DMLIB/DEALSDB) TOFILE(&DPLIB/YYDEALSDB) +
+                        MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+             CLRPFM     FILE(YYDEALSDB)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+             SNDUSRMSG  MSG('Error occurred in copying PF/DEALSDB to +
+                PF/YYDEALSDB. Process terminated.') MSGTYPE(*INFO)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+/**/
+/* Call ILE/SMU91003 */
+/**/
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&RUNP) VALUE('YES')
+
+             CALL       PGM(SMU91003)
+
+/**/
+/* Error occurred in datapatch program */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SMUC91003 completed normally.') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+             GOTO       CMDLBL(END)
+
+/**/
+/* Abnormal Termination of the program or */
+/* Restore backup if an error occurred in update mode */
+/**/
+ABNOR:
+             IF         COND(&RUNP *EQ 'YES') THEN(DO)
+                CPYF FROMFILE(&DPLIB/YYDEALSDB) TOFILE(&DMLIB/DEALSDB) +
+                     MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in restoring PF/DEALSDB +
+                        from PF/YYDEALSDB. Process terminated.  Please restore +
+                        PF/DEALSDB manually from PF/YYDEALSDB.') +
+                        MSGTYPE(*INFO)
+                ENDDO
+
+             ENDDO
+
+ABNOR1:      SNDPGMMSG  MSG('Error occurred in SMUC91003 program') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2023')
+             SNDPGMMSG  MSG('End of SMUC91003') TOMSGQ(MRUNQ MOPERQ)
+
+             ENDPGM

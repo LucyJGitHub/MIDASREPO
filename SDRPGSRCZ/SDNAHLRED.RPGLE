@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD061332           Date 15Aug23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062115A          Date 16Jan24               *
+      *  Prev Amend No. MD061332           Date 21Nov23               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132             Date 01May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062115A -Deleted record still displayed if multiple        *
+      *             succession of deleted records. Use DOW instead.   *
       *  MD061332 - Holders tagged as deleted can still be amended    *
       *             through F8. Do not retrieve deleted records.      *
       *  MD046248 - Finastra Rebranding                               *
@@ -184,10 +187,14 @@
       ** Read
 
      C                   READ      NAHOREF                                99
-     C                   IF        NHNAHO <> *BLANKS and                                    MD061332
-     C                             NHCHTP =  'D'                                            MD061332
+     C**********         IF        NHNAHO <> *BLANKS and                          MD061332 MD062115A
+     C**********                   NHCHTP =  'D'                                  MD061332 MD062115A
+     C                   DOW       NHNAHO <> *BLANKS and                                   MD062115A
+     C                             NHCHTP =  'D'     and                                   MD062115A
+     C                             *IN99  =  *Off                                          MD062115A
      C                   READ      NAHOREF                                99                MD061332
-     C                   ENDIF                                                              MD061332
+     C**********         ENDIF                                                    MD061332 MD062115A
+     C                   ENDDO                                                             MD062115A
 
      C                   ENDDO
 
@@ -229,10 +236,14 @@
       ** READ authorized/not authorized
 
      C                   READP     NAHOREF                                99
-     C                   IF        NHNAHO <> *BLANKS and                                    MD061332
-     C                             NHCHTP =  'D'                                            MD061332
+     C**********         IF        NHNAHO <> *BLANKS and                          MD061332 MD062115A
+     C**********                   NHCHTP =  'D'                                  MD061332 MD062115A
+     C                   DOW       NHNAHO <> *BLANKS and                                   MD062115A
+     C                             NHCHTP =  'D'     and                                   MD062115A
+     C                             *IN99  =  *Off                                          MD062115A
      C                   READP     NAHOREF                                99                MD061332
-     C                   ENDIF                                                              MD061332
+     C**********         ENDIF                                                    MD061332 MD062115A
+     C                   ENDDO                                                             MD062115A
 
      C                   ENDDO
 

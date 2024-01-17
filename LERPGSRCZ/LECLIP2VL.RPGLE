@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR834903           Date 16Jan24               *      
+      *  Last Amend No. AR834903           Date 16Jan24               *
       *  Prev Amend No. MD060620           Date 14Nov22               *
       *                 MD059368           Date 17Dec21               *
       *                 MD057917           Date 02Jul21               *
@@ -140,7 +140,8 @@
       *                                                               *
       *  AR834903 - Unable to early mature zero rate loan due to      *
       *             error LEL0140 - valid rate is required. Send a    *
-      *             warning message when non-guarantee loan with zero *      
+      *             warning message when non-guarantee loan with zero *
+      *             rate is being amended. (Child: AR859984)          *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
       *             switched off                                      *

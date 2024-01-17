@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT039             Date 28Sep12               *
+      *  Last Amend No. 264048             Date 17Jan24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT039             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  264048 - Amend to be used with WebSphere MQ enabled Msg API  *
+      *           Use Q name standard in Impl Manual.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
       *           Amendment done to accommodate longer data           *
@@ -126,7 +129,8 @@
      D Prefix          S              2A
  
       ** The transaction queue to send to
-     D Queue           S             20A   INZ('MIDASxx.TRANSACT.Q')
+     D*Queue****       S             20A   INZ('MIDASxx.TRANSACT.Q')                          264048
+     D Queue           S             20A   INZ('MIDASPLUS.TRANS.xx.Q')                        264048
  
       ** String to send to MQSeries queue
      D*String***       S           4000A                                                      CIR003
@@ -167,7 +171,8 @@
       ** queue of the Midas system defined by the received prefix.
  
       ** First set up the queue name
-     C                   eval      %subst(Queue : 6 : 2) = Prefix
+     C**********         eval      %subst(Queue : 6 : 2) = Prefix                             264048
+     C                   eval      %subst(Queue : 17 : 2) = Prefix                            264048
  
       ** Read the file until the end
  
@@ -194,17 +199,17 @@
      C                   enddo
  
       ** Send a shutdown message
-     C                   eval      String = 'SHUTDOWN'
+     C**********         eval      String = 'SHUTDOWN'                                        264048
+      **********                                                                              264048
+     C**********         reset                   ReturnCode                                   264048
+     C**********         callb     'ZA000001'                                                 264048
+     C**********         parm                    ReturnCode                                   264048
+     C**********         parm                    Queue                                        264048
+     C**********         parm                    String                                       264048
  
-     C                   reset                   ReturnCode
-     C                   callb     'ZA000001'
-     C                   parm                    ReturnCode
-     C                   parm                    Queue
-     C                   parm                    String
- 
-     C                   if        ReturnCode <> *blanks
-     C                   exsr      *pssr
-     C                   endif
+     C**********         if        ReturnCode <> *blanks                                      264048
+     C**********         exsr      *pssr                                                      264048
+     C**********         endif                                                                264048
  
      C                   eval      *inlr = *on
  

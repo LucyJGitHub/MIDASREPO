@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. AR638688           Date 23Jun22               *
+      *  Last Amend No. MD035531           Date 30Nov23               *
+      *  Prev Amend No. CGL069             Date 30Nov23               *
+      *                 249385             Date 01Aug22               *
+      *                 AR638688           Date 23Jun22               *
       *                 256316             Date 18Mar22               *
       *                 MD058815           Date 28Sep21               *
       *                 CSD103             Date 10Aug20               *
@@ -224,6 +226,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD035531 - No need to check MDAT to cater enhancement CGL069 *
+      *  CGL069 - Accrue up to Month-End for Accruals Processing in   *
+      *             Advance (ANWD=1)                                  *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  AR638688 - Component GLC0802A fails in COB due to a database *
@@ -2164,6 +2169,57 @@
      C                     MOVE 'N'       CDL096                                              CDL096
      C                     ENDIF                                                              CDL096
       *                                                                                       CDL096
+      ** Addtnl processing for CGL069                                                         CGL069
+      *                                                                                       CGL069
+     C                     CALL 'AOSARDR0'                                                    CGL069
+     C                     PARM *BLANKS   PRTCD                                               CGL069
+     C                     PARM '*VERIFY' POPTN                                               CGL069
+     C                     PARM 'CGL069'  PSARD                                               CGL069
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL069
+      *                                                                                       CGL069
+     C           PRTCD     IFNE *BLANK                                                        CGL069
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL069
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL069
+     C                     MOVEL'22'      DBASE                                               CGL069
+     C                     MOVEL'CGL069'  DBKEY                                               CGL069
+     C                     MOVE *ON       *INU7                                               CGL069
+     C                     MOVE *ON       *INU8                                               CGL069
+     C                     EXSR *PSSR                                                         CGL069
+     C                     ENDIF                                                              CGL069
+      *                                                                                       CGL069
+     C           PRTCD     IFEQ *BLANKS                                                       CGL069
+     C                     MOVE 'Y'       CGL069  1                                           CGL069
+     C                     ELSE                                                               CGL069
+     C                     MOVE 'N'       CGL069                                              CGL069
+     C                     ENDIF                                                              CGL069
+      *                                                                                       CGL069
+      ** Check if EOM run.                                                                    CGL069
+      *                                                                                       CGL069
+     C                     Z-ADDBJRDNB    ZDAYNO                                              CGL069
+     C                     EXSR ZDATE2                                                        CGL069
+     C                     MOVELZDATE     DDMM    4                                           CGL069
+     C                     Z-ADD31        DD      20                                          CGL069
+     C                     MOVE '1'       *IN99                                               CGL069
+     C           *IN99     DOWEQ'1'                                                           CGL069
+     C           *IN98     IFEQ '1'                                                           CGL069
+     C                     MOVE DD        DDMM                                                CGL069
+     C                     ELSE                                                               CGL069
+     C                     MOVELDD        DDMM                                                CGL069
+     C                     ENDIF                                                              CGL069
+     C                     MOVELDDMM      ZDATE                                               CGL069
+     C                     EXSR ZDATE1                                                        CGL069
+     C           *IN99     IFEQ '1'                                                           CGL069
+     C                     SUB  1         DD                                                  CGL069
+     C                     ENDIF                                                              CGL069
+     C                     ENDDO                                                              CGL069
+     C                     Z-ADDZDAYNO    EOMDAT  50                                          CGL069
+      *                                                                                       CGL069
+      ** If EOM and CGL069 is *on, set ECD to EOM                                             CGL069
+      *                                                                                       CGL069
+     C           CGL069    IFEQ 'Y'                                                           CGL069
+     C           EOMDAT    ANDLTBJDNWD                                                        CGL069
+     C                     Z-ADDEOMDAT    ECD                                                 CGL069
+     C                     ELSE                                                               CGL069
      C*                                                                   S01194
      C** For Accrual for Non-working Days Processing Types 0 and 1,       055773
      C** Event Control Date is DNWD - 1.                                  055773
@@ -2187,6 +2243,7 @@
      C                     Z-ADDBJRDNB    ECD                             055773
      C                     END                                            055773
      C                     END                                            055773
+     C                     ENDIF                                                              CGL069
       *                                                                                       CGL187
      C           CGL187    IFEQ 'Y'                                                           CGL187
       *                                                                                       CGL187
@@ -4414,8 +4471,10 @@ S13  C           VDATM     COMP BJDNWD               65                   E15988
      C***                                                                 AUS003
      C           ENDN      TAG                             ** ENDN  TAG** AUS003
      C***                                                                 AUS003
-     C           MDAT      COMP ECD                    6464
-     C   64                GOTO END
+     C           CGL069    IFEQ 'N'                                                           CGL069
+     C********** MDAT      COMP ECD                    6464                                 MD035531
+     C***64*****           GOTO END                                                         MD035531
+     C                     ENDIF                                                              CGL069
       *                                                                                       CGL015
      C           CGL015    IFEQ 'Y'                                                           CGL015
      C/COPY WNCPYSRC,DL0400C016

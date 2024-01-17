@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD060664           Date 28Dec22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD061462           Date 04Dec23               *
+      *  Prev Amend No. MD060664           Date 28Dec22               *
+      *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
@@ -44,6 +45,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061462 - Error on warning messages with ampersand (&).     *
+      *           - Concatenate the value of Security Report Name.    *
+      *             Maximum warning message is only 45 characters in  *
+      *             length. This is a system limitation.              *
+      *           - Concatenate the value of Security Report Name.    *
+      *             Maximum warning message is only 45 characters in  *
+      *             length. This is a system limitation. Added close  *
+      *             parenthesis ')' on position 45 of warning message.*
       *  MD060664 - Unexpected warning messages in SECS maintenance   *
       *             Correct some code change of MD000091.             *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
@@ -160,6 +169,9 @@
      D WWEOSF          S              1A
      D WI              S              2P 0
      D WJ              S              2P 0
+     D WMsg44          S             44A                                                    MD061462
+     D WPos1           S              2S 0                                                  MD061462
+     D WPos2           S              2S 0                                                  MD061462
       *
       ** Work array for all alphanumerics and blank
      D WAlpha1         S              1    DIM(37) CTDATA PERRCD(37)
@@ -330,6 +342,7 @@
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      WMsgDtXAr(WIx) = %Trim(WMsgDtXAr(WIx))                   MD000091
      C                                            + LenStr +%TRIM(MsgDtaTmp)                MD000091
+     C                   EXSR      ChkParenthesis                                           MD061462
      C                   ENDIF
 
      C                   ENDIF
@@ -337,6 +350,28 @@
      C                   ENDIF
 
      C                   ENDSR
+      *                                                                                     MD061462
+      *****************************************************************                     MD061462
+      /EJECT                                                                                MD061462
+      *****************************************************************                     MD061462
+      *                                                               *                     MD061462
+      *  ChkParenthesi - Check open and close parenthesis             *                     MD061462
+      *                                                               *                     MD061462
+      *****************************************************************                     MD061462
+     C     ChkParenthesisBEGSR                                                              MD061462
+                                                                                            MD061462
+      ** Check Open Parenthesis                                                             MD061462
+     C                   Eval      WPos1    = %Scan('(':WMsgDtXAr(WIx))                     MD061462
+      ** Check Close Parenthesis                                                            MD061462
+     C                   Eval      WPos2    = %Scan(')':WMsgDtXAr(WIx))                     MD061462
+      ** Force ')' on column/array 45                                                       MD061462
+     C                   If        WPos1 > 0                                                MD061462
+     C                             and WPos2 = 0                                            MD061462
+     C                   MOVEA     WMsgDtXAr(WIx)WMsg44                                     MD061462
+     C                   EVAL      WMsgDtXAr(WIx)=WMsg44 + ')'                              MD061462
+     C                   ENDIF                                                              MD061462
+                                                                                            MD061462
+     C                   ENDSR                                                              MD061462
       *
       *****************************************************************
       /EJECT

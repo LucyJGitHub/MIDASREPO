@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD058285           Date 22Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD061462           Date 04Dec23               *
+      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
       *                 CRE073             Date 06Dec10               *
@@ -44,6 +45,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061462 - Error on warning messages with ampersand (&).     *
+      *           - Pattern the fix with SEVSISNCD, missing           *
+      *             %Trim(WMsgDtxAr(WIx) which adds the current value.*
+      *           - Concatenate the value of Security Report Name.    *
+      *             Maximum warning message is only 45 characters in  *
+      *             length. This is a system limitation. Added close  *
+      *             parenthesis ')' on position 45 of warning message.*
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -152,6 +160,9 @@
       ** Work variables
      D WFound          S              1A
      D WT2RF           S             12A
+     D WMsg44          S             44A                                                    MD061462
+     D WPos1           S              2S 0                                                  MD061462
+     D WPos2           S              2S 0                                                  MD061462
                                                                                             MD000091
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -233,18 +244,47 @@
      C                   MOVEL     'SEA0254'     WMsgIdXAr(WIx)
      C**********         EVAL      WMsgDtXAr(WIx) = T2RF + SESN +                           MD000091
      C**********                                    '(' + SRPN + ')'                        MD000091
+     C                   EVAL      WMsgDtXAr(WIx) = T2RF + SESN +                           MD061462
+     C                                              '(' + SRPN + ')'                        MD061462
      C                   EVAL      BLen = %Len(%Trim(T2RF))                                 MD000091
      C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(T2RF)                     MD000091
      C                   EVAL      BLen = %Len(%Trim(SESN))                                 MD000091
-     C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(SESN)                     MD000091
+     C**********         EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(SESN)            MD000091 MD061462
+     C                   EVAL      WMsgDtXAr(WIx) = %Trim(WMsgDtXAr(WIx))                   MD061462
+     C                                            + LenStr +%TRIM(SESN)                     MD061462
      C                   EVAL      MsgDtaTmp = '(' + SRPN + ')'                             MD000091
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(MsgDtaTmp)                MD000091
+     C**********         EVAL      WMsgDtXAr(WIx) = LenStr +%TRIM(MsgDtaTmp)       MD000091 MD061462
+     C                   EVAL      WMsgDtXAr(WIx) = %Trim(WMsgDtXAr(WIx))                   MD061462
+     C                                            + LenStr +%TRIM(MsgDtaTmp)                MD061462
+     C                   EXSR      ChkParenthesis                                           MD061462
      C                   ENDIF
 
      C                   ENDIF
 
      C                   ENDSR
+      *                                                                                     MD061462
+      *****************************************************************                     MD061462
+      /EJECT                                                                                MD061462
+      *****************************************************************                     MD061462
+      *                                                               *                     MD061462
+      *  ChkParenthesi - Check open and close parenthesis             *                     MD061462
+      *                                                               *                     MD061462
+      *****************************************************************                     MD061462
+     C     ChkParenthesisBEGSR                                                              MD061462
+                                                                                            MD061462
+      ** Check Open Parenthesis                                                             MD061462
+     C                   Eval      WPos1    = %Scan('(':WMsgDtXAr(WIx))                     MD061462
+      ** Check Close Parenthesis                                                            MD061462
+     C                   Eval      WPos2    = %Scan(')':WMsgDtXAr(WIx))                     MD061462
+      ** Force ')' on column/array 45                                                       MD061462
+     C                   If        WPos1 > 0                                                MD061462
+     C                             and WPos2 = 0                                            MD061462
+     C                   MOVEA     WMsgDtXAr(WIx)WMsg44                                     MD061462
+     C                   EVAL      WMsgDtXAr(WIx)=WMsg44 + ')'                              MD061462
+     C                   ENDIF                                                              MD061462
+                                                                                            MD061462
+     C                   ENDSR                                                              MD061462
       *
       *****************************************************************
       /EJECT

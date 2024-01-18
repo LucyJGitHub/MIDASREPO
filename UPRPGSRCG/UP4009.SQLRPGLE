@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD061992             Date 23Oct23             *
-      *  Prev Amend No. MD061706             Date 01Aug23             *
+      *  Last Amend No. MD062236             Date 11Jan24             *
+      *  Prev Amend No. MD061992             Date 23Oct23             *
+      *                 MD061706             Date 01Aug23             *
       *                 MD061705             Date 01Aug23             *
       *                 MD061690             Date 27Jul23             *
       *                 MD060709             Date 08Nov22             *
@@ -25,6 +26,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062236 - 1. UDF tables are selected for upgrade            *
+      *             2. RSTP wrongly shows 'Restore complete'          *
+      *             3. Incorrect zone reference system displayed      *
       *  MD061992 - Allow 3 char prefix for reference libraries       *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061705 - Take into account *ACCPTH where attribute APKSIN  *
@@ -182,6 +186,12 @@
      C+ update upgdrvtd u set u.DRACTN = 'IGNORE'
      C+ where exists (select * from UPGXRIPD i where i.PDEPF = u.DRFILE)
      C/end-exec
+                                                                                            MD062236
+      * update DRACTN for UDF tables with 'IGNORE'                                          MD062236
+     C/exec SQL                                                                             MD062236
+     C+ update upgdrvtd u set dractn = 'IGNORE'                                             MD062236
+     C+ where exists (select * from smgnmctd s where u.drfile = s.ncobj)                    MD062236
+     C/end-exec                                                                             MD062236
                                                                                             MD061706
       * update DRACTN based on new exception tables                                         MD061706
      C/exec SQL                                                                             MD061706

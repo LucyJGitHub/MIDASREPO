@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD062077           Date 08Nov23               *
-      *  Prev Amend No. MD061779           Date 17Aug23               *
+      *  Last Amend No. MD062236           Date 11Jan24               *
+      *  Prev Amend No. MD062077           Date 08Nov23               *
+      *                 MD061779           Date 17Aug23               *
       *                 MD061992           Date 23Oct23               *
       *                 MD061954           Date 08Oct23               *
       *                 MD061951           Date 06Oct23               *
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062236 - 1. UDF tables are selected for upgrade            *
+      *             2. RSTP wrongly shows 'Restore complete'          *
+      *             3. Incorrect zone reference system displayed      *
       *  MD062077 - Include reference BFLIB                           *
       *  MD061779 - Upgrading deliverable data with full DDS set      *
       *  MD061992 - Allow 3 char prefix for reference libraries       *
@@ -2628,6 +2632,7 @@
                                                                                             MD062077
      C                   eval      WAIT = 'NO'                                              MD061954
       ** If at least one is submitted or running, wait                                      MD061954
+      ** or if GV/DV are still blank                                                        MD062236
      C                   IF        LRSTDM = 'S' or LRSTDM = 'R'                             MD061954
      C                             or LRSTDP = 'S' or LRSTDP = 'R'                          MD061954
      C                             or LRSTDT = 'S' or LRSTDT = 'R'                          MD061954
@@ -2637,6 +2642,8 @@
      C                             or LRSTGT = 'S' or LRSTGT = 'R'                          MD061954
      C                             or LRSTGV = 'S' or LRSTGV = 'R'                          MD061954
      C                             or LRSTBF = 'S' or LRSTBF = 'R'                          MD062077
+     C                             or (#LIBRGV <> ' ' and LRSTGV = ' ')                     MD062236
+     C                             or (#LIBRDV <> ' ' and LRSTDV = ' ')                     MD062236
      C                   eval      WAIT = 'YES'                                             MD061954
      C                   Endif                                                              MD061954
                                                                                             MD061954

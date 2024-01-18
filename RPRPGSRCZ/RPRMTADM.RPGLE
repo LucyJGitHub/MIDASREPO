@@ -76,8 +76,8 @@
      D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
       *      Put message options
      D MQPMO           DS
-     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
-     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
 
       **  Trigger message structure (character format)
      D MQTMCR          DS

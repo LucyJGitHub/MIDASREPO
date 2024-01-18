@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD062153           Date 13Dec23               *
-      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD062153           Date 13Dec23               *
+      *                 AR819780           Date 16Nov23               *
       *                 AR816445           Date 16Nov23               *
       *                 AR816464           Date 16Nov23               *
       *                 MD060788           Date 08May23               *
@@ -154,6 +155,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD062153 - Pay & Receipts Settlement Method defaulted to '00'*
       *             on insert even without CCY & customer. Reinstate  *
       *             checking for DDCUST & DDCCY so it will not default*

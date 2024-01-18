@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR826313           Date 16Nov23               *
-      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. AR826313           Date 16Nov23               *
+      *                 AR819780           Date 16Nov23               *
       *                 MD056602           Date 04Sep20               *
       *                 231853             Date 15Nov22               *
       *                 CDL102             Date 01Jun21               *
@@ -107,6 +108,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  AR826313 - When accessing Front office, ignore mature deals. *
       *             (Child: AR826315)                                 *
       *           - Applied for MD-61950.                             *

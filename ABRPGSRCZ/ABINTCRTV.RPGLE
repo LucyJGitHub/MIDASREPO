@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031097           Date 15Mar22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD031097           Date 15Mar22               *
+      *                 MD058285           Date 22Jun21               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048708           Date 01Dec17               *
       *                 CDL099             Date 06Oct17               *
@@ -65,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD031097 - System is diplaying error as 'Deal does not exist'*
       *             upon enquiry of matured deals in Internal Contract*
       *             Applied for MD-59041.                             *

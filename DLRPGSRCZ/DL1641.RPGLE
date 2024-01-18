@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. 241044             Date 17May22               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 241044             Date 17May22               *
       *                 MD058285           Date 22Jun21               *
       *                 MD051713           Date 08Sep18               *
       *                 MD046248           Date 27Oct17               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  241044 - Applied fix 217509.

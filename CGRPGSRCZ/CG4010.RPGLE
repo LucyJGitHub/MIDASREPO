@@ -17,8 +17,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD061615           Date 10Nov23               *
-      *  Prev Amend No. MD060590           Date 04Oct22               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. MD061615           Date 10Nov23               *
+      *                 MD060590           Date 04Oct22               *
       *                 MD059624           Date 20Jul22               *
       *                 255465             Date 05Jul22               *
       *                 255150             Date 22Jun22               *
@@ -177,6 +178,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
       *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
       *             field lenght was increased from 15,0 to 16,0.     *

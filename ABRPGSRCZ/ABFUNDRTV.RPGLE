@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR658206           Date 22Jun23               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD061957           Date 26Oct23               *
+      *  Prev Amend No. AR658206           Date 22Jun23               *
+      *                 CDL102             Date 01Jun21               *
       *                 MD058285           Date 22Jun21               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
+      *             contains 194 fields.                              *
+      *           - Recompile due to DLBHISPD changes.                *
       *  AR658206 - Cannot insert Front Office ID and Associated      *
       *             Front Office ID fields for FUND api. Add these    *
       *             fields as parameters.                             *

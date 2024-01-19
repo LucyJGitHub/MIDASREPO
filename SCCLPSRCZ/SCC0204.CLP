@@ -295,11 +295,6 @@
                    IF         COND(&CRE008 *EQ 'Y') THEN(CALL +
                                 PGM(REC101501)         )                                /*MD037320*/
                                                                                         /*MD037320*/
-/** If MT94x Messages Generation is switched on, start its background job */            /*MD052939*/
-                                                                                        /*MD052939*/
-                   IF         COND(&CGL013 *EQ 'Y') THEN(CALL +
-                                PGM(GLC001410) PARM('*START' '       ' '       '))      /*MD052939*/
-                                                                                        /*MD052939*/
 /*    If Citydealer Interface feature is on, call SCC0103.          */
 
                    IF         COND(&CITYDLR *EQ 'Y') THEN(CALL +

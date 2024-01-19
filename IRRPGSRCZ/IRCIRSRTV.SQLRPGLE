@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. 259924             Date 14Dec23               *
+      *  Prev Amend No. 260568             Date 14Dec23               *
+      *                 MD056602           Date 04Sep20               *
+      *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD057061           Date 03Nov20               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +84,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259924 - Amended so that program will check front office ID  *
+      *           in all deals.                                       *
+      *  260568 - Amend program to add checking for front office ID   *
+      *           that comes from SOAP.                               *
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  CIR020 - LIBOR Deregulation - FRA/IRS (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -179,6 +185,13 @@
                                                                                               CAP185
       ** Midas AP API Configuration                                                           CAP185
      F*APICFGL0* IF   E           K DISK    INFSR(*PSSR)                             CAP185 MD056602
+     FFRNTOFCL1 IF   E           K DISK    INFSR(*PSSR)                                       259924
+     F                                     RENAME(MMDELDP0:MMDELDX0)                          259924
+     F                                     RENAME(MMDENBP0:MMDENBX0)                          259924
+     F                                     RENAME(MMDENSP0:MMDENSX0)                          259924
+     F                                     RENAME(ABDEALP0:ABDEALX0)                          259924
+     F                                     RENAME(FXDEALP0:FXDEALX0)                          259924
+     F                                     RENAME(DEALSDGF:DEALSGX0)                          259924
 
       *****************************************************************
       ** +--------------------------------------+
@@ -407,6 +420,9 @@
       * IF THE MODE IS 'FRONT OFFICE TRANSACTION INTERFACE'
       * DO (EXTRA) VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
      C     ModeofOp      IFEQ      '*FRONT'
+     C     ModeofOp      OREQ      ' '                                                        260568
+     C     FOTRID        ANDNE     ' '                                                        260568
+     C     SACCD         ANDEQ     'I'                                                        260568
      C                   EXSR      VFRNT
 
       **  Carry out no further validation if errors have occurred.
@@ -517,7 +533,8 @@
      C                   END
 
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
-     C     FOTRID        CHAIN     IRCIRSL0F                          99
+     C*****FOTRID        CHAIN     IRCIRSL0F                          99                      259924
+     C     FOTRID        CHAIN     FRNTOFCL1                          99                      259924
 
       * IF INSERT
      C     SACCD         IFEQ      'I'

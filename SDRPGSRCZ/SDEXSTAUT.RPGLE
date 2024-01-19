@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 30May14               *
+      *  Last Amend No. AR636440           Date 10Jan24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 30May14               *
       *                 CSD095             Date 08Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR636440 - Place deleted ext. settlement onto PF/SDEXSDE1    *
+      *             before dropping them from PF/SDEXSTPD for         *
+      *             reporting of these deleted records during COB.    *
+      *             Patterned fix with 256965.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions (Recompile)*
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
@@ -97,6 +102,11 @@
      F                                     RENAME(SDAULGD0:SDAULGD1)
      F                                     COMMIT
       ** Midas SD Authorisation Log - by Key (Upd)
+      *                                                                                     AR636440
+     FSDEXSDE1  O  A E             DISK    INFSR(*PSSR)                                     AR636440
+     F                                     RENAME(SDEXSTD0:@ACDEL)                          AR636440
+      ** OUT: Deleted Ext settlement detail                                                 AR636440
+      *                                                                                     AR636440
  
      F/COPY WNCPYSRC,SDEXSTF001
  
@@ -468,8 +478,16 @@
      C**********         DELETE    SDEXSTD0                                          BUG6431 BUG7234
      C                   Z-ADD     WURDNB        BYLCD                                       BUG7234
      C                   MOVEL     '*'           BYRECI                                      BUG7234
+     C                   MOVEL     'D'           BYTYLC                                     AR636440
      C                   UPDATE    SDEXSTD0                                                  BUG7234
      C                   ELSE                                                              BUG6431
+      *                                                                                     AR636440
+      ** Copy ext settlement to be deleted to PF/SDEXSDE1 for                               AR636440
+      ** reporting of deleted records during COB if CDL031 is OFF                           AR636440
+      *                                                                                     AR636440
+     C                   Z-ADD     WURDNB        BYLCD                                      AR636440
+     C                   MOVEL     'D'           BYTYLC                                     AR636440
+     C                   WRITE     @ACDEL                                                   AR636440
      C                   DELETE    @BYREFX
      C                   ENDIF                                                             BUG6431
       *

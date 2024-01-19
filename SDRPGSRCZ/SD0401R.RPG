@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD062144           Date 28Nov23               *
-      *  Prev Amend No. 220932             Date 01Jun10               *
+      *  Last Amend No. AR636440           Date 10Jan24               *
+      *  Prev Amend No. MD062144           Date 28Nov23               *
+      *                 220932             Date 01Jun10               *
       *                 MD046248           Date 27Oct17               *
       *                 CSD095CC1          Date 13Sep16               *
       *                 MD030458           Date 17Sep14               *
@@ -101,6 +102,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR636440 - Place deleted ext. settlement onto PF/SDEXSDE1    *
+      *             before dropping them from PF/SDEXSTPD for         *
+      *             reporting of these deleted records during COB.    *
+      *             Patterned fix with 256965.                        *
       *  MD062144 - Exclude non-live records in file control totals   *
       *             when CDL031 is enabled. Apply similar fix of      *
       *             250336 and applied 256672.                        *
@@ -323,6 +328,11 @@
       *                                                                                       CSD095
      FSDDLSTL1IF  E           K        DISK                                                   CSD095
       ** Deal Sub-Type database                                                               CSD095
+      *                                                                                     AR636440
+     FSDEXSDE1O   E                    DISK                      A                          AR636440
+     F            SDEXSTD0                          KRENAME@ACDEL                           AR636440
+      ** OUT: Deleted Ext settlement detail                                                 AR636440
+      *                                                                                     AR636440
       * Check mandatory fill fields
      E                    @XF        20  1
      E                    UER       150  3
@@ -6266,9 +6276,17 @@
      C           CDL031    IFEQ 'Y'                                            CDL031
      C                     Z-ADDWURDNB    BYLCD                                CDL031
      C                     MOVEL'*'       BYRECI                               CDL031
+     C                     MOVE 'D'       BYTYLC                                            AR636440
      C                     UPDATSDEXSTD0               91  *                   CDL031
      C                     ELSE                                                CDL031
      C/COPY WNCPYSRC,SDH00291
+      *                                                                                     AR636440
+      ** Copy ext settlement to be deleted to PF/SDEXSDE1 for                               AR636440
+      ** reporting of deleted records during COB if CDL031 is OFF                           AR636440
+      *                                                                                     AR636440
+     C                     MOVE 'D'       BYTYLC                                            AR636440
+     C                     MOVE RDNB      BYLCD                                             AR636440
+     C                     WRITE@ACDEL                                                      AR636440
      C                     DELET@BYREFX                91  *
      C/COPY WNCPYSRC,SDH00292
      C                     ENDIF                                               CDL031

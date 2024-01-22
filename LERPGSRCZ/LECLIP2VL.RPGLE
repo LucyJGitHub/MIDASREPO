@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 14Nov22               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. AR834903           Date 16Jan24               *
+      *  Prev Amend No. MD060620           Date 14Nov22               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057917           Date 02Jul21               *
       *                 CLE172             Date 01Oct20               *
       *                 MD042329           Date 04May21               *
@@ -137,6 +138,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR834903 - Unable to early mature zero rate loan due to      *
+      *             error LEL0140 - valid rate is required. Send a    *
+      *             warning message when non-guarantee loan with zero *
+      *             rate is being amended. (Child: AR859984)          *
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
       *             switched off                                      *
@@ -1694,10 +1699,24 @@
      C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
      C     WLNPT         ANDEQ     80                                                       MD055219
                                                                                             BUG10225
+      *                                                                                     AR834903
+      ** Send warning message during amendment, reversal and                                AR834903
+      ** and authorization of loan with zero interest rate                                  AR834903
+      *                                                                                     AR834903
+     C     CCLCHTP       IFEQ      'A'                                                      AR834903
+     C     CCLCHTP       OREQ      'R'                                                      AR834903
+     C     CCLCHTP       OREQ      'X'                                                      AR834903
+     C                   MOVE      'W'           DDRTSPOK                                   AR834903
+     C                   ADD       1             WId                                        AR834903
+     C                   MOVEL     'DDRTSP'      WFldNmXAr(WId)                             AR834903
+     C                   MOVEL     'LEL0881'     WMsgIDXAr(WId)                             AR834903
+     C                   ELSE                                                               AR834903
      C                   MOVE      'N'           DDRTSPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)
+     C                   ENDIF                                                              AR834903
+                                                                                            AR834903
      C                   ENDIF
       *
      C                   ENDIF                                                                CLE170

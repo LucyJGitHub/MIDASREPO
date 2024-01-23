@@ -103,7 +103,8 @@
              DCL        VAR(&SVALK9)   TYPE(*CHAR) LEN(20)
              DCL        VAR(&SVAL0)    TYPE(*CHAR) LEN(200)
              DCL        VAR(&SVALK0)   TYPE(*CHAR) LEN(20)
-             DCL        VAR(&OWNER)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZZOWNER)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGOWNER)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&ADOPT)    TYPE(*CHAR) LEN(10)
              DCL        VAR(&CMD)      TYPE(*CHAR) LEN(3000)
              DCL        VAR(&CMDLEN)   TYPE(*DEC) LEN(15 5) VALUE(3000)
@@ -187,7 +188,8 @@
 /** Check whether system is in IASP environment. */
 
               CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))
-              CHGVAR     VAR(&OWNER) VALUE(&PRE *CAT 'OWNER')
+              CHGVAR     VAR(&ZZOWNER) VALUE(&PRE *CAT 'OWNER')
+              CHGVAR     VAR(&GGOWNER) VALUE(&PREGG *CAT 'OWNER')
               CHGVAR     VAR(&ADOPT) VALUE(&PRE *CAT 'ADOPT')
 
 /** If IASP environment */
@@ -201,19 +203,27 @@
 /** Create 24x7 Libraries with ASP */
 
              CRTLIB     LIB(&X24LIB) TYPE(*PROD) TEXT('BankFusion Midas Zonal 24x7 +
-                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)
+                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)  CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&X24LIB)
 
              CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
-                          Data Library') ASP(*ASPDEV) ASPDEV(&IASP)
+                          Data Library') ASP(*ASPDEV) ASPDEV(&IASP) CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&GZLIB)
 
+             CHGOWNAUT  OBJ(QSYS/&GZLIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
              CRTLIB     LIB(&G24LIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
-                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)
+                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)  CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&G24LIB)
+
+             CHGOWNAUT  OBJ(QSYS/&G24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
 
              ENDDO
              ELSE       CMD(DO)
@@ -221,20 +231,27 @@
 /** Create 24x7 Library with default ASP */
 
              CRTLIB     LIB(&X24LIB) TYPE(*PROD) TEXT('BankFusion Midas Zonal 24x7 +
-                          Objects Library')
+                          Objects Library')  CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&X24LIB)
 
              CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
-                          Data Library')
+                          Data Library')  CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&GZLIB)
 
+             CHGOWNAUT  OBJ(QSYS/&GZLIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
              CRTLIB     LIB(&G24LIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
-                          Objects Library')
+                          Objects Library')  CRTAUT(*EXCLUDE)
              MONMSG     MSGID(CPF2111)
              CLRLIB     LIB(&G24LIB)
 
+             CHGOWNAUT  OBJ(QSYS/&G24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
              ENDDO
 
 /** Create new job description for 24x7 - MIDAS24X7. */
@@ -254,12 +271,16 @@ CRTJOBD:
                           &CBSLIB &CBALIB &BFLIB LIBHTTP123 QGPL +
                           QTEMP QMQM) LOG(4 00 *SECLVL) +
                           LOGCLPGM(*YES) TEXT('Midas SC 24X7 +
-                          job description') USER(&OWNER)
+                          job description') USER(&ZZOWNER)
              MONMSG     MSGID(CPF1621)  EXEC(GOTO CMDLBL(ERROR))
 
              CHGOWNAUT  OBJ(&X24LIB/MIDAS24X7) OBJTYPE(*JOBD) +
-                          NEWOWN(&OWNER) CUROWNAUT(*REVOKE) +
+                          NEWOWN(&ZZOWNER) CUROWNAUT(*REVOKE) +
                           PUBAUT(*EXCLUDE) AUTL(&ADOPT)
+
+             CHGOWNAUT  OBJ(QSYS/&X24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&ZZOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
 
 /** Create temporary file to hold messages for UP008010. */
              DLTF       FILE(QTEMP/UPERRMQT)

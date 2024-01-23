@@ -25,8 +25,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD061390           Date 11Sep23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD061963           Date 18Oct23               *
+      *  Prev Amend No. MD061390           Date 11Sep23               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR681945           Date 12Jun13               *
       *                 264019             Date 10Jun13               *
       *                 CLE134             Date 01Aug12               *
@@ -44,6 +45,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD061963 - Add branches and location                         *
       *  MD061390 - Avoid truncation of values. Apply MD039688 and    *
       *             recompiled due to change in PRTF.                 *
       *  MD039688 - Totals truncated in SD4301P1                      *
@@ -143,6 +145,8 @@
      E*
      E** Array containing day numbers
      E*
+      * Arry for branch details                                                             MD061963
+     E                    BRA      9999 75                                                  MD061963
       /COPY ZSRSRC,ZDATE2Z1
       /SPACE 3
      ILDA       E DSLDA                         256
@@ -188,6 +192,15 @@
      ISCSARD    E DSSCSARDPD                                              CSD005
       * Switchable Features File Details                                  CSD005
       *                                                                   CSD005
+     IMEISOC    E DSMEISOJW0                                                                MD061963
+      * ME ISO country code                                                                 MD061963
+      * Data structure to store branch details                                              MD061963
+     IBRCHDS      DS                                                                        MD061963
+     I                                        1   3 XBRCD                                   MD061963
+     I                                        4  33 XDESC                                   MD061963
+     I                                       34  45 XSWFT                                   MD061963
+     I                                       38  39 XSUBS                                   MD061963
+     I                                       46  75 XLOC                                    MD061963
      I/EJECT
      C*
      C**  Set up Copyright parameter
@@ -266,6 +279,9 @@
      C                     MOVEL'N'       WFSPLT  1                       CSD004
      C                     EXSR DETAIL
      C*
+      * Print branch details                                                                MD061963
+     C                     EXSR BRANCH                                                      MD061963
+      *                                                                                     MD061963
      C**  Execute final processing
      C*
      C                     EXSR FINAL
@@ -376,6 +392,30 @@
      C                     SETOF                     32                   CSD004
      C                     ENDIF                                          CSD004
      C*
+      * Store details                                                                       MD061963
+     C           A8BRCD    IFNE 'ZYX'                                                       MD061963
+     C                     MOVELA8BRCD    XBRCD                                             MD061963
+     C                     MOVELA8BRNM    XDESC                                             MD061963
+     C                     MOVELA8BTID    XSWFT                                             MD061963
+     C                     MOVEL*BLANKS   XLOC                                              MD061963
+      * Retrieve country details using positions 6-7 from SWIFT Id                          MD061963
+     C           XSUBS     IFNE '  '                                                        MD061963
+     C                     CALL 'AOMSOCR0'             90                                   MD061963
+     C                     PARM *BLANKS   @RTCD                                             MD061963
+     C                     PARM '*KEY'    @OPTN                                             MD061963
+     C                     PARM XSUBS     @ISOC   2                                         MD061963
+     C           MEISOC    PARM MEISOC    DSFDY                                             MD061963
+      *                                                                                     MD061963
+     C           @RTCD     IFEQ *BLANKS                                                     MD061963
+     C                     MOVELM3ISOD    XLOC                                              MD061963
+     C                     ENDIF                                                            MD061963
+     C                     ENDIF                                                            MD061963
+      *                                                                                     MD061963
+      * Store details in array                                                              MD061963
+     C                     ADD  1         BB                                                MD061963
+     C                     MOVELBRCHDS    BRA,BB                                            MD061963
+     C                     ENDIF                                                            MD061963
+      *                                                                                     MD061963
      C**  If Dealing FX is present in the system, process DEALSDB
      C*
      C           BGDLFX    IFEQ 'Y'
@@ -3126,7 +3166,55 @@
      C*
      C                     ENDSR
      C*
-     C/EJECT
+     C/EJECT                                                                                MD061963
+     C********************************************************************                  MD061963
+     C*                                                                  *                  MD061963
+     C*    BRANCH - Print branch and location                            *                  MD061963
+     C*                                                                  *                  MD061963
+     C*    CALLED BY: DETAIL - Detail processing                         *                  MD061963
+     C*                                                                  *                  MD061963
+     C********************************************************************                  MD061963
+      *                                                                                     MD061963
+     C           BRANCH    BEGSR                                                            MD061963
+      *                                                                                     MD061963
+      **  Write report headings and sub-headings                                            MD061963
+      *                                                                                     MD061963
+     C                     WRITEHEADINGS                                                    MD061963
+     C                     WRITEBRHEAD                                                      MD061963
+      *                                                                                     MD061963
+      **  Process array                                                                     MD061963
+     C                     Z-ADD1         BB                                                MD061963
+      *                                                                                     MD061963
+     C           BRA,BB    DOWNE*BLANKS                                                     MD061963
+      *                                                                                     MD061963
+     C                     MOVELBRA,BB    BRCHDS                                            MD061963
+     C                     MOVELXBRCD     BCODE                                             MD061963
+     C                     MOVELXDESC     BDESC                                             MD061963
+     C                     MOVELXSWFT     BSWFT                                             MD061963
+     C                     MOVELXLOC      BLOC                                              MD061963
+      *                                                                                     MD061963
+      **  Check if new page required                                                        MD061963
+      *                                                                                     MD061963
+     C                     Z-ADD3         RQDLN                                             MD061963
+     C                     EXSR OVFLOW                                                      MD061963
+      *                                                                                     MD061963
+     C           *IN60     IFEQ '1'                                                         MD061963
+     C                     WRITEHEADINGS                                                    MD061963
+     C                     WRITEBRHEAD                                                      MD061963
+     C                     END                                                              MD061963
+      *                                                                                     MD061963
+      **  Write detail line to report                                                       MD061963
+      *                                                                                     MD061963
+     C                     WRITEBRDETL                                                      MD061963
+      *                                                                                     MD061963
+      **  Increment array index                                                             MD061963
+      *                                                                                     MD061963
+     C                     ADD  1         BB                                                MD061963
+      *                                                                                     MD061963
+     C                     END                                                              MD061963
+      *                                                                                     MD061963
+     C                     ENDSR                                                            MD061963
+     C/EJECT                                                                                MD061963
      C********************************************************************
      C*                                                                  *
      C*    INITDT - Initialise detail line fields to zero                *
@@ -3378,6 +3466,8 @@
      C                     EXSR *PSSR                                     CSD004
      C                     ENDSL                                          CSD004
      C*
+     C                     Z-ADD0         BB      50                                        MD061963
+      *                                                                                     MD061963
      C                     ENDSR
      C*
      C/EJECT

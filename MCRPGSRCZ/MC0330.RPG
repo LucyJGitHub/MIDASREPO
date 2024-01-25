@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058815           Date 28Sep21               *
-      *  Prev Amend No. MD058437           Date 09Jul21               *
+      *  Last Amend No. MD060935           Date 25Jan24               *
+      *  Prev Amend No. 213194             Date 07Mar23               *
+      *                 MD058815           Date 28Sep21               *
+      *                 MD058437           Date 09Jul21               *
       *                 CSD103             Date 10Aug20               *
       *                 224410             Date 10Mar20               *
       *                 MD053295           Date 13Apr19               *
@@ -57,6 +59,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060935 - During reconciliation test there were differences *
+      *             in SOB Adjustments and Today's Adjustments on     *
+      *             MCACDTPD between results from MP1.2.1 SP19 and    *
+      *             FM2021.E when looking into GE-PC postings.        *
+      *           - In SR #P09, core code lines 226963 not exactly    *
+      *             equal to Helaba's codes. Condition 226963 with    *
+      *             system value and include Helaba's fix 252884 and  *
+      *             231514 in #P09.                                   *
+      *  213194 - Prevent record locking in MCACHRL1.                 *
+      *           Applied for MD-60935.                               *
       *  MD058815 - Dealing interest Calculation type 6 have different*
       *             interest amount for Calculation type 1 for non-   *
       *             leap year interest period with same parameters.   *
@@ -256,6 +268,10 @@
      I*
      IDSSDY     E DSDSSDY
      I**   Second DS for Access Programs, Long Data Structure
+      *                                                                                     MD060935
+      ** System Value to determine 'Today's Adjustment Processing'.                         MD060935
+      *                                                                                     MD060935
+     I              'UpdTodaysAdjProc'    C         WSYSVL                                  MD060935
      I*
      I*****************************************************************
      C/EJECT
@@ -1107,6 +1123,8 @@
      C           WSTFTP    IFNE *ZERO
      C**  Update Todays's Adjustments.
      C*
+     C           UPDTAD    IFEQ 'N'                                                         MD060935
+      *                                                                                     MD060935
      C           FTFGCF    IFNE 'D'                                                           226963
      C           GHACLV    IFEQ '2'
      C           GHACLV    OREQ '5'
@@ -1122,6 +1140,30 @@
      C                     MOVE 'Y'       WSLOCK                                              226963
      C                     ENDIF                                                              226963
      C                     ENDIF                                                              226963
+      *                                                                                     MD060935
+     C                     ELSE                                                             MD060935
+      *                                                                                     MD060935
+     C           UPDTAD    IFEQ 'Y'                                                         MD060935
+      *                                                                                     MD060935
+     C           GHCYCD    IFEQ BJCYCD                                                      MD060935
+     C           GHACLV    IFNE '6'                                                         MD060935
+     C                     SUB  WSTFTP    GDTDAJ                                            MD060935
+     C                     MOVE 'Y'       WSLOCK                                            MD060935
+     C                     ELSE                                                             MD060935
+     C                     MOVE 'N'       WSLOCK                                            MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
+     C                     ELSE                                                             MD060935
+     C           GHACLV    IFEQ '2'                                                         MD060935
+     C           GHACLV    OREQ '5'                                                         MD060935
+     C                     SUB  WSTFTP    GDTDAJ                                            MD060935
+     C                     MOVE 'Y'       WSLOCK                                            MD060935
+     C                     ENDIF                                                            MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
+     C                     ENDIF                                                            MD060935
      C*
      C**  Build Output Data Structure
      C*
@@ -1155,6 +1197,10 @@
      C                     UPDATMCACHRD0                                  173160
      C*
      C/COPY WNCPYSRC,MC0330C006
+     C           UPDTAD    IFEQ 'Y'                                                         MD060935
+     C                     MOVE 'Y'       WSLOCK                                            MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
      C                     CALL 'MC0410'                 90
      C                     PARM           @RTCD   7
      C                     PARM BJCYCD    WSCCY   3
@@ -1174,12 +1220,18 @@
      C           PNAR      CAT  'ER OF':0 PNAR
      C           PNAR      CAT  GHACCD:1  PNAR
      C*
+     C           UPDTAD    IFEQ 'Y'                                                         MD060935
+     C                     MOVE 'Y'       WSLOCK                                            MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
+     C                     UPDATMCACHRD0                                                      213194
      C                     CALL 'MC0420'                 91
      C                     PARM           @RTCD   7
      C**********           PARM           WSBICN  60                                          CSD027
      C                     PARM           WSBICN  6                                           CSD027
      C                     PARM           WSLOCK
      C                     PARM MCMOVE    DSFDY
+     C           PFKEY     CHAINMCACHRL1             90                                       213194
      C*
      C                     ENDIF
      C***********          Z-ADDSVCURE    GHCURB                    135120173160
@@ -1653,6 +1705,41 @@
      C                     MOVEA*BLANKS   @STK,Q                                              178906
      C                     SUB  1         Q                                                   178906
      C*
+      **  Call AOSVALR0 to check 'UpdTodaysAdjProc'.                                        MD060935
+      *                                                                                     MD060935
+     C                     CALL 'AOSVALR0'                                                  MD060935
+     C                     PARM *BLANKS   PRTCD   7                                         MD060935
+     C                     PARM WSYSVL    WSVLK1 20                                         MD060935
+     C                     PARM           WSVL1 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK2 20                                         MD060935
+     C                     PARM           WSVL2 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK3 20                                         MD060935
+     C                     PARM           WSVL3 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK4 20                                         MD060935
+     C                     PARM           WSVL4 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK5 20                                         MD060935
+     C                     PARM           WSVL5 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK6 20                                         MD060935
+     C                     PARM           WSVL6 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK7 20                                         MD060935
+     C                     PARM           WSVL7 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK8 20                                         MD060935
+     C                     PARM           WSVL8 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK9 20                                         MD060935
+     C                     PARM           WSVL9 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK0 20                                         MD060935
+     C                     PARM           WSVL0 200                                         MD060935
+      *                                                                                     MD060935
+     C           PRTCD     IFNE *BLANKS                                                     MD060935
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD060935
+     C                     MOVEL'SDSVLJW0'WFILE   8        ************                     MD060935
+     C                     Z-ADD10        WBASE   30       * DBERR 10 *                     MD060935
+     C                     MOVELWSYSVL    WKEY   29        ************                     MD060935
+     C                     EXSR DBERR                                                       MD060935
+     C                     ELSE                                                             MD060935
+     C                     MOVELWSVL1     UPDTAD  1                                         MD060935
+     C                     ENDIF                                                            MD060935
+      *                                                                                     MD060935
      C                     ENDSR
      C********************************************************************
       /EJECT

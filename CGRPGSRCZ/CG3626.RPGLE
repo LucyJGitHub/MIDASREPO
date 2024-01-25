@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061852           Date 20Oct23               *
-      *  Prev Amend No. BA6020             Date 03Sep13               *
+      *  Last Amend No. MD062272           Date 22Jan24               *
+      *  Prev Amend No. MD061852           Date 20Oct23               *
+      *                 BA6020             Date 03Sep13               *
       *                 255619             Date 11Aug22               *
       *                 MD055442           Date 01Jun20               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062272 - Close of CGUXMLL0 should only be done if no DOCS  *
+      *             tag is found. Remove MP1.4 changes for GSH020CC2, *
+      *             so that extra <SYSTEMCUSTOM> tags are not output. *
       *  MD061852 - UDC_PRTGEN failed i/o operation was applied to    *
       *             closed file CGUXMLL0 in FusionMidas.              *
       *           - Open and close file CGUXMLL0 when #@ARCH <> 'A'.  *
@@ -711,7 +715,9 @@
      C                   ENDDO                                                                BA6020
      C                   ENDIF                                                                BA6020
       *                                                                                       BA6020
-     C                   IF        #@ARCH <> 'A'                                              BA6020
+     C**********         IF        #@ARCH <> 'A'                                     BA6020 MD062272
+     C                   IF        #@ARCH <> 'A' and                                        MD062272
+     C                             DOCS <> %TRIM(XMTAGN)                                    MD062272
      C                   CLOSE     CGUXMLL0                                                   BA6020
      C                   ENDIF                                                                BA6020
       *                                                                                       BA6020
@@ -796,32 +802,32 @@
      C                   EVAL      BYPS   = 'Y'                                               BA6020
      C                   ENDIF                                                                BA6020
       *                                                                                       BA6020
-     C                   If        BYPS = 'N' and WSysCus = 'N'                               BA6020
-     C                               and BA6020 = 'Y'                                         BA6020
-      *  Output <SYSTEMCUSTOM> before 1st detail line of correspondence.                      BA6020
-     C                   MOVE(P)   SYSCUSS       TagName                                      BA6020
-     C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
-     C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020
-     C                   EVAL      RecordData = %TRIM(TagName)                                BA6020
-     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
-     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
-     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
-     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
-      *                                                                                       BA6020
-      *  If error writing to stream file                                                      BA6020
-     C                   IF        RC = -1                                                    BA6020
-     C                   EVAL      DBFILE =  *BLANK                                           BA6020
-     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
-     C                   EVAL      DBASE  =  990                                              BA6020
-     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
-     C                   EXSR      *PSSR                                                      BA6020
-     C                   ENDIF                                                                BA6020
-      *                                                                                       BA6020
-      *  Set flag indicating <SYSTEMCUSTOM> has been output.                                  BA6020
-     C                   Eval      WSysCus = 'Y'                                              BA6020
-      *                                                                                       BA6020
-     C                   Endif                                                                BA6020
-      *                                                                                       BA6020
+     C**********         If        BYPS = 'N' and WSysCus = 'N'                      BA6020 MD062272
+     C**********                     and BA6020 = 'Y'                                BA6020 MD062272
+      ***Output*<SYSTEMCUSTOM>*before*1st*detail*line*of*correspondence.             BA6020 MD062272
+     C**********         MOVE(P)   SYSCUSS       TagName                             BA6020 MD062272
+     C**********         MOVE(P)   *BLANKS       TagValue                            BA6020 MD062272
+     C**********         MOVE(P)   *BLANKS       TagEnd                              BA6020 MD062272
+     C**********         EVAL      RecordData = %TRIM(TagName)                       BA6020 MD062272
+     C**********         EVAL      BigString = %TRIM(RecordData) + CRLF              BA6020 MD062272
+     C**********         Eval      Output = %TRIMR(%UCS2(BigString))                 BA6020 MD062272
+     C**********         EVAL      RC = WRITE(FileDesc : %ADDR(Output):              BA6020 MD062272
+     C**********                               %LEN(%TRIMR(Output))*2)               BA6020 MD062272
+      **********                                                                     BA6020 MD062272
+      ***If*error*writing*to*stream*file                                             BA6020 MD062272
+     C**********         IF        RC = -1                                           BA6020 MD062272
+     C**********         EVAL      DBFILE =  *BLANK                                  BA6020 MD062272
+     C**********         EVAL      DBPGM  =  PSProcPgm                               BA6020 MD062272
+     C**********         EVAL      DBASE  =  990                                     BA6020 MD062272
+     C**********         EVAL      DBMOD  =  PSProcMod                               BA6020 MD062272
+     C**********         EXSR      *PSSR                                             BA6020 MD062272
+     C**********         ENDIF                                                       BA6020 MD062272
+      **********                                                                     BA6020 MD062272
+      ***Set*flag*indicating*<SYSTEMCUSTOM>*has*been*output.                         BA6020 MD062272
+     C**********         Eval      WSysCus = 'Y'                                     BA6020 MD062272
+      **********                                                                     BA6020 MD062272
+     C**********         Endif                                                       BA6020 MD062272
+      **********                                                                     BA6020 MD062272
 
       *  Load records into work fields.
      C                   MOVE(P)   XMTAGN        TagName
@@ -919,26 +925,26 @@
       *                                                                                       BA6020
      C                   IF        BA6020 = 'Y'                                               BA6020
       *                                                                                       BA6020
-      *  Output </SYSTEMCUSTOM> before </DOCUMENT>.                                           BA6020
-     C                   MOVE(P)   SYSCUSE       TagName                                      BA6020
-     C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
-     C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020
-     C                   EVAL      RecordData = %TRIM(TagName)                                BA6020
-     C                   EVAL      BigString = %TRIM(RecordData) + CRLF                       BA6020
-     C                   Eval      Output = %TRIMR(%UCS2(BigString))                          BA6020
-     C                   EVAL      RC = WRITE(FileDesc : %ADDR(Output):                       BA6020
-     C                                         %LEN(%TRIMR(Output))*2)                        BA6020
-      *                                                                                       BA6020
-      *  If error writing to stream file                                                      BA6020
-     C                   IF        RC = -1                                                    BA6020
-     C                   EVAL      DBFILE =  *BLANK                                           BA6020
-     C                   EVAL      DBPGM  =  PSProcPgm                                        BA6020
-     C                   EVAL      DBASE  =  991                                              BA6020
-     C                   EVAL      DBMOD  =  PSProcMod                                        BA6020
-     C                   EXSR      *PSSR                                                      BA6020
-     C                   ENDIF                                                                BA6020
-      *                                                                                       BA6020
-      *  Then output </DOCUMENT>.                                                             BA6020
+      ***Output*</SYSTEMCUSTOM>*before*</DOCUMENT>.                                  BA6020 MD062272
+     C**********         MOVE(P)   SYSCUSE       TagName                             BA6020 MD062272
+     C**********         MOVE(P)   *BLANKS       TagValue                            BA6020 MD062272
+     C**********         MOVE(P)   *BLANKS       TagEnd                              BA6020 MD062272
+     C**********         EVAL      RecordData = %TRIM(TagName)                       BA6020 MD062272
+     C**********         EVAL      BigString = %TRIM(RecordData) + CRLF              BA6020 MD062272
+     C**********         Eval      Output = %TRIMR(%UCS2(BigString))                 BA6020 MD062272
+     C**********         EVAL      RC = WRITE(FileDesc : %ADDR(Output):              BA6020 MD062272
+     C**********                               %LEN(%TRIMR(Output))*2)               BA6020 MD062272
+      **********                                                                     BA6020 MD062272
+      ***If*error*writing*to*stream*file                                             BA6020 MD062272
+     C**********         IF        RC = -1                                           BA6020 MD062272
+     C**********         EVAL      DBFILE =  *BLANK                                  BA6020 MD062272
+     C**********         EVAL      DBPGM  =  PSProcPgm                               BA6020 MD062272
+     C**********         EVAL      DBASE  =  991                                     BA6020 MD062272
+     C**********         EVAL      DBMOD  =  PSProcMod                               BA6020 MD062272
+     C**********         EXSR      *PSSR                                             BA6020 MD062272
+     C**********         ENDIF                                                       BA6020 MD062272
+      **********                                                                     BA6020 MD062272
+      ***Then*output*</DOCUMENT>.                                                    BA6020 MD062272
      C                   MOVE(P)   DOCE          TagName                                      BA6020
      C                   MOVE(P)   *BLANKS       TagValue                                     BA6020
      C                   MOVE(P)   *BLANKS       TagEnd                                       BA6020

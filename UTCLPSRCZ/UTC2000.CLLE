@@ -295,7 +295,7 @@ CHGJOBDS:
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
 
              IF         COND(&DFLAYR *NE '*ZONE' *OR &DFSMNU *NE +
-                          'CreateJobDesc') THEN(DO)
+                          'CreateJobDesc' *OR &DFNAME *EQ 'MIDAS24X7') THEN(DO)
              GOTO       CMDLBL(CHGJOBDS)
              ENDDO
 
@@ -303,8 +303,14 @@ CHGJOBDS:
 
              RTVJOBD    JOBD(&XLIB/&DFNAME) INLLIBL(&JOBDLIBL)
              MONMSG     MSGID(CPF9801) EXEC(DO)
+/*                                                               */
+/** Call program to produce report UP008010P1 for error message. */
+/** CPF9801 - Object &2 in library &3 not found.                 */
 
-             GOTO       CMDLBL(CHGJOBDS)
+             CHGVAR     VAR(&ERRORMSG)   VALUE('Job description ' *CAT &DFNAME *TCAT +
+                        ' not found in library ' *CAT &XLIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
              ENDDO
 
 /** Update JOBD */
@@ -313,15 +319,16 @@ CHGJOBDS:
                           *TCAT '/' *TCAT &DFNAME *TCAT ') INLLIBL(' *TCAT &JOBDLIBL +
                           *TCAT ')')
              CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
-             MONMSG     MSGID(CPF1625) EXEC(DO)
+             MONMSG     MSGID(CPF1625 CPD1601) EXEC(DO)
 
 /*                                                               */
 /** Call program to produce report UP008010P1 for error message. */
 /** CPF1625 - Job description &1 in library &2 not changed.      */
 
-             CHGVAR     VAR(&ERRORMSG)   VALUE('Change JOBD ' *TCAT &DFNAME *TCAT +
-                        ' Library List ended abnormally')
-             CALL       PGM(UP008010) PARM(*REPORT &GENPGM &ERRORMSG)
+             CHGVAR     VAR(&ERRORMSG)   VALUE('Job description ' *CAT &DFNAME *TCAT +
+                        ' in library ' *CAT &XLIB *CAT ' not changed.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
              ENDDO
 
              GOTO       CMDLBL(CHGJOBDS)
@@ -335,4 +342,7 @@ ERROR:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 
 ENDPGM:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM &ERRORMSG)
+             ENDDO
              ENDPGM

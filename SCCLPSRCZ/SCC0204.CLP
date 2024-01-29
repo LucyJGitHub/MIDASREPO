@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD039086           Date 27Jan21              */
-/*       Prev Amend No. MD022132           Date 05Mar15              */
+/*       Last Amend No. MD037320           Date 10Jan24              */
+/*       Prev Amend No. MD039086           Date 27Jan21              */
+/*                      MD022132           Date 05Mar15              */
 /*                      MD046248           Date 05Feb18              */
 /*                      MD045731           Date 27Sep17              */
 /*                      MD031644           Date 08Jan15              */
@@ -37,6 +38,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037320 - Cash management background jobs must be          */
+/*                  submitted when Midas system is entered.          */
+/*                - Applied for MD-62184.                            */
 /*       MD039086 - Submit GLC007011 when CAP205 is switched *ON.    */
 /*                  Applied for MD-57273.                            */
 /*       MD022132 - Triggers don't pick up Rollback deletes of ABC   */
@@ -90,6 +94,7 @@
              DCL        VAR(&CLE010) TYPE(*CHAR) LEN(1) VALUE('N' )
              DCL        VAR(&CGL013) TYPE(*CHAR) LEN(1) VALUE('N' )                     /*MD045731*/
              DCL        VAR(&CSE039) TYPE(*CHAR) LEN(1) VALUE('N' )
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1) VALUE('N' )                     /*MD037320*/
              DCL        VAR(&CGP004) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CGP004*/
              DCL        VAR(&CAP002) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*240093*/
              DCL        VAR(&CAP205) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CAP205*/
@@ -218,6 +223,15 @@
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CSE039) VALUE('Y'))
 
+/*    Check if Cash Management is on (CRE008) */                                        /*MD037320*/
+                                                                                        /*MD037320*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*MD037320*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD037320*/
+             CHGVAR     VAR(&SAR) VALUE('CRE008')                                       /*MD037320*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*MD037320*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CRE008) VALUE('Y'))                                      /*MD037320*/
+                                                                                        /*MD037320*/
 /*    Check if Audit Reporting is on (CGP004) */                                          /*CGP004*/
                                                                                           /*CGP004*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CGP004*/
@@ -274,6 +288,13 @@
 /**/                                                                                    /*MD045731*/
 /*/COPY WNCPYSRC,SCC0204001                                        */
 
+/*    If Cash management is switched on, start its background jobs  */                  /*MD037320*/
+                                                                                        /*MD037320*/
+                   IF         COND(&CRE008 *EQ 'Y') THEN(CALL +
+                                PGM(REC101201)         )                                /*MD037320*/
+                   IF         COND(&CRE008 *EQ 'Y') THEN(CALL +
+                                PGM(REC101501)         )                                /*MD037320*/
+                                                                                        /*MD037320*/
 /*    If Citydealer Interface feature is on, call SCC0103.          */
 
                    IF         COND(&CITYDLR *EQ 'Y') THEN(CALL +

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSD103             Date 10Aug20              */
-/*       Prev Amend No. MD039086           Date 24Oct16              */
+/*       Last Amend No. MD037320           Date 10Jan24              */
+/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
@@ -50,6 +51,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037320 - Cash management background jobs must be          */
+/*                  submitted when subsystem starts.                 */
+/*                - Applied for MD-62184.                            */
 /*       CSD103 - LIBOR Deregulation - Common Layer/Standing Data    */
 /*       MD039086 - Submit GO_ONL_ABC background updater             */
 /*                  Applied for MD-57273.                            */
@@ -146,6 +150,7 @@
              DCL        VAR(&CGP004) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CGP004*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CGL014*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGL014*/
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD037320*/
              DCL        VAR(&CGL014) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL014*/
              DCL        VAR(&CLE024) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE024*/
              DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                     /*AR1000912*/
@@ -277,6 +282,15 @@
 /************CALL       PGM(GOC0101)                                      */  /*CAP084*/  /*BG1343*/
 /************                                                             */  /*CAP084*/  /*BG1343*/
                                                                                           /*CAP084*/
+/* Determine if Cash Management is switched on (CRE008) */                              /*MD037320*/
+                                                                                        /*MD037320*/
+             CHGVAR     VAR(&RTCD) VALUE(' ')                                           /*MD037320*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &VERIFY 'CRE008' +
+                          &SFMT)                                                        /*MD037320*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             CHGVAR     VAR(&CRE008) VALUE('Y')                                         /*MD037320*/
+             ENDDO                                                                      /*MD037320*/
+                                                                                        /*MD037320*/
 /* Read The Database Status                                         */
              RTVDTAARA  DTAARA(TSTATUS) RTNVAR(&TSTATUS)
 
@@ -411,6 +425,11 @@
              CALL       PGM(GOC0300)                                                      /*CGP004*/
              ENDDO                                                                        /*CGP004*/
                                                                                           /*CGP004*/
+/* Start Cash Management batch jobs */                                                  /*MD037320*/
+             IF         COND(&MPHAS *EQ 'A' *AND &CRE008 *EQ 'Y') THEN(DO)              /*MD037320*/
+             CALL       PGM(REC101201)                                                  /*MD037320*/
+             CALL       PGM(REC101501)                                                  /*MD037320*/
+             ENDDO                                                                      /*MD037320*/
 /** Check if the Collateralised Lending Feature is on */                                  /*CLE024*/
                                                                                           /*CLE024*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE024*/

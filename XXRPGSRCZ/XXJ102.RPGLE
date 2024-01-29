@@ -383,7 +383,7 @@
      C                   EVAL      JPWORD =  AFTP@SS                                          JMI117
       *                                                                                       JMI117
      C                   ENDIF                                                                JMI117
-     C*
+      *                                                                                       JMI117
      C                   EVAL      JDIR = SPDIR
      C****************** OUT       SDPFTPDA                                     JMI108
      C                   OUT       XXPFTPDA                                     JMI108
@@ -2107,6 +2107,5 @@
      C                   ENDSR
       *
       *================================================================
-      *
 **CTDATA CPY@
 (c) Finastra International Limited 2018

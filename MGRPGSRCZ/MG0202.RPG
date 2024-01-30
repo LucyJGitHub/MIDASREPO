@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060693           Date 28Nov22               *
-      *  Prev Amend No. MD060675           Date 18Nov22               *
+      *  Last Amend No. EML116             Date 30Jan24               *
+      *  Prev Amend No. MD060693           Date 28Nov22               *
+      *                 MD060675           Date 18Nov22               *
       *                 BA3100             Date 01Sep22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056607           Date 06Oct20               *
@@ -118,6 +119,7 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  EML116 - MT202 Fld 53B replacement with Bank to Bank Info    *
       *  MD060693 - Hotfix on RPG/MG0202 - Issue on tag 53B Account   *
       *             format.                                           *
       *             Introduced system value 'DisplayMT202Tag53B' in   *
@@ -380,6 +382,7 @@
      E                    BTBI        6 35               bank to bank info
      E                    R203       10  6               MT203 trans. nos.E29588
      E                    @STR       50  1               String formatting145304
+     E                    @STR27     27  1               String for 53B                       EML116
       *
       *                                                                   S01408
      I/COPY WNCPYSRC,MG0202IIP1                                           S01408
@@ -463,6 +466,7 @@
      I                                        7   8 CODE
      I****************************************6  35 ACL                   103277
      I                                        5  35 ACL                   103277
+     I                                        9  35 F721                                      EML116
       **  Data structure for sender to receiver information
       *
      IP@IN        DS                            256                       CSW096
@@ -564,6 +568,7 @@
      I              'Target2Nostro'       C         P@NOST                                    BA3100
       *                                                                                     MD060693
      I              'DisplayMT202Tag53B'  C         P@NOS1                                  MD060693
+     I              'MT202DLFld53B_72'    C         P53B72                                    EML116
       *                                                                   S01408
      I/COPY WNCPYSRC,MG0202IIPG                                           S01408
       *                                                                   S01408
@@ -1250,7 +1255,8 @@
      C                     PARM P@NOST    SVALK1                                              BA3100
      C**********           PARM *BLANKS   SVAL1                                      BA3100 MD060675
      C                     PARM *BLANKS   SVAL1A200                                         MD060675
-     C                     PARM *BLANKS   SVALK2                                              BA3100
+     C**********           PARM *BLANKS   SVALK2                                       BA3100 EML116
+     C                     PARM P53B72    SVALK2                                              EML116
      C                     PARM *BLANKS   SVAL2                                               BA3100
      C                     PARM *BLANKS   SVALK3                                              BA3100
      C                     PARM *BLANKS   SVAL3                                               BA3100
@@ -1272,6 +1278,7 @@
      C           RTNCDE    IFEQ *BLANK                                                        BA3100
      C**********           MOVELSVAL1     T@NOST  2                                  BA3100 MD060675
      C                     MOVELSVAL1A    T@NOST  2                                         MD060675
+     C                     MOVELSVAL2     F53B72  8                                           EML116
      C                     ENDIF                                                              BA3100
      C*                                                                   CEU003
       *  Access Switchable Feature Details                                CMG001
@@ -1365,6 +1372,20 @@
      C                     MOVEL'N'       CSW218                                              CSW218
      C                     ENDIF                                                              CSW218
       *                                                                                       CSW218
+      ** Access Switchable Feature Details                                                    EML116
+      *                                                                                       EML116
+     C                     CALL 'AOSARDR0'                                                    EML116
+     C                     PARM *BLANKS   PRTCD   7                                           EML116
+     C                     PARM '*VERIFY 'POPTN   7                                           EML116
+     C                     PARM 'EML116'  PSARD   6                                           EML116
+     C           SCSARD    PARM SCSARD    DSSDY                                               EML116
+      *                                                                                       EML116
+     C           PRTCD     IFEQ *BLANKS                                                       EML116
+     C                     MOVE 'Y'       EML116  1                                           EML116
+     C                     ELSE                                                               EML116
+     C                     MOVE 'N'       EML116                                              EML116
+     C                     ENDIF                                                              EML116
+      *                                                                                       EML116
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -3100,6 +3121,48 @@
       *
      C           FLD53     BEGSR
      C/COPY WNCPYSRC,MGH00056
+      *                                                                                       EML116
+      ** Check for '/REC/53B' for Field 53                                                    EML116
+      *                                                                                       EML116
+     C                     MOVE *BLANK    @SKF72  1                                           EML116
+     C           EML116    IFEQ 'Y'                                                           EML116
+     C           MTPY      ANDEQ'202'                                                         EML116
+     C                     MOVE *BLANKS   @BTB                                                EML116
+     C                     MOVE MGBTB1    @BTB                                                EML116
+     C           BENSC     IFEQ F53B72                                                        EML116
+     C                     MOVE 'Y'       @SKF72                                              EML116
+     C                     ENDIF                                                              EML116
+     C                     ENDIF                                                              EML116
+      *                                                                                       EML116
+     C           @SKF72    IFEQ 'Y'                                                           EML116
+      *                                                                                       EML116
+     C                     Z-ADD0         @NPOS   20                                          EML116
+     C                     MOVEA*BLANKS   @STR27                                              EML116
+     C                     Z-ADD2         N                                                   EML116
+      *                                                                                       EML116
+     C                     MOVEAF721      @STR27                                              EML116
+     C           '/'       LOKUP@STR27,N                 60                                   EML116
+      *                                                                                       EML116
+     C           *IN60     IFEQ *OFF                                                          EML116
+     C                     ADD  1         X                                                   EML116
+     C           X         OCUR MULT                                                          EML116
+     C                     MOVE ':53B:'   MTAG                                                EML116
+     C                     MOVELF721      MFLD                                                EML116
+      *                                                                                       EML116
+     C                     ELSE                                                               EML116
+     C           N         SUB  1         @NS     20                                          EML116
+     C           N         ADD  1         @NA     20                                          EML116
+     C           27        SUB  N         @NPOS                                               EML116
+     C                     ADD  1         X                                                   EML116
+     C           X         OCUR MULT                                                          EML116
+     C                     MOVE ':53B:'   MTAG                                                EML116
+     C           @NS       SUBSTF721:1    MFLD                                                EML116
+     C                     ADD  1         X                                                   EML116
+     C           X         OCUR MULT                                                          EML116
+     C           @NPOS     SUBSTF721:@NA  MFLD                                                EML116
+     C                     ENDIF                                                              EML116
+      *                                                                                       EML116
+     C                     ELSE                                                               EML116
       *
       **  Field 53  Sender's correspondent
      C           MGTTYP    IFEQ 'PC'                                                          210796
@@ -3272,6 +3335,7 @@
      C                     END
      C                     END                                                                210796
       *                                                                   S01408
+     C                     ENDIF                                                              EML116
      C/COPY WNCPYSRC,MG0202CCP9                                           S01408
       *                                                                   S01408
      C           BOBIS     TAG                                            CMG001
@@ -3657,6 +3721,13 @@
       *
      C           FLD72     BEGSR
       *
+      ** For 202, skip Field 72 if Bank to Bank info is '/REC/53B'                            EML116
+      *                                                                                       EML116
+     C           EML116    IFEQ 'Y'                                                           EML116
+     C           MTPY      ANDEQ'202'                                                         EML116
+     C           @SKF72    ANDEQ'Y'                                                           EML116
+     C                     MOVE *BLANK    @SKF72                                              EML116
+     C                     ELSE                                                               EML116
       **  Check for non-extended settlements entry
       *
      C                     MOVE 'N'       FLD72O  1
@@ -3844,6 +3915,7 @@
       *                                                                   144710
      C                     END
      C                     ENDIF                                                           AR1002987
+     C                     ENDIF                                                              EML116
      C/COPY WNCPYSRC,MG0202C029
       *
      C                     ENDSR

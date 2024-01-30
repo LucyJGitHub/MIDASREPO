@@ -18,12 +18,14 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************                   JMI113
       *  (c) Finastra International Limited 2018                      *                   JMI113
       *                                                               *
-      *  Last Amend No. JMI113             Date 24May18               *
-      *  Prev Amend No. JMI019             Date 21Feb07               *
+      *  Last Amend No. JMI117             Date 19Jan24               *
+      *  Prev Amend No. JMI113             Date 24May18               *
+      *                 JMI019             Date 21Feb07               *
       *                 JMI019  *CREATE    Date 03Oct05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI117 - Encrypt and Decrypt of password                     *
       *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
       *  JMI019 - Replace FTP input file GLGOINPD with GLG9INPD       *
       *  JMI019 - Phase III MT999 Message Processing                  *
@@ -236,6 +238,9 @@
      ISDGCMS    E DSXXGCMSPD                                                              JMI113
       ** External DS for GCMS Details
       *
+     ISCSARD    E DSSCSARDPD                                                                  JMI117
+      ** SAR File Details Accessed via Access Program AOSARDR0                                JMI117
+      *                                                                                       JMI117
      IDSFDY     E DSDSFDY
       ** First DS for Access programs, Short Data Structure
       *
@@ -322,6 +327,19 @@
      C                     EXSR *PSSR
      C                     EXSR CLOSE
      C                     ENDIF
+      *                                                                                       JMI117
+     C                     MOVE 'N'       JMI117  1                                           JMI117
+      *                                                                                       JMI117
+     C                     CALL 'AOSARDR0'                                                    JMI117
+     C                     PARM *BLANKS   PRTCD   7                                           JMI117
+     C                     PARM '*VERIFY' POPTN   7                                           JMI117
+     C                     PARM 'JMI117'  PSARD   6                                           JMI117
+     C           SCSARD    PARM SCSARD    DSFDY                                               JMI117
+      *                                                                                       JMI117
+     C           PRTCD     IFEQ *BLANKS                                                       JMI117
+     C                     MOVE 'Y'       JMI117                                              JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
       *
       ** Convert run date in YYYYMMDD format
       *
@@ -841,7 +859,36 @@
       *
      C                     MOVELJ0999U    USER
      C                     MOVEL*BLANKS   @1
+      *                                                                                       JMI117
+     C           JMI117    IFEQ 'N'                                                           JMI117
      C                     MOVELJ0999P    PASW
+      *                                                                                       JMI117
+     C                     ELSE                                                               JMI117
+      *                                                                                       JMI117
+      **  Decrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                     MOVE *BLANKS   BEFP@S                                              JMI117
+     C                     MOVELJ0999P    BEFP@S                                              JMI117
+     C                     MOVE 'D'       PMODE                                               JMI117
+     C                     Z-ADD20        PSIZE                                               JMI117
+      *                                                                                       JMI117
+     C                     CALL 'XX910100'                                                    JMI117
+     C                     PARM *BLANKS   PRTCD   7                                           JMI117
+     C                     PARM           PMODE   1                                           JMI117
+     C                     PARM           BEFP@S 30                                           JMI117
+     C                     PARM           PSIZE   20                                          JMI117
+     C                     PARM           AFTP@S 30                                           JMI117
+      *                                                                                       JMI117
+     C           PRTCD     IFEQ *BLANKS                                                       JMI117
+     C                     MOVELAFTP@S    PASW                                                JMI117
+     C                     ELSE                                                               JMI117
+     C                     MOVEL'DECRYPT' DBKEY                                               JMI117
+     C                     MOVEL'XX113047'DBFILE                                ************* JMI117
+     C                     MOVEL'801'     DBASE                                 * DBERR 801 * JMI117
+     C                     EXSR *PSSR                                           ************* JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
+     C                     ENDIF                                                              JMI117
       *
      C                     CLEARGWFTPI
      C                     MOVEL@USRID    GWFTPI

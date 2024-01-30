@@ -20,13 +20,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. JMI109             Date 23May18               *
-      *  Prev Amend No. JMI026I02          Date 16Oct08               *
+      *  Last Amend No. JMI117             Date 19Jan24               *
+      *  Prev Amend No. JMI109             Date 23May18               *
+      *                 JMI026I02          Date 16Oct08               *
       *                 JMI026             Date 29Sep08               *
       *                 JMI026 *Create     Date 30Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI117 - Encrypt and Decrypt of password                     *
       *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
       *  JMI026I02 - Increase user profile and password               *
       *  JMI026 - Add ASC command                                     *
@@ -139,6 +141,10 @@
       ** +--------------------------------------+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+                                                                                              JMI117
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  JMI117
+      *  Short Data Structure for access programs                                             JMI117
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     JMI117
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -195,7 +201,36 @@
       *
      C                   MOVEL     GUSER         USER
      C                   MOVEL     *BLANKS       @1
+      *                                                                                       JMI117
+     C                   IF        JMI117 = 'N'                                               JMI117
      C                   MOVEL     GPWORD        PASW
+      *                                                                                       JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+      **  Decrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                   MOVE      *BLANKS       BEFP@SS                                      JMI117
+     C                   MOVEL     GPWORD        BEFP@SS                                      JMI117
+     C                   MOVE      'D'           MODE                                         JMI117
+     C                   Z-ADD     30            P@SSIZE                                      JMI117
+      *                                                                                       JMI117
+     C                   CALL      'XX910100'                                                 JMI117
+     C                   PARM      *Blanks       PRtCd             7                          JMI117
+     C                   PARM                    Mode              1                          JMI117
+     C                   PARM                    BEFP@SS          30                          JMI117
+     C                   PARM                    P@SSIZE           2 0                        JMI117
+     C                   PARM                    AFTP@SS          30                          JMI117
+      *                                                                                       JMI117
+     C                   IF        PRtCd  = *BLANKS                                           JMI117
+     C                   MOVEL     AFTP@SS       PASW                                         JMI117
+     C                   ELSE                                                                 JMI117
+     C                   MOVEL     'DECRYPT'     DBKEY                                        JMI117
+     C                   MOVEL     'XX109011'    DBFILE                         ************* JMI117
+     C                   MOVEL     '801'         DBASE                          * DBERR 801 * JMI117
+     C                   EXSR      *PSSR                                        ************* JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
       *
      C                   CLEAR                   GFTPI
      C                   MOVEL     @USRID        GFTPI
@@ -304,6 +339,19 @@
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  JNSTAT
       *
+                                                                                              JMI117
+     C                   EVAL      JMI117 = 'N'                                               JMI117
+                                                                                              JMI117
+     C                   CALL      'AOSARDR0'                                                 JMI117
+     C                   PARM      *Blanks       PRtCd             7                          JMI117
+     C                   PARM      '*VERIFY'     POptn             7                          JMI117
+     C                   PARM      'JMI117'      PSARD             6                          JMI117
+     C     SCSARD        PARM      SCSARD        DSFDY                                        JMI117
+                                                                                              JMI117
+     C                   IF        PRtCd = *Blanks                                            JMI117
+     C                   MOVE      'Y'           JMI117            1                          JMI117
+     C                   ENDIF                                                                JMI117
+                                                                                              JMI117
      C*****              OPEN      SDGAMLX0                                                   JMI109
      C*****              READ      SDGAMLD0                                                   JMI109
      C                   OPEN      XXGAMLPD                                                   JMI109

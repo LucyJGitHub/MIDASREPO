@@ -16,13 +16,15 @@
       ***(c)*Misys*International*Banking*Systems*Ltd.*2005*************         JMI108
       *  (c) Finastra International Limited 2018                      *         JMI108
       *                                                               *
-      *  Last Amend No. JMI108             Date 31May18               *
-      *  Prev Amend No. TFJ011I01          Date 25Apr08               *
+      *  Last Amend No. JMI117             Date 19Jan24               *
+      *  Prev Amend No. JMI108             Date 31May18               *
+      *                 TFJ011I01          Date 25Apr08               *
       *                 TFJ011  (CHG001)   Date 21Jun05               *
       *                 TFJ011  *CREATE    Date 16Mar05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI117 - Encrypt and Decrypt of password                     *
       *  JMI108 - Account Balance Pooling. Upgrade to FBM 2.1         *
       *  TFJ011I01 - SFDC 250835 Account Pooling Screen Updates       *
       *              Inconsistent./Add Open/read/close on SDPICDV0 in *
@@ -98,6 +100,9 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Midas SD Bank Details
       *
+     D SDSARD        E DS                  EXTNAME(SCSARDPD)                                  JMI117
+     D                                     PREFIX(L_)                                         JMI117
+      *                                                                                       JMI117
      D A@CPY           DS
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
@@ -369,7 +374,16 @@
      C     *LOCK         IN        XXPFTPDA                                     JMI108
      C                   EVAL      JIP = SPSIP
      C                   EVAL      JUSER = SPSUS
+      *                                                                                       JMI117
+     C                   IF        JMI117 = 'N'                                               JMI117
      C                   EVAL      JPWORD = SPSPS
+      *                                                                                       JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+     C                   EVAL      JPWORD =  AFTP@SS                                          JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
      C                   EVAL      JDIR = SPDIR
      C****************** OUT       SDPFTPDA                                     JMI108
      C                   OUT       XXPFTPDA                                     JMI108
@@ -561,6 +575,17 @@
      C                   END
       * Move rundate to display
      C                   MOVEL     BJMRDT        ##MRDT
+      *                                                                                       JMI117
+     C                   MOVE      'N'           JMI117            1                          JMI117
+     C                   CALL      'AOSARDR0'                                                 JMI117
+     C                   PARM      *BLANKS       @RTCD                                        JMI117
+     C                   PARM      '*VERIFY'     @OPTN                                        JMI117
+     C                   PARM      'JMI117'      @SARD             6                          JMI117
+      *                                                                                       JMI117
+     C     @RTCD         IFEQ      *BLANKS                                                    JMI117
+     C                   MOVE      'Y'           JMI117                                       JMI117
+     C                   MOVE      '1'           *IN88                                        JMI117
+     C                   END                                                                  JMI117
       *
      C                   IF        P1MODE = 'E'
       * Protect input fields
@@ -615,7 +640,33 @@
      C                   IN        XXPFTPDA                                     JMI108
      C                   EVAL      SPSIP = JIP
      C                   EVAL      SPSUS = JUSER
+      *                                                                                       JMI117
+     C     JMI117        IFEQ      'N'                                                        JMI117
      C                   EVAL      SPSPS = JPWORD
+      *                                                                                       JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+      **  Decrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                   MOVE      *BLANKS       BEFP@SS                                      JMI117
+     C                   EVAL      BEFP@SS = JPWORD                                           JMI117
+     C                   MOVE      'D'           MODE                                         JMI117
+     C                   Z-ADD     8             P@SSIZE                                      JMI117
+      *                                                                                       JMI117
+     C                   CALL      'XX910100'                                                 JMI117
+     C                   PARM      *BLANKS       PReturnCode       7                          JMI117
+     C                   PARM                    Mode              1                          JMI117
+     C                   PARM                    BEFP@SS          30                          JMI117
+     C                   PARM                    P@SSIZE           2 0                        JMI117
+     C                   PARM                    AFTP@SS          30                          JMI117
+      *                                                                                       JMI117
+     C                   IF        PReturnCode = *BLANKS                                      JMI117
+     C                   EVAL      SPSPS  =  AFTP@SS                                          JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
      C                   EVAL      SPDIR = JDIR
       *
      C                   ENDIF
@@ -1951,6 +2002,55 @@
       *
      C                   ENDIF
       *
+      ** Validate Password                                                                    JMI117
+      *                                                                                       JMI117
+     C     JMI117        IFEQ      'Y'                                                        JMI117
+      *                                                                                       JMI117
+     C     SPSPS         IFEQ      *BLANKS                                                    JMI117
+     C     SPSUS         ANDNE     *BLANKS                                                    JMI117
+     C                   EVAL      ZAMSID = 'XXX1200'                                         JMI117
+     C                   EVAL      ZAMSGF = 'XXUSRMSG'                                        JMI117
+     C                   EXSR      ZASNMS                                                     JMI117
+     C                   SETON                                        33                      JMI117
+     C                   SETON                                        88                      JMI117
+     C                   SETOFF                                       30                      JMI117
+     C                   EVAL      ERR = 'Y'                                                  JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+     C     SPSPS         IFNE      *BLANKS                                                    JMI117
+      *                                                                                       JMI117
+      **  Encrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                   MOVE      *BLANKS       BEFP@SS                                      JMI117
+     C                   EVAL      BEFP@SS = SPSPS                                            JMI117
+     C                   MOVE      'E'           MODE                                         JMI117
+     C                   Z-ADD     8             P@SSIZE                                      JMI117
+      *                                                                                       JMI117
+     C                   CALL      'XX910100'                                                 JMI117
+     C                   PARM      *BLANKS       PReturnCode       7                          JMI117
+     C                   PARM                    Mode              1                          JMI117
+     C                   PARM                    BEFP@SS          30                          JMI117
+     C                   PARM                    P@SSIZE           2 0                        JMI117
+     C                   PARM                    AFTP@SS          30                          JMI117
+      *                                                                                       JMI117
+     C                   IF        PReturnCode = *BLANKS                                      JMI117
+     C                   EVAL      JPWORD =  AFTP@SS                                          JMI117
+     C                   ELSE                                                                 JMI117
+     C                   EVAL      ZAMSID = 'XXX1201'                                         JMI117
+     C                   EVAL      ZAMSGF = 'XXUSRMSG'                                        JMI117
+     C                   EXSR      ZASNMS                                                     JMI117
+     C                   SETON                                        33                      JMI117
+     C                   SETON                                        88                      JMI117
+     C                   SETOFF                                       30                      JMI117
+     C                   EVAL      ERR = 'Y'                                                  JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
      C                   ENDSR
       /EJECT
       *****************************************************************

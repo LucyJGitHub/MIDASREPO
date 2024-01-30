@@ -18,11 +18,13 @@
       ***(C)*Misys*International*Banking*Systems*Ltd.*2007*************                       JMI113
       *  (C) Finastra International Limited 2018                      *                       JMI113
       *                                                               *
-      *  Last Amend No. JMI113             Date 16May18               *
-      *  Prev Amend No. JMI019  *Create    Date 20Feb07               *
+      *  Last Amend No. JMI117             Date 19Jan24               *
+      *  Prev Amend No. JMI113             Date 16May18               *
+      *                 JMI019  *Create    Date 20Feb07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI117 - Encrypt and Decrypt of password                     *
       *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
       *  JMI019 - Upgrade as is                                       *
       *  JMI019 - Phase III MT999 Message Processing                  *
@@ -50,6 +52,9 @@
      E* Description     : Copyright notice for inclusion in all programs
      E********************************************************************
      E                    CPY@    1   1 80               Copyright array
+      *                                                                                       JMI117
+     ISCSARD    E DSSCSARDPD                                                                  JMI117
+      ** SAR File Details Accessed via Access Program AOSARDR0                                JMI117
      I*
       /EJECT
      I              'XX113002R'           C         PGMNAM                                JMI113
@@ -481,6 +486,35 @@
      C                     MOVEL'XXUSRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     SETON                     9945
+      *                                                                                       JMI117
+     C                     ELSE                                                               JMI117
+      *                                                                                       JMI117
+     C           JMI117    IFEQ 'Y'                                                           JMI117
+     C           S0999P    ANDNE*BLANK                                                        JMI117
+      *                                                                                       JMI117
+     C                     MOVE *BLANKS   BEFPAS                                              JMI117
+     C                     MOVE 'E'       MODE                                                JMI117
+     C                     Z-ADD20        PASIZ3                                              JMI117
+      *                                                                                       JMI117
+     C                     CALL 'XX910100'                                                    JMI117
+     C                     PARM *BLANKS   RTCODE  7                                           JMI117
+     C                     PARM           MODE    1                                           JMI117
+     C                     PARM S0999P    BEFPAS 30                                           JMI117
+     C                     PARM           PASIZ3  20                                          JMI117
+     C                     PARM           AFTPAS 30                                           JMI117
+      *                                                                                       JMI117
+     C           RTCODE    IFEQ *BLANKS                                                       JMI117
+     C                     MOVELAFTPAS    J0999P                                              JMI117
+     C                     ELSE                                                               JMI117
+      *                                                                                       JMI117
+     C                     MOVEL'XXX1201' ZAMSID                                              JMI117
+     C                     MOVEL'XXUSRMSG'ZAMSGF                                              JMI117
+     C                     EXSR ZASNMS                                                        JMI117
+     C                     SETON                     9945                                     JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
      C                     END
       *
       ** Maximum No. of Re-tries for MT999
@@ -615,7 +649,29 @@
       *================================================================
      C                     MOVELJ0999H    S0999H           Host Name for Outgoing MT999
      C                     MOVELJ0999U    S0999U           User Name for Outgoing MT999
+      *                                                                                       JMI117
+     C           JMI117    IFEQ 'N'                                                           JMI117
      C                     MOVELJ0999P    S0999P           Password for Outgoing MT999
+      *                                                                                       JMI117
+     C                     ELSE                                                               JMI117
+      *                                                                                       JMI117
+     C                     MOVE *BLANKS   BEFPAS                                              JMI117
+     C                     MOVE 'D'       MODE                                                JMI117
+     C                     Z-ADD20        PASIZ3                                              JMI117
+      *                                                                                       JMI117
+     C                     CALL 'XX910100'                                                    JMI117
+     C                     PARM *BLANKS   RTCODE  7                                           JMI117
+     C                     PARM           MODE    1                                           JMI117
+     C                     PARM J0999P    BEFPAS 30                                           JMI117
+     C                     PARM           PASIZ3  20                                          JMI117
+     C                     PARM           AFTPAS 30                                           JMI117
+      *                                                                                       JMI117
+     C           RTCODE    IFEQ *BLANKS                                                       JMI117
+     C                     MOVELAFTPAS    S0999P                                              JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
      C                     MOVELJ0999T    S0999T           DataFile Path for Outgoing MT999
      C                     MOVELJ0999C    S0999C           Confirmation File Path for Outgoing MT999
      C           J0MAX9    IFEQ 0
@@ -717,7 +773,16 @@
      C                     MOVELP19NNC    J19NNC
      C                     MOVELS0999H    J0999H           Host Name for Outgoing MT999
      C                     MOVELS0999U    J0999U           User Name for Outgoing MT999
+      *                                                                                       JMI117
+     C           JMI117    IFEQ 'N'                                                           JMI117
      C                     MOVELS0999P    J0999P           Password for Outgoing MT999
+      *                                                                                       JMI117
+     C                     ELSE                                                               JMI117
+      *                                                                                       JMI117
+     C                     MOVELAFTPAS    J0999P                                              JMI117
+      *                                                                                       JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
      C                     MOVELS0999T    J0999T           Datafile Path for Outgoing MT999
      C                     MOVELS0999C    J0999C           Confirmation File Path for MT999
      C                     MOVELS0MAX9    J0MAX9           Maximum No. of Re-tries for MT999
@@ -919,6 +984,19 @@
       * Flag no *SET CURSOR in the program
      C                     MOVE 'N'       YSETCS  1
      C                     MOVE *BLANK    WCSRLC  3
+      *                                                                                       JMI117
+      ** Check if JMI117 is set on                                                            JMI117
+      *                                                                                       JMI117
+     C                     MOVE 'N'       JMI117  1                                           JMI117
+     C                     CALL 'AOSARDR0'                                                    JMI117
+     C                     PARM *BLANKS   @RTCD   7                                           JMI117
+     C                     PARM '*VERIFY' @OPTN   7                                           JMI117
+     C                     PARM 'JMI117'  @SARD   6                                           JMI117
+      *                                                                                       JMI117
+     C           @RTCD     IFEQ *BLANKS                                                       JMI117
+     C                     MOVE 'Y'       JMI117                                              JMI117
+     C                     ENDIF                                                              JMI117
+      *                                                                                       JMI117
       * Begin commit control
      C                     CALL 'Y2BGCMC'
      C                     PARM           W0RTN   7

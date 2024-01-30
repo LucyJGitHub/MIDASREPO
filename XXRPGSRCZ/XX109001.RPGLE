@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. JMI109             Date 21May18               *
-      *  Prev Amend No. JMI026I02          Date 15Oct08               *
+      *  Last Amend No. JMI117             Date 19Jan24               *
+      *  Prev Amend No. JMI109             Date 21May18               *
+      *                 JMI026I02          Date 15Oct08               *
       *                 JMI026  *CREATE    Date 30Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI117 - Encrypt and Decrypt of password                     *
       *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
       *  JMI026I02- Recompile due to changes in SDGAMLX0              *
       *  JMI026 - G-AML PreProcessor                                  *
@@ -72,6 +74,9 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Midas SD Bank Details
       *
+     D SDSARD        E DS                  EXTNAME(SCSARDPD)                                  JMI117
+      ** Midas SD Bank Details                                                                JMI117
+      *                                                                                       JMI117
      D A@CPY           DS
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
@@ -239,7 +244,16 @@
       *
      C                   EVAL      GIPS = SIPS
      C                   EVAL      GUSER = SUSER
+      *                                                                                       JMI117
+     C                   IF        JMI117 = 'N'                                               JMI117
      C                   EVAL      GPWORD = SPWORD
+      *                                                                                       JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+     C                   EVAL      GPWORD = AFTP@SS                                           JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C*
      C                   EVAL      GDIR = SDIR
      C                   EVAL      GOPDPT = SOPDPT
      C                   EVAL      GLCHT = CHTYP
@@ -314,6 +328,17 @@
       *
       * Move rundate to display
      C                   MOVEL     BJMRDT        ##MRDT
+      *                                                                                       JMI117
+     C                   MOVE      'N'           JMI117            1                          JMI117
+     C                   CALL      'AOSARDR0'                                                 JMI117
+     C                   PARM      *BLANKS       @RTCD                                        JMI117
+     C                   PARM      '*VERIFY'     @OPTN                                        JMI117
+     C                   PARM      'JMI117'      @SARD             6                          JMI117
+      *                                                                                       JMI117
+     C     @RTCD         IFEQ      *BLANKS                                                    JMI117
+     C                   MOVE      'Y'           JMI117                                       JMI117
+     C                   MOVE      '1'           *IN88                                        JMI117
+     C                   END                                                                  JMI117
       *
      C                   IF        P1MODE = 'E'
       * Protect input fields
@@ -351,7 +376,33 @@
      C                   MOVE      'Y'           FLAG              1
      C                   EVAL      SIPS = GIPS
      C                   EVAL      SUSER = GUSER
+      *                                                                                       JMI117
+     C     JMI117        IFEQ      'N'                                                        JMI117
      C                   EVAL      SPWORD = GPWORD
+      *                                                                                       JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+      **  Decrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                   MOVE      *BLANKS       BEFP@SS                                      JMI117
+     C                   EVAL      BEFP@SS = GPWORD                                           JMI117
+     C                   MOVE      'D'           MODE                                         JMI117
+     C                   Z-ADD     30            P@SSIZE                                      JMI117
+      *                                                                                       JMI117
+     C                   CALL      'XX910100'                                                 JMI117
+     C                   PARM      *BLANKS       PReturnCode       7                          JMI117
+     C                   PARM                    Mode              1                          JMI117
+     C                   PARM                    BEFP@SS          30                          JMI117
+     C                   PARM                    P@SSIZE           2 0                        JMI117
+     C                   PARM                    AFTP@SS          30                          JMI117
+      *                                                                                       JMI117
+     C                   IF        PReturnCode = *BLANKS                                      JMI117
+     C                   EVAL      SPWORD =  AFTP@SS                                          JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
      C                   EVAL      SDIR = GDIR
      C                   EVAL      SOPDPT = GOPDPT
       *
@@ -388,6 +439,55 @@
      C                   ENDIF
      C                   ENDIF
       *
+      ** Validate Password                                                                    JMI117
+      *                                                                                       JMI117
+     C     JMI117        IFEQ      'Y'                                                        JMI117
+      *                                                                                       JMI117
+     C     SPWORD        IFEQ      *BLANKS                                                    JMI117
+     C     SUSER         ANDNE     *BLANKS                                                    JMI117
+     C                   EVAL      ZAMSID = 'XXX1200'                                         JMI117
+     C                   EVAL      ZAMSGF = 'XXUSRMSG'                                        JMI117
+     C                   EXSR      ZASNMS                                                     JMI117
+     C                   SETON                                        33                      JMI117
+     C                   SETON                                        88                      JMI117
+     C                   SETOFF                                       30                      JMI117
+     C                   EVAL      ERR = 'Y'                                                  JMI117
+     C                   ELSE                                                                 JMI117
+      *                                                                                       JMI117
+     C     SPWORD        IFNE      *BLANKS                                                    JMI117
+      *                                                                                       JMI117
+      **  Encrypt the passcode                                                                JMI117
+      *                                                                                       JMI117
+     C                   MOVE      *BLANKS       BEFP@SS                                      JMI117
+     C                   EVAL      BEFP@SS = SPWORD                                           JMI117
+     C                   MOVE      'E'           MODE                                         JMI117
+     C                   Z-ADD     30            P@SSIZE                                      JMI117
+      *                                                                                       JMI117
+     C                   CALL      'XX910100'                                                 JMI117
+     C                   PARM      *BLANKS       PReturnCode       7                          JMI117
+     C                   PARM                    Mode              1                          JMI117
+     C                   PARM                    BEFP@SS          30                          JMI117
+     C                   PARM                    P@SSIZE           2 0                        JMI117
+     C                   PARM                    AFTP@SS          30                          JMI117
+      *                                                                                       JMI117
+     C                   IF        PReturnCode = *BLANKS                                      JMI117
+     C                   EVAL      GPWORD =  AFTP@SS                                          JMI117
+     C                   ELSE                                                                 JMI117
+     C                   EVAL      ZAMSID = 'XXX1201'                                         JMI117
+     C                   EVAL      ZAMSGF = 'XXUSRMSG'                                        JMI117
+     C                   EXSR      ZASNMS                                                     JMI117
+     C                   SETON                                        33                      JMI117
+     C                   SETON                                        88                      JMI117
+     C                   SETOFF                                       30                      JMI117
+     C                   EVAL      ERR = 'Y'                                                  JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
+     C                   ENDIF                                                                JMI117
+      *                                                                                       JMI117
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -441,5 +541,6 @@
      C                   ENDSR
       *
       *================================================================
+      *
 **CTDATA CPY@
 (c) Misys International Banking Systems Ltd. 2008

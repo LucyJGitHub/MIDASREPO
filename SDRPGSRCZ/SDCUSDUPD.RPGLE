@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056982           Date 12Oct20               *
-      *  Prev Amend No. MD056719           Date 16Sep20               *
+      *  Last Amend No. MD060329           Date 22Jan24               *
+      *  Prev Amend No. MD056982           Date 12Oct20               *
+      *                 MD056719           Date 16Sep20               *
       *                 MD055373           Date 14Jul20               *
       *                 MD026746           Date 05Feb20               *
       *                 MD025022           Date 05Feb20               *
@@ -155,6 +156,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060329 - API Performance degradation SP25                  *
       *  MD056982 - Serious Midas Error upon authorize in CUSD, use   *
       *             file SDCRSHL0 for update                          *
       *  MD056719 - Unable to Amend Customer Due to Incorrect Error   *
@@ -381,8 +383,8 @@
      FSDCUSXL0  UF A E           K DISK    COMMIT                                             CGL132
      F                                     RENAME(SDCUSTX0:SDCUSTX1)                          CGL132
                                                                                               CGL132
-      * UPD : Midas SD Standing Data Controls index
-     FSDFCTLL0  UF A E           K DISK    COMMIT
+      **UPD*:*Midas*SD*Standing*Data*Controls*index********************                     MD060329
+     F***SDFCTLL0  UF A E           K DISK    COMMIT                                        MD060329
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
      FSDFTCSL0  UF A E           K DISK    COMMIT                                             CGL132
@@ -5781,38 +5783,55 @@
      C*****************************************************************
      C     SNCHRC        BEGSR
 
-     C                   MOVEL     *BLANK        W0RTN             7
-      *
-      * Move key fields to @AHREAU
-     C                   MOVEL     *BLANK        AHFLNM
-     C                   MOVEL     WFLNAME       AHFLNM
-      *
-     C     KLCHSN        KLIST
-     C                   KFLD                    AHFLNM
-     C     KLCHSN        CHAIN     @AHREAU                            90
-
-      ** DATABASE ERROR
-
-     C     *IN90         IFEQ      '1'
-     C                   MOVEL     AHFLNM        DBKEY
-     C                   MOVEL     'SDFCTLL0'    DBFILE                         ************
-     C                   MOVEL     '017'         DBASE                          * DBERR 017*
-     C                   EXSR      SRERR                                        ************
-     C                   END
-
-      * USER: Processing after Data read
-     C                   ADD       AHNORC        WUNORC
-     C                   ADD       AHNOIN        WUNOIN
-     C                   ADD       AHNOAM        WUNOAM
-     C                   ADD       AHNODL        WUNODL
-      * Move non-key fields to @AHREAU
-     C                   Z-ADD     WUNORC        AHNORC
-     C                   Z-ADD     WUNOIN        AHNOIN
-     C                   Z-ADD     WUNOAM        AHNOAM
-     C                   Z-ADD     WUNODL        AHNODL
-      *
-      * Update record
-     C                   UPDATE    @AHREAU
+     C                   MOVE      *BLANKS       SRETURN           7                        MD060329
+                                                                                            MD060329
+     C                   CALLB     'SDFCTLUPD'                                              MD060329
+     C                   PARM      *BLANKS       SRETURN                                    MD060329
+     C                   PARM                    WFLNAME                                    MD060329
+     C                   PARM                    WUNORC                                     MD060329
+     C                   PARM                    WUNOIN                                     MD060329
+     C                   PARM                    WUNOAM                                     MD060329
+     C                   PARM                    WUNODL                                     MD060329
+                                                                                            MD060329
+     C     SRETURN       IFNE      *BLANKS                                                  MD060329
+     C                   MOVEL     WFLNAME       DBKEY                                      MD060329
+     C                   MOVEL     'SDFCTLL0'    DBFILE                                     MD060329
+     C                   MOVEL     '017'         DBASE                                      MD060329
+     C                   EXSR      SRERR                                                    MD060329
+     C                   ENDIF                                                              MD060329
+                                                                                            MD060329
+     C**********         MOVEL     *BLANK        W0RTN             7                        MD060329
+      **********                                                                            MD060329
+      **Move*key*fields*to*@AHREAU**************************************                    MD060329
+     C**********         MOVEL     *BLANK        AHFLNM                                     MD060329
+     C**********         MOVEL     WFLNAME       AHFLNM                                     MD060329
+      **********                                                                            MD060329
+     C*****KLCHSN        KLIST                                                              MD060329
+     C**********         KFLD                    AHFLNM                                     MD060329
+     C*****KLCHSN        CHAIN     @AHREAU                            90                    MD060329
+      **********                                                                            MD060329
+      ***DATABASE*ERROR*************************************************                    MD060329
+      **********                                                                            MD060329
+     C******IN90         IFEQ      '1'                                                      MD060329
+     C**********         MOVEL     AHFLNM        DBKEY                                      MD060329
+     C**********         MOVEL     'SDFCTLL0'    DBFILE                         ************MD060329
+     C**********         MOVEL     '017'         DBASE                          * DBERR 017*MD060329
+     C**********         EXSR      SRERR                                        ************MD060329
+     C**********         END                                                                MD060329
+      **********                                                                            MD060329
+      **USER:*Processing*after*Data*read*********************************                   MD060329
+     C**********         ADD       AHNORC        WUNORC                                     MD060329
+     C**********         ADD       AHNOIN        WUNOIN                                     MD060329
+     C**********         ADD       AHNOAM        WUNOAM                                     MD060329
+     C**********         ADD       AHNODL        WUNODL                                     MD060329
+      **Move non-key fields to @AHREAU                                                      MD060329
+     C**********         Z-ADD     WUNORC        AHNORC                                     MD060329
+     C**********         Z-ADD     WUNOIN        AHNOIN                                     MD060329
+     C**********         Z-ADD     WUNOAM        AHNOAM                                     MD060329
+     C**********         Z-ADD     WUNODL        AHNODL                                     MD060329
+      **********                                                                            MD060329
+      **Update*record****************************************************                   MD060329
+     C**********         UPDATE    @AHREAU                                                  MD060329
       *
      C                   ENDSR
      C*****************************************************************

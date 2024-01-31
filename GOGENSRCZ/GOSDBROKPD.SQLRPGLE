@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD058085           Date 11May21               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062254           Date 26Jan24               *
+      *  Prev Amend No. MD058085           Date 11May21               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062254 - GOC0100/GOC0100A fails for GZSDBROKPD due to      *
+      *             duplicate record key. Fix is to restrict the      *
+      *             to the zone where the GOC0100A is called over.    *
       *  MD058085 - Deliverable Data Split for Standing Data          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
@@ -125,7 +129,8 @@ Z    C***02*****         EVAL      G_A9ZONE      = I_ZONE                       
      C+  ZOZONE as A9ZONE                                                                   MD058085
      C+ from SDBRKJW0 a, GPZONEPD                                                           MD058085
      C+ where not exists (select * from GZSDBROKPD b where a.A9BROK = b.A9BROK              MD058085
-     C+ and B.A9ZONE = :I_ZONE))                                                            MD058085
+     C**and*B.A9ZONE = :I_ZONE))                                                   MD058085 MD062254
+     C+ and B.A9ZONE = :I_ZONE) and ZOZONE = :I_ZONE)                                       MD062254
      C/end-exec                                                                             MD058085
                                                                                             MD058085
      C                   If        SQLCode <> 0                                             MD058085

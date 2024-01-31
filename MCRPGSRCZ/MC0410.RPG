@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059841           Date 21Jun22               *
-      *  Prev Amend No. MD059936           Date 14May22               *
+      *  Last Amend No. MD060935           Date 25Jan24               *
+      *  Prev Amend No. MD059841           Date 21Jun22               *
+      *                 MD059936           Date 14May22               *
       *                 CGL057             Date 02Nov21               *
       *                 AR548538           Date 10Mar20               *
       *                 215711             Date 10Mar20               *
@@ -57,6 +58,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060935 - Condition 224411 with a system value. If system   *
+      *             value is 'N', no update on gap accrual.           *
+      *             If system value is 'Y',execute SR/PRP05 to update *
+      *             gap accrual history.                              *
       *  MD059841 - Postings over Primary Funding Gap account are     *
       *             consolidated.  Introduce a new system value       *
       *             ConPosFundGapAccnt.                               *
@@ -71,7 +76,7 @@
       *           - Applied for MD-55379.                             *
       *  215711 - The system accrued the B/CCY transferred from F/CCY *
       *           IN/EX. PRP05 should not be executed for this entry. *
-      *         - Applied for MD-55379.  
+      *         - Applied for MD-55379.
       *  224411 - Gap accrual detail was incorrectly updated for the  *
       *           batch item posted to an IN/EX account. Only Gap     *
       *           requirements should create the gap balance and      *
@@ -217,6 +222,10 @@
       **  Zeros Constant                                                                      CGL029
      I              '0000000000'          C         WZEROS                                    CGL029
      I              'ConPosFundGapAccnt'  C         PSVAL1                                  MD059841
+      *                                                                                     MD060935
+      ** System Value to determine when to execute SR/PRP05                                 MD060935
+      *                                                                                     MD060935
+     I              'UpdGapAccrual'       C         WSYSVL                                  MD060935
       /EJECT
       *================================================================
       *  P R O G R A M     S T A R T                                  *
@@ -396,6 +405,40 @@
      C                     MOVELSVAL1     CONPFA  1                                         MD059841
      C                     ENDIF                                                            MD059841
       *                                                                                     MD059841
+      **  Call AOSVALR0 to check 'UpdGapAccrual'.                                           MD060935
+      *                                                                                     MD060935
+     C                     CALL 'AOSVALR0'                                                  MD060935
+     C                     PARM *BLANKS   PRTCD   7                                         MD060935
+     C                     PARM WSYSVL    WSVLK1 20                                         MD060935
+     C                     PARM           WSVL1 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK2 20                                         MD060935
+     C                     PARM           WSVL2 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK3 20                                         MD060935
+     C                     PARM           WSVL3 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK4 20                                         MD060935
+     C                     PARM           WSVL4 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK5 20                                         MD060935
+     C                     PARM           WSVL5 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK6 20                                         MD060935
+     C                     PARM           WSVL6 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK7 20                                         MD060935
+     C                     PARM           WSVL7 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK8 20                                         MD060935
+     C                     PARM           WSVL8 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK9 20                                         MD060935
+     C                     PARM           WSVL9 200                                         MD060935
+     C                     PARM *BLANKS   WSVLK0 20                                         MD060935
+     C                     PARM           WSVL0 200                                         MD060935
+      *                                                                                     MD060935
+     C           PRTCD     IFNE *BLANKS                                                     MD060935
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD060935
+     C                     MOVEL'SDSVLJW0'WFILE   8        ************                     MD060935
+     C                     Z-ADD10        WBASE   30       * DBERR 10 *                     MD060935
+     C                     MOVELWSYSVL    WKEY   29        ************                     MD060935
+     C                     EXSR DBERR                                                       MD060935
+     C                     ELSE                                                             MD060935
+     C                     MOVELWSVL1     UPDGAP  1                                         MD060935
+     C                     ENDIF                                                            MD060935
      C/COPY WNCPYSRC,MC0410C001
       *
       **  End First Cycle
@@ -751,6 +794,9 @@
       *
      C           XLCKR     IFNE 'Y'
      C           XATYP     ANDEQ'F'                                                           224411
+     C           UPDGAP    ANDEQ'N'                                                         MD060935
+     C           XLCKR     ORNE 'Y'                                                         MD060935
+     C           UPDGAP    ANDEQ'Y'                                                         MD060935
      C                     EXSR PRP05
      C                     ENDIF
       *
@@ -763,6 +809,8 @@
       **  (FX Profit Centre).
       *
      C           XATYP     IFEQ 'F'                                                           224411
+     C           UPDGAP    ANDEQ'N'                                                         MD060935
+     C           UPDGAP    OREQ 'Y'                                                         MD060935
      C                     EXSR PRP05
      C                     ENDIF                                                              224411
       *
@@ -779,6 +827,9 @@
       **  (FX Profit Centre).
       *
      C**********           EXSR PRP05                                                         224411
+     C           UPDGAP    IFEQ 'Y'                                                         MD060935
+     C                     EXSR PRP05                                                       MD060935
+     C                     ENDIF                                                            MD060935
       *
       **  Write to the Profit Centre Accounting file, for the B/Ccy Gap
       **  Funding Account (Profit Centre).
@@ -789,6 +840,9 @@
       ****(Profit*Centre).*********************************************                       215711
       *
      C*********            EXSR PRP05                                                         215711
+     C           UPDGAP    IFEQ 'Y'                                                         MD060935
+     C                     EXSR PRP05                                                       MD060935
+     C                     ENDIF                                                            MD060935
      C                     ENDIF
       *
      C                     ENDSR

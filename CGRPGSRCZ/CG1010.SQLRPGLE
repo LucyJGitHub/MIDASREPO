@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062169           Date 22Jan24               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD062169 - Action code 'G' causes program CG1150 to stop     *
+      *           - Applied for MD062219.                             *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -746,19 +749,19 @@
      C     #1SEL         IFNE      'E'                                          *IF
      C     #1SEL         ANDNE     'A'                                          *IF
      C     #1SEL         ANDNE     'D'                                          *IF
-     C     #1SEL         ANDNE     'G'                                          *IF
+     C*****#1SEL         ANDNE     'G'                                          *IF         MD062169
      C     #1SEL         ANDNE     '1'                                          *IF
      C     #1SEL         ORNE      '1'                                          *IF
      C     #1SEL         ANDNE     'E'                                          *IF
-     C     #1SEL         ANDNE     'G'                                          *IF
+     C*****#1SEL         ANDNE     'G'                                          *IF         MD062169
      C     P1ACTC        ANDEQ     'S'                                          *IF
      C     #1SEL         ORNE      'E'                                          *IF
-     C     #1SEL         ANDNE     'G'                                          *IF
+     C*****#1SEL         ANDNE     'G'                                          *IF         MD062169
      C     P1ACTC        ANDEQ     'E'                                          *IF
      C     #1SEL         ORNE      'E'                                          *IF
      C     #1SEL         ANDNE     'A'                                          *IF
      C     #1SEL         ANDNE     'D'                                          *IF
-     C     #1SEL         ANDNE     'G'                                          *IF
+     C*****#1SEL         ANDNE     'G'                                          *IF         MD062169
      C     P1ACTC        ANDEQ     'A'                                          *IF
       * Setup message data for message
      C                   MOVEL     #1SEL         ZA0001                         *SFLSEL
@@ -971,33 +974,34 @@
      C                   MOVEL     'CGD1000'     P0RTN
      C                   END
       *
-      * Derived Group Sets
-      *
-     C     #1SEL         WHENEQ    'G'
-      *
-      * Set up parameters
-      *
-     C     P1ACTC        IFEQ      'A'
-     C                   MOVEL     'a'           #USEL             1            Action Code
-     C                   ELSE
-     C                   MOVEL     'e'           #USEL                          Action Code
-     C                   END
-      *
-      * Set up parameters
-      *
-     C                   MOVEL     *BLANKS       O3PARM
-     C                   MOVEL     #1RDE         O3RDE
-      *
-     C                   CALL      'CG1150'                             9090
-     C                   PARM                    P0RTN             7
-     C                   PARM      #USEL         WP0001            1            Action Code
-     C                   PARM                    O3PARM                         KEY: RDE
-      *
-      * If in error set up return code
-      *
-     C     *IN90         IFEQ      '1'
-     C                   MOVEL     'CGD1000'     P0RTN
-     C                   END
+      * Action code can be removed as there is no 'derived groups'                          MD062169
+      **Derived*Group Sets                                                                  MD062169
+      **********                                                                            MD062169
+     C*****#1SEL         WHENEQ    'G'                                                      MD062169
+      **********                                                                            MD062169
+      **Set*up*parameters                                                                   MD062169
+      **********                                                                            MD062169
+     C*****P1ACTC        IFEQ      'A'                                                      MD062169
+     C**********         MOVEL     'a'           #USEL             1            Action Code MD062169
+     C**********         ELSE                                                               MD062169
+     C**********         MOVEL     'e'           #USEL                          Action Code MD062169
+     C**********         END                                                                MD062169
+      **********                                                                            MD062169
+      **Set*up*parameters                                                                   MD062169
+      **********                                                                            MD062169
+     C**********         MOVEL     *BLANKS       O3PARM                                     MD062169
+     C**********         MOVEL     #1RDE         O3RDE                                      MD062169
+      **********                                                                            MD062169
+     C**********         CALL      'CG1150'                             9090                MD062169
+     C**********         PARM                    P0RTN             7                        MD062169
+     C**********         PARM      #USEL         WP0001            1            Action Code MD062169
+     C**********         PARM                    O3PARM                         KEY: RDE    MD062169
+      **********                                                                            MD062169
+      **If*in*error set up return code                                                      MD062169
+      **********                                                                            MD062169
+     C******IN90         IFEQ      '1'                                                      MD062169
+     C**********         MOVEL     'CGD1000'     P0RTN                                      MD062169
+     C**********         END                                                                MD062169
       *
       * Select
       *

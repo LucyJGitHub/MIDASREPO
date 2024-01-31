@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052939           Date 27Jul23              */
-/*       Prev Amend No. AR1097127          Date 14Feb23              */
+/*       Last Amend No. MD037320           Date 10Jan24              */
+/*       Prev Amend No. MD052939           Date 27Jul23              */
+/*                      AR1097127          Date 14Feb23              */
 /*                      AR989454           Date 14Feb23              */
 /*                      CSD103             Date 10Aug20              */
 /*                      MD039086           Date 24Oct16              */
@@ -53,6 +54,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037320 - Cash management background jobs must be          */
+/*                  submitted when subsystem starts.                 */
+/*                - Applied for MD-62184.                            */
 /*       MD052939 - MT941/942 generation background job must be      */
 /*                  submitted when subsystem starts.                 */
 /*       AR1097127 - Midas Export not used but the COB started the   */
@@ -157,6 +161,7 @@
              DCL        VAR(&CGP004) TYPE(*CHAR) LEN(1) VALUE('N' )                       /*CGP004*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CGL014*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CGL014*/
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD037320*/
              DCL        VAR(&CGL014) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CGL014*/
              DCL        VAR(&CLE024) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE024*/
              DCL        VAR(&CLE025) TYPE(*CHAR) LEN(1) VALUE('N')                     /*AR1000912*/
@@ -299,6 +304,15 @@
 /************CALL       PGM(GOC0101)                                      */  /*CAP084*/  /*BG1343*/
 /************                                                             */  /*CAP084*/  /*BG1343*/
                                                                                           /*CAP084*/
+/* Determine if Cash Management is switched on (CRE008) */                              /*MD037320*/
+                                                                                        /*MD037320*/
+             CHGVAR     VAR(&RTCD) VALUE(' ')                                           /*MD037320*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &VERIFY 'CRE008' +
+                          &SFMT)                                                        /*MD037320*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+             CHGVAR     VAR(&CRE008) VALUE('Y')                                         /*MD037320*/
+             ENDDO                                                                      /*MD037320*/
+                                                                                        /*MD037320*/
 /** Check if MT94x Messages Generation is switched on (CGL013) */                       /*MD052939*/
                                                                                         /*MD052939*/
              CHGVAR     VAR(&RTCD) VALUE(' ')                                           /*MD052939*/
@@ -442,6 +456,12 @@
              CALL       PGM(GOC0300)                                                      /*CGP004*/
              ENDDO                                                                        /*CGP004*/
                                                                                           /*CGP004*/
+/* Start Cash Management batch jobs */                                                  /*MD037320*/
+             IF         COND(&MPHAS *EQ 'A' *AND &CRE008 *EQ 'Y') THEN(DO)              /*MD037320*/
+             CALL       PGM(REC101201)                                                  /*MD037320*/
+             CALL       PGM(REC101501)                                                  /*MD037320*/
+             ENDDO                                                                      /*MD037320*/
+                                                                                        /*MD052939*/
 /** Start MT94x Messages Generation batch job */                                        /*MD052939*/
                                                                                         /*MD052939*/
              IF         COND(&MPHAS *EQ 'A' *AND &CGL013 *EQ 'Y') THEN(DO)              /*MD052939*/

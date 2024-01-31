@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060936           Date 26Jan24               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060936 - BFMM - issue re incoming payment missing          *
+      *             from the incoming payment queue.                  *
+      *           - add SETON LR before returning to calling program. *
+      *           - use CALL instead of CALLB command for AOCUSTR0.   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -88,7 +93,7 @@
      C                   EXSR      SETUP_TRAP
 
       * RETURN
-
+     C                   SETON                                        LR                    MD060936
      C                   RETURN
       *
       *****************************************************************
@@ -183,7 +188,8 @@
       * Access customer details                                                             BUG11830
       ********************************************************************                  BUG11830
      C     ACS_CUST      BEGSR                                                              BUG11830
-     C                   CALLB     'AOCUSTR0'                                               BUG11830
+     C********           CALLB     'AOCUSTR0'                                      BUG11830 MD060936
+     C                   CALL      'AOCUSTR0'                                               MD060936
      C                   PARM      *BLANKS       @RTCD             7                        BUG11830
      C                   PARM      '*KEY   '     @OPTN             7                        BUG11830
      C                   PARM                    @KEY1            10                        BUG11830

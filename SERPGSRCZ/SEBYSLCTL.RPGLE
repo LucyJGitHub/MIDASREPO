@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1157,6 +1159,7 @@
       *
       * Custom Extra Data file data
      C                   PARM                    ExtData
+     C                   PARM                    TradFilFmt                                   CSE119
       *
       * Default & Validate (Y or N)
      C                   PARM      'Y'           Default

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248683             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. 248683             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR698195B          Date 20Jan11               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE119 - Block TP Sale against long short book position      *
       *  248683 - Initialize Data Area for SE1806 Flag.               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -212,7 +214,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSEITRADL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEITRADD0 : SEITRADX0)
      FSEITRADL1 UF   E           K DISK    INFSR(*PSSR)
@@ -224,7 +226,7 @@
       *
      FSECTY     IF   E           K DISK    INFSR(*PSSR)                                       206651
      F                                     PREFIX(SC_)                                        206651
- 
+
       ** API Invalid Log File                                                                 CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
@@ -235,7 +237,7 @@
      F                                     COMMIT                                             CER001
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SETRADR011
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -247,44 +249,44 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -292,17 +294,17 @@
                                                                                               CSC022
      D WCmtJobArr      S             10A   DIM(10)                                            CSC022
       ** Array for commitment job names                                                       CSC022
- 
+
      D @EI             S              1    DIM(60)
- 
+
       * Invalid Trade in Screen Format - SWIFT Details
      D InvTrSwftA    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(A)
       * Invalid Trade in Screen Format - SWIFT Details
      D InvTrSwftB    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(B)
- 
- 
+
+
       * Current Trade in File Format
      D CrTrFilFmt    E DS                  EXTNAME(TRADSD)
      D                                     PREFIX(C_)
@@ -312,8 +314,8 @@
       * Current Trade in File Format (Extension File)
      D CT1BFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(CB_)
- 
- 
+
+
       * (Current) Trade in Screen Format - Primary Details
      D CurTrPrim     E DS                  EXTNAME(SETRPRPD)
      D                                     PREFIX(@)
@@ -339,8 +341,8 @@
       * (Current) Trade in Screen Format - SWIFT Details
      D CurTrSwftB    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(@B)
- 
- 
+
+
      D NwTrFilFmt    E DS                  EXTNAME(SEVTRADPD)
       * New Trade in File Format
      D NT1AFilFmt    E DS                  EXTNAME(SEVTRX1PD)
@@ -353,8 +355,8 @@
      D                                     PREFIX(A_)                                         CSE045
      D NT2BFilFmt    E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(B_)                                         CSE045
- 
- 
+
+
       * New Trade in Screen Format - Primary Details
      D NewTrPrim     E DS                  EXTNAME(SETRPRPD)
       * New Trade in Screen Format - Secondary Details
@@ -374,12 +376,12 @@
       * New Trade in Screen Format - SWIFT Details
      D NewTrSwftB    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(B_)
- 
+
      D NewTrExtA     E DS                  EXTNAME(SETESDPD)                                  CSE045
      D                                     PREFIX(A_)                                         CSE045
      D NewTrExtB     E DS                  EXTNAME(SETESDPD)                                  CSE045
      D                                     PREFIX(B_)                                         CSE045
- 
+
       * Previous Trade in Screen Format - Primary Details
      D PrvTrPrim     E DS                  EXTNAME(SETRPRPD)
      D                                     PREFIX(@P)
@@ -402,8 +404,8 @@
       * Previous Trade in Screen Format - SWIFT Details
      D PrvTrSwft     E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(@P)
- 
- 
+
+
       * Error indicators
      D OKTrPrim      E DS                  EXTNAME(SEETRPRPD)
      D OKTrSeco      E DS                  EXTNAME(SEETRSEPD)
@@ -414,8 +416,8 @@
      D OKTrChcm      E DS                  EXTNAME(SEETRCCPD)
      D OKTrSwft      E DS                  EXTNAME(SEETRSWPD)
      D OKTrExts      E DS                  EXTNAME(SEETESPD)                                  CSE045
- 
- 
+
+
       ** Security Details
      D*SECTY****     E DS                  EXTNAME(SECTYD)                                    206651
      D SECTY2        E DS                  EXTNAME(SECTYD)                                    206651
@@ -429,7 +431,7 @@
      D SEC_REPA      E                     EXTFLD(REPA)                                       CAP137
      D SEC_TMST      E                     EXTFLD(TMST)                                       CAP137
      D SEC_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
+
       ** Investment Type Details
      D INVTP         E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
@@ -437,44 +439,44 @@
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
+
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS FOR SECURITIES TRADING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)                                  CAP067
       ** Book Details                                                                         CAP067
                                                                                               CAP067
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                 CAP004
@@ -486,7 +488,7 @@
                                                                                 229342
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                    229342
       ** EXTERNAL DS FOR BANK DETAILS                                           229342
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -515,24 +517,24 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
      D Format          S             10A   INZ('SETRADPD')
- 
+
      D FieldP          S             10A   INZ('DDACTN')
      D FieldS          S             10A   INZ('DDSETC')
- 
+
      D FieldNo         S              5P 0
- 
+
      D FldOffsetP      S              5P 0
      D FldOffsetS      S              5P 0
       *                                                                         CSE023
@@ -547,7 +549,7 @@
                                                                                               CGL031
       ** CGL031 flag                                                                          CGL031
      D CGL031          S              1A                                                      CGL031
- 
+
       ** End of fields for getting starting field number
                                                                                               CSC011
      D CSC011          S              1A                                                      CSC011
@@ -598,19 +600,19 @@
       ** Front office id variable.                                                         AR698195B
      D DDFRNT          S             20A                                                   AR698195B
       ** -------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SETRADR012
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -852,10 +854,10 @@
       /EJECT                                                                    174875
       *****************************************************************         174875
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SETRADR013
- 
+
       /EJECT
       *****************************************************************
       * SCRN@I - BROWSE INVALID TRADES
@@ -1106,7 +1108,7 @@
       *
      C                   MOVEL     DDTDRF        ##DDTDRF          6
      C     ZATRNKX0      CHAIN     SEITRADX0                          99
- 
+
      C     C_TDRF        IFNE      *BLANK
      C     DDACTN        ANDNE     'I'
      C                   MOVEL     ##DDTDRF      DDTDRF
@@ -1157,7 +1159,7 @@
       *
      C                   EXSR      SNDM@P
      C                   MOVE      'P'           @SCRN
- 
+
      C                   ELSE
       *
       * Send the trades error messages to the secondary details screen(s)
@@ -1338,7 +1340,7 @@
       * SNDM@P - SEND A MESSAGE TO PRIMARY DETAILS SCREEN
       *****************************************************************
      C     SNDM@P        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -1364,7 +1366,7 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C     ABFIELDID     IFLT      FldOffsetS
      C     DDACTN        OREQ      ' '
      C     DDACTN        OREQ      'I'
@@ -1380,7 +1382,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
       *
@@ -1407,7 +1409,7 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C     ABFIELDID     IFGE      FldOffsetS
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1420,7 +1422,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   END
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
       *
@@ -1445,9 +1447,9 @@
      C                   ELSE
      C                   MOVEL     'N'           @EDTFD
      C                   END
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewTrPrim     PrvTrPrim
       *                                                                         206651
      C     DDSESN        CHAIN     SECTY                              99        206651
@@ -1613,13 +1615,13 @@
      C                   CALLB     'SETRADPVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       ** Trade Primary Details
      C                   PARM                    NewTrPrim
- 
+
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
       ** Trade settlement currency
@@ -1628,7 +1630,7 @@
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
      C                   PARM      'Y'           Validate          1
- 
+
       * Output details of original book.                                                      193462
      C                   PARM                    OLDBK1                                       193462
 TAS  C                   PARM                    WARNIND                                      193462
@@ -1653,7 +1655,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    PFSESN           10                          CAP067
      C                   PARM                    CallFromVU                                   CAP087
       * OUTPUTS :
- 
+
       ** Security Details
       ** Investment Type Details
      C*******************PARM                    SECTY                          206651
@@ -1707,6 +1709,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    NewTrSeco
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
+     C                   PARM                    CrTrFilFmt                                   CSE119
      C/COPY WNCPYSRC,SETRADRC11
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
@@ -1853,9 +1856,9 @@ TAS  C                   PARM                    WARNIND                        
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewTrPrim     PrvTrPrim
      C                   MOVEL     NewTrSeco     PrvTrSeco
      C                   Z-ADD     WIdx_SVAL     PrvN_Warn         3 0
@@ -2130,6 +2133,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    NewTrSeco
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
+     C                   PARM                    CrTrFilFmt                                   CSE119
      C/COPY WNCPYSRC,SETRADRC12
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
@@ -2494,16 +2498,16 @@ TAS  C                   PARM                    WARNIND                        
       * SCRN@O - PROCESS OTHER DETAILS SCREEN
       *****************************************************************
      C     SCRN@O        BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewTrExch     PrvTrExch
      C                   MOVEL     NewTrSett     PrvTrSett
      C                   MOVEL     NewTrChCm     PrvTrChCm
      C                   Z-ADD     WIdx_OVAL     PrvN_Warn         3 0
- 
+
       * Pass clearance type from primary to other details screen
- 
+
      C                   MOVEL     DDCLTY        DDCLTY2
       *
       * IF FIRST TIME FOR ACTION CODE, TRADE REF, CURRENCY OR CUSTOMER
@@ -2642,22 +2646,22 @@ TAS  C                   PARM                    WARNIND                        
       * DFLT@O  - DO DEFAULTING FOR OTHER DETAILS SCREEN
       *****************************************************************
      C     DFLT@O        BEGSR
- 
+
       ** EXCHANGE RATE DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'C'
      C     DDSETC        ANDNE     C_SETC
- 
+
      C                   CALLB     'SETEXCHDFT'
- 
+
       * INPUTS
       *
       ** Nominal Currency
       ** Settlement Currency
      C                   PARM                    NMCY              3
      C                   PARM                    DDSETC            3
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
@@ -2667,29 +2671,29 @@ TAS  C                   PARM                    WARNIND                        
       ** EMU SE Settlement Ccy Conv.
      C                   PARM                    BKEURO            3
      C                   PARM                    CEU005            1            CAP050
- 
+
       * OUTPUTS
- 
+
       ** Trade Exchange Rate screen fields
- 
+
      C                   PARM                    NewTrExch
- 
+
       ** Trade Exchange Rate file fields
- 
+
      C                   PARM                    TDER             13 8
      C                   PARM                    TMDI              1
      C                   PARM                    TBCR             13 8
- 
+
      C                   END
- 
+
       ** SETTLEMENT INSTRUCTION DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
      C                   CALLB     'SETSETIDFT'
- 
+
       * INPUTS
- 
+
       ** Booking branch
       ** Incomplete Ind
       ** Trade Type
@@ -2703,22 +2707,22 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    DDTDMI            1
      C                   PARM                    DDBPBK                                       CSE028
      C                   PARM                    DDMRKT                                       CSE034
- 
+
       ** Investment type (SECTYD)
- 
+
      C                   PARM                    SITP              3
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Customer (Counterparty) Details
       ** ( Note: Customer Participant/Non-participant Indicator 1 and
       **  Customer Participant/Non-participant Indicator 2 are also outputs)
      C                   PARM                    CustDts
- 
- 
+
+
       ** ICD
       ** Depot 1 (Eurclear)
       ** Depot 2 (Cedel)
@@ -2727,25 +2731,25 @@ TAS  C                   PARM                    WARNIND                        
       *                                                                                       CSE028
       ** MT5xx SSI (Phase 2)                                                                  CSE028
      C                   PARM                    CSE028                                       CSE028
- 
+
       * OUTPUTS
- 
+
       ** Trade Settlement Instructions
- 
+
      C                   PARM                    NewTrSett
- 
+
      C                   END
- 
+
       ** CHARGE/COMMISSION DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
      C     DDACTN        OREQ      'C'
- 
+
      C                   CALLB     'SETCHCMDFT'
- 
+
       * INPUTS
- 
+
       ** Bulk reference
       ** Incomplete Ind.
       ** Market Centre
@@ -2792,32 +2796,32 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    S01496            1
      C****************** PARM                    CAP050            1     CAP050 CPB001
      C                   PARM                    BGN4ST            1            CPB001
- 
+
       * OUTPUTS
- 
+
       ** Commission Rebate %
      C                   PARM                    CMRP              5 3
- 
+
       ** Trade Charges & Commissions screen fields
- 
+
      C                   PARM                    NewTrChCm
- 
+
       ** Trade Charges & Commissions file fields
- 
+
      C                   PARM                    TBCC              2
      C                   PARM                    TCCC              2
      C                   PARM                    TCC1              2
      C                   PARM                    TCC2              2
- 
+
      C                   END
- 
+
       ** UPDATE CHECK FIELDS
- 
+
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     DDTDRF        ##TDRF            6
      C                   MOVEL     DDSETC        ##SETC            3
      C                   MOVEL     DDCNUM        ##CNUM           10
- 
+
      C     EndDFLT@O     ENDSR
       *****************************************************************
       /EJECT
@@ -2884,7 +2888,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    NewTrChCm
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
- 
+
       ** Security Details
       ** Investment Type Details
      C*******************PARM                    SECTY                                        206651
@@ -2893,10 +2897,10 @@ TAS  C                   PARM                    WARNIND                        
       *
       ** Customer (Counterparty) Details
      C                   PARM                    CustDts
- 
+
       ** Portfolio Details
      C                   PARM                    PortDts
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
@@ -2911,28 +2915,28 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    DDMAMT           18
      C                   PARM                    DDSPXR           14
      C                   PARM                    DDSPMD            1
- 
+
       ** Trade Exchange Rates OK inds
       ** Trade Settlement Instructions OK
       ** Trade Charge & Commissions OK inds
      C                   PARM                    OKTrExch
      C                   PARM                    OKTrSett
      C                   PARM                    OKTrChcm
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_OVAL
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    NwTrFilFmt
       *
@@ -3051,9 +3055,9 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVE      'Y'           Display_B
      C                   END
      C                   END
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C**********         MOVEL     NewTrSwftA    PrvTrSwft                                    201429
      C**********         Z-ADD     WIdx_EVALA    PrvN_Warn         3 0                        201429
       *
@@ -3256,7 +3260,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   MOVEL     DDTDRF        A_##TDRF          6
      C                   MOVEL     DDTDTP        A_##TDTP          2
      C                   MOVEL     DDSMTH        A_##SMTH          2
@@ -3266,7 +3270,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVEL     DDCNUM        A_##CNUM         10
      C                   MOVEL     DDDELF        A_##DELF         10
      C                   MOVEL     DDDELT        A_##DELT         10
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3460,9 +3464,9 @@ TAS  C                   PARM                    WARNIND                        
       * SCRN@E_B - PROCESS EXTENSION (SWIFT) SCREEN B
       *****************************************************************
      C     SCRN@E_B      BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C*********          MOVEL     NewTrSwftB    PrvTrSwft                                    201429
      C*********          Z-ADD     WIdx_EVALB    PrvN_Warn         3 0                        201429
       *
@@ -3661,7 +3665,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   MOVEL     DDTDRF        B_##TDRF          6
      C                   MOVEL     DDTDTP        B_##TDTP          2
      C                   MOVEL     DDSMTH        B_##SMTH          2
@@ -3671,7 +3675,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVEL     DDCNUM        B_##CNUM         10
      C                   MOVEL     DDDELF        B_##DELF         10
      C                   MOVEL     DDDELT        B_##DELT         10
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3943,16 +3947,16 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    NewTrChCm
      C                   PARM                    NewTrSwftA
      C                   PARM                    NewTrSwftB
- 
+
       ** Security Details
       ** Investment Type Details
      C*******************PARM                    SECTY                                       206651
      C                   PARM                    SECTY2                                      206651
      C                   PARM                    INVTP
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
- 
+
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
       *
@@ -4152,9 +4156,9 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVEL     DDTDRF        DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVEL     DDTDRF        @SITR
- 
+
      C                   END
       *
       * UPDATE VALID TRADE: TRADE REFERENCE
@@ -4339,7 +4343,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVEL     *BLANK        DDITRA
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4362,7 +4366,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   MOVEL     *BLANK        DDPRIC
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4370,12 +4374,12 @@ TAS  C                   PARM                    WARNIND                        
       * CHCMCAL - CHARGES AND COMMISSIONS CALCULATION
       *****************************************************************
      C     CHCMCAL       BEGSR
- 
+
      C/COPY WNCPYSRC,SETRADRC01
      C                   CALLB     'SETCHCMCAL'
- 
+
       * INPUTS
- 
+
       ** Trade reference
       ** Security
       ** Trade Type
@@ -4424,13 +4428,13 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    BVCHRC            3
      C                   PARM                    BVACSD            1
      C                   PARM                    S01446            1
- 
+
       * INPUTS & OUTPUTS
- 
+
       ** Trade Charges & commissions screen fields
- 
+
      C                   PARM                    NewTrChCm
- 
+
       ** Trade details
      C                   PARM                    TBCA             13 0
      C                   PARM                    TCCA             13 0
@@ -4445,7 +4449,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    BCMR             13 0
      C                   PARM                    CCMR             13 0
      C                   PARM                    TXRB             13 0
- 
+
      C                   ENDSR
       *****************************************************************                       233881
       * EUTXCAL - EU TAX CALCULATION                                                          233881
@@ -4484,13 +4488,13 @@ TAS  C                   PARM                    WARNIND                        
       *****************************************************************
      C     CVALCAL       BEGSR
      C/COPY WNCPYSRC,SETRADRC08
- 
+
       ** CALCULATE COUNTERVALUE
- 
+
      C                   CALLB     'SETCVALCAL'
- 
+
       * INPUTS
- 
+
       ** Trade details
      C                   PARM                    TDTP              2
      C                   PARM                    NOML             11 0
@@ -4511,7 +4515,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    TMDI              1
      C                   PARM                    SETC              3
      C                   PARM                    TDVD              5 0                        200459
- 
+
       ** Security details
      C                   PARM                    PROT              1
      C                   PARM                    SPBS              1
@@ -4519,12 +4523,12 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    NMCY              3
      C                   PARM                    NMDP              1 0
      C                   PARM                    SESN             10                          200459
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Customer classification
      C                   PARM                    CustClass         1
                                                                                 CSE023
@@ -4539,9 +4543,9 @@ TAS  C                   PARM                    WARNIND                        
                                                                                               233881
       ** EU Tax                                                                               233881
      C                   PARM                    EUTX                                         233881
- 
+
       * OUTPUTS
- 
+
       * Trade consideration in nominal currency
       * Trade countervalue in nominal currency
       * Withholding tax                                                         CSE023
@@ -4552,7 +4556,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    WHTX                           CSE023
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX                         CSE023
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CAP011
@@ -4565,7 +4569,7 @@ TAS  C                   PARM                    WARNIND                        
      C     TDtDtaSubs    BEGSR                                                  CAP011
                                                                                 CAP011
      C                   RESET                   ReturnCode                     CAP011
- 
+
       * TRADE PRIMARY DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4579,7 +4583,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrPrim     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrPrim                      CAP011
- 
+
       * TRADE SECONDARY DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4593,7 +4597,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrSeco     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrSeco                      CAP011
- 
+
       * TRADE EXCHANGE RATES
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4607,7 +4611,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrExch     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrExch                      CAP011
- 
+
       * TRADE SETTLEMENT DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4621,7 +4625,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrSett     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrSett                      CAP011
- 
+
       * TRADE CHARGE/COMMISSIONS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4635,7 +4639,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrChCm     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrChCm                      CAP011
- 
+
       * TRADE SWIFT A DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -4649,7 +4653,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM      CurTrSwftA    CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       NewTrSwftA                     CAP011
- 
+
       * TRADE SWIFT B DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -5135,11 +5139,11 @@ TAS  C                   PARM                    WARNIND                        
       *                                                                                       CER001
      C     K@KEY         KLIST                                                                CER001
      C                   KFLD                    K@TDRF                                       CER001
- 
+
       ** Message Type
- 
+
      C*******************MOVEL     'SETRAD'      @MSGTYPE          8            CAP004
- 
+
       ** Get the field number for the action code field; the primary
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -5148,11 +5152,11 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    Format
      C                   PARM                    FieldP
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetP = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the settle ccy field; the secondary
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -5161,7 +5165,7 @@ TAS  C                   PARM                    WARNIND                        
      C                   PARM                    Format
      C                   PARM                    FieldS
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetS = FieldNo - 1
      C                   ENDIF
@@ -5229,10 +5233,10 @@ TAS  C                   PARM                    WARNIND                        
      C                   EVAL      CGL014 = 'N'                                              BUG3145
      C                   ENDIF                                                               BUG3145
                                                                                              BUG3145
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SETRADR014
- 
+
       *                                                                                       CER001
       ** Access SAR details file to determine if ULX603                                       CER001
       ** is installed.                                                                        CER001

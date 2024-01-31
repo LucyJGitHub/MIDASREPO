@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 258901             Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. 258901             Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -115,6 +116,7 @@
       *                 CAP002  *CREATE    Date 06OCT97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  258901 - Error in tax amount for charges and commissions.    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
@@ -1594,6 +1596,7 @@
      C                   PARM                    TranInSeco
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
+     C                   PARM                    TradFilFmt                                   CSE119
      C/COPY WNCPYSRC,SETRADCC01
       *
       ** Default & Validate (Y or N)

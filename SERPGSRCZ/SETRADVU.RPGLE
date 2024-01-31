@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD057753           Date 07Jul21               *
-      *  Prev Amend No. MD057789           Date 19May21               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. MD057753           Date 07Jul21               *
+      *                 MD057789           Date 19May21               *
       *                 258901             Date 22May20               *
       *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
@@ -130,6 +131,7 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  MD057753 - Associated Front Office ID missing after amendment*
       *             of trade.                                         *
       *           - When Associated Front Office ID is not blanks     *
@@ -3663,6 +3665,8 @@
      C                   PARM                    TranInSeco
       * Custom Extra Data file data
      C                   PARM                    ExtData
+      ** Current Trade in File Format                                                         CSE119
+     C                   PARM                    TradFilFmt                                   CSE119
       *
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default

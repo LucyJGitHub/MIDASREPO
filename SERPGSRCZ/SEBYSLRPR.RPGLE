@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR698195B          Date 20Jan11               *
       *                 CSW210             Date 04May10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -103,22 +105,22 @@
       ** +--------------------------------------+
       *
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSEIBYSLL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEIBYSLD0 : SEIBYSLX0)
- 
+
      FSEIBYSLL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FTRADHS    IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** API Invalid Log File                                                                 CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR)                                       CSC011
      F                                     COMMIT                                             CSC011
                                                                                               CSC011
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SEBYSLR011
- 
+
       *****************************************************************
       *
       ** +--------------------------------------+
@@ -732,7 +734,7 @@
      C                   MOVEL     DDTDRF        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Check if first leg is the same as second leg, if yes, generate
@@ -756,11 +758,11 @@
      C                   ELSE
      C                   EVAL      W1DDTDRF = WPTDRF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY QWINDSRC,SETRADMOV1
- 
+
      C                   CALL      'WN0010'
      C                   PARM      'SETRADRPR'   #PGM             10
      C                   PARM                    FKEY              2
@@ -1019,12 +1021,12 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
      C                   MOVEL     *BLANKS       ##ACTN
      C                   MOVEL     *BLANKS       ##TDRF
      C                   MOVEL     *BLANKS       ##SETC
      C                   MOVEL     *BLANKS       ##CNUM
- 
+
      C                   MOVEL     *BLANKS       A_##TDRF
      C                   MOVEL     *BLANKS       A_##TDTP
      C                   MOVEL     *BLANKS       A_##SMTH
@@ -1034,7 +1036,7 @@
      C                   MOVEL     *BLANKS       A_##CNUM
      C                   MOVEL     *BLANKS       A_##DELF
      C                   MOVEL     *BLANKS       A_##DELT
- 
+
      C                   MOVEL     *BLANKS       B_##TDRF
      C                   MOVEL     *BLANKS       B_##TDTP
      C                   MOVEL     *BLANKS       B_##SMTH
@@ -1096,7 +1098,7 @@
       *****************************************************************
       *
      C     SRSndMP       BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -1122,7 +1124,7 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C     ABFIELDID     IFLT      FldOffsetS
      C     DDACTN        OREQ      ' '
      C     DDACTN        OREQ      'I'
@@ -1137,7 +1139,7 @@
      C                   ENDIF
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
       *
@@ -1168,7 +1170,7 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C     ABFIELDID     IFGE      FldOffsetS
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -1181,7 +1183,7 @@
      C                   ENDIF
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
       *
@@ -1495,6 +1497,7 @@ TAS  C                   PARM                    WARNIND
       *
       ** Custom Extra Data file data
      C                   PARM                    ExtData
+     C                   PARM                    CrTrFilFmt                                   CSE119
       *
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
@@ -1825,6 +1828,7 @@ TAS  C                   PARM                    WARNIND
       *
       ** Custom Extra Data file data
      C                   PARM                    ExtData
+     C                   PARM                    CrTrFilFmt                                   CSE119
       *
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
@@ -2512,7 +2516,7 @@ TAS  C                   PARM                    WARNIND
      C                   MOVEL     DDTDRF        ##TDRF            6
      C                   MOVEL     DDSETC        ##SETC            3
      C                   MOVEL     DDCNUM        ##CNUM           10
- 
+
      C     ESRDfltO      ENDSR
       *
       *****************************************************************
@@ -2893,7 +2897,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   MOVEL     DDTDRF        A_##TDRF          6
      C                   MOVEL     DDTDTP        A_##TDTP          2
      C                   MOVEL     DDSMTH        A_##SMTH          2
@@ -2903,7 +2907,7 @@ TAS  C                   PARM                    WARNIND
      C                   MOVEL     DDCNUM        A_##CNUM         10
      C                   MOVEL     DDDELF        A_##DELF         10
      C                   MOVEL     DDDELT        A_##DELT         10
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3252,7 +3256,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   MOVEL     DDTDRF        B_##TDRF          6
      C                   MOVEL     DDTDTP        B_##TDTP          2
      C                   MOVEL     DDSMTH        B_##SMTH          2
@@ -3262,7 +3266,7 @@ TAS  C                   PARM                    WARNIND
      C                   MOVEL     DDCNUM        B_##CNUM         10
      C                   MOVEL     DDDELF        B_##DELF         10
      C                   MOVEL     DDDELT        B_##DELT         10
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3601,7 +3605,7 @@ TAS  C                   PARM                    WARNIND
       ** details and set up first leg details.
       *
      C                   IF        PFBYSL = 'N'
- 
+
      C                   EVAL      NwTrFilFmt2 = NwTrFilFmt
      C                   EVAL      NT1AFilFmt2 = NT1AFilFmt
      C                   EVAL      NT1BFilFmt2 = NT1BFilFmt
@@ -3613,11 +3617,11 @@ TAS  C                   PARM                    WARNIND
      C                   EVAL      NewTrChcm2  = NewTrChcm
      C                   EVAL      NewTrSwftA2 = NewTrSwftA
      C                   EVAL      NewTrSwftB2 = NewTrSwftB
- 
+
      C                   EVAL      @FOTRANSEL  = W1FRNT
      C                   EVAL      @TMESTPSEL = PFTMESTPSEL
      C                   EVAL      DDFOASOCID  = W1AFRT
- 
+
      C                   EVAL      NwTrFilFmt = NwTrFilFmt1
      C                   EVAL      NT1AFilFmt = NT1AFilFmt1
      C                   EVAL      NT1BFilFmt = NT1BFilFmt1
@@ -4067,7 +4071,7 @@ TAS  C                   PARM                    WARNIND
       *
      C     SRUpdate2     BEGSR
       *
- 
+
       *
       ** Update valid trade: trade reference
       *
@@ -4213,7 +4217,7 @@ TAS  C                   PARM                    WARNIND
      C                   MOVEL     *BLANK        DDITRA
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4240,7 +4244,7 @@ TAS  C                   PARM                    WARNIND
      C                   MOVEL     *BLANK        DDPRIC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4252,7 +4256,7 @@ TAS  C                   PARM                    WARNIND
       *****************************************************************
       *
      C     SRChCmCal     BEGSR
- 
+
      C                   CALLB     'SETCHCMCAL'
       *                             ==========
       ** INPUTS
@@ -4328,7 +4332,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    BCMR             13 0
      C                   PARM                    CCMR             13 0
      C                   PARM                    TXRB             13 0
- 
+
      C                   ENDSR
       *
       *****************************************************************                       233881
@@ -4441,7 +4445,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    WHTX
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4703,13 +4707,13 @@ TAS  C                   PARM                    WARNIND
       *
      C                   CALL      'SWIF2001'                           9090
      C                   PARM      *BLANKS       @RTCD
- 
+
      C                   IF        *IN90 = *ON
      C                   EVAL      DBFILE = 'SCSARDPD'
      C                   Z-ADD     14            DBASE
      C                   EVAL      DBKEY = 'CSW201'
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   IF        @RTCD = 'CSW2001'
      C                   EVAL      CSW201 = 'Y'
@@ -4854,7 +4858,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    Format
      C                   PARM                    FieldP
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetP = FieldNo - 1
      C                   ENDIF
@@ -4867,7 +4871,7 @@ TAS  C                   PARM                    WARNIND
      C                   PARM                    Format
      C                   PARM                    FieldS
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetS = FieldNo - 1
      C                   ENDIF
@@ -4879,7 +4883,7 @@ TAS  C                   PARM                    WARNIND
       *
       ** Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SEBYSLR016
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

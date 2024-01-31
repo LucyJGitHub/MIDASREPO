@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSE119             Date 14Dec23               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSE119 - Block TP Sale against Long Short Book Position      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -112,15 +114,15 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SETRDSV037
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -132,66 +134,66 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Trade Primary Details in screen format
      D TrPrim        E DS                  EXTNAME(SETRPRPD)
       ** Trade Secondary Details in screen format
      D TrSeco        E DS                  EXTNAME(SETRSEPD)
- 
- 
+
+
       ** Trade Secondary Details OK indicators
      D OKTrSeco      E DS                  EXTNAME(SEETRSEPD)
- 
- 
+
+
       ** Security Details
      D SECTY         E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -204,7 +206,7 @@
      D SEC_REPA      E                     EXTFLD(REPA)                                       CAP137
      D SEC_TMST      E                     EXTFLD(TMST)                                       CAP137
      D SEC_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
+
       ** Investment Type Details
      D INVTP         E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
@@ -212,38 +214,38 @@
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
- 
+
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Securities Trading ICD
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
- 
+
       ** Portfolio ICD
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
- 
+
       ** Profit Centre Accounting ICD
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -257,27 +259,27 @@
       ** Data structure for MULTIBRANCH Indicator using rundat.
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
- 
+
+
      D ValidTrad     E DS                  EXTNAME(SEVTRADPD)
       * Valid Trade layout
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(SETDEXPD)                    CAP004
       * SE Trades Extra Data - File (D/B) format                                CAP004
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
                                                                                               CSE028
      D CSE028          S              1A                                                      CSE028
- 
+
      D CSC011          S              1A                                                      CSC011
      D WRunDay         S                   LIKE(BJRDNB)                                       CSC011
      D PRTCD           S              7A                                                      CSC011
@@ -288,34 +290,38 @@
      D CGL031          S              1A                                                      CGL031
                                                                                               CGL031
      D C_TDVD          S                   LIKE(TDVD)                                         235547
+
+      * Current Trade in File Format                                                          CSE119
+     D CrTrFilFmt    E DS                  EXTNAME(TRADSD)                                    CSE119
+     D                                     PREFIX(D_)                                         CSE119
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SETRDSV038
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       /COPY WNCPYSRC,SETRDSV001
- 
+
       * Call Validation Modules in Sequence
- 
+
       *
       ** Validate Trade Settlement Currency
       *
@@ -367,6 +373,13 @@
       /COPY WNCPYSRC,SETRDSV016
      C                   EXSR      VTMARKIN
       /COPY WNCPYSRC,SETRDSV017
+     C     CSE119        Ifeq      'Y'                                                        CSE119
+     C     Validate      andeq     'Y'                                                        CSE119
+     C     DDTDTP        Ifeq      'TP'                                                       CSE119
+     C     DDTDTP        oreq      'TS'                                                       CSE119
+     C                   Exsr      VTPOSN                                                     CSE119
+     C                   Endif                                                                CSE119
+     C                   Endif                                                                CSE119
       *
       ** Validate Trade Book Profit Centre
       ** If Profit Centre Accounting installed
@@ -474,21 +487,21 @@
      C                   IF        Idx = 0                                      157785
      C                   EXSR      SetupValid                                   157785
      C                   ENDIF                                                  157785
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SETRDSV039
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Validate Trade Settlement Currency
       *****************************************************************
      C     VTSETLCY      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Settlement Currency
@@ -511,7 +524,7 @@
       *
       ** Security Details
      C                   PARM                    SECTY
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
       *
@@ -549,9 +562,9 @@
       ** Trade Settlement Currency
       *
      C                   PARM                    SETC              3
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -561,9 +574,9 @@
       ** Validate Trade Reallowance
       *****************************************************************
      C     VTREALLW      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Reallowance
@@ -599,9 +612,9 @@
       ** Trade Reallowance
       *
      C                   PARM                    RALL              9 5
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -611,9 +624,9 @@
       ** Validate Trade Market Centre
       *****************************************************************
      C     VTMKTCEN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Market Centre
@@ -688,9 +701,9 @@
      C                   PARM                    TMKC              2                          209952
      C                   END                                                                  209952
                                                                                               209952
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -700,9 +713,9 @@
       ** Validate Trade Capacity
       *****************************************************************
      C     VTCAPACI      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Capacity
@@ -741,9 +754,9 @@
       ** Capacity Ind.
       *
      C                   PARM                    TCAP
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -753,9 +766,9 @@
       ** Validate Trade Trade Date
       *****************************************************************
      C     VTTRDDT       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Trade Date
@@ -803,9 +816,9 @@
       ** Trade Date
       *
      C                   PARM                    TDDT              5 0
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -815,9 +828,9 @@
       ** Validate Trade Ex Div
       *****************************************************************
      C     VTEXDIV       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Ex Div
@@ -832,46 +845,46 @@
       ** Default & Validate (Y or N)
      C                   PARM                    Default           1
      C                   PARM                    Validate          1
- 
+
       ** Screen fields
       ** -------------
       * Ex-Dividend Indicator (1A)
      C                   PARM                    DDEXDV
- 
+
       ** Trade Details
       ** -------------
       * Value Date (5P 0)
       * Trade Date (5P 0)
      C                   PARM                    TDVD              5 0
      C                   PARM                    TDDT              5 0
- 
+
       ** Security Details
       ** ----------------
      C                   PARM                    SECTY
- 
+
       ** System Info
       ** -----------
       * S01510 indicator
       * Date Format (1A)
      C                   PARM                    S01510
      C                   PARM                    BJDFIN
- 
+
       * OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Ex-Dividend Ok indicator (1A)
       ** Ex-Dividend indicator  (1A)
- 
+
      C                   PARM                    DDEXDVOK
      C                   PARM                    EXDV
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -881,9 +894,9 @@
       ** Validate Trade Trade Sub-Type
       *****************************************************************
      C     VTTRDSB       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Trade Sub-Type
@@ -923,21 +936,77 @@
       ** Trade Sub Type
       *
      C                   PARM                    TSUB              2
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
+      *****************************************************************                       CSE119
+     C/EJECT                                                                                  CSE119
+      *****************************************************************                       CSE119
+      ** Validate Trade type against Book Position                                            CSE119
+      *****************************************************************                       CSE119
+     C     VTPOSN        BEGSR                                                                CSE119
+                                                                                              CSE119
+      * Reset variables updated by each module                                                CSE119
+                                                                                              CSE119
+     C                   EXSR      RESETERRS                                                  CSE119
+      *                                                                                       CSE119
+     C     DDACTN        Ifeq      'I'                                                        CSE119
+     C     DDTdmiOK      andne     'N'                                                        CSE119
+     C     DDACTN        oreq      'A'                                                        CSE119
+     C     D_TDBK        andne     DDBPBK                                                     CSE119
+     C     DDTdmiOK      andne     'N'                                                        CSE119
+     C     DDACTN        oreq      'A'                                                        CSE119
+     C     D_TDBA        andne     DDBRCD                                                     CSE119
+     C     DDTdmiOK      andne     'N'                                                        CSE119
+     C     DDACTN        oreq      'A'                                                        CSE119
+     C     D_TDMI        andne     DDTDMI                                                     CSE119
+     C     DDTdmiOK      andne     'N'                                                        CSE119
+      *                                                                                       CSE119
+     C                   CALLB     'SEVTPOSN'                                                 CSE119
+      *                                                                                       CSE119
+      * INPUTS                                                                                CSE119
+      *                                                                                       CSE119
+      ** Return Code                                                                          CSE119
+     C                   PARM                    RetCodeOut                                   CSE119
+      *                                                                                       CSE119
+      ** Trade Screen fields                                                                  CSE119
+     C                   PARM                    DDSESN                                       CSE119
+     C                   PARM                    DDBRCD                                       CSE119
+     C                   PARM                    DDBPBK                                       CSE119
+     C                   PARM                    DDTDMI                                       CSE119
+     C                   PARM                    DDTDTP                                       CSE119
+     C                   PARM                    DDNOML                                       CSE119
+     C                   PARM                    DDTDVD                                       CSE119
+     C                   PARM                    BJDFIN                                       CSE119
+      *                                                                                       CSE119
+      * OUTPUTS                                                                               CSE119
+      *                                                                                       CSE119
+      * Error fields/message IDs/message data (arrays) from/to caller                         CSE119
+     C                   PARM                    FldNamXAr                                    CSE119
+     C                   PARM                    MsgIDXAr                                     CSE119
+     C                   PARM                    MsgDtaXAr                                    CSE119
+      *                                                                                       CSE119
+     C                   PARM                    DDTDMIOK                                     CSE119
+                                                                                              CSE119
+     C                   Endif                                                                CSE119
+                                                                                              CSE119
+      * Update error info with that returned from the validation module                       CSE119
+                                                                                              CSE119
+     C                   EXSR      UPDATERRS                                                  CSE119
+      *                                                                                       CSE119
+     C                   ENDSR                                                                CSE119
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Validate Trade Market Indicator
       *****************************************************************
      C     VTMARKIN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Market Indicator
@@ -972,9 +1041,9 @@
       ** Trade Market Indicator
       *
      C                   PARM                    TDMI              1
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -984,9 +1053,9 @@
       ** Validate Trade Book Profit Centre
       *****************************************************************
      C     VTBPRFCN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Book Profit Centre
@@ -1001,10 +1070,10 @@
       ** Default & Validate (Y or N)
      C                   PARM                    Default           1
      C                   PARM                    Validate          1
- 
+
       ** Booking profit centre
      C                   PARM                    DDBPRC            4
- 
+
       ** Security
       ** Trade Type
       ** Branch code
@@ -1045,9 +1114,9 @@
       ** Trade Book                                                             CAC005
       *                                                                         CAC005
      C                   PARM                    TDBK              2            CAC005
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1057,9 +1126,9 @@
       ** Validate Trade Transaction Profit Centre
       *****************************************************************
      C     VTTPRFCN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Transaction Profit Centre
@@ -1074,35 +1143,35 @@
       ** Default & Validate (Y or N)
      C                   PARM                    Default           1
      C                   PARM                    Validate          1
- 
+
       ** Transaction profit centre
      C                   PARM                    DDTPRC            4
- 
+
       ** Security
       ** Trade Type
       ** Branch Code
       ** Book
       ** Book Profit Centre
       ** Trade Sub Type
- 
+
      C                   PARM                    DDSESN           10
      C                   PARM                    DDTDTP            2
      C                   PARM                    DDBRCD            3
      C                   PARM                    DDBPBK            2
      C                   PARM                    DDBPRC            4
      C                   PARM                    DDTSUB            2
- 
+
       ** Customer (6S 0)
       ** Customer Classification   (1A)
- 
+
      C                   PARM                    TCNR
      C                   PARM                    CustClass         1
       *
       ** ICD
      C                   PARM                    BKPCDU            1
- 
+
       * OUTPUTS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
@@ -1116,9 +1185,9 @@
       *
       ** Transaction Profit Centre
      C                   PARM                    TPRC              4
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1128,9 +1197,9 @@
       ** Validate Trade ISMA/IPMA indicator
       *****************************************************************
      C     VTAIIP        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade ISMA/IPMA indicator
@@ -1166,9 +1235,9 @@
       ** Trade ISMA/IPMA Indicator
       *
      C                   PARM                    AIIP              1
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1225,9 +1294,9 @@
       ** Validate Trade Accrued Indicator
       *****************************************************************
      C     VTACCRIN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Accrued Indicator
@@ -1270,9 +1339,9 @@
       ** Trade Accrued Indicator
       *
      C                   PARM                    ACIN              1
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1282,9 +1351,9 @@
       ** Validate Trade Days Adjustment/Sign
       *****************************************************************
      C     VTDAYSAD      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Days Adjustment/Sign
@@ -1319,9 +1388,9 @@
       ** Trade Days Adjustment
       *
      C                   PARM                    DADJ              3 0
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1331,9 +1400,9 @@
       ** Validate Actual/Difference Ind.
       *****************************************************************
      C     VTACDFIN      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Actual/Difference Ind.
@@ -1371,9 +1440,9 @@
       ** Trade Act/Diff Indicator
       *
      C                   PARM                    ADIN              1
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1383,17 +1452,17 @@
       ** Validate Trade Interest Amount
       *****************************************************************
      C     VTINTAMT      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Interest Amount
       *
      C                   CALLB     'SEVTINTAMT'
- 
+
       * INPUTS
- 
+
      C                   PARM                    RetCodeOut
       *
       ** Default & Validate (Y or N)
@@ -1402,7 +1471,7 @@
       *
       ** Screen Fields
       ** -------------
- 
+
       ** Accrued indicator  (1A)
       ** Days Adjustment  (5A)
       ** Actual/Difference Indicator (1A)
@@ -1411,7 +1480,7 @@
      C                   PARM                    DDDADJ
      C                   PARM                    DDACTD
      C                   PARM                    DDITRA
- 
+
       ** Trade Details
       ** -------------
       ** Nominal  (11P 0)
@@ -1419,32 +1488,32 @@
       ** Days Adjustment <actual> (3P 0)
       ** Coupon rate (for trade) (11P 7)
       ** Overide Indicator  (1A)
- 
+
      C                   PARM                    NOML
      C                   PARM                    TDVD
      C                   PARM                    DADJ
      C                   PARM                    TDCR
      C                   PARM                    ZCPOVR            1
- 
+
       ** Security Details
       ** ----------------
       ** Interest days adjustment
       ** Nominal currency decimal places   (1P 0)
       ** Processing type   (1A)
- 
+
      C                   PARM                    SECTY
      C                   PARM                    DADJN             1
      C                   PARM                    NomCcyDec
      C                   PARM                    PROT
- 
+
       *
       ** System details
       ** --------------
       ** Date format  (1A)
      C                   PARM                    BJDFIN
- 
+
       * OUTPUTS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
@@ -1452,24 +1521,24 @@
       *
       ** OK Indicators
       ** -------------
- 
+
       ** Days Adjustment OK indicator  (1A)
       ** Actual/Difference Ind OK indicator  (1A)
       ** Interest Amount OK Indicator (1A)
- 
+
      C                   PARM                    ddDADJok
      C                   PARM                    ddACTDok
      C                   PARM                    ddITRAok
- 
+
       ** Interest Amount
       ** Interest Adjustment
       ** Expected Interest Amount
      C                   PARM                    ITRA
      C                   PARM                    TINA
      C                   PARM                    EXPT_ITRA        13 0
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1479,9 +1548,9 @@
       ** Validate Trade Price
       *****************************************************************
      C     VTPRICE       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Trade Price
@@ -1496,7 +1565,7 @@
       ** Default & Validate (Y or N)
      C                   PARM                    Default           1
      C                   PARM                    Validate          1
- 
+
       ** Trade Screen fields
       ** -------------------
       ** Price  (17A)
@@ -1509,7 +1578,7 @@
      C                   PARM                    DDACTN                                       CSE035
      C                   PARM                    DDTPDY                                       CSE035
      C                   PARM                    DDTCTR           21                          CSE035
- 
+
       ** Trade Details
       ** -------------
       * Nominal (15P 0)
@@ -1520,7 +1589,7 @@
      C                   PARM                    TPDY
      C                   PARM                    TDVD
      C                   PARM                    ITRA
- 
+
       ** Security Details  (& nominal ccy dec places)
       ** ----------------
      C                   PARM                    SECTY
@@ -1530,15 +1599,15 @@
       ** -----------------------
       ** Processing Type
      C                   PARM                    PROT              1
- 
+
       ** System Info
       ** -----------
- 
+
       * Date Format (1A)
      C                   PARM                    BJDFIN
- 
+
       * OUTPUTS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
@@ -1547,9 +1616,9 @@
       ** Price (15P 8)
      C                   PARM                    DDPricOk
      C                   PARM                    PRIC
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1633,7 +1702,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1643,7 +1712,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1709,29 +1778,31 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Trade Primary Details
       ** Trade Secondary Details
      C                   PARM                    TrPrim
      C                   PARM                    TrSeco
      C                   PARM                    ExtData                        CAP004
+      ** Current Trade in File Format                                                         CSE119
+     C                   PARM                    CrTrFilFmt                                   CSE119
       *
       ** Default & Validate (Y or N)
      C                   PARM                    Default
      C                   PARM                    Validate
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
       *
@@ -1750,24 +1821,24 @@
       *
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
- 
+
       ** Trade Secondary Details OK inds
      C                   PARM                    OKTrSeco
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
       *
@@ -1908,7 +1979,7 @@
       *
       ** Check if switchable feature S01510 is switched on.
       *
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -1931,7 +2002,7 @@
       *
       ** Check if switchable feature CEU005 is switched on.
       *
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -2025,15 +2096,27 @@
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
+      ** Check if switchable feature CSE119 is switched on.                                   CSE119
+                                                                                              CSE119
+     C                   CALL      'AOSARDR0'                                                 CSE119
+     C                   PARM      *BLANKS       @RTCD                                        CSE119
+     C                   PARM      '*VERIFY'     @OPTN                                        CSE119
+     C                   PARM      'CSE119'      @SARD                                        CSE119
+     C     @RTCD         IFEQ      *BLANK                                                     CSE119
+     C                   MOVE      'Y'           CSE119                                       CSE119
+     C                   ELSE                                                                 CSE119
+     C                   MOVE      'N'           CSE119            1                          CSE119
+     C                   END                                                                  CSE119
+                                                                                              CSE119
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SETRDSV040
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058986           Date 11Oct21               *
-      *  Prev Amend No. MD055891           Date 01Sep20               *
+      *  Last Amend No. MD061162           Date 30Jan24               *      
+      *  Prev Amend No. MD058986           Date 11Oct21               *
+      *                 MD055891           Date 01Sep20               *
       *                 MD046248           Date 27Oct17               *
       *                 CCB020C            Date 16May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061162 - Avoid duplicate key error when deleting records   *
+      *             by making sure the unique no. (DIDRUN) is unique  *
+      *             whether records are logically deleted or not      *     
       *  MD058986 - Add Logical Delete for components and dependencies*
       *  MD055891 - Deliverable Data Split for COB                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -850,7 +854,8 @@
      C*****KDPRL         READE     @DIREGK                                90    *           MD055891
      C/EXEC SQL                                                                             MD055891
      C+ declare CDCursor insensitive scroll cursor for                                      MD055891
-     C+ select * from CBDPRJW0                                                              MD055891
+     C**select** from CBDPRJW0                                                     MD055891 MD061162
+     C+ select * from CBDPRJW1                                                              MD061162
      C+ where DIDSON = :WQDSON and DIDSOS = :WQDSOS                                         MD055891
      C/END-EXEC                                                                             MD055891
                                                                                             MD055891

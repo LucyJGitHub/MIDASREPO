@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061274           Date 09May23               *
-      *  Prev Amend No. MD060923           Date 30Jan23               *
+      *  Last Amend No. BA5103             Date 10Jan24               *
+      *  Prev Amend No. MD061274           Date 09May23               *
+      *                 MD060923           Date 30Jan23               *
       *                 MD058517           Date 17Oct22               *
       *                 MD058815           Date 28Sep21               *
       *                 CLE172             Date 01Oct20               *
@@ -136,6 +137,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  BA5103 - Adjust Layout of Dealing & Lending I/C Confirmations*
       *  MD061274 - Deliverable Data Split for SDARRTTD               *
       *  MD060923 - Remove printing of ARRT24 to ARRT27 since report  *
       *             can only accomodate 23 fields of SDARRTTD file.   *
@@ -1717,6 +1719,29 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+      *                                                                                       BA5103
+      ** Check if BA5103 is enabled                                                           BA5103
+      *                                                                                       BA5103
+     C                     CALL 'AOSARDR0'                                                    BA5103
+     C                     PARM *BLANKS   @RTCD                                               BA5103
+     C                     PARM '*KEY   ' @OPTN                                               BA5103
+     C                     PARM 'BA5103'  PSARD                                               BA5103
+     C           SCSARD    PARM SCSARD    DSFDY                                               BA5103
+      *                                                                                       BA5103
+     C           @RTCD     IFEQ *BLANKS                                                       BA5103
+     C                     MOVE 'Y'       BA5103  1                                           BA5103
+     C                     MOVE *ON       *IN04                                               BA5103
+     C                     ELSE                                                               BA5103
+     C                     MOVE 'N'       BA5103                                              BA5103
+     C                     MOVE *OFF      *IN04                                               BA5103
+     C           @RTCD     IFNE '*NRF    '                                                    BA5103
+     C                     MOVEL'SCSARDPD'DBFILE                                              BA5103
+     C                     Z-ADD33        DBASE                                               BA5103
+     C                     MOVEL'BA5103'  DBKEY                                               BA5103
+     C                     SETON                     U7U8LR                                   BA5103
+     C                     GOTO END                                                           BA5103
+     C                     ENDIF                                                              BA5103
+     C                     ENDIF                                                              BA5103
      C*                                                                   S01408
      C/COPY WNCPYSRC,LE0130CCP1                                           S01408
      C*                                                                   S01408
@@ -4342,8 +4367,13 @@ I    C                     MOVE '1'       *IN89                                 
      O***********LE0130P1E  202   69 16 71                         S01465 179355
      OLE0130P1E   09   69 71                                              179355
      O       AND       11                                                 S01117
+     O       AND      N04                                                                     BA5103
      O***********              BRNM   B  62                               179355
      O                 16      BRNM   B  62                               179355
+      *                                                                                       BA5103
+     OLE0130P1E   09   69 16 71                                                               BA5103
+     O       AND       11 04                                                                  BA5103
+     O                 16      BRNM   B  40                                                   BA5103
      O/COPY WNCPYSRC,LE0130OP19                                           S01408
      O**
      O**   CONFIRMATION NAME

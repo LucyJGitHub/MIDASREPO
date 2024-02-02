@@ -1,0 +1,348 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT 24x7 Library List Change Utility')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC2000 - BankFusion Midas 24x7 - Library List Changes      */
+/*                                                                   */
+/*       Function:  This program will do the following:              */
+/*                  - create the 24x7 new zonal and global libraries */
+/*                  - create new 24x7 JOBD                           */
+/*                  - update all *JOBD to move the DZLIB after GTALIB*/
+/*                                                                   */
+/*       (c) Finastra International Limited 2024                     */
+/*                                                                   */
+/*       Last Amend No. MD061981 *CREATE   Date 15Jan24              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061981 - 24x7 - Library List Changes                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&PRE)      TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PREGG)    TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&IASP_YN)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&X24LIBL)  TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&JOBDLIBL) TYPE(*CHAR) LEN(2750)
+
+/** Variables for zone libs  */
+             DCL        VAR(&DMLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DVLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JLIB)     TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DTLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&XLIB)     TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INVLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&XPLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CILLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ALLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DDLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DZLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DBLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&BANKLIB)  TYPE(*CHAR) LEN(9)
+             DCL        VAR(&IRLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DILIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&HFLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&X24LIB)   TYPE(*CHAR) LEN(8)
+
+/** Variables for global libs  */
+             DCL        VAR(&GMLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GINVLIB)  TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GXLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GXPLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GCILLIB)  TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GALLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GDLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GVLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GPLIB)    TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GXPLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GTALIB)   TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GALLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GBLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GBANKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GNCLIB)   TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GFCLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GIRLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GJLIB)    TYPE(*CHAR) LEN(9)
+             DCL        VAR(&CBSLIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CBALIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&BFLIB)    TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LIBx)     TYPE(*CHAR) LEN(6)
+             DCL        VAR(&BFLIB1)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ZZGGBFLIB) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&FC)       TYPE(*CHAR) LEN(3) VALUE('FC_')
+             DCL        VAR(&NC)       TYPE(*CHAR) LEN(3) VALUE('NC_')
+             DCL        VAR(&FCLIB)    TYPE(*CHAR) LEN(9)
+             DCL        VAR(&NCLIB)    TYPE(*CHAR) LEN(9)
+             DCL        VAR(&G24LIB)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GZLIB)    TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&SVAL1)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK1)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL0)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ZZOWNER)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GGOWNER)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ADOPT)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMD)      TYPE(*CHAR) LEN(3000)
+             DCL        VAR(&CMDLEN)   TYPE(*DEC) LEN(15 5) VALUE(3000)
+
+             DCL        VAR(&GENPGM)    TYPE(*CHAR) LEN(10) VALUE('CHANGEJOBD')
+             DCL        VAR(&ERRORMSG)  TYPE(*CHAR) LEN(100)
+             DCL        VAR(&ERROR)     TYPE(*CHAR) LEN(1) VALUE(' ')
+/*/COPY GPCPYSRCG,GPSVALDCL                                          */
+             DCLF       FILE(SMIMPJW0)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2024')
+
+/** Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+/** Retrieve Zone prefix                */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+
+/** Set the zonal and global libraries  */
+             CHGVAR     VAR(&PRE)     VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DMLIB)   VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB)   VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DVLIB)   VALUE(&PRE *TCAT 'DVLIB')
+             CHGVAR     VAR(&DTLIB)   VALUE(&PRE *TCAT 'DTALIB')
+             CHGVAR     VAR(&XLIB)    VALUE(&PRE *TCAT 'XLIB')
+             CHGVAR     VAR(&JLIB)    VALUE(&PRE *TCAT 'JLIB')
+             CHGVAR     VAR(&INVLIB)  VALUE(&PRE *TCAT 'INVLIB')
+             CHGVAR     VAR(&XPLIB)   VALUE(&PRE *TCAT 'XPLIB')
+             CHGVAR     VAR(&CILLIB)  VALUE(&PRE *TCAT 'CILLIB')
+             CHGVAR     VAR(&ALLIB)   VALUE(&PRE *TCAT 'ALLIB')
+             CHGVAR     VAR(&DDLIB)   VALUE(&PRE *TCAT 'DDLIB')
+             CHGVAR     VAR(&DZLIB)   VALUE(&PRE *TCAT 'DZLIB')
+             CHGVAR     VAR(&DBLIB)   VALUE(&PRE *TCAT 'DBLIB')
+             CHGVAR     VAR(&BANKLIB) VALUE(&PRE *TCAT 'BANKLIB')
+             CHGVAR     VAR(&IRLIB)   VALUE(&PRE *TCAT 'IRLIB')
+             CHGVAR     VAR(&DILIB)   VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&HFLIB)   VALUE(&PRE *TCAT 'HFLIB')
+             CHGVAR     VAR(&X24LIB)  VALUE(&PRE *TCAT 'X24LIB')
+
+/** Retrieve Global prefix              */
+             CALL       PGM(GPRTVLIB)  PARM(&PREGG)
+             CHGVAR     VAR(&GMLIB)    VALUE(&PREGG *TCAT 'GMLIB')
+             CHGVAR     VAR(&GINVLIB)  VALUE(&PREGG *TCAT 'GINVLIB')
+             CHGVAR     VAR(&GXLIB)    VALUE(&PREGG *TCAT 'GXLIB')
+             CHGVAR     VAR(&GXPLIB)   VALUE(&PREGG *TCAT 'GXPLIB')
+             CHGVAR     VAR(&GCILLIB)  VALUE(&PREGG *TCAT 'GCILLIB')
+             CHGVAR     VAR(&GALLIB)   VALUE(&PREGG *TCAT 'GALLIB')
+             CHGVAR     VAR(&GDLIB)    VALUE(&PREGG *TCAT 'GDLIB')
+             CHGVAR     VAR(&GVLIB)    VALUE(&PREGG *TCAT 'GVLIB')
+             CHGVAR     VAR(&GPLIB)    VALUE(&PREGG *TCAT 'GPLIB')
+             CHGVAR     VAR(&GTALIB)   VALUE(&PREGG *TCAT 'GTALIB')
+             CHGVAR     VAR(&GBLIB)    VALUE(&PREGG *TCAT 'GBLIB')
+             CHGVAR     VAR(&GBANKLIB) VALUE(&PREGG *TCAT 'GBANKLIB')
+             CHGVAR     VAR(&GNCLIB)   VALUE(&PREGG *TCAT 'GNCLIB')
+             CHGVAR     VAR(&GFCLIB)   VALUE(&PREGG *TCAT 'GFCLIB')
+             CHGVAR     VAR(&GIRLIB)   VALUE(&PREGG *TCAT 'GIRLIB')
+             CHGVAR     VAR(&GJLIB)    VALUE(&PREGG *TCAT 'GJLIB')
+             CHGVAR     VAR(&CBSLIB)   VALUE(&PREGG *TCAT 'CBSLIB')
+             CHGVAR     VAR(&CBALIB)   VALUE(&PREGG *TCAT 'CBALIB')
+             CHGVAR     VAR(&BFLIB)    VALUE(&PREGG *TCAT 'BFLIB')
+             CHGVAR     VAR(&BFLIB1)   VALUE(&PREGG *TCAT 'BFLIB')
+             CHGVAR     VAR(&LIBx)     VALUE(&PREGG *TCAT '_LIB')
+             CHGVAR     VAR(&FCLIB)    VALUE(&FC *TCAT &LIBx)
+             CHGVAR     VAR(&NCLIB)    VALUE(&NC *TCAT &LIBx)
+             CHGVAR     VAR(&G24LIB)   VALUE(&PREGG *TCAT 'G24LIB')
+             CHGVAR     VAR(&GZLIB)    VALUE(&PREGG *TCAT 'GZLIB')
+             CHGVAR     VAR(&X24LIBL)  VALUE(&PRE *TCAT 'X24LIB')
+             CHGVAR     VAR(&ZZGGBFLIB)  VALUE(&PRE *TCAT &BFLIB1)
+
+/** Get the global IASP system values */
+
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK0 &SVAL0)
+
+/** Check whether system is in IASP environment. */
+
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))
+              CHGVAR     VAR(&ZZOWNER) VALUE(&PRE *CAT 'OWNER')
+              CHGVAR     VAR(&GGOWNER) VALUE(&PREGG *CAT 'OWNER')
+              CHGVAR     VAR(&ADOPT) VALUE(&PRE *CAT 'ADOPT')
+
+/** If IASP environment */
+
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)
+
+/** Get name of IASP. */
+
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))
+
+/** Create 24x7 Libraries with ASP */
+
+             CRTLIB     LIB(&X24LIB) TYPE(*PROD) TEXT('BankFusion Midas Zonal 24x7 +
+                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)  CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&X24LIB)
+
+             CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
+                          Data Library') ASP(*ASPDEV) ASPDEV(&IASP) CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&GZLIB)
+
+             CHGOWNAUT  OBJ(QSYS/&GZLIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
+             CRTLIB     LIB(&G24LIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
+                          Objects Library') ASP(*ASPDEV) ASPDEV(&IASP)  CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&G24LIB)
+
+             CHGOWNAUT  OBJ(QSYS/&G24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
+             ENDDO
+             ELSE       CMD(DO)
+
+/** Create 24x7 Library with default ASP */
+
+             CRTLIB     LIB(&X24LIB) TYPE(*PROD) TEXT('BankFusion Midas Zonal 24x7 +
+                          Objects Library')  CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&X24LIB)
+
+             CRTLIB     LIB(&GZLIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
+                          Data Library')  CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&GZLIB)
+
+             CHGOWNAUT  OBJ(QSYS/&GZLIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
+             CRTLIB     LIB(&G24LIB) TYPE(*PROD) TEXT('BankFusion Midas Global 24x7 +
+                          Objects Library')  CRTAUT(*EXCLUDE)
+             MONMSG     MSGID(CPF2111)
+             CLRLIB     LIB(&G24LIB)
+
+             CHGOWNAUT  OBJ(QSYS/&G24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&GGOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+             ENDDO
+
+/** Create new job description for 24x7 - MIDAS24X7. */
+
+CRTJOBD:
+
+             CRTJOBD    JOBD(&X24LIB/MIDAS24X7) JOBQ(&XLIB/MICJOBQ) +
+                          OUTQ(&XPLIB/MPRINT) RTGDTA(MIDAS24X7) +
+                          INLLIBL(&X24LIB &DZLIB &INVLIB &XLIB &XPLIB +
+                          &CILLIB &ALLIB &DDLIB &DBLIB &BANKLIB +
+                          &NCLIB &FCLIB &IRLIB B21_RZ B20_R1203Z +
+                          B14_R1106Z B14CBASZ &JLIB &ZZGGBFLIB &DILIB +
+                          &HFLIB &G24LIB &GZLIB &GINVLIB &GXLIB &GXPLIB +
+                          &GCILLIB &GALLIB &GDLIB &GVLIB &GPLIB &GMLIB +
+                          &GTALIB &GBLIB &GBANKLIB &GNCLIB &GFCLIB &GIRLIB +
+                          B21_RG B20_R1203G B14_R1106G B14CBASG &GJLIB +
+                          &CBSLIB &CBALIB &BFLIB LIBHTTP123 QGPL +
+                          QTEMP QMQM) LOG(4 00 *SECLVL) +
+                          LOGCLPGM(*YES) TEXT('Midas SC 24X7 +
+                          job description') USER(&ZZOWNER)
+             MONMSG     MSGID(CPF1621)  EXEC(GOTO CMDLBL(ERROR))
+
+             CHGOWNAUT  OBJ(&X24LIB/MIDAS24X7) OBJTYPE(*JOBD) +
+                          NEWOWN(&ZZOWNER) CUROWNAUT(*REVOKE) +
+                          PUBAUT(*EXCLUDE) AUTL(&ADOPT)
+
+             CHGOWNAUT  OBJ(QSYS/&X24LIB) OBJTYPE(*LIB) +
+                          NEWOWN(&ZZOWNER) PUBAUT(*USE) AUTL(*REVOKE) +
+                          CHGLIB(N)
+
+/** Create temporary file to hold messages for UP008010. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+
+/** Change job description library list, move DZLIB after GTALIB. */
+CHGJOBDS:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+
+             IF         COND(&DFLAYR *NE '*ZONE' *OR &DFSMNU *NE +
+                          'CreateJobDesc' *OR &DFNAME *EQ 'MIDAS24X7') THEN(DO)
+             GOTO       CMDLBL(CHGJOBDS)
+             ENDDO
+
+/** Retrieve JOBD to be updated */
+
+             RTVJOBD    JOBD(&XLIB/&DFNAME) INLLIBL(&JOBDLIBL)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/*                                                               */
+/** Call program to produce report UP008010P1 for error message. */
+/** CPF9801 - Object &2 in library &3 not found.                 */
+
+             CHGVAR     VAR(&ERRORMSG)   VALUE('Job description ' *CAT &DFNAME *TCAT +
+                        ' not found in library ' *CAT &XLIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/** Update JOBD */
+             CALL       PGM(UT2000) PARM(&JOBDLIBL)
+             CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *CAT &XLIB +
+                          *TCAT '/' *TCAT &DFNAME *TCAT ') INLLIBL(' *TCAT &JOBDLIBL +
+                          *TCAT ')')
+             CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+             MONMSG     MSGID(CPF1625 CPD1601) EXEC(DO)
+
+/*                                                               */
+/** Call program to produce report UP008010P1 for error message. */
+/** CPF1625 - Job description &1 in library &2 not changed.      */
+
+             CHGVAR     VAR(&ERRORMSG)   VALUE('Job description ' *CAT &DFNAME *TCAT +
+                        ' in library ' *CAT &XLIB *CAT ' not changed.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+             GOTO       CMDLBL(CHGJOBDS)
+
+ERROR:
+
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program UTC2000 - 24x7 Library +
+                          Lists Changes ended abnormally') TOPGMQ(*EXT) +
+                          TOMSGQ(*SYSOPR)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ENDPGM:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM &ERRORMSG)
+             ENDDO
+             ENDPGM

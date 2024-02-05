@@ -1,0 +1,48 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Take on Program for GODTCXTD DCUATH')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00512 - Midas SM Take on Program for GODTCXTD -         */
+/*                   Unauthorised Transaction Indicator              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2024                     */
+/*                                                                   */
+/*       Last Amend No. MD061024 *CREATE   Date 30Jan24              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD061024 - Take on program which populates the Unauthorised */
+/*                  Transaction indicatore in GODTCXTD from DCUATH   */
+/*                  of GODTCCTD.                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2024')
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SCRUNSQL   SQL('UPDATE GODTCXTD SET DCUATH = (SELECT +
+                          GODTCCTD.DCUATH FROM GODTCCTD WHERE +
+                          GODTCCTD.DCKEYD = GODTCXTD.DCKEYD)')
+
+             CALL       PGM(GOC000100) PARM('*ALL')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program SMUC00512 ended abnormally - +
+                          job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:
+             ENDPGM

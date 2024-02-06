@@ -220,6 +220,7 @@
      C                   ENDIF
       *
       ** Process SDALTNPD file
+      ** The processing of SDALTNPD to SDFCTLPA is also in SDALNAUPD program
       *
      C                   EXSR      SRInitialize
      C                   EVAL      FNAME = 'SDALTNPD'

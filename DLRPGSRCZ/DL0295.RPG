@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060773           Date 21Dec22
-      *  Prev Amend No. MD060094           Date 14Jul22               *
+      *  Last Amend No. MD060993           Date 01Feb24               *
+      *  Prev Amend No. MD060773           Date 21Dec22               *
+      *                 MD060094           Date 14Jul22               *
       *                 MD059248           Date 10Jan22               *
       *                 MD058048           Date 06May21               *
       *                 258482             Date 01Jun20               *
@@ -199,6 +200,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD060993 - DL imbalances generated during 2021.D recon COB v *
+      *             SP22.                                             *
+      *           - Condider SWAP deals with no 'V'alue event code but*
+      *             has 'S'ettlement event code for a Netted FX deal. *
       *  MD060773 - DL Trading Imbalance for FX Deal                  *
       *             Initialized ACOD and PREF fields in order not to  *
       *             pick up the previous values that is causing un-   *
@@ -3182,6 +3187,29 @@
      C           AMCOD     ANDEQ'BC'                                                        MD059248
      C********** *IN72     ANDEQ'1'                                                MD059248 MD060094
      C           WSELND    ANDEQ'Y'                                                         MD060094
+      *                                                                                     MD060993
+      ** Consider SWAP deals with no 'V'alue event code but has                             MD060993
+      ** 'S'ettlement event code.                                                           MD060993
+      *                                                                                     MD060993
+     C           EVCOD     OREQ 'S'                                                         MD060993
+     C           DTYP      ANDEQ'SW'                                                        MD060993
+     C           AMCOD     ANDEQ'FB'                                                        MD060993
+     C           WBUYND    ANDEQ'Y'                                                         MD060993
+      *                                                                                     MD060993
+     C           EVCOD     OREQ 'S'                                                         MD060993
+     C           DTYP      ANDEQ'SW'                                                        MD060993
+     C           AMCOD     ANDEQ'BB'                                                        MD060993
+     C           WBUYND    ANDEQ'Y'                                                         MD060993
+      *                                                                                     MD060993
+     C           EVCOD     OREQ 'S'                                                         MD060993
+     C           DTYP      ANDEQ'SW'                                                        MD060993
+     C           AMCOD     ANDEQ'FC'                                                        MD060993
+     C           WSELND    ANDEQ'Y'                                                         MD060993
+      *                                                                                     MD060993
+     C           EVCOD     OREQ 'S'                                                         MD060993
+     C           DTYP      ANDEQ'SW'                                                        MD060993
+     C           AMCOD     ANDEQ'BC'                                                        MD060993
+     C           WSELND    ANDEQ'Y'                                                         MD060993
       *                                                                                     MD059248
       ** Set 01 as narrative code for missing account key                                   MD059248
       ** to avoid DB error 108                                                              MD059248
@@ -5887,6 +5915,7 @@
      C                     MOVE RANETR    ZCMREF                                            MD059248
       *                                                                                     MD059248
       ** SET DEBIT/CREDIT IND BASED ON BUY/SELL IND                                         MD059248
+     C           DTYP      IFNE 'SW'                                                        MD060993
      C           RABSIN    IFEQ 'S'                                                         MD059248
      C                     MOVE '1'       *IN39                                             MD059248
      C                     MOVE '1'       *IN69                                             MD059248
@@ -5894,6 +5923,7 @@
      C                     MOVE '0'       *IN39                                             MD059248
      C                     MOVE '0'       *IN69                                             MD059248
      C                     ENDIF                                                            MD059248
+     C                     ENDIF                                                            MD060993
       *                                                                                     MD059248
       ** Postings should be treated as PREF 2                                               MD059248
      C                     EXSR PREF2                                                       MD059248
@@ -5933,16 +5963,25 @@
      C                     ENDIF                                                            MD059248
       *                                                                                     MD059248
       ** Increment count of POSTINGS generated                                              MD059248
+     C           DTYP      IFNE 'SW'                                                        MD060993
      C           NRIT      ADD  1         NRIT    50                                        MD059248
      C   70 35   NRIT      ADD  2         NRIT                                              MD059248
+     C                     ENDIF                                                            MD060993
       *                                                                                     MD059248
       ** Determine Posting Narrative:                                                       MD059248
      C                     EXSR SRGENT                                                      MD059248
       *                                                                                     MD059248
       ** If a generated entry, output:                                                      MD059248
+     C           DTYP      IFNE 'SW'                                                        MD060993
      C           *IN11     IFEQ *OFF                                                        MD059248
      C                     EXCPTGENENT                                                      MD059248
      C                     ENDIF                                                            MD059248
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Perform related postings.                                                          MD060993
+     C           DTYP      IFEQ 'SW'                                                        MD060993
+     C                     EXSR POSTN2                                                      MD060993
+     C                     ENDIF                                                            MD060993
       *                                                                                     MD059248
       ** Maintain DR,CR totals for BRANCH/CCY (EXCL.INTERBRANCH ITEMS)                      MD059248
      C           *IN39     IFEQ '1'                                                         MD059248
@@ -5964,7 +6003,364 @@
      C                     SETOF                     122933                                 MD059248
      C                     SETOF                     37                                     MD059248
      C                     SETOF                     70                                     MD059248
+      *                                                                                     MD060993
+     C           DTYP      IFEQ 'SW'                                                        MD060993
+     C                     MOVE '0'       *IN11                                             MD060993
+      *                                                                                     MD060993
+      ** Initialize reversal deal indicator after record is output.                         MD060993
+      *                                                                                     MD060993
+     C                     MOVE *ZERO     VOIN    10                                        MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
      C                     ENDSR                                                            MD059248
+      *****************************************************************                     MD060993
+      *                                                               *                     MD060993
+      *   POSTN2 - This subroutine is patterned after ACOD and PREF   *                     MD060993
+      *            processing only for posting reference 2 as part of *                     MD060993
+      *            netted FX deal.                                    *                     MD060993
+      *                                                               *                     MD060993
+      *****************************************************************                     MD060993
+     C           POSTN2    BEGSR                                                            MD060993
+      *                                                                                     MD060993
+      ** Loop to access A/C Codes from A/C key record                                       MD060993
+     C                     Z-ADD0         Q       10                                        MD060993
+     C           NXT02     TAG                                                              MD060993
+     C           Q         ADD  1         Q                                                 MD060993
+      *                                                                                     MD060993
+      ** Check if all A/C code to be processed.                                             MD060993
+     C           Q         COMP 6                    32                                     MD060993
+     C   32                GOTO POSEND                                                      MD060993
+      *                                                                                     MD060993
+      ** Ignore entries where ACOD & PREF are both blank.                                   MD060993
+     C           ACOD,Q    COMP 0                        32                                 MD060993
+     C   32      PREF,Q    COMP 0                        32                                 MD060993
+     C   32                GOTO NXT02                                                       MD060993
+      *                                                                                     MD060993
+      ** Process only for posting reference 2                                               MD060993
+     C           PREF,Q    COMP 2                    363435                                 MD060993
+     C  N35                GOTO NXT02                                                       MD060993
+      *                                                                                     MD060993
+      ** Set Debit/Credit indicator                                                         MD060993
+     C                     SETOF                     39                                     MD060993
+     C   19N18   Q         COMP 3                    39                                     MD060993
+     C  N19N18   Q         COMP 4                      39                                   MD060993
+     C   19 18   Q         COMP 4                      39                                   MD060993
+     C  N19 18   Q         COMP 3                    39                                     MD060993
+     C           *IN39     IFEQ *ON                                                         MD060993
+     C                     MOVE *OFF      *IN39                                             MD060993
+     C                     ELSE                                                             MD060993
+     C                     MOVE *ON       *IN39                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If a generated entry, output:                                                      MD060993
+     C           *IN11     IFEQ *OFF                                                        MD060993
+     C                     EXCPTGENENT                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Obtain data common to all posting types.                                           MD060993
+     C           ACOD,Q    COMP 0                        40                                 MD060993
+     C   40                GOTO NARTA2                                                      MD060993
+      *                                                                                     MD060993
+      ** Acesss A/C codes table.                                                            MD060993
+     C                     Z-ADDY         X                                                 MD060993
+     C           ACOD,Q    LOKUPACD,X                    40                                 MD060993
+     C           *IN40     IFEQ '1'                                                         MD060993
+     C                     MOVELATY,X     A5ACTY                                            MD060993
+     C                     MOVE ACS,X     A5ACSC                                            MD060993
+     C                     ELSE                                                             MD060993
+      *                                                                                     MD060993
+      ** Read account details via access program                                            MD060993
+     C                     MOVELACOD,Q    @AFNB                                             MD060993
+     C                     CALL 'AOACODR0'                                                  MD060993
+     C                     PARM '*MSG   ' @RTCD   7                                         MD060993
+     C                     PARM '*KEY   ' @OPTN   7                                         MD060993
+     C                     PARM           @AFNB                                             MD060993
+     C           SDACOD    PARM SDACOD    DSSDY                                             MD060993
+     C           @RTCD     IFNE *BLANK                                                      MD060993
+     C                     MOVE '008'     DBASE                                             MD060993
+     C                     MOVEL@OPTN     DBOPTN  7                                         MD060993
+     C                     MOVEL@AFNB     DBKEY                                             MD060993
+     C                     MOVEL'SDACODPD'DBFILE                                            MD060993
+     C                     GOTO ERROR                                                       MD060993
+     C                     ENDIF                                                            MD060993
+     C           Y         IFGT 1                                                           MD060993
+     C                     SUB  1         Y                                                 MD060993
+     C                     Z-ADDACOD,Q    ACD,Y                                             MD060993
+     C                     MOVE A5ACTY    ATY,Y                                             MD060993
+     C                     MOVE A5ACSC    ACS,Y                                             MD060993
+     C                     ENDIF                                                            MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Test A/C type.                                                                     MD060993
+     C           A5ACTY    COMP 'R'                      38                                 MD060993
+      *                                                                                     MD060993
+      ** Set up narrative.                                                                  MD060993
+     C           NARTA2    TAG                                                              MD060993
+     C                     Z-ADDQ         N                                                 MD060993
+     C                     EXSR NARRA                                                       MD060993
+     C   37                GOTO ERROR                                                       MD060993
+      *                                                                                     MD060993
+      ** Set DEBIT/CREDIT indicator                                                         MD060993
+     C                     SETOF                     3969                                   MD060993
+     C   19N18   Q         COMP 3                    39                                     MD060993
+     C  N19N18   Q         COMP 4                      39                                   MD060993
+     C   19 18   Q         COMP 4                      39                                   MD060993
+     C  N19 18   Q         COMP 3                    39                                     MD060993
+     C  N18      Q         COMP 3                    69                                     MD060993
+     C   18      Q         COMP 4                      69                                   MD060993
+      *                                                                                     MD060993
+      ** If reversal indicator is '1',                                                      MD060993
+      ** set reversal deal ind. to '1'                                                      MD060993
+      *                                                                                     MD060993
+     C           *IN19     IFEQ '0'                                                         MD060993
+     C                     MOVE 1         VOIN                                              MD060993
+     C                     ELSE                                                             MD060993
+     C                     MOVE 0         VOIN                                              MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Set off settlement type inds.                                                      MD060993
+     C                     SETOF                     131415                                 MD060993
+     C                     SETOF                     161728                                 MD060993
+     C                     MOVE '0'       *IN11                                             MD060993
+      *                                                                                     MD060993
+     C                     SETOF                     10                                     MD060993
+      *                                                                                     MD060993
+      ** If an account is found and is retail and posting is not                            MD060993
+      ** already being sent to suspense.                                                    MD060993
+      *                                                                                     MD060993
+     C           *IN06     IFEQ '1'                                                         MD060993
+     C           *IN38     ANDEQ'1'                                                         MD060993
+     C           *IN29     ANDEQ'0'                                                         MD060993
+      *                                                                                     MD060993
+      ** If DEBITS and CREDITS are blocled send posting to suspense.                        MD060993
+     C           *IN39     IFEQ '0'                                                         MD060993
+     C                     TESTB'2'       RETB           29                                 MD060993
+     C                     ELSE                                                             MD060993
+     C                     TESTB'3'       RETB           29                                 MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Increment count of postings generated                                              MD060993
+     C  N11      NRIT      ADD  1         NRIT    50                                        MD060993
+     C   11 70 35NRIT      ADD  1         NRIT    50                                        MD060993
+     C   70 35N11NRIT      ADD  2         NRIT                                              MD060993
+      *                                                                                     MD060993
+      ** Generate entries to suspense if necessary.                                         MD060993
+     C                     SETON                     12                                     MD060993
+      *                                                                                     MD060993
+      ** If suspense, generate and output:                                                  MD060993
+     C           *IN29     IFEQ *ON                                                         MD060993
+     C                     Z-ADDEAMT      PSTA                                              MD060993
+     C                     EXSR SRSUSP                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** Determine Posting Narrative:                                                       MD060993
+     C                     EXSR SRGENT                                                      MD060993
+      *                                                                                     MD060993
+      ** If Analytical Accounting module is switched on and the                             MD060993
+      ** account key is an existing Midas account key.                                      MD060993
+      *                                                                                     MD060993
+     C                     MOVE *OFF      *IN58                                             MD060993
+     C                     MOVE *OFF      *IN56                                             MD060993
+     C                     MOVE *OFF      *IN71                                             MD060993
+     C           BGN0ST    IFEQ 'Y'                                                         MD060993
+     C           AKEY6     ANDNE'T'                                                         MD060993
+     C           AKEY6     ANDNE'F'                                                         MD060993
+     C           *IN11     ANDEQ*OFF                                                        MD060993
+      *                                                                                     MD060993
+      ** If an entry to a retail or a nostro account is being                               MD060993
+      ** generated, seton indicator 56 to output profit centre of                           MD060993
+      ** the account from ACCNTAB                                                           MD060993
+      *                                                                                     MD060993
+     C           ATYPA     IFEQ 'R'                                                         MD060993
+     C           ATYPA     OREQ 'N'                                                         MD060993
+     C                     MOVE *ON       *IN56                                             MD060993
+     C                     ELSE                                                             MD060993
+      *                                                                                     MD060993
+      ** If a/c code is a Spot Trade a/c or a Spot Trade Equiv a/c,                         MD060993
+      ** determine if Profit Centre can hold FX Position                                    MD060993
+      *                                                                                     MD060993
+     C                     MOVE ACOD,Q    WACOD  10                                         MD060993
+     C           WACOD     LOKUPXSPQ,1                   71                                 MD060993
+     C           *IN71     IFEQ *ON                                                         MD060993
+     C           WACOD     OREQ BLSPTA                                                      MD060993
+     C                     EXSR SRPRFC                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If a generated entry, output:                                                      MD060993
+      *                                                                                     MD060993
+     C           *IN11     IFEQ *OFF                                                        MD060993
+     C           BRCDA     IFEQ *BLANKS                                                     MD060993
+     C                     MOVE BRCA      BRCDA                                             MD060993
+     C                     ENDIF                                                            MD060993
+     C           NTOSBR    IFEQ *BLANKS                                                     MD060993
+     C                     MOVE BRCA      NTOSBR                                            MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C           CER049    IFEQ 'Y'                                                         MD060993
+     C           ATYPA     ANDEQ'R'                                                         MD060993
+      *                                                                                     MD060993
+     C                     MOVE AKEY      WRK09   9                                         MD060993
+     C                     MOVELWRK09     WRK05   5                                         MD060993
+     C           WRK05     IFEQ '   FA'                                                     MD060993
+     C           WRK05     OREQ '   SA'                                                     MD060993
+     C           WRK05     OREQ '   FC'                                                     MD060993
+     C           WRK05     OREQ '   SC'                                                     MD060993
+     C           WRK05     OREQ '   FI'                                                     MD060993
+     C           WRK05     OREQ '   AI'                                                     MD060993
+     C                     MOVE '60001'   TRAT                                              MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If CRE009 is ON and pgm is running is Shadow Post,                                 MD060993
+      ** set the Posting Date as Value Date.                                                MD060993
+      ** If deal is back valued set Posting Date as Run Date.                               MD060993
+      *                                                                                     MD060993
+     C           CRE009    IFEQ 'Y'                                                         MD060993
+     C           *INU1     ANDEQ*OFF                                                        MD060993
+      *                                                                                     MD060993
+     C                     MOVE *IN40     SAV40   1                                         MD060993
+     C           DLNO      CHAINDEALSDBF             40                                     MD060993
+     C           *IN40     IFEQ *OFF                                                        MD060993
+     C                     Z-ADDVDAT      @EDAT   50                                        MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADDEDAT      @EDAT   50                                        MD060993
+     C                     ENDIF                                                            MD060993
+     C                     MOVE SAV40     *IN40                                             MD060993
+      *                                                                                     MD060993
+     C           @EDAT     IFLT BJRDNB                                                      MD060993
+     C                     Z-ADDBJRDNB    WDATE   50                                        MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADD@EDAT     WDATE                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADDBJRDNB    WDATE                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If in shadow post mode and CRE009 is ON and the event date is                      MD060993
+      ** greater than the next day and the account is not retail, do not                    MD060993
+      ** write record to GEDLPD.                                                            MD060993
+      **                                                                                    MD060993
+     C           CRE009    IFEQ 'Y'                                                         MD060993
+     C           *INU1     ANDEQ*OFF                                                        MD060993
+      *                                                                                     MD060993
+     C                     Z-ADD0         @EVCD   50                                        MD060993
+     C           BJDNWD    SUB  1         @EVCD                                             MD060993
+     C           @EVCD     IFGE BKAPDT                                                      MD060993
+     C                     Z-ADDBKAPDT    @EVCD                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C           *IN38     IFEQ *ON                                                         MD060993
+     C           *IN38     ORNE *ON                                                         MD060993
+     C           EDAT      ANDLE@EVCD                                                       MD060993
+     C                     EXCPTGENENT                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ELSE                                                             MD060993
+     C                     EXCPTGENENT                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If a booking branch posting, output:                                               MD060993
+      *                                                                                     MD060993
+     C           *IN35     IFEQ *ON                                                         MD060993
+     C           *IN70     ANDEQ*ON                                                         MD060993
+     C           *IN77     ANDEQ*ON                                                         MD060993
+      *                                                                                     MD060993
+      ** Initialize W#IN96 for interbranch entry                                            MD060993
+      *                                                                                     MD060993
+     C           OSBR      IFNE BKMABR                                                      MD060993
+     C           BRCA      ANDNEBKMABR                                                      MD060993
+     C           BKIEMB    ANDEQ'Y'                                                         MD060993
+     C                     MOVE '1'       W#IN96  1                                         MD060993
+     C                     MOVE *BLANKS   W#BICN                                            MD060993
+     C                     MOVE OBICN     W#BICN                                            MD060993
+     C                     MOVE @@BICN    OBICN                                             MD060993
+     C                     ELSE                                                             MD060993
+     C                     MOVE '0'       W#IN96                                            MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If CRE009 is ON and pgm is running is Shadow Post,                                 MD060993
+      ** set the Posting Date as Value Date.                                                MD060993
+      ** If deal is back valued set Posting Date as Run Date.                               MD060993
+      *                                                                                     MD060993
+     C           CRE009    IFEQ 'Y'                                                         MD060993
+     C           *INU1     ANDEQ*OFF                                                        MD060993
+      *                                                                                     MD060993
+     C                     MOVE *IN40     SAV40   1                                         MD060993
+     C           DLNO      CHAINDEALSDBF             40                                     MD060993
+     C           *IN40     IFEQ *OFF                                                        MD060993
+     C                     Z-ADDVDAT      @EDAT   50                                        MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADDEDAT      @EDAT                                             MD060993
+     C                     ENDIF                                                            MD060993
+     C                     MOVE SAV40     *IN40                                             MD060993
+      *                                                                                     MD060993
+     C           @EDAT     IFLT BJRDNB                                                      MD060993
+     C                     Z-ADDBJRDNB    WDATE   50                                        MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADD@EDAT     WDATE                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ELSE                                                             MD060993
+     C                     Z-ADDBJRDNB    WDATE                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If in shadow post mode and CRE009 is ON and the event date is                      MD060993
+      ** greater than the next day and the account is not retail, do not                    MD060993
+      ** write record to GEDLPD.                                                            MD060993
+      *                                                                                     MD060993
+     C           CRE009    IFEQ 'Y'                                                         MD060993
+     C           *INU1     ANDEQ*OFF                                                        MD060993
+      *                                                                                     MD060993
+     C                     Z-ADD0         @EVCD   50                                        MD060993
+     C           BJDNWD    SUB  1         @EVCD                                             MD060993
+     C           @EVCD     IFGE BKAPDT                                                      MD060993
+     C                     Z-ADDBKAPDT    @EVCD                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C           *IN38     IFEQ *ON                                                         MD060993
+     C           *IN38     ORNE *ON                                                         MD060993
+     C           EDAT      ANDLE@EVCD                                                       MD060993
+     C                     EXCPTBOOKBR                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ELSE                                                             MD060993
+      *                                                                                     MD060993
+     C                     EXCPTBOOKBR                                                      MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C           W#IN96    IFEQ '1'                                                         MD060993
+     C                     MOVE W#BICN    OBICN                                             MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+      ** If via main branch generate aditional posting                                      MD060993
+      *                                                                                     MD060993
+     C           W#IN96    IFEQ '1'                                                         MD060993
+     C                     EXCPTBOOKMB                                                      MD060993
+      *                                                                                     MD060993
+      ** Add amount to hash totals                                                          MD060993
+      *                                                                                     MD060993
+     C                     ADD  1         NRIT                                              MD060993
+     C                     Z-ADD2         S                                                 MD060993
+     C                     Z-ADD1         Z                                                 MD060993
+     C           PSTA      DIV  1000      ZZAMT                                             MD060993
+     C                     EXSR HASH                                                        MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C                     ENDIF                                                            MD060993
+      *                                                                                     MD060993
+     C           POSEND    TAG                                                              MD060993
+      *                                                                                     MD060993
+     C                     ENDSR                                                            MD060993
      C*****************************************************************   S01103
      C**                                                                  CDL002
      C*     Level break 2 total time routine to set up and write          CDL002

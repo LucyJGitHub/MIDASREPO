@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR569568           Date 22Nov12               *
       *                 CER059             Date 19Jul10               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
@@ -488,6 +491,9 @@
                                                                                             AR569568
      D CDL006          S              1A                                                    AR569568
                                                                                               CSC011
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -530,6 +536,15 @@
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG5268
      C                   IN        ZMUSER                                                    BUG5268
      C                   UNLOCK    ZMUSER                                                    BUG5268
+                                                                                            MD060683
+     C                   MOVE      *BLANKS       PUser            10                        MD060683
+                                                                                            MD060683
+     C                   IF        IRUSER <> *BLANKS                                        MD060683
+     C                   EVAL      PUser = IRUSER                                           MD060683
+     C                   ELSE                                                               MD060683
+     C                   EVAL      PUser = PSUser                                           MD060683
+     C                   ENDIF                                                              MD060683
+                                                                                            MD060683
       *                                                                                       CDL038
       *  *-------------------------------*                                                    CDL038
       *  * Default Sub Type and Class                                                         CDL038
@@ -1631,6 +1646,7 @@
      C                   PARM                    PaySetMeth
      C                   PARM                    PayNostro
      C                   PARM                    ExtData                        CAP004
+     C                   PARM                    IRUSER                                     MD060683
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -2053,9 +2069,21 @@
      C                   MOVE      SCYR0         FRCYR0                         CIR005
      C                   ENDIF                                                  CIR005
                                                                                               225811
-     C     SACCD         IFEQ      'I'                                                        225811
-     C                   MOVEL     ZUSER         FRUSRI                                       225811
-     C                   ENDIF                                                                225811
+     C*****SACCD         IFEQ      'I'                                               225811 MD060683
+     C**********         MOVEL     ZUSER         FRUSRI                              225811 MD060683
+     C**********         ENDIF                                                       225811 MD060683
+      *                                                                                     MD060683
+     C     SACCD         IFEQ      'I'                                                      MD060683
+     C                   EVAL      FRUSRI = PUser                                           MD060683
+     C                   ENDIF                                                              MD060683
+      *                                                                                     MD060683
+     C     SACCD         IFEQ      'A'                                                      MD060683
+     C                   EVAL      FRUSRA = PUser                                           MD060683
+     C                   ENDIF                                                              MD060683
+      *                                                                                     MD060683
+     C     SACCD         IFEQ      'X'                                                      MD060683
+     C                   EVAL      FRUSRX = PUser                                           MD060683
+     C                   ENDIF                                                              MD060683
       *                                                                                       CDL038
       ** Class                                                                                CDL038
       *                                                                                       CDL038

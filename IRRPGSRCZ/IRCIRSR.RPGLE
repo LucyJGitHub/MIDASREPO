@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059254           Date 11Nov21               *
-      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. MD059254           Date 11Nov21               *
+      *                 CIR020             Date 02Aug21               *
       *                 MD058803           Date 08Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056546           Date 16Sep20               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059254 - Freq is irregular and values entered are missing  *
       *             for Their Int Rate Change Sched, Our/Their        *
       *             Int Payment Schd but values were saved in         *
@@ -515,6 +518,10 @@
      D POP10           S             20A                                                    MD054117
      D PVL10           S            200A                                                    MD054117
      D PCIDCF          S              1A                                                    MD054117
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -977,6 +984,8 @@
      C                   PARM                    SBRCA
       **  Switchable feature CIR008
      C                   PARM                    CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
       ** Outputs
       ** (Current) deal in file format
      C                   PARM                    CIRSFilFmt
@@ -1659,6 +1668,8 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc
      C                   PARM                    ACTRJ                                      MD054906
+     C                   PARM                    IRUSER                                     MD060683
+      *                                                                                     MD060683
       * Set up the names of the message files from which the
       * message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'

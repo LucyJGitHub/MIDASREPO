@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 02Aug21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. CIR020             Date 02Aug21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054117           Date 12Sep19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -442,6 +445,9 @@
      D POP10           S             20A                                                    MD054117
      D PVL10           S            200A                                                    MD054117
      D PCIDCF          S              1A                                                    MD054117
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
 
       ** +--- Start of main processing -----------------------------------+
 
@@ -457,6 +463,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Get ZMUSER to access default branch                                                 BUG8550
                                                                                              BUG8550
@@ -691,6 +698,8 @@
      C                   PARM                    BQFIAU
      C                   PARM                    BQFIRA
      C                   PARM                    CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Outputs:
       ** Current Deal in File Format

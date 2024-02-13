@@ -18,10 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD041126           Date 31Jan24               *
+      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-62261.                             *
       *  BA1008 - Replication of Trades to consolidated branches      *
       *                                                               *
       *****************************************************************
@@ -31,22 +34,26 @@
       *
       ** MQI named constants
       *
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
       *
       ** Object Descriptor
       *
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
       *
       ** Message Descriptor
       *
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
       *
       ** Put message options
       *
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
       *
       ** Other includes
       ** --------------
@@ -69,14 +76,21 @@
       *
       ** Parameters for the QMQM calls.
       *
-     D CID             S              9P 0
-     D HCONN           S              9P 0
-     D HOBJ            S              9P 0
-     D BUFLEN          S              9P 0
-     D CCODE           S              9P 0
-     D REASON          S              9P 0
-     D OCODE           S              9P 0
-     D OPTS            S              9P 0
+     D*CID*****        S              9P 0                                                  MD041126
+     D*HCONN***        S              9P 0                                                  MD041126
+     D*HOBJ****        S              9P 0                                                  MD041126
+     D*BUFLEN**        S              9P 0                                                  MD041126
+     D*CCODE***        S              9P 0                                                  MD041126
+     D*REASON**        S              9P 0                                                  MD041126
+     D*OCODE***        S              9P 0                                                  MD041126
+     D*OPTS****        S              9P 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D HOBJ            S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
       *
       ** 4-alpha and 6-alpha fields for the MQ error code
       *
@@ -103,6 +117,32 @@
       ** Length of input Transaction Data field
       *
      D TransDtaLn      S              5P 0 INZ(8000)
+      *                                                                                     MD041126
+      ** Queue Manager name                                                                 MD041126
+      *                                                                                     MD041126
+     D QMNAME          S             48A                                                    MD041126
+                                                                                            MD041126
+     D PRTCD           S              7                                                     MD041126
+     D P@OP01          S             20                                                     MD041126
+     D P@VL01          S            200                                                     MD041126
+     D P@OP02          S             20                                                     MD041126
+     D P@VL02          S            200                                                     MD041126
+     D P@OP03          S             20                                                     MD041126
+     D P@VL03          S            200                                                     MD041126
+     D P@OP04          S             20                                                     MD041126
+     D P@VL04          S            200                                                     MD041126
+     D P@OP05          S             20                                                     MD041126
+     D P@VL05          S            200                                                     MD041126
+     D P@OP06          S             20                                                     MD041126
+     D P@VL06          S            200                                                     MD041126
+     D P@OP07          S             20                                                     MD041126
+     D P@VL07          S            200                                                     MD041126
+     D P@OP08          S             20                                                     MD041126
+     D P@VL08          S            200                                                     MD041126
+     D P@OP09          S             20                                                     MD041126
+     D P@VL09          S            200                                                     MD041126
+     D P@OP10          S             20                                                     MD041126
+     D P@VL10          S            200                                                     MD041126
 
       /EJECT
      C     Start         TAG
@@ -111,6 +151,9 @@
       ** in the C-specs to appear after the D- or I-specs in compiled
       ** listings.
       *
+      ** Connect to MQSeries queue manager                                                  MD041126
+      *                                                                                     MD041126
+     C                   EXSR      ConnQueue                                                MD041126
       *
       ** Open MQSeries Transmission queue that is to be read
       *
@@ -142,7 +185,7 @@
       ** Send the message
       *
      C                   EVAL      MDFMT = FMSTR
-     C                   EVAL      CID = MQPUT
+     C************       EVAL      CID = MQPUT                                              MD041126
 
      C                   IF        CommitCtl = 'Y'
       *
@@ -151,17 +194,21 @@
      C                   Z-ADD     PMSYP         PMOPT
      C                   ENDIF
 
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    HOBJ
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    BUFLEN
-     C                   PARM                    DataOut
-     C                   PARM                    CCODE
-     C                   PARM                    REASON
-      *
+     C************       CALL      'QMQM'                                                   MD041126
+     C************       PARM                    CID                                        MD041126
+     C************       PARM                    HCONN                                      MD041126
+     C************       PARM                    HOBJ                                       MD041126
+     C************       PARM                    MQMD                                       MD041126
+     C************       PARM                    MQPMO                                      MD041126
+     C************       PARM                    BUFLEN                                     MD041126
+     C************       PARM                    DataOut                                    MD041126
+     C************       PARM                    CCODE                                      MD041126
+     C************       PARM                    REASON                                     MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :                     MD041126
+     C                                    BUFLEN : %ADDR(DataOut) :                         MD041126
+     C                                    CCODE : REASON )                                  MD041126
+                                                                                            MD041126
       ** If an error occured, put the MQSeries return code into this
       ** module's return code.
       *
@@ -175,6 +222,25 @@
 
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD041126
+      *                                                               *                     MD041126
+      * ConnQueue - Connect to MQSeries queue manager                 *                     MD041126
+      *                                                               *                     MD041126
+      *****************************************************************                     MD041126
+                                                                                            MD041126
+     C     ConnQueue     BEGSR                                                              MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HCONN :                                 MD041126
+     C                                    OCODE : REASON )                                  MD041126
+     C                   IF        REASON <> RCNONE AND                                     MD041126
+     C                             REASON <> RC2002                                         MD041126
+     C                   EXSR      SetRetCode                                               MD041126
+     C                   EXSR      *pssr                                                    MD041126
+     C                   ENDIF                                                              MD041126
+      *                                                                                     MD041126
+     C                   ENDSR                                                              MD041126
+      *****************************************************************                     MD041126
+      /EJECT                                                                                MD041126
       *****************************************************************
       *                                                               *
       * OpenQueue - Open the MQSeries queue                           *
@@ -195,7 +261,7 @@
       ** kind of call is being made.
       *
      C                   EVAL      OPTS = OOOUT + OOFIQ
-     C                   EVAL      CID = MQOPEN
+     C************       EVAL      CID = MQOPEN                                             MD041126
       *
       ** ODON is a subfield of the MQOD data structure, which holds the
       ** name of the queue to be opened.  It is declared in the CMQODR
@@ -209,14 +275,17 @@
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
       *
-     C                   CALL      'QMQM'
-     C                   PARM                    CID
-     C                   PARM                    HCONN
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS
-     C                   PARM                    HOBJ
-     C                   PARM                    OCODE
-     C                   PARM                    REASON
+     C************       CALL      'QMQM'                                                   MD041126
+     C************       PARM                    CID                                        MD041126
+     C************       PARM                    HCONN                                      MD041126
+     C************       PARM                    MQOD                                       MD041126
+     C************       PARM                    OPTS                                       MD041126
+     C************       PARM                    HOBJ                                       MD041126
+     C************       PARM                    OCODE                                      MD041126
+     C************       PARM                    REASON                                     MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                    HOBJ : OCODE : REASON )                           MD041126
       *
       ** Report reason, if any; stop if failed
       ** RCNONE is a named constant indicating no failure (it is zero).
@@ -251,14 +320,17 @@
       *
       ** Close queue
       *
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HOBJ              9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C************       Z-ADD     MQCLOS        CID                                        MD041126
+     C************       CALL      'QMQM'                                                   MD041126
+     C************       PARM                    CID               9 0                      MD041126
+     C************       PARM                    HCONN             9 0                      MD041126
+     C************       PARM                    HOBJ              9 0                      MD041126
+     C************       PARM                    OPTS              9 0                      MD041126
+     C************       PARM                    CCODE             9 0                      MD041126
+     C************       PARM                    REASON            9 0                      MD041126
+      *                                                                                     MD041126
+     C                   CALLP     MQCLOSE( HCONN : HOBJ : OPTS :                           MD041126
+     C                                    CCODE : REASON )                                  MD041126
       *
       ** Error processing
       *
@@ -325,6 +397,37 @@
       ** Remove use of %len as this is not supported below V3R7
       *
      C                   EVAL      ApnHeadLen = 200
+      *                                                                                     MD041126
+      ** Use queue name defined in system values.                                           MD041126
+      *                                                                                     MD041126
+     C                   EVAL      P@OP01 = 'MQQueueMgr'                                    MD041126
+      *                                                                                     MD041126
+     C                   CALL      'AOSVALR0'                                               MD041126
+     C                   PARM      *BLANKS       PRTCD                                      MD041126
+     C                   PARM                    P@OP01                                     MD041126
+     C                   PARM      *BLANKS       P@VL01                                     MD041126
+     C                   PARM      *BLANKS       P@OP02                                     MD041126
+     C                   PARM      *BLANKS       P@VL02                                     MD041126
+     C                   PARM      *BLANKS       P@OP03                                     MD041126
+     C                   PARM      *BLANKS       P@VL03                                     MD041126
+     C                   PARM      *BLANKS       P@OP04                                     MD041126
+     C                   PARM      *BLANKS       P@VL04                                     MD041126
+     C                   PARM      *BLANKS       P@OP05                                     MD041126
+     C                   PARM      *BLANKS       P@VL05                                     MD041126
+     C                   PARM      *BLANKS       P@OP06                                     MD041126
+     C                   PARM      *BLANKS       P@VL06                                     MD041126
+     C                   PARM      *BLANKS       P@OP07                                     MD041126
+     C                   PARM      *BLANKS       P@VL07                                     MD041126
+     C                   PARM      *BLANKS       P@OP08                                     MD041126
+     C                   PARM      *BLANKS       P@VL08                                     MD041126
+     C                   PARM      *BLANKS       P@OP09                                     MD041126
+     C                   PARM      *BLANKS       P@VL09                                     MD041126
+     C                   PARM      *BLANKS       P@OP10                                     MD041126
+     C                   PARM      *BLANKS       P@VL10                                     MD041126
+                                                                                            MD041126
+     C                   IF        PRTCD = *BLANKS                                          MD041126
+     C                   EVAL      QMNAME = P@VL01                                          MD041126
+     C                   ENDIF                                                              MD041126
 
      C                   ENDSR
 

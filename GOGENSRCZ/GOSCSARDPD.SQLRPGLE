@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055681           Date 31Jul20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062254           Date 26Jan24               *
+      *  Prev Amend No. MD055681           Date 31Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD023266           Date 07Nov13               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062254 - GOC0100/GOC0100A fails for GZSDBROKPD due to      *
+      *             duplicate record key. Fix is to restrict the      *
+      *             to the zone where the GOC0100A is called over.    *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023266 - Dumps in CGL135 and CGL146 Switch-On (Recompile)  *
@@ -128,7 +132,8 @@ Z    C***02*****         EVAL      G_ZONE        = I_ZONE                       
      C+ (select SARN, SARD, LCD, TYLC, ZOZONE as ZONE                                       MD055681
      C+ from SCSRDJW0 a, GPZONEPD                                                           MD055681
      C+ where not exists (select * from GZSCSARDPD b where a.SARN = b.SARN                  MD055681
-     C+ and b.ZONE = :I_ZONE))                                                              MD055681
+     C**and*b.ZONE = :I_ZONE))                                                     MD055681 MD062254
+     C+ and b.ZONE = :I_ZONE) and ZOZONE = :I_ZONE)                                         MD062254
      C/end-exec                                                                             MD055681
                                                                                             MD055681
      C/EXEC SQL                                                                             MD055681

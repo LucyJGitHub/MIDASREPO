@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260568             Date 14Dec23               *
-      *  Prev Amend No. MD059304           Date 11Nov21               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. 260568             Date 14Dec23               *
+      *                 MD059304           Date 11Nov21               *
       *                 CIR020             Date 02Aug21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
@@ -86,6 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  260568 - Amended program to cater amendments made on JAVA.   *
       *  MD059304 - Changing the Pay settlement method in from        *
       *             00 to 01 (indicating a valid Nostro Number on     *
@@ -655,6 +658,9 @@ RGC  D DWMsgDtaArr     S             45A   DIM(ArrayMax)                        
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -775,6 +781,8 @@ RGC  D DWMsgDtaArr     S             45A   DIM(ArrayMax)                        
      C                   PARM                    @MsgDtaArr                                  BUG4744
      C                   PARM                    @MsgFArray                                  BUG4744
      C                   PARM                    @APIRetC          1                         BUG5230
+     C                   PARM                    IRUSER                                     MD060683
+      *                                                                                     MD060683
      C                   MOVEL     SACCD         Buffer                                      BUG4744
      C                   ELSE                                                                BUG4744
 
@@ -928,6 +936,7 @@ RGC  C                   PARM                    InSwift2013                    
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    @TNLU             5                         BUG4469
+     C                   PARM                    IRUSER                                     MD060683
 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
@@ -1139,6 +1148,8 @@ RGC  C                   PARM                    InSwift2013                    
      C                   PARM                    SBRCA             3
       *  Switchable feature CIR008
      C                   PARM                    CIR008
+      * Current User                                                                        MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       * OUTPUTS
       * (Current) deal in file format
@@ -1369,6 +1380,7 @@ RGC  C                   PARM                    InSwift2013                    
      C                   PARM                    PaySetMeth
      C                   PARM                    PayNostro
      C                   PARM                    ExtData
+     C                   PARM                    IRUSER                                     MD060683
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1957,6 +1969,7 @@ RGC  C                   PARM                    InSwift2013                    
      C                   PARM                    ValidFRA
      C                   PARM                    CIR008
      C                   PARM                    CAP056
+     C                   PARM                    IRUSER                                     MD060683
 
       *                                                                                       CSW213
       ** Call DLRPIFVU - Midas DL Reporting Information Validate and Update                   CSW213

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. AR994776           Date 04Apr19               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 AR994776           Date 04Apr19               *
       *                 MD054906           Date 15Jan20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -279,6 +282,7 @@
      D OKACTN          S              1                                                       CAP210
      D OKTRNN          S              1                                                       CAP210
      D BtnPressed      S             10                                                    AR1090283
+     D IRUSER          S             10                                                     MD060683
 
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
@@ -309,6 +313,7 @@
      C                   PARM                    MsgArrOUT
      C                   PARM                    APIRetC
      C                   PARM                    ApHead                                     AR971184
+     C                   PARM                    IRUSER                                     MD060683
       *
       * Extract entry parameters
      C                   Eval      APParm = Parm
@@ -919,6 +924,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Single Currency IRS (SIRS)
 
@@ -946,6 +952,7 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    ACTRJ                                      MD054906
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Cross Currency IRS (CIRS)
 
@@ -973,6 +980,7 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    ACTRJ                                      MD054906
+     C                   PARM                    IRUSER                                     MD060683
 
       * SE Securities Details
      C     TransTYPE     WHENEQ    'SECS'
@@ -1230,6 +1238,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM                    IRUSER                                     MD060683
 
       ** CLS Pay-in Schedules Header
 

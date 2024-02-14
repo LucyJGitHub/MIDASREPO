@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059863           Date 28Sep22               *
-      *  Prev Amend No. MD059410           Date 21Dec21               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. MD059863           Date 28Sep22               *
+      *                 MD059410           Date 21Dec21               *
       *                 CIR020             Date 02Aug21               *
       *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
@@ -128,6 +129,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059863 - UDF field position in CIRS or SIRS message type.  *
       *           - Save Front Office ID for Amend mode.              *
       *  MD059410 - Wrong rate is applied for the computation of int  *
@@ -850,6 +853,10 @@
      D STEINR          S             12A                                                    MD054095
       *                                                                                     MD054117
      D PCIDCF          S              1A                                                    MD054117
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -866,13 +873,17 @@
      C                   EVAL      WLastPRDT(4) = *ZERO                                       CGL029
                                                                                               CGL029
       ** Check whether user is a web browser user, if so overwrite                           BUG7095
-     C                   Call      'SFC000026'                                               BUG7095
-     C                   Parm      *Blanks       User             10                         BUG7095
+     C**********         Call      'SFC000026'                                      BUG7095 MD060683
+     C**********         Parm      *Blanks       User             10                BUG7095 MD060683
       *                                                                                      BUG7095
-     C                   If        User <> *Blanks                                           BUG7095
-     C                   Eval      PSUser = User                                             BUG7095
-     C                   EndIf                                                               BUG7095
+     C**********         If        User <> *Blanks                                  BUG7095 MD060683
+     C**********         Eval      PSUser = User                                    BUG7095 MD060683
+     C**********         EndIf                                                      BUG7095 MD060683
                                                                                              BUG7095
+     C                   IF        IRUSER <> *BLANKS                                        MD060683
+     C                   EVAL      PSUser = IRUSER                                          MD060683
+     C                   ENDIF                                                              MD060683
+      *                                                                                     MD060683
      C                   IF        CIR008 = 'N'                                               CIR008
      C     RXCHTP        IFNE      'I'
      C     RXCHTP        ANDNE     'A'
@@ -1144,6 +1155,9 @@
                                                                                               CIR008
       ** FRA/IRS Deals Authorisation                                                          CIR008
      C                   PARM                    CIR008                                       CIR008
+                                                                                            MD060683
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
       *                                                                         CAP006
       * OUTPUTS                                                                 CAP006
       *                                                                         CAP006
@@ -5854,6 +5868,7 @@
      C                   PARM                    CAP056                                       CAP056
      C                   PARM                    SUEINR                                     MD054095
      C                   PARM                    STEINR                                     MD054095
+     C                   PARM                    IRUSER                                     MD060683
       *
      C     *LIKE         DEFINE    UEINR         ##UEINR
      C     *LIKE         DEFINE    TEINR         ##TEINR

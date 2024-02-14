@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059863           Date 28Sep22               *
-      *  Prev Amend No. MD059314           Date 22Feb22               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. MD059863           Date 28Sep22               *
+      *                 MD059314           Date 22Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD059183A          Date 21Dec21               *
       *                 MD059100           Date 28Oct21               *
@@ -124,6 +125,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059863 - UDF field position in CIRS or SIRS message type.  *
       *           - Move Front Office ID to RSFRNT, if not blanks.    *
       *  MD059314 - Error encountered on Principal Change Schedule    *
@@ -742,6 +745,7 @@ RGC                                                                             
      D BufferEx8       S           9999                                         BUG4646
      D BufferEx9       S           9999                                         BUG4646
      D APIRetc         S              1A
+     D IRUSER          S             10A                                                    MD060683
 
       ** Error message field(s)
      D Msg1            S                   LIKE(#MsgID)
@@ -1794,6 +1798,8 @@ RGC                                                                             
      C                   PARM                    MsgFArray                                   BUG6377
      C                   PARM                    APIRetC                                     BUG6377
      C                   PARM                    ACTRJ                                      MD054906
+     C                   PARM                    IRUSER                                     MD060683
+      *                                                                                     MD060683
      C                   MOVEL     SACCD         Buffer                                      BUG6377
       *                                                                                      BUG6377
      C                   ELSE                                                                BUG6377
@@ -2065,6 +2071,8 @@ RGC                                                                             
      C                   PARM                    SBRCA
       ** FRA/IRS Deals Authorisation
      C                   PARM                    CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
       ** OUTPUTS
       ** (Current) deal in file format
       ** (Current) deal extenstion in file format                               BUG4646
@@ -5453,6 +5461,7 @@ RGC                                                                             
      C                   PARM                    CAP056
      C                   PARM                    SUEINR                                     MD054095
      C                   PARM                    STEINR                                     MD054095
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CSW213
       ** Call DLRPIFVU - Midas DL Reporting Information Validate and Update                   CSW213
                                                                                               CSW213
@@ -6396,6 +6405,7 @@ RGC                                                                             
      C                   PARM                    BufferEx8                      BUG4646
      C                   PARM                    BufferEx9                      BUG4646
      C                   PARM                    APIRetc
+     C                   PARM                    IRUSER                                     MD060683
 
       * Set up the names of the message files from which the
       * message handler will get the messages

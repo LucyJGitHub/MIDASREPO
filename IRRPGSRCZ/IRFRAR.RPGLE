@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD029818           Date 03Dec14               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -207,6 +210,10 @@
                                                                                               CSW213
      D PRtCd           S              7                                                       CSW213
      D CSW213          S              1                                                       CSW213
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
 
@@ -220,6 +227,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
+     C                   PARM                    IRUSER                                     MD060683
 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
@@ -444,6 +452,8 @@
      C                   PARM                    SBRCA             3
       *  Switchable feature CIR008
      C                   PARM                    CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       * OUTPUTS
       * (Current) deal in file format

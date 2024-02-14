@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CIR020             Date 05Aug21               *
-      *  Prev Amend No. CDL102             Date 01Jun21               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. CIR020             Date 05Aug21               *
+      *                 CDL102             Date 01Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -91,6 +92,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CIR020 - LIBOR Deregulation - FRA/IRS                        *
       *  CDL102 - LIBOR Deregulation - Dealing (Recompile)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -421,6 +424,9 @@
      D Z#BSTS        E DS                  EXTNAME(Z#BST)                                    BUG8094
      D Z#ASTS        E DS                  EXTNAME(Z#AST)                                    BUG8094
                                                                                              BUG8094
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -654,6 +660,8 @@
                                                                                               CIR008
       ** FRA/IRS Deals Authorisation                                                          CIR008
      C                   PARM                    CIR008                                       CIR008
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
       *                                                                         CAP006
       * OUTPUTS                                                                 CAP006
       *                                                                         CAP006
@@ -1975,6 +1983,7 @@
      C                   PARM                    IRVFRA
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CAP056                                       CAP056
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CAP056
      C     *LIKE         DEFINE    BQFIRA        WkFIRA                                       CAP056
      C     *LIKE         DEFINE    BQFIAU        WkFIAU                                       CAP056

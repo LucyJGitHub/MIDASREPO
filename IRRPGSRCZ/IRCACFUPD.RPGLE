@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059863           Date 28Sep22               *
-      *  Prev Amend No. MD060069           Date 11Aug22               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. MD059863           Date 28Sep22               *
+      *                 MD060069           Date 11Aug22               *
       *                 MD059410           Date 21Dec21               *
       *                 MD059375           Date 20Dec21               *
       *                 CIR020             Date 02Aug21               *
@@ -84,6 +85,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  MD059863 - UDF field position in CIRS or SIRS message type.  *
       *           - Save Front Office ID for Amend mode.              *
       *  MD060069 - DLC0602 00001 failed trying to divide by zero     *
@@ -653,6 +656,10 @@
      D #0EINR          S             12A                                                    MD054095
      D OurTheirInd     S              1A                                                    MD054095
      D WkAACRT         S                   LIKE(AACRT)                                      MD059410
+      *                                                                                     MD060683
+      ** Current User                                                                       MD060683
+     D IRUSER          S             10A                                                    MD060683
+      *                                                                                     MD060683
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -688,13 +695,17 @@
 
       ** Check whether user is a web browser user, if so overwrite                           BUG1099
                                                                                              BUG1099
-     C                   CALL      'SFC000026'                                               BUG1099
-     C                   PARM      *BLANKS       USER             10                         BUG1099
+     C**********         CALL      'SFC000026'                                      BUG1099 MD060683
+     C**********         PARM      *BLANKS       USER             10                BUG1099 MD060683
                                                                                              BUG1099
-     C                   IF        USER <> *BLANKS                                           BUG1099
-     C                   EVAL      PSUSER = USER                                             BUG1099
-     C                   ENDIF                                                               BUG1099
+     C**********         IF        USER <> *BLANKS                                  BUG1099 MD060683
+     C**********         EVAL      PSUSER = USER                                    BUG1099 MD060683
+     C**********         ENDIF                                                      BUG1099 MD060683
                                                                                              BUG1099
+     C                   IF        IRUSER <> *BLANKS                                        MD060683
+     C                   EVAL      PSUSER = IRUSER                                          MD060683
+     C                   ENDIF                                                              MD060683
+                                                                                            MD060683
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program
 
@@ -939,6 +950,9 @@
       ** FRA/IRS Deals Authorisation                                                          CIR008
                                                                                               CIR008
      C                   PARM                    CIR008                                       CIR008
+                                                                                            MD060683
+      ** Current User                                                                       MD060683
+     C                   PARM                    IRUSER                                     MD060683
 
       ** Outputs:
       ** (Current) deal in file format
@@ -3721,6 +3735,7 @@
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CAP056                                       CAP056
      C                   PARM                    #0EINR                                     MD054095
+     C                   PARM                    IRUSER                                     MD060683
 
      C     *LIKE         DEFINE    UEINR         WkUEINR
      C     *LIKE         DEFINE    TEINR         WkTEINR

@@ -24,8 +24,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD060298           Date 15Aug22               *
-      *  Prev Amend No. MD036225           Date 22May20               *
+      *  Last Amend No. MD060992           Date 25Jan24               *      
+      *  Prev Amend No. MD060298           Date 15Aug22               *
+      *                 MD036225           Date 22May20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060992 - Cannot amend an MM Deal due to a blocking error   *
+      *             message in Value Date.                            *      
       *  MD060298 - Amendment of deal is blocked due to error 45034067*
       *           - Fix is to condition the validation of value date  *
       *             against back value period in checking first if    *
@@ -387,6 +390,7 @@
      C                   MOVE      A7ACCD        P@ACCD                                     MD036225
      C                   Z-ADD     A7ACSN        W@ACSQ                                     MD036225
      C                   MOVE      A7BRCD        P@BRCA                                     MD036225
+     C                   MOVE      *BLANKS       P@RETL                                     MD060992
       *                                                                                     MD036225
      C                   EXSR      SRACCT                                                   MD036225
       *                                                                                     MD036225
@@ -540,8 +544,13 @@
      C     @VDYNO        ANDLT     BVDYNO                                                   MD036225
      C     RETACC        OREQ      'N'                                                      MD036225
      C     @VDYNO        ANDLT     BVDYNO                                                   MD036225
+     C     PMPONS        ANDNE     *BLANKS                                                  MD060992
+     C     RETACC        OREQ      'N'                                                      MD060992
+     C     @VDYNO        ANDLT     BVDYNO                                                   MD060992
+     C     PMRONS        ANDNE     *BLANKS                                                  MD060992
      C                   EVAL      WarnFound  = 'Y'                                         MD036225
-     C                   MOVEL     'MMM2626'     WMSGid1                                    MD036225
+     C**********         MOVEL     'MMM2626'     WMSGid1                           MD036225 MD060992
+     C                   MOVEL     '5049573'     WMSGid1                                    MD060992
      C                   ENDIF                                                              MD036225
      C                   ENDIF                                                              MD060298
      C*

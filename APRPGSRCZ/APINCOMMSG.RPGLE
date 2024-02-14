@@ -137,7 +137,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
-      *           - Applied for MD-62261                             *
+      *           - Applied for MD-62261                              *
       *  MD058203 - Remove MD041126 completely.                       *
       *  MD039032 - Modified fix 251029 to include checking of the    *
       *             Front Office ID to make sure that new transactions*

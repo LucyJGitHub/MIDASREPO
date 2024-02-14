@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /**** *  RPGBASEBND                                                   *                     MD056612
-/*STD *  RPGSQLBND                                                    *                     MD056612
+/*S*D ***RPGSQLBND*****************************************************            MD056612 MD041126
+/*STD *  RPGSQLMOD                                                    *                     MD041126
 /*EXI *  TEXT('Midas TI Update MX Files for Trade Finance')           *
       *****************************************************************
       *                                                               *
@@ -12,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041126           Date 31Jan24               *      
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031372           Date 21Nov14               *
       *                 MD031150           Date 29Oct14               *
       *                 MD030926           Date 08Oct14               *
@@ -21,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-62261.                             *      
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031372 - Changes in Account Types export. New format       *
@@ -86,12 +90,14 @@
       ** Declare MQI structures needed
       ** MQI Constants
 
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
 
       ** Object Descriptor
 
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
 
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
@@ -167,13 +173,18 @@
      D ErrMsgId        S              7A
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
      D QManagerUC      S             48A
-     D CID             S              9P 0
+     D***CID****         S              9P 0                                                MD041126
      D QMNAME          S             48A
-     D HCONN           S              9P 0
-     D OCODE           S              9P 0
-     D REASON          S              9P 0
-     D OPTS            S              9P 0
-     D HIN             S              9P 0
+     D***HCONN**         S              9P 0                                                MD041126
+     D***OCODE**         S              9P 0                                                MD041126
+     D***REASON*         S              9P 0                                                MD041126
+     D***OPTS***         S              9P 0                                                MD041126
+     D***HIN****         S              9P 0                                                MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
      D wMQManager      S             48A
      D @RUN            S              1A
 
@@ -283,12 +294,19 @@
       *
       **  Attempt to CONNECT to the MQ Manager
       *
-     C                   CALL      'QMQM'
-     C                   PARM      MQCONN        CID
-     C                   PARM      wMQManager    QMNAME
-     C                   PARM      *ZERO         HCONN
-     C                   PARM      *ZERO         OCODE
-     C                   PARM      *ZERO         REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQCONN        CID                                        MD041126
+     C**********         PARM      wMQManager    QMNAME                                     MD041126
+     C**********         PARM      *ZERO         HCONN                                      MD041126
+     C**********         PARM      *ZERO         OCODE                                      MD041126
+     C**********         PARM      *ZERO         REASON                                     MD041126
+                                                                                            MD041126
+     C                   EVAL      QMNAME = wMQManager                                      MD041126
+     C                   Z-ADD     *ZERO         HCONN                                      MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMNAME : HCONN :                                 MD041126
+     C                                     OCODE : REASON )                                 MD041126
       *
       ** Error processing
       *
@@ -307,14 +325,17 @@
      C                   EVAL      OPTS = OOOUT + OOFIQ
      C     LoCase:UpCase XLATE     MQUEUE        ODON
       *
-     C                   CALL      'QMQM'
-     C                   PARM      MQOPEN        CID
-     C                   PARM                    HCONN
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS
-     C                   PARM                    HIN
-     C                   PARM                    OCODE
-     C                   PARM                    REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQOPEN        CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS                                       MD041126
+     C**********         PARM                    HIN                                        MD041126
+     C**********         PARM                    OCODE                                      MD041126
+     C**********         PARM                    REASON                                     MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
       *
       ** Error processing
       *
@@ -335,11 +356,15 @@
       *
       **  Disconnect from the MQ Manager
       *
-     C                   CALL      'QMQM'
-     C                   PARM      MQDISC        CID
-     C                   PARM                    HCONN
-     C                   PARM      *ZERO         OCODE
-     C                   PARM      *ZERO         REASON
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM      MQDISC        CID                                        MD041126
+     C**********         PARM                    HCONN                                      MD041126
+     C**********         PARM      *ZERO         OCODE                                      MD041126
+     C**********         PARM      *ZERO         REASON                                     MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
      C                   ENDIF
       *
      C                   ENDSR

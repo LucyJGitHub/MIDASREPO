@@ -21,11 +21,14 @@
       *                                                               *
       *  (c) Finantia International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD058656           Date 23Aug21               *
-      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD041126           Date 31Jan24               *
+      *  Prev Amend No. MD058656           Date 23Aug21               *
+      *                 BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-62261. (Recompile)                 *
       *  MD058656 - Compilation Issue                                 *
       *           - Added OVRDBF TRADSDT in the creation parameter    *
       *  BA1008 - Replication of Trades to consolidated branches      *

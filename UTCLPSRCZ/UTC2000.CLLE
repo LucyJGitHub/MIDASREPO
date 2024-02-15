@@ -14,10 +14,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2024                     */
 /*                                                                   */
-/*       Last Amend No. MD061981 *CREATE   Date 15Jan24              */
+/*       Last Amend No. MD062318           Date 14Feb24              */
+/*       Prev Amend No. MD061981 *CREATE   Date 15Jan24              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062318 - Library list for SHDINTJOBD was not updated      */
+/*                - If JOBD is not found in the XLIB library, proceed*/
+/*                  to read the next JOBD without reporting the      */
+/*                  missing object.                                  */
 /*       MD061981 - 24x7 - Library List Changes                      */
 /*                                                                   */
 /*********************************************************************/
@@ -303,10 +308,12 @@ CHGJOBDS:
 
              RTVJOBD    JOBD(&XLIB/&DFNAME) INLLIBL(&JOBDLIBL)
              MONMSG     MSGID(CPF9801) EXEC(DO)
+                                                                                        /*MD062318*/
+             GOTO       CMDLBL(CHGJOBDS)                                                /*MD062318*/
 /*                                                               */
 /** Call program to produce report UP008010P1 for error message. */
 /** CPF9801 - Object &2 in library &3 not found.                 */
-
+ 
              CHGVAR     VAR(&ERRORMSG)   VALUE('Job description ' *CAT &DFNAME *TCAT +
                         ' not found in library ' *CAT &XLIB *TCAT '.')
              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)

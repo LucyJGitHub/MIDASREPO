@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD062251           Date 06Feb24               *
+      *  Prev Amend No. 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR1088283          Date 20Mar13               *
       *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
@@ -166,6 +167,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD062251 - Next Statement Date of the account is set to L    *
+      *             (Last Calendar Day of the Month) but statement    *
+      *             was generated on the last working day of the month*
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -2998,6 +3002,37 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CCP8                                           S01408
      C*                                                                   S01408
+     C                   MOVE      *BLANKS       EVTDAT            7                        MD062251
+     C                   Z-ADD     BJRDNB        CTRDATE           5 0                      MD062251
+     C                   EVAL      EVTDAT = RUNA                                            MD062251
+      *                                                                                     MD062251
+     C                   IF        STFQ = 'L'                                               MD062251
+      *                                                                                     MD062251
+      ** Get Event Control Date                                                             MD062251
+      ** For Accrual for Non-working Days Processing Types 0 and 1,                         MD062251
+      ** Event Control Date is BJDNWD - 1.                                                  MD062251
+      *                                                                                     MD062251
+     C                   Z-ADD     *ZEROS        CTRDATE                                    MD062251
+     C     BJDNWD        SUB       1             CTRDATE                                    MD062251
+     C*                                                                                     MD062251
+      ** If Accrual for Non-working days indicator is equal 2, then                         MD062251
+      ** if the Accrual/Profit Date is less than or equal to Date of                        MD062251
+      ** Next Working Day minus 1, the Event Control Date should be                         MD062251
+      ** the Accrual/Profit Date.  Otherwise, it should be Rundate.                         MD062251
+      *                                                                                     MD062251
+     C     BKANWD        IFEQ      '2'                                                      MD062251
+     C     BKAPDT        IFLE      CTRDATE                                                  MD062251
+     C                   Z-ADD     BKAPDT        CTRDATE                                    MD062251
+     C                   ELSE                                                               MD062251
+     C                   Z-ADD     BJRDNB        CTRDATE                                    MD062251
+     C                   ENDIF                                                              MD062251
+     C                   ENDIF                                                              MD062251
+      *                                                                                     MD062251
+     C                   Z-ADD     CTRDATE       ZDAYNO                                     MD062251
+     C                   EXSR      ZDATE2                                                   MD062251
+     C                   EVAL      EVTDAT = ZADATE                                          MD062251
+     C                   ENDIF                                                              MD062251
+      *                                                                                     MD062251
      C                   EXCEPT
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CCP9                                           S01408
@@ -3448,6 +3483,13 @@
      C     PSTD          ANDGE     LSTD                                                       E16854
      C                   SETOFF                                       39                      E16854
      C                   END                                                                  E16854
+      *                                                                                     MD062251
+      ** When printing the statement, check the transation Posting Date                     MD062251
+      ** against the Event Control Date                                                     MD062251
+      *                                                                                     MD062251
+     C     PSTD          IFGT      CTRDATE                                                  MD062251
+     C                   SETON                                        39                    MD062251
+     C                   ENDIF                                                              MD062251
 0622 C*                                                                   S01091
 0641 C*    TEST STATEMENT FREQUENCY AND POSTING DATE                      S01091
 0643 C     STFQ          COMP      'A'                                    55                  S01091
@@ -5867,7 +5909,8 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 1652 O                       CCNM                65
      O/COPY WNCPYSRC,GL0420O128
 1653 O                                           77 'DATE'
-1654 O                       RUNA                87
+     O**********             RUNA                87                                         MD062251
+1654 O                       EVTDAT              87                                         MD062251
      O/COPY WNCPYSRC,GL0420O129
 1655 O                                          102 'PAGE'
      O/COPY WNCPYSRC,GL0420OY63                                           S01408
@@ -8216,7 +8259,8 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 2361 O*                        GLBT     118                               S01091
 2353 OACCNT     E            ACUPD                                              S01091
 2354 O***********      59      RUND      77P                       S01091 055721
-     O               59N33   RUND                77P                            055721
+     O**********     59N33   RUND                77P                                 055721 MD062251
+     O               59N33   CTRDATE             77P                                        MD062251
      O***********      33 59   LSTD      77P                    S01091    S01161
      O***********      33 59   LSTD      77P                       E18546 055721
 2355 O               59   N35NSTDA               80P                            S01091

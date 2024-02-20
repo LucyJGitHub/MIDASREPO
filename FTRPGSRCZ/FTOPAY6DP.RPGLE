@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD062137           Date 20Feb24               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027047           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
@@ -37,6 +38,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD062137 - Feature CFT018 not working. Removed fix MD027047  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -237,7 +239,8 @@
       *
       **  Return to calling program
      C**********         Return                                                             MD027047
-     C                   SETON                                        LR                    MD027047
+     C**********         SETON                                        LR           MD027047 MD062137
+     C                   RETURN                                                             MD062137
       *
       /EJECT
       *****************************************************************

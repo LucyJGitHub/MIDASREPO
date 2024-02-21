@@ -167,9 +167,11 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
-      *  MD062251 - Next Statement Date of the account is set to L    *
+      *  MD062251 - Statement Frequency of the account is set to L    *
       *             (Last Calendar Day of the Month) but statement    *
-      *             was generated on the last working day of the month*
+      *             was generated on the last working day of the      *
+      *             month. Ensure Last Calendar Day is considered for *
+      *             frequency L.                                      *
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *

@@ -42,6 +42,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD059917 - Change target release to V7R3M0.                  *
+      *             Apply for MD-61658                                *
       *             Apply for MD062268.                               *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *

@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR954640           Date 23Apr12              */
-/*       Prev Amend No. CSD102             Date 08Jan19              */
+/*       Last Amend No. MD060683           Date 06Feb24              */
+/*       Prev Amend No. AR954640           Date 23Apr12              */
+/*                      CSD102             Date 08Jan19              */
 /*                      MD024398           Date 16Jul18              */
 /*                      CLE168             Date 26Feb18              */
 /*                      MD046248           Date 27Oct17              */
@@ -44,6 +45,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD060683 - Unable to Authorize newly inserted Single        */
+/*                  Currency IRS deal                                */
 /*       AR954640 - REC24 fails during close of business. If the     */
 /*                  current job name is REC24 end the program.       */
 /*                  (Child: AR954641)                                */
@@ -155,6 +158,7 @@
              DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)
 /**********  DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)          */            /*AR971184 CSD102*/
              DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                                 /*CSD102*/
+             DCL        VAR(&IRUSER) TYPE(*CHAR) LEN(10)                                /*MD060683*/
 
 /* Parameters for call to AOMENUR1                                   */
              DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
@@ -173,6 +177,7 @@
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
 
              CHGVAR     VAR(&INUSER) VALUE(&INUSER1)                                      /*239551*/
+             CHGVAR     VAR(&IRUSER) VALUE(&INUSER1)                                    /*MD060683*/
              IF         COND(&TRANSTYPE = 'HELP') THEN(GOTO +
                           CMDLBL(HELP))                                                   /*CSC021*/
                                                                                         /*MD024398*/
@@ -462,11 +467,17 @@ FlagBypass:                                                                     
                           &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
                           &BUFFER9  +
                           &MSGARR &APIRETC)                              */              /*BUG4646*/
+/**********  CALL       PGM(&PROGRAM) PARM(&TRANSTYPE &PARM &BUFFER +
+                          &BUFFER2 &BUFFER3 &BUFFER4 +
+                          &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
+                          &BUFFER9  +
+                          &MSGARR &APIRETC &APHEAD)                 */ /*BUG4646 AR971184 MD060683*/
+                                                                                        /*MD060683*/
              CALL       PGM(&PROGRAM) PARM(&TRANSTYPE &PARM &BUFFER +
                           &BUFFER2 &BUFFER3 &BUFFER4 +
                           &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
                           &BUFFER9  +
-                          &MSGARR &APIRETC &APHEAD)                             /*BUG4646 AR971184*/
+                          &MSGARR &APIRETC &APHEAD &IRUSER)                             /*MD060683*/
 
 /* Go to the end of the program */
              GOTO       CMDLBL(ENDPGM)

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060936           Date 26Jan24               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP212             Date 15Sep14               *
       *                 CGP017             Date 06Aug12               *
       *                 CER049             Date 06Dec10               *
@@ -27,6 +28,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060936 - BFMM - issue re incoming payment missing          *
+      *             from the incoming payment queue.                  *
+      *           - add SETON LR before returning to calling program. *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
@@ -151,6 +155,7 @@
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
  
+     C                   SETON                                        LR                    MD060936
      C                   RETURN
  
       /SPACE 5

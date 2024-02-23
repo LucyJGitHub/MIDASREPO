@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT167             Date 17Oct23               *
-      *  Prev Amend No  263630             Date 13Sep23               *
+      *  Last Amend No. MD060683           Date 06Feb24               *
+      *  Prev Amend No. CFT167             Date 17Oct23               *
+      *                 263630             Date 13Sep23               *
       *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
@@ -241,6 +242,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060683 - Unable to Authorize newly inserted Single         *
+      *             Currency IRS deal                                 *
       *  CFT167 - Remove FT Payment Authorisation function            *
       *  263630 -  Error in DEAMS for the new MQ API's processing.    *
       *            Amended so that system can get the associated      *
@@ -868,6 +871,7 @@
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
+     D IRUSER          S             10                                                     MD060683
       ** LIBOR Fields for Base Rate Maintenance                                               CSD103
      D LiborBSRTfld    DS            49                                                       CSD103
       ** DS/variables to split up incoming parameter
@@ -1207,6 +1211,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    MsgArrOUT
      C                   PARM                    APIRetC
      C                   PARM                    ApHead                                     AR971184
+     C                   PARM                    IRUSER                                     MD060683
       *
       * Extract entry parameters
      C                   Eval      APParm = Parm
@@ -3259,6 +3264,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    @TLNU                                       BUG4469
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'IRFRAUPD'                                        CRE020
@@ -3363,6 +3369,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    BufferEx8                                   BUG5449
      C                   PARM                    BufferEx9                                   BUG5449
      C                   PARM                    APIRetc
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'IRCIRSUPD'                                       CRE020
@@ -4069,6 +4076,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer2                                     BUG5403
      C                   PARM                    BufferEx2                                   BUG5403
      C                   PARM                    APIRetc
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'IRCACFUPD'                                       CRE020
@@ -5301,6 +5309,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    BufferEx8                                   BUG4646
      C                   PARM                    BufferEx9                                   BUG4646
      C                   PARM                    APIRetc
+     C                   PARM                    IRUSER                                     MD060683
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'IRSIRSUPD'                                       CRE020

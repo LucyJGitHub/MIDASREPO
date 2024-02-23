@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD060936           Date 26Jan24               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
@@ -51,6 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060936 - BFMM - issue re incoming payment missing          *
+      *             from the incoming payment queue.                  *
+      *           - add SETON LR before returning to calling program. *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -208,6 +212,7 @@
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
  
+     C                   SETON                                        LR                    MD060936
      C                   RETURN
  
       /SPACE 5

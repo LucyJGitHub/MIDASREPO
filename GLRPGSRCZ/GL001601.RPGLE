@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD061979           Date 18Oct23               *
-      *  Prev Amend No. MD057760           Date 01Apr21               *
+      *  Last Amend No. MD062270           Date 21Feb24               *
+      *  Prev Amend No. MD061979           Date 18Oct23               *
+      *                 MD057760           Date 01Apr21               *
       *                 MD056838           Date 01Oct20               *
       *                 AR1095148          Date 07May18               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062270 - Batch header and details timestamp is incorrect.  *
+      *             Set the correct timestamp to the date and time    *
+      *             the batch is inserted.                            *
       *  MD061979 - When batch is created from Payplus it did not     *
       *             update GLBTNOPD. Update GLBTNOPD once batch is    *
       *             created. Patterned fix MD-52962                   *
@@ -294,6 +298,8 @@
      D W_SavCcy        S                   Like(G_BsCyCd)                                  AR1095148
      D W_TotDrAmt      S                   Like(G_BsDbTt)                                  AR1095148
      D W_TotCrAmt      S                   Like(G_BsCrTt)                                  AR1095148
+     D TimeStamp       S               Z                                                    MD062270
+     D W#TMST          S                   Like(TimeStamp)                                  MD062270
 
       ** Externally described DS for SAR details                                            BUG25187
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG25187
@@ -689,7 +695,8 @@
      C                   EVAL      G_BRUSRA = *BLANKS
      C                   EVAL      G_BRFRNT = *BLANKS
      C                   EVAL      G_BRAFRT = *BLANKS
-     C                   EVAL      G_BRTMST = *LOVAL
+     C**********         EVAL      G_BRTMST = *LOVAL                                        MD062270
+     C                   EVAL      G_BRTMST = W#TMST                                        MD062270
      C**********         EVAL      G_BRBHAI = *BLANKS                                       BUG23669
      C                   EVAL      G_BRBHAI = BRBTSF                                        BUG23669
      C                   EVAL      G_BRACCF = *BLANKS
@@ -1013,6 +1020,9 @@
      C                   MOVEL     'Y'           CGL016                                     BUG25187
      C                   ENDIF                                                              BUG25187
                                                                                             BUG25187
+      * Set TimeStamp                                                                       MD062270
+     C                   CALLB     'ZAGENTMSTM'                                             MD062270
+     C                   PARM      TimeStamp     W#TMST                                     MD062270
      C                   ENDSR
       *****************************************************************
       /EJECT

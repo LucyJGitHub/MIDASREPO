@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. BA6045             Date 09Jan23               *
-      *  Prev Amend No. MD057739           Date 28Apr22               *
+      *  Last Amemd No. MD062242           Date 16Feb24               *
+      *  Prev Amend No. BA6045             Date 09Jan23               *
+      *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
       *                 MD058991           Date 06Oct21               *
@@ -240,6 +241,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062242 - NY: Security Definitions API not supporting Auto  *
+      *             Authorisation.                                    *
+      *           - Added new AUTH parameter on SESECSVU.             *
       *  BA6045 - Collateral API Changes                              *
       *  MD057739 - Settlement parameter mismatch. Reorganize new     *
       *             field buffers.                                    *
@@ -3378,6 +3382,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       SECSFLn       Bfp                                         BUG5988
      C     SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       SEEXLn        Bfp                                        MD044880
+     C     1             SUBST     BUFFER:Bfp    AAuth                                      MD062242
+     C                   ADD       1             Bfp                                        MD062242
      C     SERXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       SERXLn        Bfp                                          CER001
      C*****SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
@@ -3408,6 +3414,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG1569
+     C                   PARM                    AAuth                                      MD062242
 
       * SE Trade
 

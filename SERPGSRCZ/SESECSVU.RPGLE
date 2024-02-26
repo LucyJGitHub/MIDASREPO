@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MDSC38665          Date 21Jul22               *
-      *  Prev Amend No. MD058285           Date 22Jun21               *
+      *  Last Amend No. MD062242           Date 16Feb24               *
+      *  Prev Amend No. MDSC38665          Date 21Jul22               *
+      *                 MD058285           Date 22Jun21               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD044880           Date 15Jan18               *
@@ -78,6 +79,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062242 - NY: Security Definitions API not supporting Auto  *
+      *             Authorisation.                                    *
+      *           - Added new AUTH parameter.                         *
       *  MDSC38665 - Make Issue Date a Mandatory input field for all  *
       *              complete securities (re-design of GEMS250592).   *
       *  MD058285 - Change base rate code to alphanumeric (Recompile) *
@@ -1907,6 +1911,7 @@
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG1569
+     C                   PARM                    AAuth             1                        MD062210
      C/COPY WNCPYSRC,SESECSJC02                                                               LLN022
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN012                                      LLN022A

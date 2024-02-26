@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055649           Date 21Mar23               *
-      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *  Last Amemd No. MD062242           Date 16Feb24               *
+      *  Prev Amend No. MD055649           Date 21Mar23               *
+      *                 MD060683           Date 15Feb23               *
       *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
@@ -241,6 +242,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062242 - NY: Security Definitions API not supporting Auto  *
+      *             Authorisation.                                    *
+      *           - Added new AUTH parameter on SESECSVU.             *
       *  MD055649 - Authorised corrective batch was not copied to     *
       *             PEA system. Introduced New Field BPAUTH           *
       *  MD060683 - Unable to Authorize newly inserted Single         *
@@ -3385,6 +3389,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       SECSFLn       Bfp                                         BUG5988
      C     SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       SEEXLn        Bfp                                        MD044880
+     C     1             SUBST     BUFFER:Bfp    AAuth                                      MD062242
+     C                   ADD       1             Bfp                                        MD062242
      C     SERXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       SERXLn        Bfp                                          CER001
      C*****SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
@@ -3415,6 +3421,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG1569
+     C                   PARM                    AAuth                                      MD062242
 
       * SE Trade
 

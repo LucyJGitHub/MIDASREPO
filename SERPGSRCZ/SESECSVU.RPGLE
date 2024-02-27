@@ -1915,7 +1915,7 @@
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG1569
-     C                   PARM                    AAuth             1                        MD062210
+     C                   PARM                    AAuth             1                        MD062242
      C/COPY WNCPYSRC,SESECSJC02                                                               LLN022
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN012                                      LLN022A

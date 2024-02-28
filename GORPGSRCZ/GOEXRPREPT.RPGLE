@@ -14,9 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062124           Date 27Feb24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSD086             Date 18Mar10               *
+      *                 CSD086             Date 18Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062124 - GOEXRP1 report has no header on first page when   *
+      *             exception record module is Standing Data.         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD086 - Overridable Errors                                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -82,7 +85,7 @@
      D ZSnum           S              6  0
      D*ZSnumU******    S              6  0                                                    BG4543
      D ZSerr           S              1
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
       *
@@ -169,6 +172,9 @@
       *
       ** Initialise Saved Branch field
      C                   MOVEL     *BLANKS       SVBRCA            3
+      *                                                                                     MD062124
+      ** Initialise Saved Module field                                                      MD062124
+     C                   MOVEL     *BLANKS       SVMOD             2                        MD062124
       *
       ** Define data areas
       *
@@ -232,7 +238,7 @@
       *
      C                   EXSR      REPORT
       *
- 
+
      C                   READ      GOEXKSPD                               10
      C                   ENDDO
       *
@@ -299,6 +305,8 @@
       *
      C     DIFLN1        IFLE      RQDLN1
      C     KSBRCA        ORNE      SVBRCA
+     C     KSBRCA        OREQ      *BLANK                                                   MD062124
+     C     KSMOD         ANDNE     SVMOD                                                    MD062124
      C                   WRITE     HEADER1
      C                   WRITE     DETAIL1
      C                   ELSE
@@ -314,6 +322,7 @@
      C                   MOVEL     'Y'           DET               1
      C                   MOVEL     KSBRCA        SVBRCA
      C                   MOVEL     KSTREF        SVTREF           50
+     C                   MOVEL     KSMOD         SVMOD                                      MD062124
      C                   ENDSR
       *
       /EJECT
@@ -337,13 +346,13 @@
       *                                                               *
       *****************************************************************
      C     SrRcfP1       BEGSR
- 
+
      C                   OPEN      GOEXRP1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = PSFNum1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C***********        PARM                    SEnty                                        BG4543
@@ -351,14 +360,14 @@
      C                   PARM                    PSFile1
      C                   PARM                    ZSnum
      C                   PARM      *BLANKS       ZSErr
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

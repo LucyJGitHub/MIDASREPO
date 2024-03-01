@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD032119           Date 19Jul22               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD032119           Date 19Jul22               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041709           Date 28Sep16               *
       *                 MD030151           Date 05Sep14               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD032119 - Wrong validation if birthdate is earlier than 1972*
       *             Use E5DBTH instead of E5BRTH.                     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
@@ -82,13 +85,13 @@
       ** ¦ F-specs                              ¦                     *
       ** ¦ =======                              ¦                     *
       ** +--------------------------------------+                     *
- 
+
       ** Midas SD FATCA Customer Details retrieval index
      FSDFTCSL1  IF   E           K DISK
- 
+
       ** Customer Details Master File Retrieval
      FSDCUSTL1  IF   E           K DISK
- 
+
       ** Midas SD Customer Details Ext C - Keyed                                            MD025161
      FSDCUSXL0  IF   E           K DISK                                                     MD025161
                                                                                             MD025161
@@ -100,15 +103,15 @@
      F                                     OFLIND(*IN05)
      F                                     USROPN
      F                                     INFDS(SPOOL)
- 
+
       ** RPT: FATCA Customer details report audit.
      FSD000716AUO    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOLU)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -119,84 +122,84 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D ARMNT           S              3    DIM(12) CTDATA PERRCD(12)                        MD032119
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Aacces Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Bank Details Accessed via Access Program
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Midas FATCA Classification Code
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
- 
+
       ** SPOOL Information Data Structure for ZSFILE
      D SPOOL           DS
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
      D  OflLn1               188    189B 0
      D  PrtLn1               367    368B 0
- 
+
       ** SPOOL Information Data Structure for AU
      D SPOOLU          DS
- 
+
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
      D WCOMM           DS
      D  WCOM1                  1     64
      D  WCOM2                 65    128
      D  WCOM3                129    192
      D  WCOM4                193    256
- 
+
      D WDTMST          DS
      D  WWMn                   1      2
      D  WWDy                   3      4
      D  WWYr                   5      6
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRUN            S              1
      D DRUND           S              5  0
      D SENTY           S              3
@@ -208,29 +211,29 @@
      D @PFTC           S              5
      D WReqLin         S              4P 0
      D WPrvCust        S              6    INZ(*BLANKS)                                     MD026607
- 
+
       ** ZSFILE Parameters
      D ZSERR           S              1
      D ZSNUM           S              6  0
      D KCUST           S              6
- 
+
       ** ZDATE2 Parameters
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
       ** PLIST Parameters
      D PMode           S              1
      D PSeq            S              5
      D PEnty           S              3
      D PIntyp          S              1
- 
+
       ** AOCTRY Parameters
      D PRTCD           S              7
      D POPTN           S              7
      D PDCCD           S              2
      D PCTRY           S              2
- 
+
      D BDAY            S              2                                                     MD032119
      D BMON            S              2                                                     MD032119
      D BMOND           S              2  0                                                  MD032119
@@ -242,30 +245,30 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Initial Processing
- 
+
      C                   EXSR      SRINIT
- 
+
       ** Main Processing
- 
+
      C                   EXSR      SRMAIN
- 
+
       ** Termination Processing
- 
+
      C                   EXSR      SRTERM
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -277,16 +280,16 @@
       * Called by: Main Routine                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMAIN        BEGSR
- 
+
       ** For customers
- 
+
      C                   EXSR      SRCUSTOMER
      C                   EVAL      *INLR = *ON
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -299,40 +302,40 @@
       * Calls: SRCUSTSET, SROPENP1                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUSTOMER    BEGSR
- 
+
       ** Do unit end of  SD FATCA Customer Details retrieval index.
- 
+
      C                   READ      SDFTCSL1                               14
      C     FACUST        SETLL     SDFTCSL1
      C                   DOW       NOT %EOF (SDFTCSL1)
- 
+
       ** Read through SD FATCA Customer Details retrieval index.
- 
+
      C                   READ      SDFTCSL1                               14
      C                   IF        NOT %EOF (SDFTCSL1)
      C                   EVAL      WCustCtr = WCustCtr + 1
- 
+
       ** Opens printer file once/on first customer reading including the header.
- 
+
      C                   IF        WCustCtr = 1
      C                   EXSR      SROPENP1
      C                   WRITE     SD0716R0
      C                   ENDIF
- 
+
      C                   EXSR      SRCUSTSET
      C                   ENDIF
- 
+
      C                   ENDDO
- 
- 
+
+
      ** Close Printer file if it is open and records have been printed.
- 
+
      C                   EXSR      SRCLOSEP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -344,9 +347,9 @@
       * Calls    : *PSSR, SROPENP1, SRBLANKS, SRDETAILS               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUSTSET     BEGSR
- 
+
      C     FACUST        CHAIN     SDCUSTL1                           16
      C                   IF        NOT %FOUND (SDCUSTL1)
      C                   EVAL      DBFILE = 'SDCUSTL1'
@@ -355,9 +358,9 @@
      C                   EVAL      DBKEY = FACUST                                           MD026653
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ***customer*no,*customer*shortname,*report*name,*report*town.****                     MD026653
- 
+
      C**********         EVAL      DDCUST = FACUST                                          MD026653
      C**********         EVAL      DDCSSN = BBCSSN                                          MD026653
      C**********         EVAL      DDCRNM = BBCRNM                                          MD026653
@@ -369,11 +372,11 @@
      C                   EVAL      DDCOLC = *BLANKS                                         MD025161
      C                   EVAL      DDCNCZ = BBCNCZ                                          MD025161
      C                   EVAL      DDCOLC = BBCOLC                                          MD025161
- 
+
      C                   ENDIF
- 
+
       ** Report in List or Audit Mode
- 
+
      C                   IF        (PMode = 'A' AND BBLCD = BJRDNB)
      C                             OR PMode = 'L' OR PMode = ' '
                                                                                             MD026653
@@ -383,18 +386,18 @@
      C                   EVAL      DDCSSN = BBCSSN                                          MD026653
      C                   EVAL      DDCRNM = BBCRNM                                          MD026653
      C                   EVAL      DDCRTN = BBCRTN                                          MD026653
- 
+
       ** Initiate fields to blanks before writing details.
- 
+
      C                   EXSR      SRBLANKS
- 
+
       ** Invoke records from database to fields.
- 
+
      C                   EXSR      SRDETAILS
- 
+
       ** Display Customer details and information.
       ** Print Header and customer details if overflow occurs.
- 
+
      C                   EVAL      WReqLin = 2
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                             or ( WPrvCust <> DDCUST                                  MD026607
@@ -403,98 +406,98 @@
      C                   ELSE
      C                   WRITE     SD0716R1
      C                   ENDIF
- 
+
      C                   EVAL      WReqLin = 4
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R2
- 
+
      C                   EVAL      WReqLin = 4
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R3
- 
+
      C                   EVAL      WReqLin = 4
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R4
- 
+
      C**********         EVAL      WReqLin = 4                                              MD025161
      C                   EVAL      WReqLin = 5                                              MD025161
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R5
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R6
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R7
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R8
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R9
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R10
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R11
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R12
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R13
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R14
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R15
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
      C                   ENDIF
      C                   WRITE     SD0716R16
- 
+
      C                   EVAL      WReqLin = 3
      C                   IF        PrtLn1 + WReqLin >= OflLn1
      C                   EXSR      SROVRFLOW
@@ -506,14 +509,14 @@
      C                   EXSR      SROVRFLOW                                                MD026607
      C                   ENDIF                                                              MD026607
      C                   WRITE     SD0716R19                                                MD026607
- 
+
      C                   EVAL      WCustCnt = WCustCnt + 1
      C                   EVAL      WPrvCust = DDCUST                                        MD026607
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -525,16 +528,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SROVRFLOW     BEGSR
       *
       ** Prints title and customer details
       *
      C                   WRITE     SD0716R0
      C                   WRITE     SD0716R1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *****************************************************************
       /EJECT
@@ -547,15 +550,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SROPENP1      BEGSR
- 
+
       ** open printer file and indicate that there is atleast one
       ** detail to report; ensure report spool file recorded by RCF
- 
+
      C                   IF        NOT %OPEN (SD000716P1)
      C                   OPEN      SD000716P1
- 
+
      C                   Z-ADD     SFNUM         ZSNUM
      C                   CALL      'ZSFILE'
      C                   PARM                    PSEQ
@@ -563,9 +566,9 @@
      C                   PARM                    SFILE
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** error during ZSFILE processing, return to calling program
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
@@ -573,9 +576,9 @@
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -587,9 +590,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCLOSEP1     BEGSR
- 
+
      C                   IF        %OPEN (SD000716P1)
      C                   EVAL      WReqLin = 2
      C                   IF        PrtLn1 + WReqLin >= OflLn1
@@ -599,9 +602,9 @@
      C                   WRITE     SD0716R18
      C                   CLOSE     SD000716P1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -613,7 +616,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRBLANKS      BEGSR
                                                                                             MD026607
       ** US Indicia of Authority Holder Details                                             MD026607
@@ -628,9 +631,9 @@
      C                   EVAL      DDAUON = *BLANKS                                         MD026607
      C                   EVAL      DDAUC1 = *BLANKS                                         MD026607
      C                   EVAL      DDAUC2 = *BLANKS                                         MD026607
- 
+
       ** US Indicia of US Hold Mail details
- 
+
      C                   EVAL      DDHMSV = *BLANKS
      C                   EVAL      DDHMOV = *BLANKS
      C                   EVAL      DDHMD1 = *BLANKS
@@ -641,9 +644,9 @@
      C                   EVAL      DDHMON = *BLANKS
      C                   EVAL      DDHMC1 = *BLANKS
      C                   EVAL      DDHMC2 = *BLANKS
- 
+
       ** US Indicia of Mailing Country details
- 
+
      C                   EVAL      DDMCSV = *BLANKS
      C                   EVAL      DDMCOV = *BLANKS
      C                   EVAL      DDMCD1 = *BLANKS
@@ -654,9 +657,9 @@
      C                   EVAL      DDMCON = *BLANKS
      C                   EVAL      DDMCC1 = *BLANKS
      C                   EVAL      DDMCC2 = *BLANKS
- 
+
       ** US Indicia of Regular Payment Ins. to US details
- 
+
      C                   EVAL      DDRPSV = *BLANKS
      C                   EVAL      DDRPOV = *BLANKS
      C                   EVAL      DDRPD1 = *BLANKS
@@ -667,9 +670,9 @@
      C                   EVAL      DDRPON = *BLANKS
      C                   EVAL      DDRPC1 = *BLANKS
      C                   EVAL      DDRPC2 = *BLANKS
- 
+
       ** US Indicia of Citizenship details
- 
+
      C                   EVAL      DDCISV = *BLANKS
      C                   EVAL      DDCIOV = *BLANKS
      C                   EVAL      DDCID1 = *BLANKS
@@ -680,9 +683,9 @@
      C                   EVAL      DDCION = *BLANKS
      C                   EVAL      DDCIC1 = *BLANKS
      C                   EVAL      DDCIC2 = *BLANKS
- 
+
       ** US Indicia of US Country of Birth details
- 
+
      C                   EVAL      DDCBSV = *BLANKS
      C                   EVAL      DDCBOV = *BLANKS
      C                   EVAL      DDCBD1 = *BLANKS
@@ -693,9 +696,9 @@
      C                   EVAL      DDCBON = *BLANKS
      C                   EVAL      DDCBC1 = *BLANKS
      C                   EVAL      DDCBC2 = *BLANKS
- 
+
       ** US Indicia of US Country of Domicile details
- 
+
      C                   EVAL      DDCDSV = *BLANKS
      C                   EVAL      DDCDOV = *BLANKS
      C                   EVAL      DDCDD1 = *BLANKS
@@ -706,9 +709,9 @@
      C                   EVAL      DDCDON = *BLANKS
      C                   EVAL      DDCDC1 = *BLANKS
      C                   EVAL      DDCDC2 = *BLANKS
- 
+
       ** US Indicia of US Green Card details
- 
+
      C                   EVAL      DDGCSV = *BLANKS
      C                   EVAL      DDGCOV = *BLANKS
      C                   EVAL      DDGCD1 = *BLANKS
@@ -719,9 +722,9 @@
      C                   EVAL      DDGCON = *BLANKS
      C                   EVAL      DDGCC1 = *BLANKS
      C                   EVAL      DDGCC2 = *BLANKS
- 
+
       ** US Indicia of Citizenship details
- 
+
      C                   EVAL      DDIDSV = *BLANKS
      C                   EVAL      DDIDOV = *BLANKS
      C                   EVAL      DDIDD1 = *BLANKS
@@ -732,9 +735,9 @@
      C                   EVAL      DDIDON = *BLANKS
      C                   EVAL      DDIDC1 = *BLANKS
      C                   EVAL      DDIDC2 = *BLANKS
- 
+
       ** US Indicia of US Joint Account Member details
- 
+
      C                   EVAL      DDJASV = *BLANKS
      C                   EVAL      DDJAOV = *BLANKS
      C                   EVAL      DDJAD1 = *BLANKS
@@ -745,9 +748,9 @@
      C                   EVAL      DDJAON = *BLANKS
      C                   EVAL      DDJAC1 = *BLANKS
      C                   EVAL      DDJAC2 = *BLANKS
- 
+
       ** US Indicia of US Telephone details
- 
+
      C                   EVAL      DDTESV = *BLANKS
      C                   EVAL      DDTEOV = *BLANKS
      C                   EVAL      DDTED1 = *BLANKS
@@ -758,9 +761,9 @@
      C                   EVAL      DDTEON = *BLANKS
      C                   EVAL      DDTEC1 = *BLANKS
      C                   EVAL      DDTEC2 = *BLANKS
- 
+
       ** US Indicia of US Tax Identification Number  details
- 
+
      C                   EVAL      DDTXSV = *BLANKS
      C                   EVAL      DDTXOV = *BLANKS
      C                   EVAL      DDTXD1 = *BLANKS
@@ -771,9 +774,9 @@
      C                   EVAL      DDTXON = *BLANKS
      C                   EVAL      DDTXC1 = *BLANKS
      C                   EVAL      DDTXC2 = *BLANKS
- 
+
       ** Other FATCA details.
- 
+
      C                   EVAL      DDCLAC = *BLANKS
      C                   EVAL      DDCLDS = *BLANKS
      C                   EVAL      DDPCLA = *BLANKS
@@ -807,9 +810,9 @@
      C                   EVAL      DDBRTH = *BLANKS                                         MD025161
      C                   EVAL      DDBTHT = *BLANKS                                         MD025161
      C                   EVAL      DDCBTH = *BLANKS                                         MD025161
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -821,7 +824,7 @@
       * Calls: SRZDate2                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDETAILS     BEGSR
                                                                                             MD026607
       ** US Indicia of Authority Holder Details                                             MD026607
@@ -854,9 +857,9 @@
      C                   MOVEL     FAAUOT        DDAUOM                                     MD026607
      C                   EVAL      DDAUC1 = FAAUCO                                          MD026607
      C                   EVALR     DDAUC2 = FAAUCO                                          MD026607
- 
+
       ** US Indicia of US Hold Mail details
- 
+
      C                   EVAL      DDHMSV = FAHMSV
      C                   EVAL      WTempDate = FAHMSD
      C                   EXSR      SRZDate2
@@ -875,23 +878,23 @@
      C                   EVAL      DDHMON = FAHMON
      C                   EVAL      WTempDate = FAHMOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDHMOD
      C                   ELSE
      C                   EVAL      DDHMOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAHMOT        DDHMOM
      C                   EVAL      DDHMC1 = FAHMCO
      C                   EVALR     DDHMC2 = FAHMCO
- 
+
       ** US Indicia of Mailing Country details
- 
+
      C                   EVAL      DDMCSV = FAMCSV
      C                   EVAL      WTempDate = FAMCSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDMCSD
      C                   ELSE
@@ -908,29 +911,29 @@
      C                   EVAL      DDMCON = FAMCON
      C                   EVAL      WTempDate = FAMCOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDMCOD
      C                   ELSE
      C                   EVAL      DDMCOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAMCOT        DDMCMM
      C                   EVAL      DDMCC1 = FAMCCO
      C                   EVALR     DDMCC2 = FAMCCO
- 
+
       ** US Indicia of Regular Payment Ins. to US details
- 
+
      C                   EVAL      DDRPSV = FARPSV
      C                   EVAL      WTempDate = FARPSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDRPSD
      C                   ELSE
      C                   EVAL      DDRPSD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FARPST        DDRPST
      C                   EVAL      DDRPOV = FARPOV
      C                   EVAL      DDRPD1 = FARPD1
@@ -941,29 +944,29 @@
      C                   EVAL      DDRPON = FARPON
      C                   EVAL      WTempDate = FARPOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDRPOD
      C                   ELSE
      C                   EVAL      DDRPOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FARPOT        DDRPOM
      C                   EVAL      DDRPC1 = FARPCO
      C                   EVALR     DDRPC2 = FARPCO
- 
+
       ** US Indicia of Citizenship details
- 
+
      C                   EVAL      DDCISV = FACISV
      C                   EVAL      WTempDate = FACISD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCISD
      C                   ELSE
      C                   EVAL      DDCISD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACIST        DDCIST
      C                   EVAL      DDCIOV = FACIOV
      C                   EVAL      DDCID1 = FACID1
@@ -974,29 +977,29 @@
      C                   EVAL      DDCION = FACION
      C                   EVAL      WTempDate = FACIOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCIOD
      C                   ELSE
      C                   EVAL      DDCIOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACIOT        DDCIOM
      C                   EVAL      DDCIC1 = FACICO
      C                   EVALR     DDCIC2 = FACICO
- 
+
       ** US Indicia of US Country of Birth details
- 
+
      C                   EVAL      DDCBSV = FACBSV
      C                   EVAL      WTempDate = FACBSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCBSD
      C                   ELSE
      C                   EVAL      DDCBSD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACBST        DDCBST
      C                   EVAL      DDCBOV = FACBOV
      C                   EVAL      DDCBD1 = FACBD1
@@ -1007,29 +1010,29 @@
      C                   EVAL      DDCBON = FACBON
      C                   EVAL      WTempDate = FACBOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCBOD
      C                   ELSE
      C                   EVAL      DDCBOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACBOT        DDCBOM
      C                   EVAL      DDCBC1 = FACBCO
      C                   EVALR     DDCBC2 = FACBCO
- 
+
       ** US Indicia of US Country of Domicile details
- 
+
      C                   EVAL      DDCDSV = FACDSV
      C                   EVAL      WTempDate = FACDSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCDSD
      C                   ELSE
      C                   EVAL      DDCDSD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACDST        DDCDST
      C                   EVAL      DDCDOV = FACDOV
      C                   EVAL      DDCDD1 = FACDD1
@@ -1040,29 +1043,29 @@
      C                   EVAL      DDCDON = FACDON
      C                   EVAL      WTempDate = FACDOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCDOD
      C                   ELSE
      C                   EVAL      DDCDOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FACDOT        DDCDMM
      C                   EVAL      DDCDC1 = FACDCO
      C                   EVALR     DDCDC2 = FACDCO
- 
+
       ** US Indicia of US Green Card details
- 
+
      C                   EVAL      DDGCSV = FAGCSV
      C                   EVAL      WTempDate = FAGCSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDGCSD
      C                   ELSE
      C                   EVAL      DDGCSD =  *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAGCST        DDGCST
      C                   EVAL      DDGCOV = FAGCOV
      C                   EVAL      DDGCD1 = FAGCD1
@@ -1073,29 +1076,29 @@
      C                   EVAL      DDGCON = FAGCON
      C                   EVAL      WTempDate = FAGCOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDGCOD
      C                   ELSE
      C                   EVAL      DDGCOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAGCOT        DDGCOM
      C                   EVAL      DDGCC1 = FAGCCO
      C                   EVALR     DDGCC2 = FAGCCO
- 
+
       ** US Indicia of Citizenship details
- 
+
      C                   EVAL      DDIDSV = FAIDSV
      C                   EVAL      WTempDate = FAIDSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDIDSD
      C                   ELSE
      C                   EVAL      DDIDSD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAIDST        DDIDST
      C                   EVAL      DDIDOV = FAIDOV
      C                   EVAL      DDIDD1 = FAIDD1
@@ -1106,29 +1109,29 @@
      C                   EVAL      DDIDON = FAIDON
      C                   EVAL      WTempDate = FAIDOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDIDOD
      C                   ELSE
      C                   EVAL      DDIDOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAIDOT        DDIDOM
      C                   EVAL      DDIDC1 = FAIDCO
      C                   EVALR     DDIDC2 = FAIDCO
- 
+
       ** US Indicia of US Joint Account Member details
- 
+
      C                   EVAL      DDJASV = FAJASV
      C                   EVAL      WTempDate = FAJASD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDJASD
      C                   ELSE
      C                   EVAL      DDJASD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAJAST        DDJAST
      C                   EVAL      DDJAOV = FAJAOV
      C                   EVAL      DDJAD1 = FAJAD1
@@ -1139,29 +1142,29 @@
      C                   EVAL      DDJAON = FAJAON
      C                   EVAL      WTempDate = FAJAOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDJAOD
      C                   ELSE
      C                   EVAL      DDJAOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAJAOT        DDJAMM
      C                   EVAL      DDJAC1 = FAJACO
      C                   EVALR     DDJAC2 = FAJACO
- 
+
       ** US Indicia of US Telephone details
- 
+
      C                   EVAL      DDTESV = FATESV
      C                   EVAL      WTempDate = FATESD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDTESD
      C                   ELSE
      C                   EVAL      DDTESD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FATEST        DDTEST
      C                   EVAL      DDTEOV = FATEOV
      C                   EVAL      DDTED1 = FATED1
@@ -1172,29 +1175,29 @@
      C                   EVAL      DDTEON = FATEON
      C                   EVAL      WTempDate = FATEOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDTEOD
      C                   ELSE
      C                   EVAL      DDTEOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FATEOT        DDTEOM
      C                   EVAL      DDTEC1 = FATECO
      C                   EVALR     DDTEC2 = FATECO
- 
+
       ** US Indicia of US Tax Identification Number  details
- 
+
      C                   EVAL      DDTXSV = FATXSV
      C                   EVAL      WTempDate = FATXSD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDTXSD
      C                   ELSE
      C                   EVAL      DDTXSD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FATXST        DDTXST
      C                   EVAL      DDTXOV = FATXOV
      C                   EVAL      DDTXD1 = FATXD1
@@ -1205,40 +1208,40 @@
      C                   EVAL      DDTXON = FATXON
      C                   EVAL      WTempDate = FATXOD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDTXOD
      C                   ELSE
      C                   EVAL      DDTXOD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FATXOT        DDTXOM
      C                   EVAL      DDTXC1 = FATXCO
      C                   EVALR     DDTXC2 = FATXCO
- 
+
       ** Other FATCA details.
- 
+
      C                   EVAL      DDCLAC = FACLAC
      C                   EVAL      WTempDate = FACLAD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDCLAF
      C                   ELSE
      C                   EVAL      DDCLAF = *BLANKS
      C                   ENDIF
- 
+
      C                   EVAL      DDPCLA = FAPCLA
      C                   EVAL      DDEXEM = FAEXEM
      C                   EVAL      WTempDate = FAEXED
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDEXED
      C                   ELSE
      C                   EVAL      DDEXED = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FAEXET        DDEXET
      C                   EVAL      DDEXEU = FAEXEU
      C                   EVAL      DDEXE1 = %SUBST(FAEXER:1:64)
@@ -1266,13 +1269,13 @@
      C                   ENDIF
      C                   EVAL      WTempDate = FARPTD
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDRPTD
      C                   ELSE
      C                   EVAL      DDRPTD = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVEL     FARPTM        DDRPTM
      C                   EVAL      DDRPTU = FARPTU
      C                   EVAL      DDRPT1 = FARPTR
@@ -1280,13 +1283,13 @@
      C                   EVAL      DDGIIN = FAGIIN
      C                   EVAL      WTempDate = FAGIID
      C                   EXSR      SRZDate2
- 
+
      C                   IF        ZDATE > 0
      C                   MOVEL     ZADATE        DDGIIF
      C                   ELSE
      C                   EVAL      DDGIIF = *BLANKS
      C                   ENDIF
- 
+
      C                   EVAL      DDGIIO = FAGIIO
      C                   EVAL      DDUTIN = FAUTIN
      C                   EVAL      DDMAIL = FAMAIL
@@ -1301,24 +1304,24 @@
      C                   EVAL      DDCSTD = 'Foreign Financial +
      C                                      Institution'
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = 'N'
      C                   EVAL      DDCSTD = 'Non-financial +
      C                                      Entity'
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = 'P'
      C                   EVAL      DDCSTD = 'Physical Person'
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = 'J'
      C                   EVAL      DDCSTD = 'Joint Account'
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = 'O'
      C                   EVAL      DDCSTD = 'Other'
      C                   ENDIF
- 
+
      C                   EVAL      DDCSST = FACSST
       *
       ** Load Customer Sub-type Description.
@@ -1328,67 +1331,67 @@
      C                   EVAL      DDCSSD = 'Participating +
      C                                      - Own GIIN'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'PW'
      C                   EVAL      DDCSSD = 'Participating +
      C                                      - W/o GIIN'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'PS'
      C                   EVAL      DDCSSD = 'Part. w/ +
      C                                      someone elses GIIN'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'NP'
      C                   EVAL      DDCSSD = 'Non-participating'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'OW'
      C                   EVAL      DDCSSD = 'Owner Document +
      C                                      FFI'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'UN'
      C                   EVAL      DDCSSD = 'Unknown'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDCSTP = 'N'
      C                   IF        DDCSST = 'AC'
      C                   EVAL      DDCSSD = 'Active'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'PA'
      C                   EVAL      DDCSSD = 'Passive'
      C                   ENDIF
- 
+
      C                   IF        DDCSST = 'UN'
      C                   EVAL      DDCSSD = 'Unknown'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      DDREPT = FAREPT
      C                   EVAL      DDINFC = FAINFC
      C                   EVAL      DDEXMA = FAEXMA
- 
+
       ** Access SDFATCPD for FATCA Classification Descriptions
- 
+
      C                   CALL      'AOFATCR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      DDCLAC        @PFTC
      C     SDFATC        PARM      SDFATC        DSFDY
- 
+
      C                   EVAL      DDCLDS = FCDESC
- 
+
       ** Access SDFATCPD for Prev FATCA Classification Descriptions
- 
+
      C                   CALL      'AOFATCR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      FAPCLA        @PFTC
      C     SDFATC        PARM      SDFATC        DSFDY
- 
+
      C                   IF        @RTCD <> '*NRF      '                                    MD028123
      C                   EVAL      DDPFCE = FCDESC
      C                   ELSE                                                               MD028123
@@ -1429,9 +1432,9 @@
      C                   EVAL      DDBTHT = E5BTHT                                          MD025161
      C                   EVAL      DDCBTH = E5BTHC                                          MD025161
      C                   ENDIF                                                              MD025161
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1443,18 +1446,18 @@
       * Calls: ZDATE                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZDate2      BEGSR
- 
+
      C                   EVAL      ZDAYNO = WTempDate
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1466,33 +1469,33 @@
       * Calls    : SRFCP - File Control Processing                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTERM        BEGSR
- 
+
       ** if database error has occured, output total report headings;
       ** print error message and exit program.
- 
+
      C                   IF        *IN80 = *ON
      C                   Z-ADD     WCustCnt      RRCUST                                     MD026653
      C                   WRITE     CONTROL
      C                   WRITE     DBERROR
      C                   GOTO      TEND
      C                   ENDIF
- 
+
       ** produce standard totals report
- 
+
      C                   EXSR      SRFCP
- 
+
       ** if a database error has occured, bypass further processing
- 
+
      C     *INU7         CABEQ     *ON           TEND
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C     TEND          ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1504,25 +1507,25 @@
       * Calls    : None                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFCP         BEGSR
- 
+
       ** set-up calculated number of records fields
- 
+
      C                   Z-ADD     WCustCnt      RRCUST
- 
+
       ** print standard totals report
- 
+
      C                   IF        RRCUST > 0
      C                   EVAL      *IN54 = *ON
      C                   ELSE
      C                   EVAL      *IN54 = *OFF
      C                   ENDIF
- 
+
      C                   WRITE     CONTROL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1535,23 +1538,23 @@
       *                                                               *
       *****************************************************************
      C     SRINIT        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PMode
      C                   PARM                    PIntyp
      C                   PARM                    PSeq
      C                   PARM                    PEnty
- 
+
       ** access installation control data
       ** access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** if access program fails call SR. *PSSR
- 
+
      C                   IF        PRTCD <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1560,26 +1563,26 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** if fails goto END
- 
+
      C                   IF        *IN80 = *ON
      C                   GOTO      IEND
      C                   ENDIF
- 
+
       ** load printer file fields with date and title
- 
+
      C                   EVAL      RRTITL = BJURPT
      C                   EVAL      RRRUNA = BJMRDT
      C                   EVAL      DRUND  = BJRDNB
- 
+
       ** Set counters to 0
- 
+
      C                   EVAL      WCustCtr = 0
      C                   EVAL      WCustCnt = 0
- 
+
      C     IEND          ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1594,22 +1597,22 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRUN  = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   EVAL      DBPGM = 'SD000716'
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
       ** set on database error indicator and dump
- 
+
      C                   EVAL      *IN80 = *ON
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

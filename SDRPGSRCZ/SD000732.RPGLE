@@ -28,8 +28,9 @@
       *                                                               *                     MD027669
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051218           Date 06Jun18               *
       *                 MD040497           Date 18Aug16               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *

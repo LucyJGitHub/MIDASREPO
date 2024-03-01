@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052432           Date 18Dec18               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD050572           Date 03May18               *
       *                 MD040734           Date 23Aug16               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

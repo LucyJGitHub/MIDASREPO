@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD053088           Date 23Oct19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD053088           Date 23Oct19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD053088 - FATCA Allocation/Search Tool's object exclusive   *
       *             lock cause crash                                  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -181,16 +184,16 @@
       *
       ** Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** File Information Data Structure for SD000104P1
      D SPOOL1          DS
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** Data structure for AOSVALR0 string
      D SVal1           DS           200
      D  SVal11                 1      1
@@ -262,13 +265,13 @@
      D PDate           S              6  0
      D PDateFormat     S              1A
      D PDayNo          S              5  0
- 
+
       ** ZSFILE Parameters
      D ZSEQ            S              5
      D ZENTY           S              3
      D ZSERR           S              1
      D ZSNUM           S              6  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -296,7 +299,7 @@
       *
      C                   IF        PMode <> 'F'
      C                   OPEN      SD000104P1
- 
+
      C                   Z-ADD     SFNUM         ZSNUM
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       ZSEQ
@@ -304,9 +307,9 @@
      C                   PARM                    SFILE
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** error during ZSFILE processing, return to calling program
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
@@ -353,7 +356,7 @@
      C                   IF        PMode <> 'F' AND WChange = 'Y'
      C                   EVAL      RqdLn1 = 2
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   EXSR      SRHeader
      C                   ENDIF
@@ -468,7 +471,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BBCUST        PCustNo
      C     SDACUS        PARM      SDACUS        DSLDY
- 
+
      C**********         IF        XRCLCD <> *BLANKS AND                                    MD027707
      C**********                   XRCLCD <> SVAL25 AND                                     MD027707
      C                   IF        XRCLCD <> SVAL25 AND                                     MD027707
@@ -700,14 +703,14 @@
       ** Setup Header fields
      C                   EVAL      RRRUNA = BJMRDT
      C                   EVAL      RRTITL = BJURPT
- 
+
       ** Check whether CSD092 is available
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       PRtcd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSD092'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C                   IF        PRtcd <> '*NRF'
      C     *LOCK         IN        LDA
@@ -747,7 +750,7 @@
      C                   PARM                    SVal9
      C                   PARM                    SValK0
      C                   PARM                    SVal10
- 
+
      C                   IF        PRtcd <> *Blanks  AND
      C                             PRtcd <> '*NRF   '
      C     *LOCK         IN        LDA

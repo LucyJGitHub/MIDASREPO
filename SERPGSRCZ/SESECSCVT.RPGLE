@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056949           Date 13Nov20               *
+      *  Last Amend No. 263284             Date 08Feb24               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056949           Date 13Nov20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -64,6 +65,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  263284 - Average Life Date not shown for some securities.    *
+      *           Amend condition to see if security is a new issue.  *
+      *         - Applied for MD-62214.                               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD056949 - SE0045 is dumping on security with no coupon      *
       *             date array - which is not an error                *
@@ -363,7 +367,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -371,7 +375,7 @@
       *  SRInit - Routine to initialise fields                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInit        BEGSR
       *
       ** Initialise output parameters.
@@ -382,9 +386,9 @@
      C                   CLEAR                   CrSE4SCnFmt                                  CSE031
      C                   CLEAR                   CrSE5ScnFmt                                  CAS006
      C                   CLEAR                   CrSE6ScnFmt                                  CSE071
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -392,55 +396,55 @@
       *  SRPLink - Routine to process other info from link pgm        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPLink       BEGSR
- 
+
      C                   IF        POthInf <> *BLANKS
- 
+
      C                   IF        WSRPN <> *BLANKS
      C                   EVAL      SRPN = WSRPN
      C                   ENDIF
- 
+
      C                   IF        WSFN1 <> *BLANKS
      C                   EVAL      SFN1 = WSFN1
      C                   ENDIF
- 
+
      C                   IF        WSFN2 <> *BLANKS
      C                   EVAL      SFN2 = WSFN2
      C                   ENDIF
- 
+
      C                   IF        WT2RF <> *BLANKS
      C                   EVAL      T2RF = WT2RF
      C                   ENDIF
- 
+
      C                   IF        WISNO <> *BLANKS
      C                   EVAL      ISIN = WISNO
      C                   ENDIF
- 
+
      C                   IF        WCSPN <> *BLANKS
      C                   EVAL      CSPN = WCSPN
      C                   ENDIF
- 
+
      C                   IF        WSREF <> *BLANKS
      C                   EVAL      SREF = WSREF
      C                   ENDIF
- 
+
      C                   IF        WSRE1 <> *BLANKS
      C                   EVAL      DASR = WSRE1
      C                   ENDIF
- 
+
      C                   IF        WSRE2 <> *BLANKS
      C                   EVAL      DCSR = WSRE2
      C                   ENDIF
- 
+
      C                   IF        WSRE3 <> *BLANKS
      C                   EVAL      DDSR = WSRE3
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -449,7 +453,7 @@
       *               from file to screen fields                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRConvFlds    BEGSR
       *
       ** First Screen
@@ -502,7 +506,8 @@
       *
      C************       IF        (DDACTN = 'A' OR DDACTN = 'E') AND                         CAP084
      C                   IF        DDACTN <> 'I'  AND                                         CAP084
-     C                             (ISSD <> ITLD OR ISSP <> 0 OR
+     C**********                   (ISSD <> ITLD OR ISSP <> 0 OR                              263284
+     C                             (ISSD <> 0 OR ISSP <> 0 OR                                 263284
      C**********                   LMGR <> 0 OR ISSA <> 0 OR                                  CSD027
      C                             LMGR <> *BLANKS OR ISSA <> 0 OR                            CSD027
      C                             TOTU <> 0 OR ALRQ <> 0 OR
@@ -610,7 +615,7 @@
       *
       ** SWIFT security type code.
      C                   EVAL      DDSWTP = SWTP
- 
+
      C*******************ENDIF                                                               BUG5564
       *
       ** Set up Nominal decimal places if EMU Securities decimals
@@ -640,9 +645,9 @@
       *
       ** Pricing group.
      C                   EVAL      DDPGCD = PLPGCD
- 
+
      C                   ENDIF
- 
+
       ** Market Data Feed
      C                   IF        CAP060 = 'Y'                                               CAP060
      C                   EVAL      DDSPID = SPID                                              CAP060
@@ -675,7 +680,7 @@
       ** Next expected dividend.
       *
      C                   IF        NEXD <> *ZEROS
- 
+
      C                   IF        VLCY <> *BLANKS
      C                   EVAL      PCurr = VLCY
      C                   ELSE
@@ -688,7 +693,7 @@
      C                   EVAL      PNDCP = A6NBDP
      C                   EXSR      SRFmtAmt
      C                   MOVE      PAmountOutP   DDNEXD
- 
+
      C                   ENDIF
       *
       ** Set up Roll forward dividend if Interest Risk Management
@@ -861,7 +866,7 @@
      C                   EVAL      DDHCY9 = HCY9                                              CSE071
       *                                                                                       CSE071
      C                   ENDIF                                                                CSE071
- 
+
      C                   ENDIF
       *
       ** Discount security.
@@ -890,18 +895,18 @@
       *
       ** Contingent liability indicator 1.
      C                   EVAL      DDCNLI1 = CNLI
- 
+
      C                   ENDIF
       *
       ** Risk customer and drawer.
       *
      C                   IF        PPROT = '9'
- 
+
      C**********         IF        RSKC <> *ZERO                                              CSD027
      C                   IF        RSKC <> *BLANKS                                            CSD027
      C                   MOVEL     RSKC          DDRSKC
      C                   ENDIF
- 
+
      C                   EVAL      DDDRWR = DRWR
      C                   ENDIF
       *
@@ -958,7 +963,7 @@
       *
      C                   IF        SINP <> *ZEROS OR
      C                             SFPP <> *ZEROS
- 
+
      C                   IF        PPROT <> '4'
      C                   EVAL      PNDCP = 3
      C                   ELSE
@@ -966,7 +971,7 @@
      C                   EXSR      SRAOCurr
      C                   EVAL      PNDCP = A6NBDP
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Initial payment.
@@ -993,7 +998,7 @@
      C                             PPROT <> '4' AND PPROT <> '7' AND
      C                             PPROT <> '9')  OR  PPROT = '4' OR
      C                             PPROT = '7'
- 
+
      C                   IF        CD01 <> *ZEROS
      C                   MOVEL     CD01          DDCD01
      C                   ENDIF
@@ -1030,7 +1035,7 @@
      C                   IF        CD12 <> *ZEROS
      C                   MOVEL     CD12          DDCD12
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Issue amount - 1.
@@ -1092,7 +1097,7 @@
      C                   EVAL      DDMATY2 = '999999'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If user is not inserting, format last/next coupon date.
@@ -1138,7 +1143,7 @@
      C                   PARM                    HCY9                                         CSE071
      C                   PARM                    NCD
      C                   ENDIF                                                              MD056949
- 
+
      C                   IF        NCD <> *ZEROS
      C                   Z-ADD     NCD           PDateIn
      C                   EXSR      SRFmtDat
@@ -1146,7 +1151,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       PNCD
      C                   ENDIF
- 
+
      C                   IF        CSE031 = 'Y' AND PPROT = '3' OR                            CSE031
      C                             CSE031 = 'Y' AND PPROT = '8'                               CSE031
      C                             OR CSE071 = 'Y' AND (PPROT = '1' OR                        CSE071
@@ -1160,7 +1165,7 @@
      C                   ENDIF                                                                CSE031
       *                                                                                       CSE031
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                       CSE037
       ** Set up No of decimal places to round if Countervalue rounding is on.                 CSE037
@@ -1170,7 +1175,7 @@
      C                   ELSE                                                                 CSE037
      C                   CLEAR                   DDNDEC                                       CSE037
      C                   ENDIF                                                                CSE037
- 
+
       *
       ** Third Screen
       ** ============
@@ -1307,7 +1312,7 @@
      C                   EXSR      SRFmtAmt
      C                   MOVE      PAmountOutP   DDUNFR
      C                   ENDIF
- 
+
      C*******************ENDIF                                                               BUG5564
       *
       ** Fee currency.
@@ -1350,7 +1355,7 @@
       *
       ** PB Instrument Type.
      C                   EVAL      DDPBIT = PBIT
- 
+
      C                   ENDIF
       *                                                                                       CSE065
       ** Average Life Date                                                                    CSE065
@@ -1358,9 +1363,12 @@
      C                             PPROT <> '2' AND                                           CSE065
      C                             PPROT <> '4' AND                                           CSE065
      C                             PPROT <> '7'                                               CSE065
-     C                   EVAL      PDayN = ALDT                                               CSE065
-     C                   EXSR      SrFmtDat2                                                  CSE065
-     C                   MOVE      PDat8F        DDALDT                                       CSE065
+     C*********          EVAL      PDayN = ALDT                                        CSE065 263284
+     C*********          EXSR      SrFmtDat2                                           CSE065 263284
+     C*********          MOVE      PDat8F        DDALDT                                CSE065 263284
+     C                   EVAL      PDateIn = ALDT                                             263284
+     C                   EXSR      SrFmtDat                                                   263284
+     C                   MOVE      PDateOut      DDALDT                                       263284
      C                   ENDIF                                                                CSE065
       *                                                                                       CSE075
       ** Format US Enhanced Treasury fields.                                                  CSE075
@@ -1414,7 +1422,7 @@
      C                   MOVEL     WRKFLD4       DDCPDY                                       CSE075
      C                   ENDIF                                                                CSE075
      C                   ENDIF                                                                CSE075
- 
+
      C*******************ENDIF                                                               BUG5564
       *                                                                         CSE023
       ** Third Screen Window                                                    CSE023
@@ -1435,7 +1443,7 @@
      C                   EVAL      DDAPIE = APIE                                CSE023
                                                                                 CSE023
      C                   ENDIF                                                  CSE023
- 
+
       *                                                                                       CSE031
       * Fourth Screen                                                                         CSE031
       * =============                                                                         CSE031
@@ -1941,7 +1949,7 @@
      C                   ENDIF                                                                CRE073
       *                                                                                       CRE073
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1949,18 +1957,18 @@
       *  SRFmtAm1 - Format amount for display using ZSEDITF           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAm1      BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    ZFld15
      C                   PARM                    ZDecs
      C                   PARM      'L'           ZECode
      C                   PARM      *BLANKS       ZEChar
      C                   PARM      *BLANKS       ZOut21
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1968,9 +1976,9 @@
       *  SRFmtAmt - Format amount for display                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtAmt      BEGSR
- 
+
      C                   CALLB     'ZA0921'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    PAmountIn
@@ -1978,9 +1986,9 @@
      C                   PARM      '.'           PDCSP
      C                   PARM      *BLANK        PAmountOutP
      C                   PARM      *BLANK        PAmountOutD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1988,17 +1996,17 @@
       *  SRFmtDat - Format date for display                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFmtDat      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CSE065
       /EJECT                                                                                  CSE065
       *****************************************************************                       CSE065
@@ -2027,24 +2035,24 @@
       *  SRAOCurr - Check currency details                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAOCurr      BEGSR
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKey = PCurr
      C                   EVAL      DBFile = 'SDCURRPD'
      C                   Z-ADD     1             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2052,16 +2060,16 @@
       *  SRAOCust - Access customer details                           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAOCust      BEGSR
- 
+
      C                   CALLB     'AOCUSTR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PKeyC
      C                   PARM      *BLANKS       PKySt
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                             and RECI <> 'M'                                            216368
      C                   EVAL      DBKey = PKeyC
@@ -2069,9 +2077,9 @@
      C                   Z-ADD     2             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2079,9 +2087,9 @@
       *  SRClrSec - Clear security details                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRClrSec      BEGSR
- 
+
      C                   CLEAR                   CRSEFilFmt
      C                   EVAL      CDArr = *ZEROS
      C                   Z-ADD     0             NMDP
@@ -2143,7 +2151,7 @@
      C                   EVAL      MKPN = *ZERO                                               CAS006
      C                   EVAL      MCRK = *ZERO                                               CAS006
      C                   EVAL      MLQP = *ZERO                                               CAS006
- 
+
      C                   EVAL      LOIC = *BLANKS                                             CER020
       *                                                                                       CRE073
       ** CRE073 related fields                                                                CRE073
@@ -2194,7 +2202,7 @@
      C                   EVAL      RDF10 = *BLANKS                                            CRE073
                                                                                               CRE073
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2204,9 +2212,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -2415,9 +2423,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2426,7 +2434,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       *
 **  CPY@

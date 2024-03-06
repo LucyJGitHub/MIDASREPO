@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD056556           Date 31Aug20               *
-      *  Prev Amend No. MD055751           Date 22May20               *
+      *  Last Amend No. MD061246           Date 06Mar24               *
+      *  Prev Amend No. MD056556           Date 31Aug20               *
+      *                 MD055751           Date 22May20               *
       *                 MD055146           Date 04Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1079991          Date 29Jan13               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061246 - Cater for multiple records in GPGLFJW0 with the   *
+      *             same GFGPF                                        *
+      *           - Applied for MD062306                              *
       *  MD056556 - Deliverable Data Split for GPGLOBFPD              *
       *  MD055751 - Global Sync Issue for GOC0100 during COB          *
       *             Include zone in the creation of SQL view.         *
@@ -240,6 +244,7 @@
      C+ into :GPGLOBF                                                                       MD056556
      C+ from GPGLFJW0                                                                       MD056556
      C+ where GFGPF = :I_GPF                                                                MD056556
+     C+ fetch first 1 row only                                                              MD061246
      C/END-EXEC                                                                             MD056556
 
      C******in99         IFEQ      *OFF                                                     MD056556

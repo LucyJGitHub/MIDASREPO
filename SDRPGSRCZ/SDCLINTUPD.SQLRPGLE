@@ -288,7 +288,7 @@
      C+ SET OPTION COMMIT = *CHG
      C/END-EXEC
 
-      ** Update the SDCLINTPP file
+      ** Write record to SDCLINTPP file
      C/EXEC SQL
      C+ insert into SDCLINTPP
      C+ (

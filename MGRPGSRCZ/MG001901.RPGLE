@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. BA6020             Date 12Feb23               *
-      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *  Last Amend No. MD062385           Date 07Mar24               *
+      *  Prev Amend No. MD062339           Date 21Feb24               *
+      *                 BA6020             Date 12Feb23               *
+      *                 BA6026             Date 18Jan23               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044271           Date 21Mar17               *
@@ -34,6 +36,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062385 - Implement MP1.4 missing fixes MD054381/MD055334.  *
+      *             Changes to be conditioned on CSW101 (GSH018 was   *
+      *             upgraded to FM2021F as CSW101).                   *
+      *    MD055334 - Referencing case 02149005 and remaining issues  *
+      *               of the fix - Amend the condition of checking    *
+      *               if GSH018 is ON introduced by MD054381. SWIFT   *
+      *               A/cs with more than 390 extended narratives     *
+      *               must be accepted.                               *
+      *    MD054381 - Receiving transaction data in Midas batch       *
+      *               interface - Add checking of feature GSH018 in   *
+      *               validation of extended narrative.               *
+      *  MD062339- BA6026 - upgrade of extra parts to FM 2021         *
       *  BA6020 - Add Specific header field to CM XML Output          *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *           Add structured formatting for Field 86.             *
@@ -177,8 +191,23 @@
       ** Array for TRF Unstructured REMI (Incoming)                                           BA6026
      D TRFUnstInc      S              5A   DIM(40)                                            BA6026
       *                                                                                       BA6026
+      ** Array for TRF Unstructured REMI (Outgoing)                                         MD062339
+     D TRFUnstOut      S              5A   DIM(40)                                          MD062339
+      *                                                                                     MD062339
       ** Array for TRF Structured REMI (Incoming)                                             BA6026
      D TRFStrucInc     S              5A   DIM(40)                                            BA6026
+      *                                                                                     MD062339
+      ** Array for TRF Structured REMI (Outgoing)                                           MD062339
+     D TRFStrucOut     S              5A   DIM(40)                                          MD062339
+      *                                                                                     MD062339
+      ** Array for RTI (Incoming)                                                           MD062339
+     D RTIInc          S              5A   DIM(40)                                          MD062339
+      *                                                                                     MD062339
+      ** Array for RTI (Outgoing)                                                           MD062339
+     D RTIOut          S              5A   DIM(40)                                          MD062339
+      *                                                                                     MD062339
+      ** Array for CHG (Both Incoming and Outgoing)                                         MD062339
+     D CHGIncOut       S              5A   DIM(40)                                          MD062339
       *
       ** Network details record format data structure
       *
@@ -300,8 +329,15 @@
      D BA6026          S              1A                                                      BA6026
       ** Work fields for AOSVALR0                                                             BA6026
      D SVALK1          C                   'TTyp_TRF_UnstREMIInc'                             BA6026
-     D SVALK2          C                   'TTyp_TRF_StrREMIInc'                              BA6026
-     D SVALK3          C                   'A6Fld86AddChg'                                    BA6026
+     D SVALK2          C                   'TTyp_TRF_UnstREMIOut'                           MD062339
+     D*SVALK2****      C                   'TTyp_TRF_StrREMIInc'                      BA6026MD062339
+     D SVALK3          C                   'TTyp_TRF_StrREMIInc'                            MD062339
+     D SVALK4          C                   'TTyp_TRF_StrREMIOut'                            MD062339
+     D SVALK5          C                   'TTyp_RTI_Incoming'                              MD062339
+     D SVALK6          C                   'TTyp_RTI_Outgoing'                              MD062339
+     D SVALK7          C                   'TTyp_CHG_Inc_Out'                               MD062339
+     D*SVALK3****      C                   'A6Fld86AddChg'                            BA6026MD062339
+     D SVALK8          C                   'A6Fld86AddChg'                                  MD062339
      D SVOP01          S             20A                                                      BA6026
      D SVVL01          S            200A                                                      BA6026
      D SVOP02          S             20A                                                      BA6026
@@ -328,8 +364,35 @@
      D Str             S              3S 0                                                    BA6026
      D Z               S              2S 0                                                    BA6026
      D FMTMode         S              5A                                                      BA6026
+     D WENarrNew       S            770A                                                    MD062339
+     D WENarrNew2      S            123A                                                    MD062339
+     D WAdded          S              1A                                                    MD062339
+     D WKBENM          S             80A                                                    MD062339
+     D WKORDP          S             80A                                                    MD062339
+     D WKIBAN          S             45A                                                    MD062339
+     D WKBENB          S             45A                                                    MD062339
+     D WKORDB          S             45A                                                    MD062339
+     D WKREMI          S            160A                                                    MD062339
+     D WKEREF          S             45A                                                    MD062339
+     D WKCHGS          S             45A                                                    MD062339
+     D WKOCMT          S             45A                                                    MD062339
+     D WKEXCH          S             45A                                                    MD062339
+     D WKTRTP          S             45A                                                    MD062339
+     D WKRTRN          S             45A                                                    MD062339
      D WKSF86          S              1A                                                      BA6026
      D ChkFound        S              1A                                                      BA6026
+     D CheckL1         S             70A                                                    MD062339
+     D CheckL2         S             70A                                                    MD062339
+     D CheckL3         S             70A                                                    MD062339
+     D CheckL4         S             70A                                                    MD062339
+     D CheckL5         S             70A                                                    MD062339
+     D CheckL6         S             70A                                                    MD062339
+     D CheckL7         S             70A                                                    MD062339
+     D CheckL8         S             70A                                                    MD062339
+     D CheckL9         S             70A                                                    MD062339
+     D CheckL10        S             70A                                                    MD062339
+     D CheckL11        S             70A                                                    MD062339
+     D CheckL12        S             70A                                                    MD062339
      D MapDet          S              1A                                                      BA6026
       *                                                                                       BA6026
       ** Key fields for KAcct2 (for CHAIN to A6NW94L0)                                        BA6026
@@ -344,6 +407,7 @@
       *                                                                                       BA6026
       ** Work fields for System Values                                                        BA6026
      D A6Fld86AddChg   S              1A                                                      BA6026
+     D CSW101          S              1A                                                    MD062385
       *
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -487,7 +551,14 @@
      C                             and PNwrk = 'SWIFT' and WKSF86 = 'Y'                       BA6026
      C                             and G1SIDC <> *Blanks and G1SIDC <> 'NMSC'                 BA6026
      C                             and MapDet = 'Y'                                           BA6026
+     C                             Or BA6026 = 'Y' and PMsgTyp = '940'                      MD062339
+     C                             and PNwrk = 'SWIFT' and WKSF86 = 'Y'                     MD062339
+     C                             and MapDet <> 'Y'                                        MD062339
+     C                   If        MapDet = 'Y'                                             MD062339
      C                   Exsr      SrFmt046                                                   BA6026
+     C                   Else                                                               MD062339
+     C                   Exsr      SrFmtNew                                                 MD062339
+     C                   Endif                                                              MD062339
      C                   Else                                                                 BA6026
      C                   EXSR      SrNarr
       *
@@ -705,9 +776,14 @@
       *                                                                                     BUG25476
      C                   ENDIF
       *
+     C                   If        CSW101 = 'Y'                                             MD062385
+     C                   LEAVESR                                                            MD062385
+     C                   Endif                                                              MD062385
+      *
       ** If network/format is 'SWIFT' then the max chars allowed is 390
       *
      C                   IF        EDNWRK = 'SWIFT' OR EDF86F ='SWIFT'
+     C                             OR CSW101 = 'N'                                          MD062385
       *
      C                   EVAL      WExt = %TRIM(PArrExt22(1)) +
      C                                        %TRIM(PArrExt22(2))+
@@ -2038,6 +2114,570 @@
       *                                                                                       BA6026
      C                   ENDSR                                                                BA6026
       *****************************************************************                       BA6026
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrFmtNew - Format Field 86 in Structured 6*65                *                     MD062339
+      *                                                               *                     MD062339
+      *  Called by : Main                                             *                     MD062339
+      *                                                               *                     MD062339
+      *  Calls : None                                                 *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrFmtNew      BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** Inialise workfields                                                                MD062339
+     C                   Eval      WKBENM = *Blanks                                         MD062339
+     C                   Eval      WKORDP = *Blanks                                         MD062339
+     C                   Eval      WKIBAN = *Blanks                                         MD062339
+     C                   Eval      WKBENB = *Blanks                                         MD062339
+     C                   Eval      WKORDB = *Blanks                                         MD062339
+     C                   Eval      WKREMI = *Blanks                                         MD062339
+     C                   Eval      WKEREF = *Blanks                                         MD062339
+     C                   Eval      WKCHGS = *Blanks                                         MD062339
+     C                   Eval      WKOCMT = *Blanks                                         MD062339
+     C                   Eval      WKEXCH = *Blanks                                         MD062339
+     C                   Eval      WKTRTP = *Blanks                                         MD062339
+     C                   Eval      WKRTRN = *Blanks                                         MD062339
+      *                                                                                     MD062339
+      ** Look up in arrays of Transaction Types to determine                                MD062339
+      ** formatting type                                                                    MD062339
+      *                                                                                     MD062339
+     C                   Eval      FMTMode = *blanks                                        MD062339
+     C     PTranTp       Lookup    TRFUnstInc                             99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'TRFUI'                                        MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    TRFUnstOut                             99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'TRFUO'                                        MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    TRFStrucInc                            99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'TRFSI'                                        MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    TRFStrucOut                            99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'TRFSO'                                        MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    RTIInc                                 99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'RTII'                                         MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    RTIOut                                 99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'RTIO'                                         MD062339
+     C                   Else                                                               MD062339
+     C     PTranTp       Lookup    CHGIncOut                              99                MD062339
+      *                                                                                     MD062339
+     C                   If        *IN99 = *ON                                              MD062339
+     C                   Eval      FMTMode = 'CHGIO'                                        MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      FMTMode = 'UNSTR'                                        MD062339
+      *                                                                                     MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+      ** Format Field 86 based on Transaction Type of this posting.                         MD062339
+     C                   SELECT                                                             MD062339
+      ** --- TRF Unstructured REM.INFO (Incoming) ---                                       MD062339
+     C                   WHEN      FMTMode = 'TRFUI'                                        MD062339
+     C                   EXSR      SrORDP                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrORDB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrCHGS                                                   MD062339
+     C                   EXSR      SrOCMT                                                   MD062339
+     C                   EXSR      SrEXCH                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- TRF Unstructured REM.INFO (Outgoing) ---                                       MD062339
+     C                   WHEN      FMTMode = 'TRFUO'                                        MD062339
+     C                   EXSR      SrBENM                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrBENB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrCHGS                                                   MD062339
+     C                   EXSR      SrOCMT                                                   MD062339
+     C                   EXSR      SrEXCH                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- TRF Structured REM.INFO (Incoming) ---                                         MD062339
+     C                   WHEN      FMTMode = 'TRFSI'                                        MD062339
+     C                   EXSR      SrORDP                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrORDB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- TRF Structured REM.INFO (Outgoing) ---                                         MD062339
+     C                   WHEN      FMTMode = 'TRFSO'                                        MD062339
+     C                   EXSR      SrBENM                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrBENB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- RTI (Incoming) ---                                                             MD062339
+     C                   WHEN      FMTMode = 'RTII'                                         MD062339
+     C                   EXSR      SrRTRN                                                   MD062339
+     C                   EXSR      SrBENM                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrBENB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- RTI (Outgoing) ---                                                             MD062339
+     C                   WHEN      FMTMode = 'RTIO'                                         MD062339
+     C                   EXSR      SrRTRN                                                   MD062339
+     C                   EXSR      SrORDP                                                   MD062339
+     C                   EXSR      SrIBAN                                                   MD062339
+     C                   EXSR      SrORDB                                                   MD062339
+     C                   EXSR      SrREMI                                                   MD062339
+     C                   EXSR      SrEREF                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- CHG (Incoming and Outgoing) ---                                                MD062339
+     C                   WHEN      FMTMode = 'CHGIO'                                        MD062339
+     C                   EXSR      SrCHGS                                                   MD062339
+     C                   EXSR      SrTRTP                                                   MD062339
+     C                   EXSR      SrConcTags                                               MD062339
+      *                                                                                     MD062339
+      ** --- Format as current (unstructured) ---                                           MD062339
+     C                   OTHER                                                              MD062339
+     C                   EXSR      SrNarr                                                   MD062339
+     C                   EXSR      SRFormat                                                 MD062339
+     C                   ENDSL                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrORDP - Format /ORDP/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrORDP        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** ORDP (Ordering party/sender for Incoming Payment)                                  MD062339
+      *                                                                                     MD062339
+      ** When BA6026 is off, extract Extended Narrative Field2                              MD062339
+                                                                                            MD062339
+      *                                                                                     MD062339
+     C                   If        BA6026 = 'N' Or                                          MD062339
+     C                             (BA6026='Y' And FMTMode = 'RTIO')                        MD062339
+      *                                                                                     MD062339
+     C                   Eval      WKORDP = '/ORDP/' + %TRIM(PArrExt22(1))                  MD062339
+     C                             + ' ' + %TRIM(PArrExt22(2))                              MD062339
+     C                   Else                                                               MD062339
+      *                                                                                     MD062339
+      ** limit format to Incoming payments                                                  MD062339
+      *                                                                                     MD062339
+     C                   If        FMTMode = 'TRFUI' OR                                     MD062339
+     C                             FMTMode = 'TRFSI'                                        MD062339
+     C                   Eval      WKORDP = '/ORDP/' + %TRIM(PArrExt22(1))                  MD062339
+     C                   Endif                                                              MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrBENM - Format /BENM/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrBENM        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** BENM (Beneficiary for Outgoing Payment)                                            MD062339
+     C                   Eval      WKBENM = '/BENM/' + %TRIM(PArrExt22(1))                  MD062339
+     C                             + ' ' + %TRIM(PArrExt22(2))                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrORDB - Format /ORDB/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrORDB        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** ORDB (BIC of Ordering Bank/Senders Bank in Incoming Payment)                       MD062339
+     C                   Eval      WKORDB = '/ORDB/' + %TRIM(PArrExt22(19))                 MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrBENB - Format /BENB/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrBENB        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** BENB (BIC of Beneficiary bank in Outgoing Payment)                                 MD062339
+     C                   Eval      WKBENB = '/BENB/' + %TRIM(PArrExt22(19))                 MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrIBAN - Format /IBAN/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrIBAN        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** IBAN (IBAN of Ordering Party or Beneficiary)                                       MD062339
+     C                   Eval      WKIBAN = '/IBAN/' + %TRIM(PArrExt22(5))                  MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrREMI - Format /REMI/ or /REMI/SCOR/ tag                    *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrREMI        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+     C                   If        FMTMode = 'TRFUI' or FMTMode = 'TRFUO'                   MD062339
+     C                             or FMTMode = 'RTII' or FMTMode = 'RTIO'                  MD062339
+      ** REMI (Remittance Information [unstructured])                                       MD062339
+     C                   Eval      WKREMI = '/REMI/' + %TRIM(PArrExt22(6))                  MD062339
+     C                             + ' ' + %TRIM(PArrExt22(7))                              MD062339
+     C                             + ' ' + %TRIM(PArrExt22(8))                              MD062339
+     C                             + ' ' + %TRIM(PArrExt22(9))                              MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   If        FMTMode = 'TRFSI' or FMTMode = 'TRFSO'                   MD062339
+      ** REMI/SCOR (Remittance Information [structured])                                    MD062339
+     C                   Eval      WKREMI = '/REMI/SCOR/' + %TRIM(PArrExt22(6))             MD062339
+     C                             + '/' + %TRIM(PArrExt22(7))                              MD062339
+     C                             + ' ' + %TRIM(PArrExt22(8))                              MD062339
+     C                             + ' ' + %TRIM(PArrExt22(9))                              MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrEREF - Format /EREF/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrEREF        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** EREF (End to End Reference)                                                        MD062339
+     C                   Eval      WKEREF = '/EREF/' + %TRIM(PArrExt22(12))                 MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrCHGS - Format /CHGS/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrCHGS        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** CHGS (Charges related to the transaction)                                          MD062339
+      *                                                                                     MD062339
+     C                   SELECT                                                             MD062339
+     C                   When      FMTMode <> 'CHGIO'                                       MD062339
+     C                   If        PArrExt22(13) <> *BLANKS                                 MD062339
+     C                   Eval      WKCHGS = '/CHGS/' + %TRIM(PArrExt22(13))                 MD062339
+     C                             + '/'                                                    MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      WKCHGS = *BLANKS                                         MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   When      FMTMode = 'CHGIO'                                        MD062339
+     C                   If        PPNarr <> *BLANKS                                        MD062339
+     C                   Eval      WKCHGS = '/CHGS/' + %TRIM(PPNarr)                        MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      WKCHGS = *BLANKS                                         MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSL                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrOCMT - Format /OCMT/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrOCMT        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** OCMT (Original Amount)                                                             MD062339
+     C                   If        PArrExt22(15) <> *BLANKS                                 MD062339
+     C                   Eval      WKOCMT = '/OCMT/' + %TRIM(PArrExt22(15))                 MD062339
+     C                             + '/'                                                    MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      WKOCMT = *BLANKS                                         MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrEXCH - Format /EXCH/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrEXCH        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** EXCH (Exchange Rate)                                                               MD062339
+     C                   If        PArrExt22(14) <> *BLANKS                                 MD062339
+     C                   Eval      WKEXCH = '/EXCH/' + %TRIM(PArrExt22(14))                 MD062339
+     C                             + '/'                                                    MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      WKEXCH = *BLANKS                                         MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrRTRN - Format /RTRN/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrRTRN        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** RTRN (Return Reason)                                                               MD062339
+     C                   Eval      WKRTRN = '/RTRN/' + %TRIM(PArrExt22(21))                 MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrTRTP - Format /TRTP/ tag                                   *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrTRTP        BEGSR                                                              MD062339
+      *                                                                                     MD062339
+      ** TRTP (Transaction Type Description)                                                MD062339
+     C                   Eval      WKTRTP = '/TRTP/' + %TRIM(PArrExt22(20))                 MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
+      /EJECT                                                                                MD062339
+      *****************************************************************                     MD062339
+      *                                                               *                     MD062339
+      *  SrConcTags - Concatenate Field 86 Tags                       *                     MD062339
+      *  Called by : SrFmtNew                                         *                     MD062339
+      *                                                               *                     MD062339
+      *****************************************************************                     MD062339
+     C     SrConcTags    BEGSR                                                              MD062339
+      *                                                                                     MD062339
+     C                   Eval      WENarrNew = *Blanks                                      MD062339
+     C                   Eval      WENarrNew2= *Blanks                                      MD062339
+     C                   Eval      WAdded = *Blanks                                         MD062339
+      *                                                                                     MD062339
+     C                   SELECT                                                             MD062339
+      ** --- TRF Unstructured REM.INFO (Incoming) ---                                       MD062339
+     C                   WHEN      FMTMode = 'TRFUI'                                        MD062339
+     C                   Eval      WENarrNew = %Trim(WKORDP) + %Trim(WKIBAN) +              MD062339
+     C                                         %Trim(WKORDB) + %Trim(WKREMI) +              MD062339
+     C                                         %Trim(WKEREF) + %Trim(WKTRTP) +              MD062339
+     C                                         %Trim(WKCHGS) + %Trim(WKOCMT) +              MD062339
+     C                                         %Trim(WKEXCH)                                MD062339
+      *                                                                                     MD062339
+      ** --- TRF Unstructured REM.INFO (Outgoing) ---                                       MD062339
+     C                   WHEN      FMTMode = 'TRFUO'                                        MD062339
+     C                   Eval      WENarrNew = %Trim(WKBENM) + %Trim(WKIBAN) +              MD062339
+     C                                         %Trim(WKBENB) + %Trim(WKREMI) +              MD062339
+     C                                         %Trim(WKEREF) + %Trim(WKTRTP) +              MD062339
+     C                                         %Trim(WKCHGS) + %Trim(WKOCMT) +              MD062339
+     C                                         %Trim(WKEXCH)                                MD062339
+      *                                                                                     MD062339
+      ** --- TRF Structured REM.INFO (Incoming) ---                                         MD062339
+     C                   WHEN      FMTMode = 'TRFSI'                                        MD062339
+     C                   Eval      WENarrNew = %Trim(WKORDP) + %Trim(WKIBAN) +              MD062339
+     C                                         %Trim(WKORDB) + %Trim(WKREMI) +              MD062339
+     C                                         %Trim(WKEREF) + %Trim(WKTRTP)                MD062339
+      *                                                                                     MD062339
+      ** --- TRF Structured REM.INFO (Outgoing) ---                                         MD062339
+     C                   WHEN      FMTMode = 'TRFSO'                                        MD062339
+     C                   Eval      WENarrNew = %Trim(WKBENM) + %Trim(WKIBAN) +              MD062339
+     C                                         %Trim(WKBENB) + %Trim(WKREMI) +              MD062339
+     C                                         %Trim(WKEREF) + %Trim(WKTRTP)                MD062339
+      *                                                                                     MD062339
+      ** --- RTI (Incoming) ---                                                             MD062339
+     C                   WHEN      FMTMode = 'RTII'                                         MD062339
+     C                   Eval      WENarrNew = %Trim(WKRTRN) + %Trim(WKBENM) +              MD062339
+     C                                         %Trim(WKIBAN) + %Trim(WKBENB) +              MD062339
+     C                                         %Trim(WKREMI) + %Trim(WKEREF) +              MD062339
+     C                                         %Trim(WKTRTP)                                MD062339
+      *                                                                                     MD062339
+      ** --- RTI (Outgoing) ---                                                             MD062339
+     C                   WHEN      FMTMode = 'RTIO'                                         MD062339
+     C                   Eval      WENarrNew = %Trim(WKRTRN) + %Trim(WKORDP) +              MD062339
+     C                                         %Trim(WKIBAN) + %Trim(WKORDB) +              MD062339
+     C                                         %Trim(WKREMI) + %Trim(WKEREF) +              MD062339
+     C                                         %Trim(WKTRTP)                                MD062339
+      *                                                                                     MD062339
+      ** --- CHG (Incoming and Outgoing) ---                                                MD062339
+     C                   WHEN      FMTMode = 'CHGIO'                                        MD062339
+     C                   Eval      WENarrNew = %Trim(WKCHGS) + %Trim(WKTRTP)                MD062339
+      *                                                                                     MD062339
+     C                   ENDSL                                                              MD062339
+      *                                                                                     MD062339
+      ** Check for double slash ('//') or colon (':') or hyphen ('-') at                    MD062339
+      ** the beginning of each 6*65 line then pad or replace by period ('.')                MD062339
+      ** if found.                                                                          MD062339
+     C                   Eval      ChkFound = 'N'                                           MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL1 = %subst(WENarrNew:1:65)                         MD062339
+     C                   If        %subst(CheckL1:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL1:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL1:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL2 = %subst(WENarrNew:66:65)                        MD062339
+     C                   If        %subst(CheckL2:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL2:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL2:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL3 = %subst(WENarrNew:131:65)                       MD062339
+     C                   If        %subst(CheckL3:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL3:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL3:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL4 = %subst(WENarrNew:196:65)                       MD062339
+     C                   If        %subst(CheckL4:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL4:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL4:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL5 = %subst(WENarrNew:261:65)                       MD062339
+     C                   If        %subst(CheckL5:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL5:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL5:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL6 = %subst(WENarrNew:326:65)                       MD062339
+     C                   If        %subst(CheckL6:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL6:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL6:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL7 = %subst(WENarrNew:391:65)                       MD062339
+     C                   If        %subst(CheckL7:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL7:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL7:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL8 = %subst(WENarrNew:456:65)                       MD062339
+     C                   If        %subst(CheckL8:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL8:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL8:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL9 = %subst(WENarrNew:521:65)                       MD062339
+     C                   If        %subst(CheckL9:1:1) = ':'                                MD062339
+     C                             or %subst(CheckL9:1:1) = '-'                             MD062339
+     C                   Eval      %subst(CheckL9:1:1) = '.'                                MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL10 = %subst(WENarrNew:586:65)                      MD062339
+     C                   If        %subst(CheckL10:1:1) = ':'                               MD062339
+     C                             or %subst(CheckL10:1:1) = '-'                            MD062339
+     C                   Eval      %subst(CheckL10:1:1) = '.'                               MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL11 = %subst(WENarrNew:651:65)                      MD062339
+     C                   If        %subst(CheckL11:1:1) = ':'                               MD062339
+     C                             or %subst(CheckL11:1:1) = '-'                            MD062339
+     C                   Eval      %subst(CheckL11:1:1) = '.'                               MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+     C                   EVAL      CheckL12 = %subst(WENarrNew:716:55)                      MD062339
+     C                   If        %subst(CheckL12:1:1) = ':'                               MD062339
+     C                             or %subst(CheckL12:1:1) = '-'                            MD062339
+     C                   Eval      %subst(CheckL12:1:1) = '.'                               MD062339
+     C                   Eval      ChkFound = 'Y'                                           MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+      ** If replacement occurred, rebuild output array                                      MD062339
+     C                   If        ChkFound = 'Y'                                           MD062339
+     C                   Eval      WENarrNew = *Blanks                                      MD062339
+     C                   Eval      WENarrNew = %trim(CheckL1) +                             MD062339
+     C                                         %trim(CheckL2) +                             MD062339
+     C                                         %trim(CheckL3) +                             MD062339
+     C                                         %trim(CheckL4) +                             MD062339
+     C                                         %trim(CheckL5) +                             MD062339
+     C                                         %trim(CheckL6) +                             MD062339
+     C                                         %trim(CheckL7) +                             MD062339
+     C                                         %trim(CheckL8) +                             MD062339
+     C                                         %trim(CheckL9) +                             MD062339
+     C                                         %trim(CheckL10) +                            MD062339
+     C                                         %trim(CheckL11) +                            MD062339
+     C                                         %trim(CheckL12)                              MD062339
+     C                   Endif                                                              MD062339
+      *                                                                                     MD062339
+      ** Output in 6*65 format (tags concatenated)                                          MD062339
+     C                   EVAL      PFormL1 = %subst(WENarrNew:1:65)                         MD062339
+     C                   EVAL      PFormL2 = %subst(WENarrNew:66:65)                        MD062339
+     C                   EVAL      PFormL3 = %subst(WENarrNew:131:65)                       MD062339
+     C                   EVAL      PFormL4 = %subst(WENarrNew:196:65)                       MD062339
+     C                   EVAL      PFormL5 = %subst(WENarrNew:261:65)                       MD062339
+     C                   EVAL      PFormL6 = %subst(WENarrNew:326:65)                       MD062339
+      *                                                                                     MD062339
+     C                   ENDSR                                                              MD062339
+      *****************************************************************                     MD062339
       /EJECT                                                                                  BA6026
       *****************************************************************                       BA6026
       *                                                               *                       BA6026
@@ -2063,23 +2703,96 @@
      C                   Eval      Z = Z + 1                                                  BA6026
      C                   Endif                                                                BA6026
      C                   Enddo                                                                BA6026
+      *                                                                                     MD062339
+      ** Process 'TTyp_TRF_UnstREMIOut'                                                     MD062339
+     C                   Eval      TRFUnstOut = *blanks                                     MD062339
+     C                   Eval      Str = 1                                                  MD062339
+     C                   Eval      Z = 1                                                    MD062339
+     C     Z             DowLE     40                                                       MD062339
+     C                   If        %Subst(SVVL02:Str:Len) = *blanks                         MD062339
+     C                   Leave                                                              MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      TRFUnstOut(Z) = %Subst(SVVL02:Str:Len)                   MD062339
+     C                   Eval      Str = Str + 5                                            MD062339
+     C                   Eval      Z = Z + 1                                                MD062339
+     C                   Endif                                                              MD062339
+     C                   Enddo                                                              MD062339
       *                                                                                       BA6026
       ** Process 'TTyp_TRF_StrREMIInc'                                                        BA6026
      C                   Eval      TRFStrucInc = *blanks                                      BA6026
      C                   Eval      Str = 1                                                    BA6026
      C                   Eval      Z = 1                                                      BA6026
      C     Z             DowLE     40                                                         BA6026
-     C                   If        %Subst(SVVL02:Str:Len) = *blanks                           BA6026
+     C*****              If        %Subst(SVVL02:Str:Len) = *blanks                   BA6026MD062339
+     C                   If        %Subst(SVVL03:Str:Len) = *blanks                         MD062339
      C                   Leave                                                                BA6026
      C                   Else                                                                 BA6026
-     C                   Eval      TRFStrucInc(Z) = %Subst(SVVL02:Str:Len)                    BA6026
+     C*****              Eval      TRFStrucInc(Z) = %Subst(SVVL02:Str:Len)            BA6026MD062339
+     C                   Eval      TRFStrucInc(Z) = %Subst(SVVL03:Str:Len)                  MD062339
      C                   Eval      Str = Str + 5                                              BA6026
      C                   Eval      Z = Z + 1                                                  BA6026
      C                   Endif                                                                BA6026
      C                   Enddo                                                                BA6026
+      *                                                                                     MD062339
+      ** Process 'TTyp_TRF_StrREMIOut'                                                      MD062339
+     C                   Eval      TRFStrucOut = *blanks                                    MD062339
+     C                   Eval      Str = 1                                                  MD062339
+     C                   Eval      Z = 1                                                    MD062339
+     C     Z             DowLE     40                                                       MD062339
+     C                   If        %Subst(SVVL04:Str:Len) = *blanks                         MD062339
+     C                   Leave                                                              MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      TRFStrucOut(Z) = %Subst(SVVL04:Str:Len)                  MD062339
+     C                   Eval      Str = Str + 5                                            MD062339
+     C                   Eval      Z = Z + 1                                                MD062339
+     C                   Endif                                                              MD062339
+     C                   Enddo                                                              MD062339
+      *                                                                                     MD062339
+      ** Process 'TTyp_RTI_Incoming'                                                        MD062339
+     C                   Eval      RTIInc = *blanks                                         MD062339
+     C                   Eval      Str = 1                                                  MD062339
+     C                   Eval      Z = 1                                                    MD062339
+     C     Z             DowLE     40                                                       MD062339
+     C                   If        %Subst(SVVL05:Str:Len) = *blanks                         MD062339
+     C                   Leave                                                              MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      RTIInc(Z) = %Subst(SVVL05:Str:Len)                       MD062339
+     C                   Eval      Str = Str + 5                                            MD062339
+     C                   Eval      Z = Z + 1                                                MD062339
+     C                   Endif                                                              MD062339
+     C                   Enddo                                                              MD062339
+      *                                                                                     MD062339
+      ** Process 'TTyp_RTI_Outgoing'                                                        MD062339
+     C                   Eval      RTIOut = *blanks                                         MD062339
+     C                   Eval      Str = 1                                                  MD062339
+     C                   Eval      Z = 1                                                    MD062339
+     C     Z             DowLE     40                                                       MD062339
+     C                   If        %Subst(SVVL06:Str:Len) = *blanks                         MD062339
+     C                   Leave                                                              MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      RTIOut(Z) = %Subst(SVVL06:Str:Len)                       MD062339
+     C                   Eval      Str = Str + 5                                            MD062339
+     C                   Eval      Z = Z + 1                                                MD062339
+     C                   Endif                                                              MD062339
+     C                   Enddo                                                              MD062339
+      *                                                                                     MD062339
+      ** Process 'TTyp_CHG_Inc_Out'                                                         MD062339
+     C                   Eval      CHGIncOut = *blanks                                      MD062339
+     C                   Eval      Str = 1                                                  MD062339
+     C                   Eval      Z = 1                                                    MD062339
+     C     Z             DowLE     40                                                       MD062339
+     C                   If        %Subst(SVVL07:Str:Len) = *blanks                         MD062339
+     C                   Leave                                                              MD062339
+     C                   Else                                                               MD062339
+     C                   Eval      CHGIncOut(Z) = %Subst(SVVL07:Str:Len)                    MD062339
+     C                   Eval      Str = Str + 5                                            MD062339
+     C                   Eval      Z = Z + 1                                                MD062339
+     C                   Endif                                                              MD062339
+     C                   Enddo                                                              MD062339
       *                                                                                       BA6026
       ** Process 'A6Fld86AddChg'                                                              BA6026
-     C                   Eval      A6Fld86AddChg = SVVL03                                     BA6026
+     C*****              Eval      A6Fld86AddChg = SVVL03                             BA6026MD062339
+     C                   Eval      A6Fld86AddChg = SVVL08                                   MD062339
      C                   If        A6Fld86AddChg <> 'Y'                                       BA6026
      C                             And A6Fld86AddChg <> 'N'                                   BA6026
      C                   Eval      A6Fld86AddChg = 'N'                                        BA6026
@@ -2251,15 +2964,20 @@
      C                   PARM      *BLANKS       SVVL02                                       BA6026
      C                   PARM      SVALK3        SVOP03                                       BA6026
      C                   PARM      *BLANKS       SVVL03                                       BA6026
-     C                   PARM      *BLANKS       SVOP04                                       BA6026
+     C*****              PARM      *BLANKS       SVOP04                               BA6026MD062339
+     C                   PARM      SVALK4        SVOP04                                     MD062339
      C                   PARM      *BLANKS       SVVL04                                       BA6026
-     C                   PARM      *BLANKS       SVOP05                                       BA6026
+     C*****              PARM      *BLANKS       SVOP05                               BA6026MD062339
+     C                   PARM      SVALK5        SVOP05                                     MD062339
      C                   PARM      *BLANKS       SVVL05                                       BA6026
-     C                   PARM      *BLANKS       SVOP06                                       BA6026
+     C*****              PARM      *BLANKS       SVOP06                               BA6026MD062339
+     C                   PARM      SVALK6        SVOP06                                     MD062339
      C                   PARM      *BLANKS       SVVL06                                       BA6026
-     C                   PARM      *BLANKS       SVOP07                                       BA6026
+     C*****              PARM      *BLANKS       SVOP07                               BA6026MD062339
+     C                   PARM      SVALK7        SVOP07                                     MD062339
      C                   PARM      *BLANKS       SVVL07                                       BA6026
-     C                   PARM      *BLANKS       SVOP08                                       BA6026
+     C*****              PARM      *BLANKS       SVOP08                               BA6026MD062339
+     C                   PARM      SVALK8        SVOP08                                     MD062339
      C                   PARM      *BLANKS       SVVL08                                       BA6026
      C                   PARM      *BLANKS       SVOP09                                       BA6026
      C                   PARM      *BLANKS       SVVL09                                       BA6026
@@ -2305,6 +3023,19 @@
      C     K1M940        KList                                                                BA6026
      C                   KFld                    K1Swid            4                          BA6026
      C                   KFld                    K1Trat            5                          BA6026
+      *                                                                                     MD062385
+      ** Check if CSW101 is switched *ON.                                                   MD062385
+      *                                                                                     MD062385
+     C                   Move      'N'           CSW101                                     MD062385
+     C                   Call      'AOSARDR0'                                               MD062385
+     C                   Parm      *BLANK        ##RTCD                                     MD062385
+     C                   Parm      '*FIRST  '    ##OPTN                                     MD062385
+     C                   Parm      'CSW101'      ##SARD                                     MD062385
+     C     SCSARD        Parm      *BLANKS       DSFDY                                      MD062385
+      *                                                                                     MD062385
+     C     ##RTCD        Ifeq      *BLANK                                                   MD062385
+     C                   Move      'Y'           CSW101            1                        MD062385
+     C                   Endif                                                              MD062385
       *
      C                   ENDSR
       *****************************************************************

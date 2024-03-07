@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *  Last Amend No. MD062405           Date 07Mar24               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 CSW101             Date 03Feb23               *
       *                 MD058285           Date 22Jun21               *
       *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062405 - MT940 for retail account is missing retail acct   *
+      *             number in field 61 for capitalization account.    *
+      *             (BA6026)                                          *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
       *           Include GSH026, MD-28413 and MD-27371B              *
       *  MG027371B-  Applied fix MD028413 only if GLTRAT <> 0         *
@@ -1019,6 +1023,19 @@
      C                   EVAL      MGSFD8 = '//' + %SUBST(WkModuleID:1:1) +
      C                             GLOTRF
      C/COPY WNCPYSRC,GLH00631
+      *                                                                                     MD062405
+      ** Update Subfield 9 of MT940 Gen. Extract File (Posting Detail)                      MD062405
+      *                                                                                     MD062405
+      ** If subfield 7 has first half of narrative > subfield 9 = second half of narrative  MD062405
+      ** Otherwise > subfield 9 = complete narrative                                        MD062405
+     C                   IF        BA6026 = 'Y'                                             MD062405
+     C                             AND GLSWCR = *BLANKS                                     MD062405
+     C                   IF        MGSFD7 = %SUBST(GLPNAR:1:16)                             MD062405
+     C                   EVAL      X = 17                                                   MD062405
+     C                   ELSE                                                               MD062405
+     C                   EVAL      X = 1                                                    MD062405
+     C                   ENDIF                                                              MD062405
+     C                   ENDIF                                                              MD062405
 
      C                   ENDSL
 

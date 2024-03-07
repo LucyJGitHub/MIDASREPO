@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061240           Date 25May23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD061240           Date 25May23               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD061240 - Charges are defaulted during OPAY amend. Add      *
       *             validation to execute the defaulting of charges   *
       *             only if action is insert.                         *
@@ -572,6 +574,10 @@
       *                                                                                       CER030
      D CurTr7BthCp   E DS                  EXTNAME(FTOPY7BPD)                                 CER030
      D                                     PREFIX(C)                                          CER030
+     D TranInISO     E DS                  EXTNAME(FTOPY11APD)                                CSW123
+      *                                                                                       CSW123
+     D CurTr11Ath    E DS                  EXTNAME(FTOPY11APD)                                CSW123
+     D                                     PREFIX(O)                                          CSW123
 
 
       *  User / Branch data area
@@ -666,6 +672,7 @@
      D Trans5009B      S            500A                                                      262664
      D Trans5009C      S            500A                                                      262664
      D TRANS5013       S            500A                                                      CFT039
+     D TRANS5014       S           2000A                                                      CSW123
       *                                                                                       262664
      D TransIn7and8    S           1000A
      D RegData500      S            500A                                                      CER001
@@ -746,6 +753,7 @@
      D CSW209          S              1                                                       CSW209
                                                                                               CSW209
      D InputUser       S             10A                                                    MD042042
+     D ApproveUser     S             10A                                                      CSW123
       *
      D TimeStampC      S             26A   INZ('0001-01-01-00.00.00.000000')                BUG18500
      D TimeStampZ      S             26Z                                                    BUG18500
@@ -799,6 +807,7 @@
      C                   MOVEL     Trans5009C    TranInMarB                                   262664
      C                   MOVEL     Trans5012     TranInExtn                                   CER049
      C                   MOVEL     Trans5013     TranInfoFlds                                 CFT039
+     C                   MOVEL     Trans5014     TranInISO                                    CSW123
       *                                                                                       262664
      C                   MOVEL     RegData500    RegData                                    BUG10128
      C/COPY WNCPYSRC,FTOPAYVUC5
@@ -1008,8 +1017,10 @@
      C                                        + BtnPressed                                  MD042042
      C                                        + ExtData                                     MD042042
      C                                        + InputUser                                   MD042042
-     C                                        + RegData                                     MD042042
+     C**********                              + RegData                              MD042042 CSW123
      C                                        + StopFTDta                                   MD050928
+     C                                        + TranInISO                                     CSW123
+     C                                        + RegData                                       CSW123
                                                                                               CSF011
      C                   RETURN
 
@@ -1191,6 +1202,7 @@
      C                   PARM                    CurTr7Ath                                    CER030
      C                   PARM                    CurTr7Bth                                    CER030
      C                   PARM                    SDFTFR
+     C                   PARM                    CurTr11Ath                                   CSW123
 
       *  Validation Work Fields
      C                   PARM                    Val@Fields
@@ -1355,6 +1367,7 @@
      C                   PARM      APFOTRANID    FrontOffice      20
      C                   PARM                    TRANINFOUR
      C                   PARM                    TranInfoFlds                                 CFT039
+     C                   PARM                    TranInISO                                    CSW123
       * Custom Extra Data file data
      C                   PARM                    ExtData
 
@@ -1412,6 +1425,7 @@
      C                   PARM                    TranInSecB
      C                   PARM                    TranInPrmB
      C                   PARM                    TranInThir
+     C                   PARM                    TranInISO                                    CSW123
       * Custom Extra Data file data
      C                   PARM                    ExtData
       * Field OK flags (DS) from/to caller
@@ -2280,6 +2294,7 @@
      C                   PARM                    CurTr7AthCp                                  CER030
      C                   PARM                    CurTr7BthCp                                  CER030
      C                   PARM                    SDFTFR
+     C                   PARM                    CurTr11Ath                                   CSW123
 
       *  Validation Work Fields
      C**********         PARM                    Val@Fields@                                 BUG4163
@@ -2355,6 +2370,7 @@
      C                   PARM                    CurTr7Ath                                    CER030
      C                   PARM                    CurTr7Bth                                    CER030
      C                   PARM                    SDFTFR
+     C                   PARM                    CurTr11Ath                                   CSW123
 
       *  Validation Work Fields
      C                   PARM                    Val@Fields
@@ -2922,6 +2938,7 @@
      C                   PARM                    Trans5009C                                   262664
      C                   PARM                    Trans5013                                    CFT039
      C                   PARM                    Trans5012                                    CER049
+     C                   PARM                    Trans5014                                    CSW123
 
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData

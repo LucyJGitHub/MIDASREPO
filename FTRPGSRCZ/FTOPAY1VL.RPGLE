@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060110           Date 15Sep22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060110           Date 15Sep22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD057597           Date 19Feb21               *
       *                 MD057498           Date 26Jan21               *
       *                 254841B            Date 14May20               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD060110 - Payments can be amended and authorised by the     *
       *             same user. Use the MSWINPUSER value from T_MSWIP  *
       *             to populate Input Officer 1 and Input Officer 2.  *
@@ -369,6 +371,7 @@
                                                                                 CFT014
       ** Valid Outgoing Payments Extension File                                 CFT014
      D ValidPmtX     E DS                  EXTNAME(FTVOPY2PD)                   CFT014
+     D TranInISO     E DS                  EXTNAME(FTOPY11APD)                                CSW123
 
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
       * FT (OPAY) Extra Data - File (D/B) format
@@ -790,6 +793,9 @@
 
       * Validate Ordering Customer
      C                   Exsr      VORDCUS
+                                                                                CSW123
+      ** Validate Creditor                                                      CSW123
+     C                   Exsr      VISODebi                                     CSW123
 
       * Validate Sender's Correspondent
      C                   Exsr      VSNDCOR
@@ -2333,6 +2339,44 @@
       *****************************************************************
      C/EJECT
      C/COPY WNCPYSRC,FTOPA1VC27
+      *****************************************************************         CSW123
+      *                                                               *         CSW123
+      *  VISODebi - Validate Debitor Postal Address                   *         CSW123
+      *                                                               *         CSW123
+      *  Called By: Main Processing                                   *         CSW123
+      *                                                               *         CSW123
+      *  Calls:                                                       *         CSW123
+      *  RESETERRS  - Resets variables updated by each modules        *         CSW123
+      *  FTVDADDR  - Debitor Postal Address Validation Module         *         CSW123
+      *  UPDATERRS  - Updates error information                       *         CSW123
+      *                                                               *         CSW123
+      *****************************************************************         CSW123
+                                                                                CSW123
+     C     VISODebi      BEGSR                                                  CSW123
+                                                                                CSW123
+      ** Reset variables updated by other modules                               CSW123
+                                                                                CSW123
+     C                   EXSR      RESETERRS                                    CSW123
+                                                                                CSW123
+      ** Validate Debitor Postal Address                                        CSW123
+                                                                                CSW123
+     C                   CALLB     'FTVDADDR'                                   CSW123
+     C                   PARM                    RETCODEOUT                     CSW123
+     C                   PARM                    TRANINPRIM                     CSW123
+     C                   PARM                    TranInISO                      CSW123
+     C                   PARM                    FLDNAMXAR                      CSW123
+     C                   PARM                    MSGIDXAR                       CSW123
+     C                   PARM                    MSGDTAXAR                      CSW123
+     C                   PARM                    OKFLAGSDS                      CSW123
+     C                   PARM                    VAL@FIELDS                     CSW123
+                                                                                CSW123
+      ** Update error info with that returned from the validation module        CSW123
+                                                                                CSW123
+     C                   EXSR      UPDATERRS                                    CSW123
+                                                                                CSW123
+     C                   ENDSR                                                  CSW123
+      *****************************************************************         CSW123
+     C/EJECT                                                                    CSW123
       *****************************************************************         CFT009
       *                                                               *         CFT009
       *  VFXSP     - Validate FX Spread Set                           *         CFT009
@@ -2920,6 +2964,25 @@
      C                   EndIf                                                              BUG15032
      C                   EndIf                                                              BUG15032
                                                                                             BUG15032
+     C                   EVAL      O2DNAM =  SDNAM                                            CSW123
+     C                   EVAL      O2DDEP =  SDDEP                                            CSW123
+     C                   EVAL      O2DSDE =  SDSDE                                            CSW123
+     C                   EVAL      O2DSTR =  SDSTR                                            CSW123
+     C                   EVAL      O2DBUI =  SDBUI                                            CSW123
+     C                   EVAL      O2DBUA =  SDBUA                                            CSW123
+     C                   EVAL      O2DFLO =  SDFLO                                            CSW123
+     C                   EVAL      O2DPOS =  SDPOS                                            CSW123
+     C                   EVAL      O2DROO =  SDROO                                            CSW123
+     C                   EVAL      O2DPOC =  SDPOC                                            CSW123
+     C                   EVAL      O2DTWN =  SDTWN                                            CSW123
+     C                   EVAL      O2DTWL =  SDTWL                                            CSW123
+     C                   EVAL      O2DDIS =  SDDIS                                            CSW123
+     C                   EVAL      O2DCTR =  SDCTR                                            CSW123
+     C                   EVAL      O2DCTY =  SDCTY                                            CSW123
+     C                   EVAL      O2DAD1 =  SDAD1                                            CSW123
+     C                   EVAL      O2DAD2 =  SDAD2                                            CSW123
+     C                   EVAL      O2DAD3 =  SDAD3                                            CSW123
+                                                                                              CSW123
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CFT009
@@ -3004,6 +3067,7 @@
      C                   PARM                    FrontOffice                    CPB002
      C                   PARM                    NEWPMTSCN4                     CFT009
      C                   PARM                    TranInfoFlds                                 CFT039
+     C                   PARM                    TranInISO                                    CSW123
       * Custom Extra Data file data
      C                   PARM                    ExtData
 

@@ -39,14 +39,14 @@
       *  MD062385 - Implement MP1.4 missing fixes MD054381/MD055334.  *
       *             Changes to be conditioned on CSW101 (GSH018 was   *
       *             upgraded to FM2021F as CSW101).                   *
-      *    MD055334 - Referencing case 02149005 and remaining issues  *
-      *               of the fix - Amend the condition of checking    *
-      *               if GSH018 is ON introduced by MD054381. SWIFT   *
-      *               A/cs with more than 390 extended narratives     *
-      *               must be accepted.                               *
-      *    MD054381 - Receiving transaction data in Midas batch       *
-      *               interface - Add checking of feature GSH018 in   *
-      *               validation of extended narrative.               *
+      *  MD055334 - Referencing case 02149005 and remaining issues    *
+      *             of the fix - Amend the condition of checking      *
+      *             if GSH018 is ON introduced by MD054381. SWIFT     *
+      *             A/cs with more than 390 extended narratives       *
+      *             must be accepted.                                 *
+      *  MD054381 - Receiving transaction data in Midas batch         *
+      *             interface - Add checking of feature GSH018 in     *
+      *             validation of extended narrative.                 *
       *  MD062339- BA6026 - upgrade of extra parts to FM 2021         *
       *  BA6020 - Add Specific header field to CM XML Output          *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *

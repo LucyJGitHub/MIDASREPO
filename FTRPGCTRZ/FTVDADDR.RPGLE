@@ -174,10 +174,7 @@
      C                             SDTWL <> *BLANKS OR
      C                             SDDIS <> *BLANKS OR
      C                             SDCTR <> *BLANKS OR
-     C                             SDCTY <> *BLANKS OR
-     C                             SDAD1 <> *BLANKS OR
-     C                             SDAD2 <> *BLANKS OR
-     C                             SDAD3 <> *BLANKS)
+     C                             SDCTY <> *BLANKS)
      C                   MOVE      'N'           OKDNAM
      C                   Add       1             Idx
      C                   MOVEL     'SDNAM '      FldNamXAr(Idx)
@@ -198,10 +195,7 @@
      C                             SDTWL <> *BLANKS OR
      C                             SDDIS <> *BLANKS OR
      C                             SDCTR <> *BLANKS OR
-     C                             SDCTY <> *BLANKS OR
-     C                             SDAD1 <> *BLANKS OR
-     C                             SDAD2 <> *BLANKS OR
-     C                             SDAD3 <> *BLANKS)
+     C                             SDCTY <> *BLANKS)
      C                   MOVE      'N'           OKDTWN
      C                   Add       1             Idx
      C                   MOVEL     'SDTWN '      FldNamXAr(Idx)
@@ -222,10 +216,7 @@
      C                             SDTWL <> *BLANKS OR
      C                             SDDIS <> *BLANKS OR
      C                             SDCTR <> *BLANKS OR
-     C                             SDTWN <> *BLANKS OR
-     C                             SDAD1 <> *BLANKS OR
-     C                             SDAD2 <> *BLANKS OR
-     C                             SDAD3 <> *BLANKS)
+     C                             SDTWN <> *BLANKS)
      C                   MOVE      'N'           OKDCTR
      C                   Add       1             Idx
      C                   MOVEL     'SDCTY '      FldNamXAr(Idx)

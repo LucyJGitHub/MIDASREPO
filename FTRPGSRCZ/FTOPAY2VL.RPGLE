@@ -933,9 +933,6 @@
      C                   EVAL      O2CDIS =  SCDIS                                            CSW123
      C                   EVAL      O2CCTR =  SCCTR                                            CSW123
      C                   EVAL      O2CCTY =  SCCTY                                            CSW123
-     C                   EVAL      O2CAD1 =  SCAD1                                            CSW123
-     C                   EVAL      O2CAD2 =  SCAD2                                            CSW123
-     C                   EVAL      O2CAD3 =  SCAD3                                            CSW123
                                                                                               CSW123
       ***Details*of*Payment********************************************                       CFT014
      C***********        Eval      OTDTP1 = SDTP1                                             CFT014

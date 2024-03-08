@@ -173,10 +173,7 @@
      C                             SCTWL <> *BLANKS OR
      C                             SCDIS <> *BLANKS OR
      C                             SCCTR <> *BLANKS OR
-     C                             SCCTY <> *BLANKS OR
-     C                             SCAD1 <> *BLANKS OR
-     C                             SCAD2 <> *BLANKS OR
-     C                             SCAD3 <> *BLANKS)
+     C                             SCCTY <> *BLANKS)
      C                   MOVE      'N'           OKCNAM
      C                   Add       1             Idx
      C                   MOVEL     'SCNAM '      FldNamXAr(Idx)
@@ -197,10 +194,7 @@
      C                             SCTWL <> *BLANKS OR
      C                             SCDIS <> *BLANKS OR
      C                             SCCTR <> *BLANKS OR
-     C                             SCCTY <> *BLANKS OR
-     C                             SCAD1 <> *BLANKS OR
-     C                             SCAD2 <> *BLANKS OR
-     C                             SCAD3 <> *BLANKS)
+     C                             SCCTY <> *BLANKS)
      C                   MOVE      'N'           OKCTWN
      C                   Add       1             Idx
      C                   MOVEL     'SCTWN '      FldNamXAr(Idx)
@@ -221,10 +215,7 @@
      C                             SCTWL <> *BLANKS OR
      C                             SCDIS <> *BLANKS OR
      C                             SCCTR <> *BLANKS OR
-     C                             SCTWN <> *BLANKS OR
-     C                             SCAD1 <> *BLANKS OR
-     C                             SCAD2 <> *BLANKS OR
-     C                             SCAD3 <> *BLANKS)
+     C                             SCTWN <> *BLANKS)
      C                   MOVE      'N'           OKCCTR
      C                   Add       1             Idx
      C                   MOVEL     'SCCTY '      FldNamXAr(Idx)

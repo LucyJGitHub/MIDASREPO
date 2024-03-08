@@ -1173,9 +1173,6 @@
      C                   EVAL      OPDDIS = O2DDIS                                            CSW123
      C                   EVAL      OPDCTR = O2DCTR                                            CSW123
      C                   EVAL      OPDCTY = O2DCTY                                            CSW123
-     C                   EVAL      OPDAD1 = O2DAD1                                            CSW123
-     C                   EVAL      OPDAD2 = O2DAD2                                            CSW123
-     C                   EVAL      OPDAD3 = O2DAD3                                            CSW123
      C                   EVAL      OPCNAM = O2CNAM                                            CSW123
      C                   EVAL      OPCDEP = O2CDEP                                            CSW123
      C                   EVAL      OPCSDE = O2CSDE                                            CSW123
@@ -1191,9 +1188,6 @@
      C                   EVAL      OPCDIS = O2CDIS                                            CSW123
      C                   EVAL      OPCCTR = O2CCTR                                            CSW123
      C                   EVAL      OPCCTY = O2CCTY                                            CSW123
-     C                   EVAL      OPCAD1 = O2CAD1                                            CSW123
-     C                   EVAL      OPCAD2 = O2CAD2                                            CSW123
-     C                   EVAL      OPCAD3 = O2CAD3                                            CSW123
      C                   ENDIF                                                                CSW123
 
      C                   Eval      OPRECI = 'D'

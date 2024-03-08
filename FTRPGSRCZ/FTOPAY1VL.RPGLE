@@ -2979,9 +2979,6 @@
      C                   EVAL      O2DDIS =  SDDIS                                            CSW123
      C                   EVAL      O2DCTR =  SDCTR                                            CSW123
      C                   EVAL      O2DCTY =  SDCTY                                            CSW123
-     C                   EVAL      O2DAD1 =  SDAD1                                            CSW123
-     C                   EVAL      O2DAD2 =  SDAD2                                            CSW123
-     C                   EVAL      O2DAD3 =  SDAD3                                            CSW123
                                                                                               CSW123
      C                   ENDSR
       *****************************************************************

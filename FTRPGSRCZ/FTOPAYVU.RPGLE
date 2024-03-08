@@ -1884,6 +1884,8 @@
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   MOVEL     OTPREF        SPREF                                      MD054059
+     C                   EVAL      SCRCT = @ORCT                                              CSW123
+     C                   EVAL      SDNCT = @BNCT                                              CSW123
      C                   ENDIF
 
      C                   ENDSR
@@ -3426,6 +3428,27 @@
      C                   ELSE                                                                 CFT157
      C                   EVAL      CFT157 = 'N'                                               CFT157
      C                   ENDIF                                                                CFT157
+                                                                                              CSW123
+      ** Check if CSW123 Feature is enabled                                                   CSW123
+                                                                                              CSW123
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   PARM      *BLANKS       @RTCD                                        CSW123
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW123
+     C                   PARM      'CSW123'      @SARD                                        CSW123
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
+                                                                                              CSW123
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CSW123
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CSW123
+     C                   EVAL      DBKEY  = 'CSW123'                                          CSW123
+     C                   EVAL      DBASE  = 33                                                CSW123
+     C                   EXSR      *PSSR                                                      CSW123
+     C                   ENDIF                                                                CSW123
+                                                                                              CSW123
+     C                   IF        @RTCD = *BLANKS                                            CSW123
+     C                   MOVEL     'Y'           CSW123            1                          CSW123
+     C                   ELSE                                                                 CSW123
+     C                   EVAL      CSW123 = 'N'                                               CSW123
+     C                   ENDIF                                                                CSW123
 
       * Set up User id
      C                   Eval      PSUSER = WUSRID

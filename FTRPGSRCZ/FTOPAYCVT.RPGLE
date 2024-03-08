@@ -1983,9 +1983,6 @@
      C                   EVAL      SDDIS = OPDDIS                                             CSW123
      C                   EVAL      SDCTR = OPDCTR                                             CSW123
      C                   EVAL      SDCTY = OPDCTY                                             CSW123
-     C                   EVAL      SDAD1 = OPDAD1                                             CSW123
-     C                   EVAL      SDAD2 = OPDAD2                                             CSW123
-     C                   EVAL      SDAD3 = OPDAD3                                             CSW123
      C                   EVAL      SCNAM = OPCNAM                                             CSW123
      C                   EVAL      SCDEP = OPCDEP                                             CSW123
      C                   EVAL      SCSDE = OPCSDE                                             CSW123
@@ -2001,9 +1998,6 @@
      C                   EVAL      SCDIS = OPCDIS                                             CSW123
      C                   EVAL      SCCTR = OPCCTR                                             CSW123
      C                   EVAL      SCCTY = OPCCTY                                             CSW123
-     C                   EVAL      SCAD1 = OPCAD1                                             CSW123
-     C                   EVAL      SCAD2 = OPCAD2                                             CSW123
-     C                   EVAL      SCAD3 = OPCAD3                                             CSW123
      C                   ENDIF                                                                CSW123
      C                   ENDSR
                                                                                 CFT014

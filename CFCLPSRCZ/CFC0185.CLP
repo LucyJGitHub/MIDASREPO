@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR807226           Date 20Oct23              */
-/*       Prev Amend No. BA6016             Date 10Feb23              */
+/*       Last Amend No. MD062361           Date 11Mar24              */
+/*       Prev Amend No. AR807226           Date 20Oct23              */
+/*                      BA6016             Date 10Feb23              */
 /*                      MD060952           Date 19Jan23              */
 /*                      MD027509           Date 10Oct22              */
 /*                      CSC059             Date 10Oct22              */
@@ -53,6 +54,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD062361 - Locking on CFWICMPD caused SCKOBJLCB 00001 to be */
+/*                  on LCKW and eventually failed. Add DLCOBJ to     */
+/*                  CFWICMPD.                                        */
 /*       AR807226 - Download Counterparty changes daily.             */
 /*                  (Child: AR807227)                                */
 /*       BA6016 - Upgrade CMD IFSAUT to BFMidas (GSH016)             */
@@ -878,6 +882,9 @@ FULL3:                                                                          
                                                                                         /*MD055267*/
              ENDDO                                                                        /*CSC059*/
              CHGDTAARA  DTAARA(CFSTAT (4 3)) VALUE(&TRAMID)
+
+             DLCOBJ     OBJ((CFWICMPD *FILE *EXCL *FIRST))                              /*MD062361*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD062361*/
 
 /* Copy feedback */
              IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/

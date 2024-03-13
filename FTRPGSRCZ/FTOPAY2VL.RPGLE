@@ -212,6 +212,10 @@
                                                                                 CFT014
       ** Valid Outgoing Payments Extension File                                 CFT014
      D ValidPmtX     E DS                  EXTNAME(FTVOPY2PD)                   CFT014
+      ** Switchable Features File                                                             CSW123
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSW123
+      ** First DS for access programs, short data structure                                   CSW123
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSW123
 
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
       * FT (OPAY) Extra Data - File (D/B) format
@@ -304,8 +308,11 @@
       *  Validate Beneficiary
      C                   Exsr      VBENFCY
 
+                                                                                CSW123
+     C                   IF        CSW123 = 'Y'                                 CSW123
       ** Validate Creditor                                                      CSW123
      C                   Exsr      VISOCred                                     CSW123
+     C                   ENDIF                                                  CSW123
       ***Validate*Details*Of*Payment***********************************         CFT014
      C***********        Exsr      VDETPAY                                      CFT014
 
@@ -918,6 +925,7 @@
      C                   Eval      OTBNC4 = SBNC4
      C                   Eval      OTBNC5 = SBNC5
 
+     C                   IF        CSW123 = 'Y'                                               CSW123
      C                   EVAL      O2CNAM =  SCNAM                                            CSW123
      C                   EVAL      O2CDEP =  SCDEP                                            CSW123
      C                   EVAL      O2CSDE =  SCSDE                                            CSW123
@@ -933,6 +941,7 @@
      C                   EVAL      O2CDIS =  SCDIS                                            CSW123
      C                   EVAL      O2CCTR =  SCCTR                                            CSW123
      C                   EVAL      O2CCTY =  SCCTY                                            CSW123
+     C                   ENDIF                                                                CSW123
                                                                                               CSW123
       ***Details*of*Payment********************************************                       CFT014
      C***********        Eval      OTDTP1 = SDTP1                                             CFT014
@@ -1010,6 +1019,18 @@
       ** which the message handler will get the messages                        CFT007
      C                   EVAL      #MsgFile     = 'FTUSRMSG'                    CFT007
      C                   EVAL      MsgFArray(1) = 'DRSMM'                       CFT007
+                                                                                              CSW123
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   PARM      *Blanks       @RTCD             7                          CSW123
+     C                   PARM      '*VERIFY'     @OPTN             7                          CSW123
+     C                   PARM      'CSW123'      @SARD             6                          CSW123
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
+      *                                                                                       CSW123
+     C     @RTCD         IFEQ      *BLANK                                                     CSW123
+     C                   MOVEL     'Y'           CSW123            1                          CSW123
+     C                   ELSE                                                                 CSW123
+     C                   MOVEL     'N'           CSW123                                       CSW123
+     C                   ENDIF                                                                CSW123
      C/COPY WNCPYSRC,FTH00018
 
       ** =================================================================

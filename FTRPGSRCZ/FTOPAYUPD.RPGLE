@@ -5179,7 +5179,7 @@
      C                   If        @RTCD = *Blanks                                            CSW123
      C                   Movel     'Y'           CSW123            1                          CSW123
      C                   Else                                                                 CSW123
-     C                   Movel     'Y'           CSW123                                       CSW123
+     C                   Movel     'N'           CSW123                                       CSW123
      C                   End                                                                  CSW123
 
      C                   ENDSR

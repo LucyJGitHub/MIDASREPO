@@ -794,8 +794,10 @@
       * Validate Ordering Customer
      C                   Exsr      VORDCUS
                                                                                 CSW123
+     C                   IF        CSW123 = 'Y'                                 CSW123
       ** Validate Creditor                                                      CSW123
      C                   Exsr      VISODebi                                     CSW123
+     C                   ENDIF                                                  CSW123
 
       * Validate Sender's Correspondent
      C                   Exsr      VSNDCOR
@@ -2964,6 +2966,7 @@
      C                   EndIf                                                              BUG15032
      C                   EndIf                                                              BUG15032
                                                                                             BUG15032
+     C                   IF        CSW123 = 'Y'                                               CSW123
      C                   EVAL      O2DNAM =  SDNAM                                            CSW123
      C                   EVAL      O2DDEP =  SDDEP                                            CSW123
      C                   EVAL      O2DSDE =  SDSDE                                            CSW123
@@ -2979,6 +2982,7 @@
      C                   EVAL      O2DDIS =  SDDIS                                            CSW123
      C                   EVAL      O2DCTR =  SDCTR                                            CSW123
      C                   EVAL      O2DCTY =  SDCTY                                            CSW123
+     C                   ENDIF                                                                CSW123
                                                                                               CSW123
      C                   ENDSR
       *****************************************************************
@@ -3177,6 +3181,18 @@
      C                   ELSE                                                         CDL049
      C                   MOVEL     'N'           CDL049                               CDL049
      C                   ENDIF                                                        CDL049
+                                                                                              CSW123
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   PARM      *Blanks       @RTCD                                        CSW123
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW123
+     C                   PARM      'CSW123'      @SARD                                        CSW123
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
+      *                                                                                       CSW123
+     C     @RTCD         IFEQ      *BLANK                                                     CSW123
+     C                   MOVEL     'Y'           CSW123            1                          CSW123
+     C                   ELSE                                                                 CSW123
+     C                   MOVEL     'N'           CSW123                                       CSW123
+     C                   ENDIF                                                                CSW123
                                                                                               CFT142
      C                   Move      'N'           CFT142            1                          CFT142
                                                                                               CFT142

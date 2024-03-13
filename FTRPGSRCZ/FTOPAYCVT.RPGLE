@@ -2482,7 +2482,7 @@
      C     @RTCD         IFEQ      *BLANK                                                     CSW123
      C                   MOVEL     'Y'           CSW123            1                          CSW123
      C                   ELSE                                                                 CSW123
-     C                   MOVEL     'Y'           CSW123                                       CSW123
+     C                   MOVEL     'N'           CSW123                                       CSW123
      C                   END                                                                  CSW123
      C*                                                                                       CSW123
      C                   ENDSR

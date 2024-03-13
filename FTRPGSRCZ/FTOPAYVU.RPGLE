@@ -1884,8 +1884,10 @@
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   MOVEL     OTPREF        SPREF                                      MD054059
+     C                   IF        CSW123 = 'Y'                                               CSW123
      C                   EVAL      SCRCT = @ORCT                                              CSW123
      C                   EVAL      SDNCT = @BNCT                                              CSW123
+     C                   ENDIF                                                                CSW123
      C                   ENDIF
 
      C                   ENDSR

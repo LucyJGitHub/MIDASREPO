@@ -93,6 +93,27 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
 
+     D DPORC1          S             35A
+     D DPORC2          S             35A
+     D DPORC3          S             35A
+     D DPORC4          S             35A
+     D DPORC5          S             35A
+     D DDCNAM          S            140A
+     D DDDEPT          S             70A
+     D DDSDEP          S             70A
+     D DDSTRE          S             70A
+     D DDBUIU          S             16A
+     D DDBUIA          S             35A
+     D DDFLOR          S             70A
+     D DDPOSB          S             16A
+     D DDROOM          S             70A
+     D DDPOSC          S             16A
+     D DDTWNN          S             35A
+     D DDTWNL          S             35A
+     D DDDISN          S             35A
+     D DDCTRS          S             35A
+     D DDCTRY          S              2A
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D PRTCD           S              7
@@ -147,6 +168,69 @@
       ** VALIDATION - Validate Creditor Postal Address
       *****************************************************************
      C     VCADDR        BEGSR
+
+      ** If Creditor postal address is blanks and ordering customer is a valid customer,
+      ** Retrieve postal address of the customer
+
+     C                   IF        SCNAM = *BLANKS AND
+     C                             SCDEP = *BLANKS AND
+     C                             SCSDE = *BLANKS AND
+     C                             SCSTR = *BLANKS AND
+     C                             SCBUI = *BLANKS AND
+     C                             SCBUA = *BLANKS AND
+     C                             SCFLO = *BLANKS AND
+     C                             SCPOS = *BLANKS AND
+     C                             SCROO = *BLANKS AND
+     C                             SCPOC = *BLANKS AND
+     C                             SCTWN = *BLANKS AND
+     C                             SCTWL = *BLANKS AND
+     C                             SCDIS = *BLANKS AND
+     C                             SCCTR = *BLANKS AND
+     C                             SCCTY = *BLANKS AND
+     C                             @BNCT = 'C'
+
+     C                   CALL      'FT00001PR'
+     C                   PARM      SBNC1         DPORC1
+     C                   PARM      SBNC2         DPORC2
+     C                   PARM      SBNC3         DPORC3
+     C                   PARM      SBNC4         DPORC4
+     C                   PARM                    DPORC5
+     C                   PARM      *BLANKS       DDCNAM
+     C                   PARM      *BLANKS       DDDEPT
+     C                   PARM      *BLANKS       DDSDEP
+     C                   PARM      *BLANKS       DDSTRE
+     C                   PARM      *BLANKS       DDBUIU
+     C                   PARM      *BLANKS       DDBUIA
+     C                   PARM      *BLANKS       DDFLOR
+     C                   PARM      *BLANKS       DDPOSB
+     C                   PARM      *BLANKS       DDROOM
+     C                   PARM      *BLANKS       DDPOSC
+     C                   PARM      *BLANKS       DDTWNN
+     C                   PARM      *BLANKS       DDTWNL
+     C                   PARM      *BLANKS       DDDISN
+     C                   PARM      *BLANKS       DDCTRS
+     C                   PARM      *BLANKS       DDCTRY
+     C                   PARM      *BLANKS       PRTCD
+
+     C                   IF        PRTCD = *BLANKS
+     C                   EVAL      SCNAM = DDCNAM
+     C                   EVAL      SCDEP = DDDEPT
+     C                   EVAL      SCSDE = DDSDEP
+     C                   EVAL      SCSTR = DDSTRE
+     C                   EVAL      SCBUI = DDBUIU
+     C                   EVAL      SCBUA = DDBUIA
+     C                   EVAL      SCFLO = DDFLOR
+     C                   EVAL      SCPOS = DDPOSB
+     C                   EVAL      SCROO = DDROOM
+     C                   EVAL      SCPOC = DDPOSC
+     C                   EVAL      SCTWN = DDTWNN
+     C                   EVAL      SCTWL = DDTWNL
+     C                   EVAL      SCDIS = DDDISN
+     C                   EVAL      SCCTR = DDCTRS
+     C                   EVAL      SCCTY = DDCTRY
+     C                   ENDIF
+
+     C                   ENDIF
 
       ** Name is mandatory if Beneficiary customer is not a valid midas customer
 

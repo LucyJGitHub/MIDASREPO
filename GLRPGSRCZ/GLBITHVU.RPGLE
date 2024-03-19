@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *  Last Amend No. MD062304           Date 19Mar24               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 CGL118             Date 02Nov21               *
       *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -81,10 +82,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062304 - Batch cant be amended due to OOB error.           *
+      *             Reset BHAI to H if Auto Auth = Y.                 *
       *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
-      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *      
+      *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -321,7 +324,7 @@
       *
       ** Timestamp for the transaction
      D PTimeStamp      S               Z
- 
+
      D DBerrUpd        C                   CONST('DB error in BITH API update')
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -484,9 +487,9 @@
      C                   ELSE
      C                   EVAL      B1VALI = 'Y'
      C                   ENDIF
- 
+
       *  Write to database
- 
+
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
@@ -497,9 +500,9 @@
      C                                           + PEAHeader                                  CSC054
      C                                           + PInfData + PExtData                        CAP086
      C                                           + DDSHPI                                   MD054696
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -687,12 +690,12 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SRSetOFld
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -701,7 +704,7 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       ** Update JE Headers file.
@@ -752,12 +755,12 @@
       *
       ** If update not done due to record being updated by another
       *  workstation send message to screen.
- 
+
      C     PRTCD         IFEQ      '*RECUPD'
- 
+
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     DBerrUpd      MsgIdArr(1)
- 
+
      C                   END
       *
       ** If update not done due to user not been authorised (CGL008) send message
@@ -792,11 +795,11 @@
      C                   ADD       1             Idx
      C                   ENDIF
      C**********         ENDIF                                                               BUG1898
- 
+
       ** Batch Number to pass back to APTRANVU on insert mode
- 
+
      C                   EVAL                    DDBTNB = B1BTNB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -888,6 +891,7 @@
       *
      C                   IF        IF_AUTH <> ' '                                             249177
      C                   EVAL      B1TOJE = 'I'
+     C                   EVAL      B1BHAI = 'H'                                             MD062304
      C                   ELSE                                                                 249177
      C                   EVAL      B1TOJE = 'J'                                               249177
      C                   ENDIF                                                                249177
@@ -959,12 +963,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'GLUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,GLBITH02
       *

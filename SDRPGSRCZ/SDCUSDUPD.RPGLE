@@ -8063,7 +8063,7 @@
      C                   IF        PRTCD       = *BLANKS                                      CSW123
      C                   EVAL      CSW123      = 'Y'                                          CSW123
      C                   ELSE                                                                 CSW123
-     C                   EVAL      CSW123      = 'Y'                                          CSW123
+     C                   EVAL      CSW123      = 'N'                                          CSW123
      C                   ENDIF                                                                CSW123
       *                                                                                       CSW123
      C                   ENDSR

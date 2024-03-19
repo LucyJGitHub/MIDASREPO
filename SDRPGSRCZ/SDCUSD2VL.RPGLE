@@ -2315,7 +2315,6 @@
      C                   PARM      'CSW123'      PSard                                        CSW123
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
                                                                                               CSW123
-     C                   EVAL      PRTCD = *BLANKS                                          XXCSW123
      C                   IF        PRtCd = *BLANKS                                            CSW123
      C                   EVAL      CSW123 = 'Y'                                               CSW123
      C                   ENDIF                                                                CSW123

@@ -1,0 +1,195 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas A9 GLM/EDW files Housekeeping')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       A9C005003 - Midas A9 GLM/EDW Files Housekeeping             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2024                     */
+/*                                                                   */
+/*       Last Amend No. MD059357           Date 11Mar24              */
+/*       Prev Amend No. BA9005  *CREATE    Date 11Mar24              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD059357 - A9C005003 failure for LN* and BL* deletion       */
+/*       BA9005 - HO and EDW Extracts                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2024')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('A9C005003 ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BA9005) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PYYMM) TYPE(*CHAR) LEN(4) VALUE('    ')
+             DCL        VAR(&PFLNE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFBLE) TYPE(*CHAR) LEN(7)
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+
+             DCLF       FILE(SDBANKPD)
+
+/**/
+/** Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('A9C005003 - Midas A9 GLM/EDW Files Housekeeping') +
+                          TOMSGQ(MRUNQ)
+
+/**/
+             CHGJOB     SWS(00000000)
+
+/**/
+/** Retrieve Zone prefix */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+/**/
+/** Check if BA9005 is ON */
+/**/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('BA9005')
+             CHGVAR     VAR(&BA9005) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&BA9005) VALUE('Y')
+             ENDDO
+
+/**/
+/** Process only if BA9005 is ON */
+/**/
+
+             IF         COND(&BA9005 *EQ 'Y') THEN(DO)
+
+/** Get values for following system values */
+/** 'HO_EDW_Ext_Library' */
+/** 'HO_EDW_Ret_Period' */
+
+             CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                          'HO_EDW_Ret_Period' &SVAL1 'HO_EDW_Ext_Library' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
+
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+/**/
+
+/**/
+/** Call program CB0160 to get value of restart indicator. */
+/**/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/**/
+/** If it is NOT a restart */
+/**/
+             IF COND(&STAT *NE 'Y') THEN(DO)
+
+/**/
+/** Calculate Retention Period to get YYMM  */
+/**/
+             CALL       PGM(A9005006) PARM(&PYYMM)
+             CHGVAR     VAR(&PFLNE) VALUE('LN' *TCAT &PYYMM *TCAT '*')
+             CHGVAR     VAR(&PFBLE) VALUE('BL' *TCAT &PYYMM *TCAT '*')
+             DLTOBJ     OBJ(&SVAL2/&PFLNE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF2105 CPF2125 CPF0000)                                  /*MD059357*/
+
+             DLTOBJ     OBJ(&SVAL2/&PFBLE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF2105 CPF2125 CPF0000)                                  /*MD059357*/
+
+             ENDDO
+/**/
+/** If no error occured in the program */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+/**/
+/** Database error processing */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+/**/
+/** If no error occured in the program */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/** Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program A9C005003 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2024')
+             ENDPGM

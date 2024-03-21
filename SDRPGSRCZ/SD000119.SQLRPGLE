@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2023                      *
       *                                                               *
-      *  Last Amend No. MD061007 *CREATE   Date 02Feb23               *
+      *  Last Amend No. MD061009           Date 23Jan23               *
+      *  Prev Amend No. MD061007 *CREATE   Date 02Feb23               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD061007 - Deliverable Data Split for SDFCTLPA/GPFCTLPA      *
       *                                                               *
       *****************************************************************
@@ -71,7 +73,8 @@
      C/exec sql
      C+ select AHNORC, AHNOIN, AHNOAM, AHNODL
      C+  into :NORC,   :NOIN,  :NOAM,  :NODL
-     C+   from SDFCTLPA
+     C*+***from*SDFCTLPA                                                                    MD061009
+     C+   from SDCTLJW0                                                                     MD061009
      C+   where AHFLNM = :File
      C/end-exec
 
@@ -92,7 +95,8 @@
       ** if MODE is *UPD
      C                   If        Mode = '*UPD'
      C/exec sql
-     C+ update SDFCTLPA set
+     C*+*update*SDFCTLPA set                                                                MD061009
+     C+ update SDCTLXTD set                                                                 MD061009
      C+  AHNORC = :NORC, AHNOIN = :NOIN, AHNOAM = :NOAM, AHNODL = :NODL
      C+   where AHFLNM = :File
      C/end-exec

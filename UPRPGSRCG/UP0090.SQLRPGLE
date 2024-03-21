@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060918             Date 21Jan21             *
-      *  Prev Amend No. MD061706             Date 01Aug23             *
+      *  Last Amend No. MD061009             Date 23Jan23             *
+      *  Prev Amend No. MD060918             Date 21Jan21             *
+      *                 MD061706             Date 01Aug23             *
       *                 MD061518             Date 23Jul23             *
       *                 MD061576             Date 23Jul23             *
       *                 MD061503             Date 23Jun23             *
@@ -112,6 +113,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD060918 - Deliverable Data Split for MITB_* tables          *
       *  MD061706 - Various changes for transition to aDBU            *
       *  MD061518 - Deliverable Data Split for ZZGBLANG and ZZGBXXLANG*
@@ -1380,6 +1382,8 @@
      C                             or ChkFile = 'MIBEVXTD'                                  MD060918
      C                             or ChkFile = 'MILNGXTD'                                  MD060918
      C                             or ChkFile = 'MIPRMXTD'                                  MD060918
+     C                             or ChkFile = 'SDCTLXTD'                                  MD061009
+     C                             or ChkFile = 'GPCTLXTD'                                  MD061009
 
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
@@ -1570,6 +1574,7 @@
      C                             or Member = 'MIBEVCTD'                                   MD060918
      C                             or Member = 'MILNGCTD'                                   MD060918
      C                             or Member = 'MIPRMCTD'                                   MD060918
+     C                             or Member = 'GPCTLCTD'                                   MD061009
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
      C                   IF        Member = 'SCHLPCTD'                                      MD055264
@@ -1762,6 +1767,7 @@
      C                             or Member = 'RPACICTD'                                   MD061503
      C                             or Member = 'RPASICTD'                                   MD061503
      C                             or Member = 'RPMSGCTD'                                   MD061503
+     C                             or Member = 'SDCTLCTD'                                   MD061009
      C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
      C                   Else                                                               MD055264
      C/exec SQL                                                                             MD057943

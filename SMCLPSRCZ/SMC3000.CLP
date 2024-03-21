@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD058089           Date 01Sep21              */
-/*       Prev Amend No. MD054346           Date 18Jul21              */
+/*       Last Amend No. MD061009           Date 23Jan23              */
+/*       Prev Amend No. MD058089           Date 01Sep21              */
+/*                      MD054346           Date 18Jul21              */
 /*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR936709           Date 19Mar12              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA */
 /*       MD058089 - Deliverable Data Split for SM  and UP            */
 /*       MD054346 - Switchable Features Password Encryption          */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
@@ -135,7 +137,8 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF7030) EXEC(DO)
                 CHGVAR     VAR(&LENOJRN) VALUE(Y)
              ENDDO
-             STRJRNPF   FILE(SDFCTLPA) JRN(ICJRN)
+/**********  STRJRNPF   FILE(SDFCTLPA) JRN(ICJRN) */                                    /*MD061009*/
+             STRJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD) JRN(ICJRN) /*MD061009*/
              MONMSG     MSGID(CPF7030) EXEC(DO)
                 CHGVAR     VAR(&FCTLJRN) VALUE(Y)
              ENDDO
@@ -150,7 +153,8 @@ VALIDATE:                                                                       
                 ENDJRNPF   FILE(SDLENOPD)
              ENDDO
              IF         COND(&FCTLJRN *EQ 'N') THEN(DO)
-                ENDJRNPF   FILE(SDFCTLPA)
+/**********     ENDJRNPF   FILE(SDFCTLPA) */                                            /*MD061009*/
+                ENDJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD) /*MD061009*/
              ENDDO
 
              GOTO       CMDLBL(END)

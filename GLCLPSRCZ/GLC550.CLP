@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD061009           Date 23Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA */
 /*  MD046248 - Finastra Rebranding                                   */
 /*  XXXXX - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX       */
 /*                                                                   */
@@ -30,13 +32,13 @@
                           Finastra International Limited +
                           2001')
 /**/
-             OVRDBF     FILE(SDFCTLL0) TOFILE(GLFCTLL0) SHARE(*NO)
+/**********  OVRDBF     FILE(SDFCTLL0) TOFILE(GLFCTLL0) SHARE(*NO) */                   /*MD061009*/
 /**/
              CALL       PGM(GL5500D) PARM(' ' 'M')
 /**/
-             DLTOVR     FILE(SDFCTLL0)
+/**********  DLTOVR     FILE(SDFCTLL0) */                                               /*MD061009*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
       ENDPGM

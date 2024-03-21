@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2022                      *
       *                                                               *
-      *  Last Amend No. MD060092 *CREATE   Date 01Aug22               *
+      *  Last Amend No. MD061009           Date 23Jan23               *
+      *  Prev Amend No. MD060092 *CREATE   Date 01Aug22               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
       *             design of SDFACTX0 to store facility classes.     *
@@ -405,9 +407,12 @@
                    thatFile = 'SDFCTLPA';
 
                    // Retrieve value of AHNORC in SDFCTLPA
-                   wSQLStr = 'select AHNORC from SDFCTLPA' +
-                             ' where AHFLNM = ' + QUO + 'SDFACTPD' +
-                             QUO;
+                 //wSQLStr = 'select AHNORC from SDFCTLPA' +                              //MD061009
+                 //          ' where AHFLNM = ' + QUO + 'SDFACTPD' +                      //MD061009
+                 //          QUO;                                                         //MD061009
+                   wSQLStr = 'select AHNORC from SDCTLXTD' +                              //MD061009
+                             ' where AHFLNM = ' + QUO + 'SDFACTPD' +                      //MD061009
+                             QUO;                                                         //MD061009
                    exec sql close P0;
                    exec sql prepare P0 from :wSQLStr;
                    exec sql declare P0 cursor for P0;
@@ -424,10 +429,14 @@
 
                    wkAHNORC = wkAHNORC - Count1;
 
-                    wSQLStr = 'update SDFCTLPA' +
-                              ' set AHNORC = ' + %Char(wkAHNORC) +
-                             ' where AHFLNM = ' + QUO + 'SDFACTPD' +
-                             QUO;
+                  //wSQLStr = 'update SDFCTLPA' +                                         //MD061009
+                  //          ' set AHNORC = ' + %Char(wkAHNORC) +                        //MD061009
+                  //         ' where AHFLNM = ' + QUO + 'SDFACTPD' +                      //MD061009
+                  //         QUO;                                                         //MD061009
+                    wSQLStr = 'update SDCTLXTD' +                                         //MD061009
+                              ' set AHNORC = ' + %Char(wkAHNORC) +                        //MD061009
+                             ' where AHFLNM = ' + QUO + 'SDFACTPD' +                      //MD061009
+                             QUO;                                                         //MD061009
                    exec sql
                    execute immediate :wSqlStr;
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;

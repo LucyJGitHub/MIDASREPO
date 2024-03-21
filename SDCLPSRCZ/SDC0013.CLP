@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD061009           Date 23Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CSD028 - KYC (Standing Data Authorisations)                 */
@@ -56,7 +58,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RSEQ &RLVL &RENT)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -82,21 +84,21 @@
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
 /*/COPY WNCPYSRC,SDC0013004                                          */
- 
+
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
 /*                                                                      CCB009*/
 /** Check for Switchable feature CCB009.                                CCB009*/
 /*                                                                      CCB009*/
              CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
                           'CCB009' &AOFMT)                            /*CCB009*/
- 
+
 /* Retrieve the system prefix */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
 /*/COPY WNCPYSRC,SDC0013005                                          */
- 
+
 /* Start commitment control */
- 
+
 /************STRCMTCTL  LCKLVL(*CHG)                                      /*CPK009*/
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
                                                                           /*CPK009*/
@@ -108,57 +110,58 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SDC0013MPS                                          */
                                                                       /*S01408*/
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
              IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
 /* Delete any existing journal/journal receiver */
- 
+
              ENDJRNPF   FILE(CLINTCA)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(CLINTCB)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(CLINTCC)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(CLINTC1)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(CLINTSE)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(FOCLTA)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(FOCLTD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDCUSTPD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDALTNPD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDACUSPD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDCFCDPD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDCMRKPD)
              MONMSG     MSGID(CPF0000)
 /*/COPY WNCPYSRC,SDC0013001                                          */
- 
+
              ENDJRNPF   FILE(SDFOCSPD)
              MONMSG     MSGID(CPF0000)
- 
+
              ENDJRNPF   FILE(SDSECSPD)
              MONMSG     MSGID(CPF0000)
- 
-             ENDJRNPF   FILE(SDFCTLPA)
+
+/*********   ENDJRNPF   FILE(SDFCTLPA) */                                               /*MD061009*/
+             ENDJRNPF   FILE(SDCTLXTD)                                                  /*MD061009*/
              MONMSG     MSGID(CPF0000)
                                                                       /*069253*/
              ENDJRNPF   FILE(SDCBRTPD)                                /*069253*/
@@ -166,7 +169,7 @@
                                                                       /*069253*/
              ENDJRNPF   FILE(PTYHSTPD)                                /*069253*/
              MONMSG     MSGID(CPF0000)                                /*069253*/
- 
+
              ENDJRNPF   FILE(SDPLCSPD)                                /*S01486*/
              MONMSG     MSGID(CPF0000)                                /*S01486*/
                                                                       /*S01486*/
@@ -190,21 +193,21 @@
                                                                                           /*CSD028*/
              DLTJRN     JRN(SD0013JRN)
              MONMSG     MSGID(CPF0000)
- 
+
 /* Change job to automatically reply to the journal receiver not */
 /* fully saved message.                                          */
- 
+
              CHGJOB     INQMSGRPY(*DFT)
- 
+
              DLTJRNRCV  JRNRCV(SD0013RCV)
              MONMSG     MSGID(CPF0000)
- 
+
 /* Change job to reply required again */
- 
+
              CHGJOB     INQMSGRPY(*RQD)
- 
+
 /* Setup journal environment and start journalling */
- 
+
 /************CRTJRNRCV  JRNRCV(&XLIB/SD0013RCV) TEXT('Journal +   */  /*077335*/
 /************             receiver for SD0013 background updates')*/  /*077335*/
                                                                       /*077335*/
@@ -216,7 +219,7 @@
                                                                       /*077335*/
              CRTJRN     JRN(&JLIB/SD0013JRN) JRNRCV(&JLIB/SD0013RCV) +
                           TEXT('SD0013 temporary journal')            /*077335*/
- 
+
 /************STRJRNPF FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +  /*069253*/
 /************             FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +  /*069253*/
 /************             SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +       /*069253*/
@@ -229,14 +232,14 @@
 /**********               SDFCTLPA SDCBRTPD PTYHSTPD) +               /*S01486*/
 /**********               JRN(SD0013JRN) IMAGES(*BOTH) +              /*S01486*/
 /**********               OMTJRNE(*OPNCLO)                 /*069253*/ /*S01486*/
- 
+
 /**********  STRJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
 /**********               FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +
 /**********               SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
 /**********               SDFCTLPA SDCBRTPD PTYHSTPD SDPLCSPD +
 /**********               SDLBCSPD) JRN(SD0013JRN) IMAGES(*BOTH) +
 /**********               OMTJRNE(*OPNCLO)                 /*S01486*/ /*146350*/
- 
+
 /**********  STRJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +                    /*CSD028*/
 /**********               FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +                      /*CSD028*/
 /**********               SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +                           /*CSD028*/
@@ -245,61 +248,68 @@
 /**********               SDCCRDPD) JRN(SD0013JRN) IMAGES(*BOTH) +                        /*CSD028*/
 /**********               OMTJRNE(*OPNCLO)                            /*146350*/          /*CSD028*/
                                                                                           /*CSD028*/
-             STRJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
+/**********  STRJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
                           FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +
                           SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
                           SDFCTLPA SDCBRTPD PTYHSTPD SDPLCSPD +
                           SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
                           SDCCRDPD SDKYCIPD) JRN(SD0013JRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)                                                /*CSD028*/
+                          OMTJRNE(*OPNCLO) */                                /*CSD028*/ /*MD061009*/
+             STRJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
+                          FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +
+                          SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
+                          SDCTLXTD SDCBRTPD PTYHSTPD SDPLCSPD +
+                          SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
+                          SDCCRDPD SDKYCIPD) JRN(SD0013JRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)                                   /*CSD028*/ /*MD061009*/
                                                                                           /*CSD028*/
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SDC0013002                                          */
- 
+
 /* Call customer deletion program */
- 
+
              CALL       PGM(SD0013) PARM(&RSEQ &RLVL &RENT)
- 
+
 /* Check switches after call to SD0013 */
- 
+
              RTVJOBA    SWS(&SWS)
- 
+
              IF         COND(%SST(&SWS 7 2) *EQ '11') THEN(DO)
- 
+
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&LDA)
- 
+
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&LDA) +
                              TOMSGQ(MOPERQ)
- 
+
                 GOTO       CMDLBL(ABNOR)
- 
+
              ENDDO
- 
+
 /* Commit changes */
- 
+
              COMMIT
- 
+
 /* Avoid ABNOR processing */
- 
+
              GOTO       CMDLBL(END)
- 
+
 /* Abnormal termination processing */
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000)
- 
+
              ROLLBACK
              MONMSG     MSGID(CPF0000)
- 
+
              SNDPGMMSG  MSG('Program SDC0013 ended abnormally') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000)
- 
+
 /* End of program processing */
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /* Close down SD0011X, SD0010U and SD0340U */                         /*077335*/
                                                                       /*077335*/
              CALL       PGM(SD0011X) PARM(&RTNCDE &CUST &RTNCDE2 +
@@ -308,10 +318,10 @@ END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                                                                       /*077335*/
                                                                       /*077335*/
 /* End journalling and commitment control */
- 
+
              ENDCMTCTL
              MONMSG     MSGID(CPF0000)
- 
+
 /*/COPY WNCPYSRC,SDC0013006                                          */
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
@@ -331,38 +341,44 @@ END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
                           SDFCTLPA SDCBRTPD PTYHSTPD SDPLCSPD +
                           SDLBCSPD)                        /*S01486*/ /*146350*/
- 
-             ENDJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
+
+/**********  ENDJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
                           FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +
                           SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
                           SDFCTLPA SDCBRTPD PTYHSTPD SDPLCSPD +
                           SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
-                          SDCCRDPD)                                   /*146350*/
+                          SDCCRDPD) */                                /*146350*/        /*MD061009*/
+             ENDJRNPF   FILE(CLINTCA CLINTCB CLINTCC CLINTC1 CLINTSE +
+                          FOCLTA FOCLTD SDCUSTPD SDALTNPD SDACUSPD +
+                          SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
+                          SDCTLXTD SDCBRTPD PTYHSTPD SDPLCSPD +
+                          SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
+                          SDCCRDPD)                                   /*146350*/        /*MD061009*/
              MONMSG     MSGID(CPF0000)
 /*/COPY WNCPYSRC,SDC0013003                                          */
- 
+
 /* If this is a successful completion of the program then */
 /* delete the journal/journal receiver                    */
- 
+
              IF         COND(%SST(&SWS 7 2) *EQ '00') THEN(DO)
- 
+
                 DLTJRN     JRN(SD0013JRN)
                 MONMSG     MSGID(CPF0000)
- 
+
 /* Change job to automatically reply to the journal receiver not */
 /* fully saved message.                                          */
- 
+
                 CHGJOB     INQMSGRPY(*DFT)
- 
+
                 DLTJRNRCV  JRNRCV(SD0013RCV)
                 MONMSG     MSGID(CPF0000)
- 
+
 /* Change job to reply required again */
- 
+
                 CHGJOB     INQMSGRPY(*RQD)
- 
+
              ENDDO
 /*/COPY WNCPYSRC,SDC0013007                                          */
- 
+
              ENDDO                                                    /*CCB009*/
              ENDPGM

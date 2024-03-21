@@ -11,8 +11,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD061009           Date 23Jan23              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -41,6 +42,7 @@
 /*                    RT      Drop SD0310 for RT test               */
 /********************************************************************/
 /*                                                                  */
+/*       MD061009 - Deliverable Data Split for SDFCTLPA and GPFCTLPA */
 /*       MD046248 - Finastra Rebranding                              */
 /*     CCB020 - COB Restructure - Secondary COB Infrastructure      */
 /*     CGL018 - Risk Weighted Assets                                */
@@ -105,20 +107,20 @@
              DCL        VAR(&PLVL) TYPE(*CHAR) LEN(1)                 /*CGL018*/
              DCL        VAR(&PENT) TYPE(*CHAR) LEN(3)                 /*CGL018*/
 /*/COPY WNCPYSRC,SDH00594                                            */
- 
+
  dcl        &rtcd       *char    7  (' ')                   /*LN0381*/
  dcl        &optn       *char    7  ('*FIRST ')             /*LN0381*/
  dcl        &fmt        *char  200                          /*LN0381*/
  dcl        &fiche      *char    1                          /*LN0381*/
  dcl        &optdk      *char    1                          /*LN0381*/
- 
+
 /**/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                              /*177440*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*                                                          *LN0381*/
 /* Microfich Module active = (&FMT 54) is 'Y'               *LN0381*/
 /* Optical Disk Module active = (&FMT 85) is 'Y'            *LN0381*/
@@ -135,7 +137,7 @@
                                                            /*LN0381*/
  chgvar &FICHE  (%SST(&FMT 54 1))                          /*LN0381*/
  chgvar &OPTDK  (%SST(&FMT 85 1))                          /*LN0381*/
- 
+
 /*/COPY WNCPYSRC,SDH00595                                            */
 /**/                                                                  /*LN0220*/
 /* CALL FCC06 TO RESET RCF FILE/DATA AREA FOR PERIODIC REPORTS          LN0220*/
@@ -199,20 +201,20 @@
 /************      GOTO       ENDCLPGM                      *S01146*/ /*LN0220*/
 /************   ENDDO                                       *S01146*/ /*LN0220*/
 /************ENDDO                                          *S01146*/ /*LN0220*/
- 
+
 /* Optical Disk and/or                                        *LN0381*/
 /* Microfiche Processing -                                    *LN0381*/
 /*                        Set up Collation Frequency Dataara  *LN0381*/
- 
+
    IF    ((&fiche *EQ 'Y') *or +
           (&optdk *EQ 'Y'))     +
        then(DO)                                              /*LN0381*/
- 
+
           chgvar   &MSG  ('MICROFICHE COB PROCESSING, +
                            setup Collation Frequencies')     /*LN0381*/
 /******** sndmsg   tomsgq(MRUNQ MOPERQ) msg(&MSG)      LN0381/*LN0982*/
           SNDMSG     MSG(&MSG) TOMSGQ(MRUNQ)                 /*LN0982*/
- 
+
 /* reset EDDFLG                                               *LN0381*/
           chgjob   sws(XXXXXX00)                             /*LN0381*/
           call     MA0500                                    /*LN0381*/
@@ -225,7 +227,7 @@
 /******************goto       ENDCLPGM                /*LN0381 177440*/
                 ENDDO                                        /*LN0381*/
        ENDDO                                                 /*LN0381*/
- 
+
 /*                                                                  */
              CHGVAR     &MSG VALUE(' UPDATED TABLES REPORTS EXECUTING')
              SNDMSG     TOMSGQ(MRUNQ) MSG(&MSG)
@@ -242,7 +244,7 @@
 /* BECAUSE SDFCTLL1 IS USED AT SEVERAL DIFFERENT PROGRAM LEVELS  */   /*BHF890*/
 /* SHARE OPEN DATA PATH MUST BE CHANGED TO *NO SO THAT THE FILE'S*/   /*BHF890*/
 /* POINTER IN THE FIRST PROGRAM IS NOT CHANGED BY LOWER PROGRAMS */   /*BHF890*/
-             OVRDBF     FILE(SDFCTLL1) SHARE(*NO)                     /*BHF890*/
+/**********  OVRDBF     FILE(SDFCTLL1) SHARE(*NO) */                  /*BHF890*/        /*MD061009*/
              CLRPFM     FILE(SDBRKDPD)                                /*195963*/
 /* CALL THE NEW AUDIT REPORT CONTROL PROGRAM                            LN0220*/
              CALL       PGM(SF0410) PARM(&GROUP &USR &SLEVEL &TIMEO  +
@@ -255,7 +257,7 @@
              CALL       PGM(SD0541X) PARM(&RTNCDE &SEQNO &LEVEL +
                           &ENTTY)                                     /*LN0220*/
              DLTOVR     FILE(QUSERMSG)                                /*131076*/
-             DLTOVR     FILE(SDFCTLL1)                                /*BHF890*/
+/**********  DLTOVR     FILE(SDFCTLL1) */                             /*BHF890*/        /*MD061009*/
              RTVJOBA    SWS(&SWS)
 /************IF         (%SUBSTRING(&SWS 8 1) *EQ '1') THEN(DO)       /*E29035*/
              IF         (%SUBSTRING(&SWS 7 2) *EQ '11') THEN(DO)      /*E29035*/
@@ -266,7 +268,7 @@
 /************GOTO       ENDCLPGM                                      /*177440*/
              GOTO       ABNOR                                         /*177440*/
  ENDD001:    ENDDO
- 
+
              IF         (%SUBSTRING(&SWS 7 2) *EQ '01') THEN(DO)      /*E29035*/
                 CHGVAR     VAR(&MSG) VALUE(' FILE CONTROLS OUT OF +
                              BALANCE')                                /*E29035*/
@@ -278,49 +280,49 @@
 /**/                                                                  /*S01340*/
 /* OVERRIDE SDFCTL LOGICALS TO GLFCTL AS THE SAME PROGRAMS       */   /*S01340*/
 /* PROCESS THE REPORTS FOR BOTH MODULES.                         */   /*S01340*/
-             OVRDBF     FILE(SDFCTLL1) TOFILE(GLFCTLL1) SHARE(*NO)    /*S01340*/
-             OVRDBF     FILE(SDFCTLL0) TOFILE(GLFCTLL0)               /*S01340*/
+/**********  OVRDBF     FILE(SDFCTLL1) TOFILE(GLFCTLL1) SHARE(*NO) */ /*S01340*/        /*MD061009*/
+/*********** OVRDBF     FILE(SDFCTLL0) TOFILE(GLFCTLL0) */            /*S01340*/        /*MD061009*/
 /* CALL THE NEW GL AUDIT REPORT CONTROL PROGRAM                         S01340*/
              CALL       PGM(GL0930) PARM(&RTNCDE &SEQNO &LEVEL +
                           &ENTTY)                                     /*S01340*/
-             DLTOVR     FILE(SDFCTLL1 SDFCTLL0)                       /*S01340*/
+/**********  DLTOVR     FILE(SDFCTLL1 SDFCTLL0) */                    /*S01340*/        /*MD061009*/
 /* CGL018 start */
- 
+
 /*  Check if feature on                                              */
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SARD) VALUE('CGL018')
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
- 
+
              IF         COND(&RTCD *NE '       ') THEN(DO)
              GOTO       CMDLBL(POSTRWA)
              ENDDO
- 
+
              CHGVAR     VAR(&MODE) VALUE('A')
- 
+
 /*  RWA Sets Audit Report                                            */
              CHGVAR     VAR(&PSEQ) VALUE('     ')
              CALL       PGM(SD001244) PARM(&RTCD &MODE &PSEQ &PLVL &PENT)
              IF         COND(&RTCD *NE '       ') THEN(DO)
              GOTO       CMDLBL(POSTRWA)
              ENDDO
- 
+
 /*  RWA Codes Audit Report                                           */
              CHGVAR     VAR(&PSEQ) VALUE('     ')
              CALL       PGM(SD001246) PARM(&RTCD &MODE &PSEQ &PLVL &PENT)
              IF         COND(&RTCD *NE '       ') THEN(DO)
              GOTO       CMDLBL(POSTRWA)
              ENDDO
- 
+
 /*  RWA Netting Groups Audit Report                                  */
              CHGVAR     VAR(&PSEQ) VALUE('     ')
              CALL       PGM(GL001247) PARM(&RTCD &MODE &PSEQ &PLVL &PENT)
              IF         COND(&RTCD *NE '       ') THEN(DO)
              GOTO       CMDLBL(POSTRWA)
              ENDDO
- 
+
 POSTRWA:
- 
+
 /* CGL018 end */
              RTVJOBA    SWS(&SWS)
              IF         (%SUBSTRING(&SWS 7 2) *EQ '11') THEN(DO)      /*S01340*/

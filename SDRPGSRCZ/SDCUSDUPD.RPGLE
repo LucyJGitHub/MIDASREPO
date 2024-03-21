@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061007           Date 31Dec21               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD061007           Date 31Dec21               *
+      *                 MD059520           Date 21Feb22               *
       *                 252069             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
@@ -160,6 +161,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records. (Recompile)      *
@@ -588,6 +590,7 @@
                                                                                               CSD023
      D WURDNB          S                   like(BJRDNB)                                       CSD079
      D CER050          S              1A   inz('N')                                           CER050
+     D CSW123          S              1A   inz('N')                                           CSW123
      D CSD079          S              1A   inz('N')                                           CSD079
      D S01425          S              1A   inz('N')                                           CSD079
      D CSD008          S              1A   inz('N')                                           CSD079
@@ -2903,6 +2906,23 @@
      C**********         EVAL      XCLCUS=WKUSER                                  MD026835 MD027492A
      C                   EVAL      XCLCUS=WLUSER                                           MD027492A
      C**********         ENDIF                                                     MD030958 MD042407
+     C                   IF        CSW123 = 'Y'                                               CSW123
+     C                   EVAL      XCCNAM = A_XCCNAM                                          CSW123
+     C                   EVAL      XCDEPT = A_XCDEPT                                          CSW123
+     C                   EVAL      XCSDEP = A_XCSDEP                                          CSW123
+     C                   EVAL      XCSTRE = A_XCSTRE                                          CSW123
+     C                   EVAL      XCBUIU = A_XCBUIU                                          CSW123
+     C                   EVAL      XCBUIA = A_XCBUIA                                          CSW123
+     C                   EVAL      XCFLOR = A_XCFLOR                                          CSW123
+     C                   EVAL      XCPOSB = A_XCPOSB                                          CSW123
+     C                   EVAL      XCROOM = A_XCROOM                                          CSW123
+     C                   EVAL      XCPOSC = A_XCPOSC                                          CSW123
+     C                   EVAL      XCTWNN = A_XCTWNN                                          CSW123
+     C                   EVAL      XCTWNL = A_XCTWNL                                          CSW123
+     C                   EVAL      XCDISN = A_XCDISN                                          CSW123
+     C                   EVAL      XCCTRS = A_XCCTRS                                          CSW123
+     C                   EVAL      XCCTRY = A_XCCTRY                                          CSW123
+     C                   ENDIF                                                                CSW123
                                                                                               CSW024
      C                   IF        CSW024 = 'Y' and BGMSDL = 'Y'                              CSW024
      C                   EVAL      BBCORP=A_CUCORP                                            CSW024
@@ -4088,6 +4108,23 @@
      C**********         EVAL      XCLCUS=WKUSER                                 MD026957B MD027492A
      C                   EVAL      XCLCUS=WLUSER                                           MD027492A
      C**********         ENDIF                                                     MD030958 MD042407
+     C                   IF        CSW123 = 'Y'                                               CSW123
+     C                   EVAL      XCCNAM = A_XCCNAM                                          CSW123
+     C                   EVAL      XCDEPT = A_XCDEPT                                          CSW123
+     C                   EVAL      XCSDEP = A_XCSDEP                                          CSW123
+     C                   EVAL      XCSTRE = A_XCSTRE                                          CSW123
+     C                   EVAL      XCBUIU = A_XCBUIU                                          CSW123
+     C                   EVAL      XCBUIA = A_XCBUIA                                          CSW123
+     C                   EVAL      XCFLOR = A_XCFLOR                                          CSW123
+     C                   EVAL      XCPOSB = A_XCPOSB                                          CSW123
+     C                   EVAL      XCROOM = A_XCROOM                                          CSW123
+     C                   EVAL      XCPOSC = A_XCPOSC                                          CSW123
+     C                   EVAL      XCTWNN = A_XCTWNN                                          CSW123
+     C                   EVAL      XCTWNL = A_XCTWNL                                          CSW123
+     C                   EVAL      XCDISN = A_XCDISN                                          CSW123
+     C                   EVAL      XCCTRS = A_XCCTRS                                          CSW123
+     C                   EVAL      XCCTRY = A_XCCTRY                                          CSW123
+     C                   ENDIF                                                                CSW123
                                                                                               CSW024
      C                   IF        CSW024 = 'Y' and BGMSDL = 'Y'                              CSW024
      C                   EVAL      BBCORP=A_CUCORP                                            CSW024
@@ -8017,6 +8054,18 @@
      C                   EVAL      CER050      = 'N'                                          CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   PARM      *BLANKS       PRTCD                                        CSW123
+     C                   PARM      '*VERIFY'     POPTN                                        CSW123
+     C                   PARM      'CSW123'      PSARD                                        CSW123
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
+                                                                                              CSW123
+     C                   IF        PRTCD       = *BLANKS                                      CSW123
+     C                   EVAL      CSW123      = 'Y'                                          CSW123
+     C                   ELSE                                                                 CSW123
+     C                   EVAL      CSW123      = 'N'                                          CSW123
+     C                   ENDIF                                                                CSW123
+      *                                                                                       CSW123
      C                   ENDSR
      C****************************************************************
       /EJECT

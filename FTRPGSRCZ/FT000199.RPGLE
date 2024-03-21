@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060263           Date 20Jul22               *
-      *  Prev Amend No. MD060250           Date 11Jul22               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060263           Date 20Jul22               *
+      *                 MD060250           Date 11Jul22               *
       *                 CSW122A            Date 04May22               *
       *                 MD057056           Date 19May21               *
       *                 MD056683           Date 14Sep20               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD060263 - MT199 REJT field tag 79 Line 4 TREF value should  *
       *             not include further trailing info.                *
       *  MD060250 - Not translated Incoming MT is generating MTn99    *

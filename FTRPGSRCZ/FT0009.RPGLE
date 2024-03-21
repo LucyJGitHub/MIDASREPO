@@ -16,9 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG25230           Date 29Jul09               *
+      *                 BUG25230           Date 29Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG25230 - FTC0510 00001 failed. Apply fix 219564.           *
       *  219564 - Initialise field INCHGC and OPCHGC.                 *
@@ -71,23 +74,23 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Payment details file
      FINPAY     IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Incoming Payment details extension file
      FINPAYXL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Outgoing Payment details file
      FOTPAY     IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Outgoing Payment details extension file
      FOTPAYXL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
      FFT0009AU  O    E             PRINTER INFDS(SPOOLU)
      FFT0009P1  O    E             PRINTER INFDS(SPOOL1) USROPN
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -95,83 +98,83 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** File Information Data Structure for FT0009AU
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
       ** File Information Data Structure for FT0009P1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** External data structure for Bank details
      D Sdbank        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for SAR details
      D Scsard        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** DS for Access Objects - short data structure
      D Dsfdy         E DS                  EXTNAME(Dsfdy)
- 
+
       ** Externally described DS for Funds Transfer ICD details                               219564
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                                  219564
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D RqdLn1          S              3S 0
      D DifLn1          S              3S 0
      D WOpenP1         S              1A
      D CFT014          S              1A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      SrInPay
- 
+
      C                   EXSR      SrOtPay
- 
+
      C                   EXSR      Audit
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -182,45 +185,45 @@
       *  Calls     : InzInX, WrtEnd                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrInPay       BEGSR
- 
+
       ** Reset report work fields, read first record from
       ** Incoming Payments file
- 
+
      C                   EVAL      PRTLN1 = *ZERO
      C                   EVAL      RFile = 'INPAYDD  '
      C                   EVAL      WOpenP1 = 'N'
- 
+
      C     *LOVAL        SETLL     INPAY
      C                   READ      INPAYDDF                               80
- 
+
      C                   IF        *IN80 = *OFF
      C                   OPEN      FT0009P1
      C                   WRITE     HEADP1
      C                   EVAL      WOpenP1 = 'Y'
      C                   ENDIF
- 
+
       ** Do until file end: count number of records read, and
       ** initialise new fields on the extension file
- 
+
      C                   DOW       *IN80 = *OFF
- 
+
      C                   ADD       1             RCntI
      C                   EXSR      InzInX
      C                   READ      INPAYDDF                               80
- 
+
      C                   ENDDO
- 
+
       ** Write final record and End of report
- 
+
      C                   IF        WOpenP1 = 'Y'
      C                   EXSR      WrtEnd
      C                   CLOSE     FT0009P1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -232,13 +235,13 @@
       *  Calls     : WrtDetl                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     InzInX        BEGSR
- 
+
      C     PREF          CHAIN     INPAYXDF                           90
- 
+
       ** Initialise the new fields introduced by CFT009
- 
+
      C                   If        PMode   = '1' OR
      C                             PMode   = '2' AND INCHGC = *Blanks
      C                   EVAL      INRECI  = RECI
@@ -295,10 +298,10 @@
      C                   EVAL      CMSC03  = *ZERO
      C                   EVAL      CMSC04  = *ZERO
      C                   EVAL      CMSC05  = *ZERO
- 
+
       ** If CFT014 is not installed, initialise the fields
       ** introduced by CFT014
- 
+
      C                   IF        CFT014 = 'N'
      C                   EVAL      INBOCD = *BLANKS
      C                   EVAL      INICD1 = *BLANKS
@@ -337,15 +340,15 @@
      C                   EVAL      INREPA = REPA
      C                   EVAL      INTMST = TMST
      C                   ENDIF
- 
+
       ** Update record if it exists in the extension file
- 
+
      C                   IF        *IN90 = *OFF
      C                   UPDATE    INPAYXDF
      C                   EVAL      RActn = 'A'
- 
+
       ** Write new record if none exists yet
- 
+
      C                   ELSE
      C                   EVAL      INPREF = PREF
      C                   EVAL      INSETM = *BLANK
@@ -358,15 +361,15 @@
      C                   WRITE     INPAYXDF
      C                   EVAL      RActn = 'I'
      C                   ENDIF
- 
+
       ** Print the record on the report
- 
+
      C                   EXSR      WrtDetl
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -377,45 +380,45 @@
       *  Calls     : InzOtX, WrtEnd                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrOtPay       BEGSR
- 
+
       ** Reset report work fields, read first record from
       ** Outgoing Payments file
- 
+
      C                   EVAL      PRTLN1 = *ZERO
      C                   EVAL      RFile = 'OTPAYDD  '
      C                   EVAL      WOpenP1 = 'N'
- 
+
      c     *LOVAL        SETLL     OTPAY
      C                   READ      OTPAYDDF                               80
- 
+
      C                   IF        *IN80 = *OFF
      C                   OPEN      FT0009P1
      C                   WRITE     HEADP1
      C                   EVAL      WOpenP1 = 'Y'
      C                   ENDIF
- 
+
       ** Do until file end: count number of records read, and
       ** initialise new fields on the extension file
- 
+
      C                   DOW       *IN80 = *OFF
- 
+
      C                   ADD       1             RCntO
      C                   EXSR      InzOtX
      C                   READ      OTPAYDDF                               80
- 
+
      C                   ENDDO
- 
+
       ** Write final record and End of report
- 
+
      C                   IF        WOpenP1 = 'Y'
      C                   EXSR      WrtEnd
      C                   CLOSE     FT0009P1
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -427,13 +430,13 @@
       *  Calls     : WrtDetl                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     InzOtX        BEGSR
- 
+
      C     PREF          CHAIN     OTPAYXDF                           90
- 
+
       ** Initialise the new fields introduced by CFT009
- 
+
      C                   If        PMode  = '1'  OR
      C                             PMode  = '2' AND OPCHGC = *Blanks
      C                   EVAL      OPRECI = RECI
@@ -494,10 +497,10 @@
      C                   EVAL      MISC04 = *ZERO
      C                   EVAL      MISC05 = *ZERO
      C                   EVAL      SWSCCC = *ZERO
- 
+
       ** If CFT014 is not installed, initialise the fields
       ** introduced by CFT014
- 
+
      C                   IF        CFT014 = 'N'
      C                   EVAL      OPBOCD = *BLANKS
      C                   EVAL      OPICD1 = *BLANKS
@@ -538,15 +541,15 @@
      C                   EVAL      OPREPA = REPA
      C                   EVAL      OPTMST = TMST
      C                   ENDIF
- 
+
       ** Update record if it exists in the extension file
- 
+
      C                   IF        *IN90 = *OFF
      C                   UPDATE    OTPAYXDF
      C                   EVAL      RActn = 'A'
- 
+
       ** Write new record if none exists yet
- 
+
      C                   ELSE
      C                   EVAL      OPPREF = PREF
      C                   EVAL      OPBJPR = *BLANKS
@@ -560,15 +563,15 @@
      C                   WRITE     OTPAYXDF
      C                   EVAL      RActn = 'I'
      C                   ENDIF
- 
+
       ** Print the record on the report
- 
+
      C                   EXSR      WrtDetl
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -579,40 +582,40 @@
       *  Calls     : None                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     WrtDetl       BEGSR
- 
+
      C                   EVAL      RPref = PREF
      C                   EVAL      RStat = *BLANKS
- 
+
      C                   SELECT
- 
+
      C                   WHEN      RECI = 'D'
      C                   EVAL      RStat = 'LIVE'
- 
+
      C                   WHEN      RECI = 'M'
      C                   EVAL      RStat = 'MATURED'
- 
+
      C                   WHEN      RECI = 'C'
      C                   EVAL      RStat = 'DELETED'
- 
+
      C                   ENDSL
- 
+
       ** Check that sufficient lines remain for the Format.  If not,
       ** write out the Main Headings on a new page
- 
+
      C                   Z-ADD     1             RqdLn1
      C     OFLLN1        SUB       PRTLN1        DifLn1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Detail Record
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -623,24 +626,24 @@
       *  Calls     : None                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     WrtEnd        BEGSR
- 
+
       ** Check that sufficient lines remain for the Format.  If not,
       ** write out the Main Headings on a new page
- 
+
      C                   Z-ADD     4             RqdLn1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Total Format
- 
+
      C                   WRITE     TRAILP1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -651,33 +654,33 @@
       *  Calls     : None                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     Audit         BEGSR
- 
+
       ** Output Report Header
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, output "No Details" message
- 
+
      C                   IF        RCntI = 0 AND RCntO = 0
      C                   WRITE     NODTLS
      C                   ELSE
- 
+
       ** Output Report Header and File Controls
- 
+
      C                   WRITE     CONTROL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -688,23 +691,23 @@
       *  Calls     : AOBANKR0, AOSARDR0, *PSSR                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   Parm                    PMode             1
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      Dbpgm = 'FT0009    '
      C                   OUT       LDA
- 
+
       ** Retrieve Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     Sdbank        PARM      Sdbank        Dsfdy
- 
+
      C                   IF        @RtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      Dbfile = 'SDBANKPD'
@@ -713,15 +716,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SAR details for STP Phase 2 MT103 for Funds Transfer
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'CFT014'      @Sard
      C     Scsard        PARM      Scsard        Dsfdy
- 
+
      C                   IF        @RtCd <> *BLANKS AND
      C                             @RtCd <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -731,7 +734,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RtCd = *BLANKS
      C                   EVAL      CFT014 = 'Y'
      C                   ELSE
@@ -755,14 +758,14 @@
      C                   OUT       LDA                                                        219564
      C                   EXSR      *PSSR                                                      219564
      C                   ENDIF                                                                219564
- 
+
       ** Report work fields
- 
+
      C                   Z-ADD     0             RCntI
      C                   Z-ADD     0             RCntO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -773,25 +776,25 @@
       *  Calls     : Audit                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
- 
+
       ** Check to see that *PSSR has not already been called
- 
+
      C                   IF        RunBefore = *BLANK
      C                   EVAL      RunBefore = 'Y'
      C                   EXSR      Audit
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
 (c) Finastra International Limited 2001

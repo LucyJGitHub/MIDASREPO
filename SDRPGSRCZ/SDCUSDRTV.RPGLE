@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060008           Date 11May21               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060008           Date 11May21               *
+      *                 MD058830           Date 01Oct21               *
       *                 MD059520           Date 21Feb22               *
       *                 254109             Date 01Jun20               *
       *                 AR1088819          Date 03Jun20               *
@@ -156,6 +157,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD060076           Date 14Jun22               *
-      *  Prev Amend No. MD059655           Date 02Mar22               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060076           Date 14Jun22               *
+      *                 MD059655           Date 02Mar22               *
       *                 MD039307           Date 02Mar22               *
       *                 MD050212           Date 02Apr18               *
       *                 MD039670           Date 11Aug16               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD060076 - COB component SDC000715 00001 failed              *
       *  MD059655 - Amendment to MD39670 while testing MD039307.      *
       *             Used DSLDY instead of DSSDY when calling          *

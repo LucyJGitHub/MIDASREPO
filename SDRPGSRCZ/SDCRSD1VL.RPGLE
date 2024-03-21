@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD052432           Date 18Dec18               *
-      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *                 MD051393           Date 29Jun18               *
       *                 MD051230           Date 08Jun18               *
       *                 MD050572           Date 03May18               *
       *                 MD040876           Date 13Sep16               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD051393 - Info complete flag                                *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
       *             midas error message                               *

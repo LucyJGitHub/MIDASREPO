@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD032119           Date 19Jul22               *
-      *  Prev Amend No. MD057255           Date 27Nov20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD032119           Date 19Jul22               *
+      *                 MD057255           Date 27Nov20               *
       *                 MD056982           Date 12Oct20               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD032119 - Wrong validation if birthdate is earlier than 1972*
       *             Use E5DBTH instead of E5BRTH.                     *
       *  MD057255 - Controlling Person not removed in report          *

@@ -16,14 +16,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042946           Date 01Dec16               *
       *                 MD039670           Date 26Jul16               *
       *                 CGL154   *CREATE   Date 13Oct14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042946 - Input Cycle Due Diligence Action Report is not    *
@@ -241,7 +244,7 @@
       *
       ** Customers/Non-Account Holders Driver File Load Loop
      C                   EXSR      SRLoadDrv
- 
+
       ** End Program
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -259,7 +262,7 @@
       *                                                               *
       *****************************************************************
      C     SRLoadDrv     BEGSR
- 
+
       **  FATCA Customer
      C     *LOVAL        SETLL     SDFTCSL8
      C                   READ      SDFTCSL8
@@ -275,7 +278,7 @@
      C                   PARM                    WFDCSNH
      C                   PARM      *BLANKS       PKeyST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Database error processing
      C                   IF        Prtcd <> *BLANKS
      C                             AND Prtcd <> '*CUSDEL'
@@ -293,7 +296,7 @@
      C                   ITER
      C                   ELSE
      C     BBCUST        CHAIN     SDCUSTX0
- 
+
       ** Database error processing
      C                   IF        NOT %FOUND(SDCUSXL0)
      C     *LOCK         IN        LDA
@@ -303,7 +306,7 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ELSE
- 
+
       ** Move fields to work variables before write to driver file
      C                   EVAL      WFDFILE = 'CUST'
      C                   EVAL      WFDHVAC = FAHVAC
@@ -318,11 +321,11 @@
      C                   ENDIF
      C                   READ      SDFTCSD0
      C                   ENDDO
- 
+
       **  FATCA Non-Account Holder
      C     *LOVAL        SETLL     SDFTNHL8
      C                   READ      SDFTNHL8
- 
+
      C                   DOW       NOT %EOF(SDFTNHL8)
       ** Clear driver file
      C                   CLEAR                   SDDDAC
@@ -333,7 +336,7 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    WFDCSNH
      C     SDNAHO        PARM      SDNAHO        DSSDY
- 
+
      C                   IF        PRTCD = '*NRF'                                           MD039670
      C                             OR NHCHTP = 'D'                                          MD039670
      C                   READ      SDFTNHL8                                                 MD039670
@@ -367,7 +370,7 @@
      C                   ENDDO
       *
      C                   FEOD      SDDDACPD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -382,10 +385,10 @@
       *                                                               *
       *****************************************************************
      C     SRValCond     BEGSR
- 
+
       ** For Existing Customer/Non-account Holder
      C                   IF        WFDATYP = 'E'
- 
+
       ** Existing A/C - Individual/Medium
      C                   IF        FACSTY = 'P'
      C                             AND FAHVAC = 'M'
@@ -398,7 +401,7 @@
      C                   EXSR      SRWriteDrv
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Existing A/C - Individual/High
      C                   IF        FACSTY = 'P'
      C                             AND FAHVAC = 'H'
@@ -411,7 +414,7 @@
      C                   EXSR      SRWriteDrv
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Existing A/C - Entity/Medium
      C                   IF        FACSTY <> 'P'
      C                             AND FAHVAC = 'M'
@@ -424,7 +427,7 @@
      C                   EXSR      SRWriteDrv
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Existing A/C - Entity/High
      C                   IF        FACSTY <> 'P'
      C                             AND FAHVAC = 'H'
@@ -437,9 +440,9 @@
      C                   EXSR      SRWriteDrv
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** For New Customer/Non-account Holder
      C                   IF        WFDATYP = 'N'
       *
@@ -449,7 +452,7 @@
      C                   EXSR      SRWriteDrv
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -463,13 +466,13 @@
       *                                                               *
       *****************************************************************
      C     SRChkTypAc    BEGSR
- 
+
      C                   IF        WEffectiveDate < WFDCRDT
      C                   EVAL      WFDATYP = 'N'
      C                   ELSE
      C                   EVAL      WFDATYP = 'E'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -483,7 +486,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteDrv    BEGSR
- 
+
      C                   EVAL      FDCUST = WFDCSNH
      C                   EVAL      FDFILE = WFDFILE
      C                   EVAL      FDHVAC = WFDHVAC
@@ -492,10 +495,10 @@
      C                   EVAL      FDCRDT = WFDCRDT
      C                   EVAL      FDATYP = WFDATYP
      C                   EVAL      FDSYDT = WFDSYDT
- 
+
       ** Write to driver file
      C                   WRITE     SDDDACD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -505,13 +508,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Access installation control data
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST'      POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -520,7 +523,7 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
      C                   CALLB     'AOSVALR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      WSysVal1      SVal01
@@ -543,7 +546,7 @@
      C                   PARM      *BLANKS       PVal09
      C                   PARM      *BLANKS       SVal10
      C                   PARM      *BLANKS       PVal10
- 
+
      C                   IF        PRetCode  <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDSVALPD'
@@ -552,51 +555,51 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
       ** Convert FATCA Existing A/C Individual/Medium to
       ** Midas Day Number
- 
+
      C                   EVAL      PDate = WDilMedInd
      C                   EXSR      SrZDATE1
      C                   EVAL      WDMIDayNo = PDayNo
- 
+
       ** Convert FATCA Existing A/C Individual/High to
       ** Midas Day Number
- 
+
      C                   EVAL      PDate = WDilHiInd
      C                   EXSR      SrZDATE1
      C                   EVAL      WDHIDayNo = PDayNo
- 
+
       ** Convert FATCA Existing A/C Entity/Medium to Midas Day Number
- 
+
      C                   EVAL      PDate = WDilMedEnt
      C                   EXSR      SrZDATE1
      C                   EVAL      WDMEDayNo = PDayNo
- 
+
       ** Convert FATCA Existing A/C Entity/High to Midas Day Number
- 
+
      C                   EVAL      PDate = WDilHiEnt
      C                   EXSR      SrZDATE1
      C                   EVAL      WDHEDayNo = PDayNo
- 
+
       ** Convert FATCA effective date to Midas Day Number
- 
+
      C                   EVAL      PDate = WEffStrDate
      C                   EXSR      SrZDATE1
      C                   EVAL      WEffectiveDate = PDayNo
- 
+
       ** Convert FATCA Diligence New A/C for computation purpose
      C                   EVAL      ZADec = 0
      C                   EVAL      ZADig = 5
      C                   EVAL      ZField = PVal05
      C                   EXSR      SRAlgAmount
      C                   MOVE      ZField        WNewAc
- 
+
       ** Convert Notice Days for Actions Report for FATCA
      C                   EVAL      ZField = PVal07
      C                   EXSR      SRAlgAmount
      C                   MOVE      ZField        WNoticeDays
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

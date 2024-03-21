@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055649           Date 21Mar23               *
-      *  Prev Amend No. MD060683           Date 15Feb23               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD055649           Date 21Mar23               *
+      *                 MD060683           Date 15Feb23               *
       *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD059539           Date 07Mar22               *
@@ -241,6 +242,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD055649 - Authorised corrective batch was not copied to     *
       *             PEA system. Introduced New Field BPAUTH           *
       *  MD060683 - Unable to Authorize newly inserted Single         *
@@ -869,6 +871,7 @@
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
      D IRUSER          S             10                                                     MD060683
+     D TransCUXC2      S             19                                                       CSW123
       ** LIBOR Fields for Base Rate Maintenance                                               CSD103
      D LiborBSRTfld    DS            49                                                       CSD103
       ** DS/variables to split up incoming parameter
@@ -1187,6 +1190,7 @@ RGC  D RPIF4LN         S              4  0                                      
      D/COPY OFCPYSRCZ,CGL135_041                                                             CGL135A
      D/COPY OFCPYSRCZ,CGL158_001                                                              CGL158
      D CUXCLn          S              4  0                                                    CGL132
+     D CUXCLn2         S              4  0                                                    CSW123
      D FTCRLn          S              4  0                                                    CGL132
      D CRSSLn          S              4  0                                                    CGL157
      D CRDDLn          S              4  0                                                    CGL157
@@ -5827,7 +5831,9 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CSW213
      C                   EVAL      FileName = 'SDCUXCPD'                                      CGL132
      C                   EXSR      GETRCDLN                                                   CGL132
-     C                   EVAL      CUXCLn = RecordLen                                         CGL132
+     C**********         EVAL      CUXCLn = RecordLen                                  CGL132 CSW123
+     C                   EVAL      CUXCLn = 19                                                CSW123
+     C                   EVAL      CUXCLn2 = RecordLen - 19                                   CSW123
                                                                                               CGL132
      C                   EVAL      FileName = 'SDFTCRPD'                                      CGL132
      C                   EXSR      GETRCDLN                                                   CGL132
@@ -7447,7 +7453,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      TransCS13 = %SUBST(BufferEx2:Bfp:SW13Ln)                 MD022093
       *                                                                                     MD022093
      C                   EVAL      Bfp  += SW13Ln                                           MD022093
-     C                   EVAL      TransCUXC = %SUBST(BufferEx2:Bfp:CUXCLn)                   CGL132
+     C**********         EVAL      TransCUXC = %SUBST(BufferEx2:Bfp:CUXCLn)            CGL132 CSW123
+     C                   EVAL      TransCUXC2 = %SUBST(BufferEx2:Bfp:CUXCLn)                  CSW123
      C                   EVAL      Bfp  += CUXCLn                                             CGL132
      C                   EVAL      TransFTCR = %SUBST(BufferEx2:Bfp:FTCRLn)                   CGL132
      C                   EVAL      Bfp  += FTCRLn                                             CGL132
@@ -7466,6 +7473,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      TransPROFUser = %SUBST(BufferEx2:Bfp:20)                 MD055373
      C                   EVAL      Bfp  += 20                                               MD055373
       *                                                                                     MD055373
+     C                   EVAL      TransCUXC = TransCUXC2 +                                   CSW123
+     C                                        %SUBST(BufferEx2:Bfp:CUXCLn2)                   CSW123
+     C                   EVAL      Bfp  += CUXCLn2                                            CSW123
      C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093

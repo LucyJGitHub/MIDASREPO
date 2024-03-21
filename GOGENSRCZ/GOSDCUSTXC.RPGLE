@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD050212 *Create   Date 02Apr18               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD050212 *Create   Date 02Apr18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *                                                               *
       *****************************************************************

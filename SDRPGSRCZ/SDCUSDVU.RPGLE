@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD062003           Date 15Nov23               *
-      *  Prev Amend No. MD059830           Date 21Apr22               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD062003           Date 15Nov23               *
+      *                 MD059830           Date 21Apr22               *
       *                 MD059520           Date 21Feb22               *
       *                 MD058090           Date 12May21               *
       *                 MD053345           Date 01Jun20               *
@@ -163,6 +164,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD062003 - Cannot delete customer due to error message       *
       *             'This account is closed' and 'Settlement Account  *
       *              does not exist'.                                 *
@@ -583,6 +585,8 @@
      D                                     PREFIX(CT)                                      AR1086546
      D TranInCUXC    E DS                  EXTNAME (SDCUXCPD)                                 CGL132
      D                                     PREFIX(XC)                                         CGL132
+     D TranInCUX1              1     19                                                       CSW123
+     D TranInCUX2             20    734                                                       CSW123
      D TranInFTCR    E DS                  EXTNAME (SDFTCRPD)                                 CGL132
      D                                     PREFIX(FS)                                         CGL132
      D TranInCRSS    E DS                  EXTNAME(SDCRSSPD)                                  CGL157
@@ -1203,7 +1207,8 @@
      D***FillerBufEx2    S           5591A                                           CGL157 MD054028
      D***FillerBufEx2    S           5590A                                         MD054028 MD055446
      D***FillerBufEx2    S           5580A                                         MD055446 MD055373
-     D FillerBufEx2    S           5560A                                                    MD055373
+     D***FillerBufEx2    S           5560A                                           MD055373 CSW123
+     D FillerBufEx2    S           4845A                                                      CSW123
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1620,13 +1625,15 @@
      C**********                                 + TranInCtnm                     AR1086546 MD041996
      C                                           + FillerBuf                                  CSW213
      C                   EVAL      BufferEx2 = SDSW13                                         CSW213
-     C                                       + TranInCUXC                                     CGL132
+     C**********                             + TranInCUXC                              CGL132 CSW123
+     C                                       + TranInCUX1                                     CSW123
      C                                       + TranInFTCR                                     CGL132
      C                                       + ExtData                                      MD044880
      C                                       + TranInCRSS                                     CGL157
      C                                       + DDAPRC                                       MD054028
      C                                       + TranInBRTCent                                MD055446
      C                                       + TransUser                                    MD055373
+     C                                       + TranInCUX2                                     CSW123
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213

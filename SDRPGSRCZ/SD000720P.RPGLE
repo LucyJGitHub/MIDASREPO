@@ -14,10 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
       *****************************************************************

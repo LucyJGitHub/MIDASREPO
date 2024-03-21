@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No  MD055446           Date 04Apr20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
       *  MD055446 - There are parties and fields missing from the BRT *	
@@ -769,6 +771,25 @@
      C                   MOVE      'N'           DDDRMT                                      CGL132
      C                   ENDIF                                                               CGL132
                                                                                              CGL132
+      *                                                                                      CSW123
+     C                   IF        CSW123 = 'Y'                                              CSW123
+     C                   EVAL      DDCNAM = XCCNAM                                           CSW123
+     C                   EVAL      DDDEPT = XCDEPT                                           CSW123
+     C                   EVAL      DDSDEP = XCSDEP                                           CSW123
+     C                   EVAL      DDSTRE = XCSTRE                                           CSW123
+     C                   EVAL      DDBUIU = XCBUIU                                           CSW123
+     C                   EVAL      DDBUIA = XCBUIA                                           CSW123
+     C                   EVAL      DDFLOR = XCFLOR                                           CSW123
+     C                   EVAL      DDPOSB = XCPOSB                                           CSW123
+     C                   EVAL      DDROOM = XCROOM                                           CSW123
+     C                   EVAL      DDPOSC = XCPOSC                                           CSW123
+     C                   EVAL      DDTWNN = XCTWNN                                           CSW123
+     C                   EVAL      DDTWNL = XCTWNL                                           CSW123
+     C                   EVAL      DDDISN = XCDISN                                           CSW123
+     C                   EVAL      DDCTRS = XCCTRS                                           CSW123
+     C                   EVAL      DDCONT = XCCTRY                                           CSW123
+     C                   ENDIF                                                               CSW123
+                                                                                             CSW123
       *  Country of Domicile
      C                   MOVE      BBCOLC        DDCOLC
 
@@ -4980,6 +5001,20 @@
      C                   MOVEL     'N'           CER050                                       CER050
      C                   END                                                                  CER050
       *                                                                                       CER050
+      ** Check if feature CSW123 is switched on                                               CSW123
+      *                                                                                       CSW123
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   PARM      *BLANKS       @RTCD                                        CSW123
+     C                   PARM      '*VERIFY'     @OPTN                                        CSW123
+     C                   PARM      'CSW123'      @SARD                                        CSW123
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW123
+      *                                                                                       CSW123
+     C                   IF        @RTCD = *BLANKS                                            CSW123
+     C                   MOVEL     'Y'           CSW123            1                          CSW123
+     C                   ELSE                                                                 CSW123
+     C                   MOVEL     'N'           CSW123                                       CSW123
+     C                   ENDIF                                                                CSW123
+      *                                                                                       CSW123
      C                   ENDSR
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079

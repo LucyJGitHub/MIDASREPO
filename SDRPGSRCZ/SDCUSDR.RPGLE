@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No. MD055373           Date 14Jul20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 MD055373           Date 14Jul20               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
       *  MD055373 - Audit trail not available                         *
@@ -235,6 +237,8 @@
                                                                                               CGL132
       ** Customer details extension file                                                      CGL132
      D CuCUXC        E DS                  EXTNAME(SDCUXCPD)                                  CGL132
+     D CuCUXC1                 1     19                                                       CSW123
+     D CuCUXC2                20    734                                                       CSW123
                                                                                               CGL132
       ** FATCA Customer details extension file                                                CGL132
      D CuFTCR        E DS                  EXTNAME(SDFTCRPD)                                  CGL132
@@ -340,7 +344,8 @@
      D***FillerBufEx2    S           5915A                                         MD044880 MD054028
      D***illerBufEx2    S           5914A                                          MD054028 MD055446
      D***FillerBufEx2    S           5904A                                         MD055446 MD055373
-     D FillerBufEx2    S           5884A                                                    MD055373
+     D***FillerBufEx2    S           5884A                                           MD055373 CSW123
+     D FillerBufEx2    S           5169A                                                      CSW123
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -470,7 +475,8 @@
      C**********                                 + NewCuCtnm                      AR1086546 MD041996
      C**********                                 + ExtData                            BUG5870 CSW213
      C                   EVAL      BufferEx2 = CuSW13                                         CSW213
-     C                                       + CuCUXC                                         CGL132
+     C**********                             + CuCUXC                                  CGL132 CSW123
+     C                                       + CuCUXC1                                        CSW123
      C                                       + CuFTCR                                         CGL132
      C**********                             + ExtData                             MD044880 MD051299
      C**********                             + Filler65                            MD051299 MD051532
@@ -479,6 +485,7 @@
      C                                       + DDAPRC                                       MD054028
      C                                       + NewCuBrtCent                                 MD055446
      C                                       + NewPROFUser                                  MD055373
+     C                                       + CuCUXC2                                        CSW123
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213

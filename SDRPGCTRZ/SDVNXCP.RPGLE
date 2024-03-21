@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD040734           Date 23Aug16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036459           Date 06Nov15               *
       *                 MD036356           Date 02Nov15               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *           (Recompile)                                         *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD040734 - CRS Exception other than Due Diligence is still   *
       *             displayed                                         *
@@ -64,27 +67,27 @@
       *           Classification - Master                             *
       *                                                               *
       *****************************************************************
- 
+
      FSDFTCSL1  IF   E           K DISK
      F                                     RENAME(SDFTCSD0:SDFTCSD1)
      F                                     PREFIX(J)
- 
+
      FSDFTNHL1  IF   E           K DISK
      F                                     RENAME(SDFTNHD0:SDFTNHD1)
      F                                     PREFIX(J)
- 
+
      FSDCUSXL0  IF   E           K DISK
- 
+
      FSDJACCL0  IF   E           K DISK
- 
+
      FSDJACCL4  IF   E           K DISK
      F                                     RENAME(SDJACCD0:SDJACCD4)
- 
+
      FSDJACCL7  IF   E           K DISK
      F                                     RENAME(SDJACCD0:SDJACCD7)
- 
+
      FSDNAHOL1  IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -92,56 +95,56 @@
       ** +--------------------------------------+
       **
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDVFTNH       E DS                  EXTNAME(SDVFTNHPD)
       ** Valid Customer Details layout
- 
+
       ** New Non-A/C Holder in File Format
      D NwNaFilFmt    E DS                  Extname(SDVNAHLPD)
- 
+
       ** FATCA Customer Classification Code
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
- 
+
       ** Non-Account Holders File
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)
- 
+
       ** Midas Module Details Data Structure
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                             MD033414
@@ -166,7 +169,7 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  CGL157
      D                                     PREFIX(L_)                                         CGL157
                                                                                               CGL157
- 
+
      D CustIndOverDS   DS
      D  JFAHMOV
      D  JFAMCOV
@@ -179,7 +182,7 @@
      D  JFAJAOV
      D  JFATEOV
      D  JFATXOV
- 
+
      D CustIndSValDS   DS
      D  JFAHMSV
      D  JFAMCSV
@@ -192,7 +195,7 @@
      D  JFAJASV
      D  JFATESV
      D  JFATXSV
- 
+
       ** Data Structure for Non-Account Holder Indicia
      D NahoIndOverDS   DS
      D  JFNHMOV
@@ -206,7 +209,7 @@
      D  JFNJAOV
      D  JFNTEOV
      D  JFNTXOV
- 
+
      D NahoIndSvalDS   DS
      D  JFNHMSV
      D  JFNMCSV
@@ -219,7 +222,7 @@
      D  JFNJASV
      D  JFNTESV
      D  JFNTXSV
- 
+
      D PCRSDT          DS                                                                     CGL157
      D  DDCTRY                 1      2                                                       CGL157
      D  DDPREP                 3      3                                                       CGL157
@@ -251,12 +254,12 @@
      D  DDPEP2               286    349                                                       CGL157
      D  DDCRSA               350    350                                                       CGL157
      D  DDTINS               351    351                                                       CGL177
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      ** Parameters for AOSVALR0
      D POP01           S             20A
      D POP02           S             20A
@@ -278,7 +281,7 @@
      D PVL08           S            200A
      D PVL09           S            200A
      D PVL10           S            200A
- 
+
       ** Access Object Parameters
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -289,7 +292,7 @@
      D PMDate          S              5  0
      D PErrFlag        S              1A                                                    MD025163
      D WFound          S              1A
- 
+
      D WRUND           S              5S 0
      D WBthDate        S              5S 0
      D WBthDateA       S              8A
@@ -341,13 +344,13 @@
      D PSARD           S              6A                                                    MD033414
      D CGL154          S              1A                                                    MD033414
      D PHasIndicia     S              1A                                                    MD042697
- 
+
       ** Exception Report Flag Array
      D WExcpRptArr     S              1    Dim(30)
- 
+
       ** Index for arrays of error message ids etc
      D WIx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -355,20 +358,20 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        ReturnCode
      C                   MOVE      *BLANK        WFldNmXAr
      C                   MOVE      *BLANK        WMsgIdXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
      C                   EVAL      WRUND = BJRDNB
- 
+
       ** Access System Values
- 
+
      C                   EXSR      SRSVAL
- 
+
       ** Access System Values for CRS                                                         CGL157
                                                                                               CGL157
      C                   IF        PFeature = 'CRS'                                           CGL157
@@ -381,13 +384,13 @@
                                                                                               CGL157
       ** FATCA Exception Reporting for Non-Account Holders
      C                   EXSR      SrExcpNAHO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** RETURN
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -396,35 +399,35 @@
       *                                                               *
       *****************************************************************
      C     SrExcpNAHO    BEGSR
- 
+
       ** FATCA Information for Non-Account Holders
- 
+
      C                   EVAL      WArrCnt = 0
- 
+
       ** Initialize Array
      C                   EVAL      WFNEXID = *BLANKS
      C                   MOVE      *BLANKS       WExcpRptArr
- 
+
       ** FATCA classification and US indicia are consistent
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHClass
      C                   ENDIF                                                                CGL157
- 
+
       ** new Customer or Non-account holder is subject to reporting
       ** but no US tax number is defined
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHRepTxN
      C                   ENDIF                                                                CGL157
- 
+
       ** new Customer or non-account holder is subject to reporting
       ** but no US tax number and/or date and place of birth is defined
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHRepBrth
      C                   ENDIF                                                                CGL157
- 
+
       ** Expiry days for a new customer or non-acocunt holder has passed
       ** and the classification is still the default value for new
       ** customer or non-account holder
@@ -432,35 +435,35 @@
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHExpCls
      C                   ENDIF                                                                CGL157
- 
+
       ** FATCA customer type is defined but no FATCA customer subtype
       ** defined
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHSubtyp
      C                   ENDIF                                                                CGL157
- 
+
       ** Customer is flagged as a participating FFI but the GIIN number
       ** information is missing
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHGIINno
      C                   ENDIF                                                                CGL157
- 
+
       ** Customer is flagged as a participating FFI but the GIIN
       ** verification date is blank
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHGIINDt
      C                   ENDIF                                                                CGL157
- 
+
       ** FATCA inoformation is flagged as 'complete' but customer
       ** or non-account holder has still one of the default statuses
      C                   IF        PFeature = 'FTC'                                           CGL157
      C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHComplt
      C                   ENDIF                                                                CGL157
- 
+
       ** Due diligence period is expired but FATCA information                              MD033414
       ** complete flag still set to 'No'                                                    MD033414
                                                                                             MD033414
@@ -505,7 +508,7 @@
      C                   IF        DFEXID <> *BLANKS
      C                   EVAL      DFEXMA = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -515,11 +518,11 @@
       *                                                               *
       *****************************************************************
      C     SRNAHO        BEGSR
- 
+
      C                   EVAL      WBthDateA = NADBTH
      C                   EVAL      WBthCntry = NABTHC
      C                   EVAL      WBthTown  = NABTHT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -529,76 +532,76 @@
       *                                                               *
       *****************************************************************
      C     SrNHClass     BEGSR
- 
+
      C                   EVAL      PPFTC = FVCLAC
- 
+
       ** Check classification code details of the Non-Account Holder
- 
+
      C                   CALL      'AOFATCR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
      C                   PARM                    PPFTC
      C     SDFATC        PARM      SDFATC        DSFDY
- 
+
       ** US Indicia NOT allowed
      C                   IF        FCUSIA = 'N'
- 
+
       ** Hold Mail
      C                   IF        FVHMSV = 'Y'
      C                             AND FVHMOV <> 'N'
- 
+
       ** Mailing Country
      C                             OR  FVMCSV = 'Y'
      C                             AND FVMCOV <> 'N'
- 
+
       ** Regular Payment Instructions to US
      C                             OR  FVRPSV = 'Y'
      C                             AND FVRPOV <> 'N'
- 
+
       ** US Citizenship
      C                             OR  FVCISV = 'Y'
      C                             AND FVCIOV <> 'N'
- 
+
       ** US Country of Birth
      C                             OR  FVCBSV = 'Y'
      C                             AND FVCBOV <> 'N'
- 
+
       ** US Country of Domicile
      C                             OR  FVCDSV = 'Y'
      C                             AND FVCDOV <> 'N'
- 
+
       ** US Green Card
      C                             OR  FVGCSV = 'Y'
      C                             AND FVGCOV <> 'N'
- 
+
       ** US Identity Document
      C                             OR  FVIDSV = 'Y'
      C                             AND FVIDOV <> 'N'
- 
+
       ** US Joint Account Members
      C                             OR  FVJASV = 'Y'
      C                             AND FVJAOV <> 'N'
- 
+
       ** US Telephone
      C                             OR  FVTESV = 'Y'
      C                             AND FVTEOV <> 'N'
- 
+
       ** US TIN
      C                             OR  FVTXSV = 'Y'
      C                             AND FVTXOV <> 'N'
                                                                                             MD042697
      C                             OR  PHasIndicia = 'Y'                                    MD042697
- 
+
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'A'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0430'
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -608,7 +611,7 @@
       *                                                               *
       *****************************************************************
      C     SrNHRepTxN    BEGSR
- 
+
       ** Convert FATCA Effective Date to run day number                                     MD026997
      C                   EVAL      ZDATEA = WSvalEffctDate                                  MD026997
      C                   EXSR      ZDATE1                                                   MD026997
@@ -631,7 +634,7 @@
      C                   EVAL      WHasIndicia = PHasIndicia                                MD042697
                                                                                             MD042697
       ** Non-Account Holder Subject to reporting but no US Tax defined
- 
+
      C**********         IF        FVREPT = 'Y'                                             MD033414
      C**********                   AND FVUTIN = *BLANKS                                     MD033414
      C**********                   AND PMDate >= WSvalEffDayNo                     MD026997 MD033414
@@ -647,13 +650,13 @@
      C                             FVRPTT <> 'R'                                            MD027148
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'B'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0431'
      C                   ENDIF                                                              MD027148
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -664,11 +667,11 @@
       *                                                               *
       *****************************************************************
      C     SrNHRepBrth   BEGSR
- 
+
       ** Access Non-Account Holder Details for Date and Place of Birth
- 
+
      C                   EXSR      SRNAHO
- 
+
       ** Check the US Indicia for NAHO                                                      MD033414
                                                                                             MD033414
      C                   IF        CGL154 = 'Y'                                             MD033414
@@ -683,7 +686,7 @@
      C                   EVAL      WHasIndicia = PHasIndicia                                MD042697
                                                                                             MD042697
       ** Subject to Reporting
- 
+
      C**********         IF        FVREPT = 'Y'                                             MD033414
                                                                                             MD033414
      C                   IF        (FVREPT = 'Y'                                            MD033414
@@ -694,14 +697,14 @@
                                                                                             MD033414
      C                   IF        WSvalTinBrthRq = 'U'
      C                             AND FVUTIN = *BLANKS
- 
+
      C                             OR WSvalTinBrthRq = 'B'
      C                             AND WBthDateA = *BLANKS
      C**********                   OR WSvalTinBrthRq = 'B'                                  MD025163
      C**********                   AND WBthCntry = *BLANKS                                  MD025163
      C                             OR WSvalTinBrthRq = 'B'
      C                             AND WBthTown = *BLANKS
- 
+
      C                             OR WSvalTinBrthRq = 'Y'
      C                             AND FVUTIN = *BLANKS
      C                             OR WSvalTinBrthRq = 'Y'
@@ -710,16 +713,16 @@
      C**********                   AND WBthCntry = *BLANKS                                  MD025163
      C                             OR WSvalTinBrthRq = 'Y'
      C                             AND WBthTown = *BLANKS
- 
+
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'C'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0432'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -729,9 +732,9 @@
       *                                                               *
       *****************************************************************
      C     SrNHExpCls    BEGSR
- 
+
       ** Check creation date
- 
+
      C     FVNAHO        CHAIN     SDNAHOD0
      C                   IF        NOT %FOUND(SDNAHOL1) AND
      C                             FVLCTP <> 'I' AND
@@ -741,24 +744,24 @@
      C                   EVAL      DBKEY  = POPTN
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         IF        FVLCTP <> 'I'                                            MD026497
      C**********         EVAL      PInDate = NHCRDT                                         MD026497
      C                   EVAL      PInDate = NACRDT                                         MD026497
      C                   EXSR      SRDate10
- 
+
      C                   EVAL      WExpiryDate = PMDate + WSvalExpDayDft
      C                   IF        WExpiryDate < WRUND
      C                             AND FVCLAC = WSvalDftClsCde
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'D'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0367'
      C                   ENDIF
      C**********         ENDIF                                                              MD026497
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -768,10 +771,10 @@
       *                                                               *
       *****************************************************************
      C     SrNHSubtyp    BEGSR
- 
+
       ** FATCA Customer Type is 'F' (FFI) or 'N' (NFE)
       ** but no FATCA Subtype defined
- 
+
      C                   IF        FVNHTY = 'F'
      C                             AND FVNHST = *BLANKS
      C                             OR FVNHTY = 'N'
@@ -782,12 +785,12 @@
      C                             AND FVNHST = 'UN'
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'E'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0433'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -798,10 +801,10 @@
       *                                                               *
       *****************************************************************
      C     SrNHGIINno    BEGSR
- 
+
       ** Naho is flagged as a participating FFI but the GIIN number
       ** information is missing
- 
+
      C                   IF        FVNHTY = 'F'
      C                             AND FVNHST = 'PO'
      C                             AND FVGIIN = *BLANKS
@@ -810,12 +813,12 @@
      C                             AND FVGIIN = *BLANKS
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'F'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0434'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -826,7 +829,7 @@
       *                                                               *
       *****************************************************************
      C     SrNHGIINDt    BEGSR
- 
+
      C                   IF        FVNHTY = 'F'
      C                             AND FVNHST = 'PO'
      C                             AND FVGIID = *ZERO
@@ -835,12 +838,12 @@
      C                             AND FVGIID = *ZERO
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'G'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0435'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -850,22 +853,22 @@
       *                                                               *
       *****************************************************************
      C     SrNHComplt    BEGSR
- 
+
       ** FATCA inoformation is flagged as 'complete' but non-account
       ** holder has still one of the default statuses
- 
+
      C                   IF        FVINFC = 'Y'
      C                             AND WSvalDftClsCde = FVCLAC
      C                             OR FVINFC = 'Y'
      C                             AND WSvalDftClsTkn = FVCLAC
      C                   EVAL      WArrCnt = WArrCnt + 1
      C                   EVAL      WExcpRptArr (WArrCnt) = 'K'
- 
+
      C                   EVAL      WIx = WIx + 1
      C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '
      C                   EVAL      WMsgIdXAr(WIx)  = 'USS0439'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                MD033414
@@ -1436,11 +1439,11 @@
       *                                                               *
       *****************************************************************
      C     SRDate10      BEGSR
- 
+
      C                   CALLB     'ZDATE10'
      C                   PARM                    PInDate
      C                   PARM                    PMDate
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1466,7 +1469,7 @@
       *                                                               *
       *****************************************************************
      C     SRSVAL        BEGSR
- 
+
      C                   EVAL      POP01 = 'FATCAUsTinBirthRqd'
      C                   EVAL      POP02 = 'FATCAExpDayDftClsNew'
      C                   EVAL      POP03 = 'FATCADftCLsNewCustNH'
@@ -1477,7 +1480,7 @@
      C                   EVAL      POP08 = 'FATCADiligenceHiInd'                            MD033414
      C                   EVAL      POP09 = 'FATCADiligenceMedEnt'                           MD033414
      C                   EVAL      POP10 = 'FATCADiligenceHiEnt'                            MD033414
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM                    POP01
@@ -1500,7 +1503,7 @@
      C                   PARM                    PVL09
      C                   PARM                    POP10
      C                   PARM                    PVL10
- 
+
      C                   EVAL      WSvalTinBrthRq = PVL01
      C**********         MOVEL     PVL02         WSvalExpDayDft                             MD026497
      C                   EVALR     WDays = %TRIM(PVL02)                                     MD026497
@@ -1513,7 +1516,7 @@
      C                   EVAL      WSvalDlgHiInd = PVL08                                    MD033414
      C                   EVAL      WSvalDlgMedEnt = PVL09                                   MD033414
      C                   EVAL      WSvalDlgHiEnt = PVL10                                    MD033414
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1523,20 +1526,20 @@
       *                                                               *
       *****************************************************************
      C     SrChkIndCust  BEGSR
- 
+
      C                   EVAL      WOvrOff = 1
      C                   EVAL      WSysOff = 0
- 
+
       ** Check if any override flag has been set on
       ** If any has been set, this needs to get flagged as having indicia
- 
+
      C                   IF        %SCAN('Y':CustIndOverDS) = 0
- 
+
      C                   DOU       WOvrOff > WIndCnt
      C                             OR  WOvrOff = 0
      C                             OR WHasIndicia = 'Y'
      C                             OR WOvrOff = 12                                          MD033804
- 
+
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
      C                   EVAL      WOvrOff =
@@ -1546,7 +1549,7 @@
      C                   EVAL      WSysOff =
      C                               %SCAN('N':CustIndOverDS:WSysOff)
      C                   ENDIF
- 
+
       ** If offsets match, system value has been overriden
      C                   IF        WSysOff <> WOvrOff
      C                             AND WOvrOff <> 0
@@ -1555,13 +1558,13 @@
      C                   IF        WOvrOff <> 0
      C                   EVAL      WOvrOff = WOvrOff + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
      C                   EVAL      WHasIndicia = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1571,23 +1574,23 @@
       *                                                               *
       *****************************************************************
      C     SrChkIndNAHO  BEGSR
- 
+
      C                   EVAL      WOvrOff = 1
      C                   EVAL      WSysOff = 0
- 
+
       ** Check if any override flag has been set on
       ** If any has been set, this needs to get flagged as having indicia
- 
+
      C                   IF        %SCAN('Y':NahoIndOverDS) = 0
- 
+
      C                   DOU       WOvrOff = 0 OR
      C                             WOvrOff > WIndCnt
      C                             OR WHasIndicia = 'Y'
      C                             OR WOvrOff = 12                                          MD033804
- 
+
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
- 
+
      C                   EVAL      WOvrOff =
      C                               %SCAN('Y':NahoIndSvalDS:WOvrOff)
      C                   EVAL      WSysOff = WOvrOff
@@ -1595,7 +1598,7 @@
      C                   EVAL      WSysOff =
      C                               %SCAN('N':NahoIndOverDS:WSysOff)
      C                   ENDIF
- 
+
       ** If offsets match, system value has been overriden
      C                   IF        WSysOff <> WOvrOff
      C                             AND WOvrOff <> 0
@@ -1604,15 +1607,15 @@
      C                   IF        WOvrOff <> 0
      C                   EVAL      WOvrOff = WOvrOff + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
      C                   EVAL      WHasIndicia = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1620,11 +1623,11 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
      C                   PARM                    SDVFTNH
@@ -1636,14 +1639,14 @@
      C                   PARM                    PCrsdS                                       CGL157
      C                   PARM                    SDVCRNS2                                     CGL157
      C                   PARM                    PFeature                                     CGL157
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIdXAr
      C                   PARM                    WMsgDtXAr
      C                   PARM                    DFEXMA            1
      C                   PARM                    DFEXID           30
- 
+
      C/COPY ZACPYSRC,DBFIELDS
                                                                                             MD033414
       ** Check if CGL154 is On                                                              MD033414
@@ -1673,7 +1676,7 @@
      C                   ENDIF                                                              MD033414
                                                                                             MD033414
      C                   ENDIF                                                              MD033414
- 
+
       ** Access Bank Details                                                                  CGL157
                                                                                               CGL157
      C                   CALL      'AOBANKR0'                                                 CGL157

@@ -9,7 +9,7 @@
       *                                                               *
       *  DL0280 - DEALS FILE UPDATE                                   *
       *                                                               *
-      *  (c) Finastra International Limited 2001.                     *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
       *****************************************************************

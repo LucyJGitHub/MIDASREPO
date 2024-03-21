@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2021')
+     H COPYRIGHT('(c) Finastra International Limited 2023')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     MD060815
 /*STD *  RPGBASEMOD                                                   *                     MD060815

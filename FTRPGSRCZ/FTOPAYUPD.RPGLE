@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060066           Date 30Jun22               *
-      *  Prev Amend No. MD058914           Date 06Oct21               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060066           Date 30Jun22               *
+      *                 MD058914           Date 06Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 MD048586           Date 11Jan21               *
       *                 MD023298A          Date 03Jun20               *
@@ -129,6 +130,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD060066 - MT202 message not generated for MT103 transactions*
       *             Add reversal of FTM199 for Stop of Outgoing Pay-  *
       *             ment transaction.                                 *
@@ -1155,6 +1157,38 @@
      C                   Eval      MISC05 = *Zero                               204029
      C                   Eval      SWSCHG = *Zero                               204029
      C                   ENDIF                                                  CFT009
+     C                   IF        CSW123 = 'Y'                                               CSW123
+     C                   EVAL      OPDNAM = O2DNAM                                            CSW123
+     C                   EVAL      OPDDEP = O2DDEP                                            CSW123
+     C                   EVAL      OPDSDE = O2DSDE                                            CSW123
+     C                   EVAL      OPDSTR = O2DSTR                                            CSW123
+     C                   EVAL      OPDBUI = O2DBUI                                            CSW123
+     C                   EVAL      OPDBUA = O2DBUA                                            CSW123
+     C                   EVAL      OPDFLO = O2DFLO                                            CSW123
+     C                   EVAL      OPDPOS = O2DPOS                                            CSW123
+     C                   EVAL      OPDROO = O2DROO                                            CSW123
+     C                   EVAL      OPDPOC = O2DPOC                                            CSW123
+     C                   EVAL      OPDTWN = O2DTWN                                            CSW123
+     C                   EVAL      OPDTWL = O2DTWL                                            CSW123
+     C                   EVAL      OPDDIS = O2DDIS                                            CSW123
+     C                   EVAL      OPDCTR = O2DCTR                                            CSW123
+     C                   EVAL      OPDCTY = O2DCTY                                            CSW123
+     C                   EVAL      OPCNAM = O2CNAM                                            CSW123
+     C                   EVAL      OPCDEP = O2CDEP                                            CSW123
+     C                   EVAL      OPCSDE = O2CSDE                                            CSW123
+     C                   EVAL      OPCSTR = O2CSTR                                            CSW123
+     C                   EVAL      OPCBUI = O2CBUI                                            CSW123
+     C                   EVAL      OPCBUA = O2CBUA                                            CSW123
+     C                   EVAL      OPCFLO = O2CFLO                                            CSW123
+     C                   EVAL      OPCPOS = O2CPOS                                            CSW123
+     C                   EVAL      OPCROO = O2CROO                                            CSW123
+     C                   EVAL      OPCPOC = O2CPOC                                            CSW123
+     C                   EVAL      OPCTWN = O2CTWN                                            CSW123
+     C                   EVAL      OPCTWL = O2CTWL                                            CSW123
+     C                   EVAL      OPCDIS = O2CDIS                                            CSW123
+     C                   EVAL      OPCCTR = O2CCTR                                            CSW123
+     C                   EVAL      OPCCTY = O2CCTY                                            CSW123
+     C                   ENDIF                                                                CSW123
 
      C                   Eval      OPRECI = 'D'
      C                   Eval      OPPREF = OTPREF
@@ -5125,6 +5159,28 @@
      C                   ELSE                                                                 CSW220
      C                   MOVE      'N'           CSW220                                       CSW220
      C                   ENDIF                                                                CSW220
+                                                                                              CSW123
+     C                   CALLB     'AOSARDR0'                                                 CSW123
+     C                   Parm      *BLANKS       @RTCD                                        CSW123
+     C                   Parm      '*VERIFY'     @OPTN                                        CSW123
+     C                   Parm      'CSW123'      @SARD                                        CSW123
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CSW123
+                                                                                              CSW123
+     C                   If        @RTCD <> *Blanks and                                       CSW123
+     C                             @RTCD <> '*NRF   '                                         CSW123
+     C     *LOCK         In        LDA                                                        CSW123
+     C                   Movel     'SCSARDPD'    DBFILE                                       CSW123
+     C                   Movel     '203'         DBASE                                        CSW123
+     C                   Movel     'CSW123'      DBKEY                                        CSW123
+     C                   Out       LDA                                                        CSW123
+     C                   Exsr      *PSSR                                                      CSW123
+     C                   End                                                                  CSW123
+                                                                                              CSW123
+     C                   If        @RTCD = *Blanks                                            CSW123
+     C                   Movel     'Y'           CSW123            1                          CSW123
+     C                   Else                                                                 CSW123
+     C                   Movel     'N'           CSW123                                       CSW123
+     C                   End                                                                  CSW123
 
      C                   ENDSR
       *****************************************************************                       CGL029

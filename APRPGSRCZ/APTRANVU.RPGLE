@@ -961,6 +961,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D TRANS11B        S            500                                                       CFT039
      D TRANS12         S            500                                                       CSD079
      D TRANS13         S            500                                                       CSD079
+     D TRANS13A        S           2000                                                       CSW123
      D TRANS14         S            500                                                       CSD079
      D TRANS15         S            500                                                       CSD079
      D TRANS16         S            500                                                       CSD079
@@ -1737,6 +1738,11 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                     MD042042
      C     10            SUBST     BUFFER2:Bfp2  InputUser                                  MD042042
      C                   ADD       10            Bfp2                                       MD042042
+     C                   EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)                 CSW123
+     C                   ADD       StopOPLen     Bfp2                                         CSW123
+      *                                                                                       CSW123
+     C                   EVAL      TRANS13A = %SUBST(BUFFER2:Bfp2:OPY11Alen)                  CSW123
+     C                   ADD       OPY11Alen     Bfp2                                         CSW123
       *                                                                                    AR1002463
      C*****2****         SUBST     BUFFER:Bfp    TempData#3                         CSF011 AR1005984
      C/COPY WNCPYSRC,APH00061
@@ -1762,8 +1768,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER2:Bfp2  AAuth                              CSF011 AR1002463
      C**********         ADD       1             Bfp2                               CSF011 AR1002463
      C/COPY WNCPYSRC,APH00063
-     C                   EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)               MD050928
-     C                   ADD       StopOPLen     Bfp2                                       MD050928
+     C**********         EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)        MD050928 CSW123
+     C**********         ADD       StopOPLen     Bfp2                                MD050928 CSW123
 
      C                   CALL      'FTOPAYVU'
       * Common header information (DS) from source system
@@ -1790,6 +1796,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Trans11A                                     CER030
      C                   PARM                    Trans11B                                     CFT039
      C                   PARM                    Trans12                                      CER049
+     C                   PARM                    Trans13A                                     CSW123
 
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
@@ -5625,6 +5632,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FTOPY10APD'  FileName                                   MD050928
      C                   EXSR      GETRCDLN                                                 MD050928
      C                   Z-ADD     RecordLen     StopOPlen         4 0                      MD050928
+                                                                                              CSW123
+     C                   MOVEL     'FTOPY11APD'  FileName                                     CSW123
+     C                   EXSR      GETRCDLN                                                   CSW123
+     C                   Z-ADD     RecordLen     OPY11Alen         4 0                        CSW123
      C                   ENDSR
       *****************************************************************
       /SPACE 5

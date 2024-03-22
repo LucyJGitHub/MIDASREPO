@@ -91,7 +91,7 @@
                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)                                /*MD061009*/
 
 /**********  STRJRNAP   FILE(SDCOTPPD SDFCTLPA) JRN(&JLIB/JSDC0722) */                  /*MD061009*/
-             STRJRNAP   FILE(SDCOTPPD SDCTLXTD) JRN(&JLIB/JSDC0722) /*MD061009*/
+             STRJRNAP   FILE(SDCOTPPD SDCTLXTD) JRN(&JLIB/JSDC0722)                     /*MD061009*/
              MONMSG     MSGID(CPF0000)
              ENDDO                                                    /*CCB009*/
 

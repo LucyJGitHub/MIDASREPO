@@ -261,7 +261,7 @@
                           SDCTLXTD SDCBRTPD PTYHSTPD SDPLCSPD +
                           SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
                           SDCCRDPD SDKYCIPD) JRN(SD0013JRN) IMAGES(*BOTH) +
-                          OMTJRNE(*OPNCLO)                                   /*CSD028*/ /*MD061009*/
+                          OMTJRNE(*OPNCLO)                                              /*MD061009*/
                                                                                           /*CSD028*/
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SDC0013002                                          */
@@ -353,7 +353,7 @@ END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           SDCFCDPD SDCMRKPD SDFOCSPD SDSECSPD +
                           SDCTLXTD SDCBRTPD PTYHSTPD SDPLCSPD +
                           SDLBCSPD SDPATTPD SDJUSRPD SDRELCPD +
-                          SDCCRDPD)                                   /*146350*/        /*MD061009*/
+                          SDCCRDPD)                                                     /*MD061009*/
              MONMSG     MSGID(CPF0000)
 /*/COPY WNCPYSRC,SDC0013003                                          */
 

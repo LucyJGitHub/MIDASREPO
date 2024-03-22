@@ -12,12 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062338           Date 19Mar24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSD024             Date 03Dec04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062338 - Authority issue when accessing UDC details from   *
+      *             Standing Data Account Codes Maintenance Enquiry   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSD024 - Fedwire Code on Counterparty Nostros.               *
@@ -130,6 +133,15 @@
       * Message data for 'Database Error (ICD)'
       * Filename
      I                                        1  10 ZA0001
+      *                                                                                     MD062338
+      ** Data to retrieve the menu group/item codes                                         MD062338
+     IZMITEM      DS                                                                        MD062338
+     I                                        1  10 INDX                                    MD062338
+      *                                                                                     MD062338
+      ** Menu item index                                                                    MD062338
+     I              '0000000363'          C         UDCENQ                                  MD062338
+     I              '0000000490'          C         CPNENQ                                  MD062338
+      *                                                                                     MD062338
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -497,6 +509,12 @@
       * User Defined Correspondence
       * CASE: WRK.User Defined Correspondnc is Yes
      C           WUN1ST    IFEQ 'Y'                        *IF
+      *                                                                                     MD062338
+      ** Change ZMITEM to UDC Enquiry Menu Item                                             MD062338
+     C           *LOCK     IN   ZMITEM                                                      MD062338
+     C                     MOVELUDCENQ    INDX                                              MD062338
+     C                     OUT  ZMITEM                                                      MD062338
+      *                                                                                     MD062338
      C                     MOVEL*BLANK    WURTCD           Return Code wor
       * Call the UDC CL PGM - Counterparty Nostros  *
      C                     CALL 'CGC0024'              90  Call the UDC CL
@@ -515,6 +533,11 @@
      C                     MOVELW0CLPG    ZAMSDA           Message data
      C                     EXSR ZASNMS
      C                     END
+      *                                                                                     MD062338
+      ** Change ZMITEM back to Counterparty Nostros Enquiry Menu Item                       MD062338
+     C           *LOCK     IN   ZMITEM                                                      MD062338
+     C                     MOVELCPNENQ    INDX                                              MD062338
+     C                     OUT  ZMITEM                                                      MD062338
       *
       * CASE: WRK.Return Code work field is USER QUIT REQUESTED
      C           WURTCD    IFEQ 'Y2U9999'                  *IF
@@ -1251,6 +1274,10 @@
      C                     MOVE SUC       WUSUC            SET UP COMPLT
      C                     MOVE DFF       WUDFF            DTE FMT FLAG
      C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      *                                                                                     MD062338
+      ** ZMITEM Data Area                                                                   MD062338
+     C           *NAMVAR   DEFN           ZMITEM                                            MD062338
+      *                                                                                     MD062338
       * DATA DS Counterparty Nost - Counterparty Nostros  *
       * Start of S01522
       * Call 'get all Midas Modules' instead of 'Get DRS and Windows'

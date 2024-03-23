@@ -14,10 +14,12 @@
       *                                                               *
       *  (C) Finastra International Limited 2024                      *
       *                                                               *
-      *  Last Amend No. BA9005  *CREATE    Date 11Mar24               *
+      *  Last Amend No. MD062458           Date 25Mar24               *
+      *  Prev Amend No. BA9005  *CREATE    Date 11Mar24               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062458 - Change GBA9USRMSG message file to GBXXUSRMSG      *
       *  BA9005 - HO and EDW Extracts                                 *
       *                                                               *
       *****************************************************************
@@ -621,7 +623,8 @@
      C                   For       WIdx1 = 1 TO 10
      C                   If        %LookUp(MidAccod(WIdx1):VLD) = 0
      C                   Movel     'A9X0011'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Seton                                        70
      C                   Exsr      ZASNMS
      C                   Movel     'N'           W0RSF
@@ -670,7 +673,8 @@
       ** CASE: PAR.Display file mode is Enquiry mode
      C     P1DFMD        Ifeq      'E'
       ** Setup message data for message
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm      'A9X0012'     ZAMSID            7
@@ -684,7 +688,8 @@
       ** CASE: PAR.Display file mode is Maintenance mode
      C     P1DFMD        Ifeq      'M'
       ** Setup message data for message
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm      'A9X0013'     ZAMSID            7

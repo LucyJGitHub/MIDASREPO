@@ -14,11 +14,13 @@
       *                                                               *
       *  (C) Finastra International Limited 2024                      *
       *                                                               *
-      *  Last Amend No. MD059284           Date 11Mar24               *
-      *  Prev Amend No. BA9005  *CREATE    Date 11Mar24               *
+      *  Last Amend No. MD062458           Date 25Mar24               *
+      *  Prev Amend No. MD059284           Date 11Mar24               *
+      *                 BA9005  *CREATE    Date 11Mar24               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062458 - Change GBA9USRMSG message file to GBXXUSRMSG      *
       *  MD059284 - HO Product Code and Market Code not mandatory     *
       *  BA9005 - HO and EDW Extracts                                 *
       *                                                               *
@@ -338,7 +340,8 @@
      C                   Seton                                        99
      C                   Seton                                        31
      C                   Movel     'A9X0011'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Goto      BFEXIT
      C                   Endif
@@ -353,7 +356,8 @@
      C                   Seton                                        99
      C                   Seton                                        31
      C                   Movel     'A9X0014'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Endif
       *
@@ -505,7 +509,8 @@
      C                   Movel     #1HOAC        ZA0001
       ** Send message 'Midas A/c Code must be unique'
      C                   Movel     'A9X0005'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Seton                                        9941
      C                   Goto      DCEXIT
@@ -517,7 +522,8 @@
       ** HO A/c Code must be entered
      C                   Seton                                        9942
      C                   Movel     'A9X0006'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Endif
       *
@@ -542,14 +548,16 @@
       ** Exclude flag must be entered
      C                   Seton                                        9945
      C                   Movel     'A9X0009'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Else
      C                   If        #1EXCL <> 'Y' and #1EXCL <> 'N'
       ** Exclude flag must be 'Y' or 'N'
      C                   Seton                                        9945
      C                   Movel     'A9X0010'     ZAMSID
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Exsr      ZASNMS
      C                   Endif
      C                   Endif
@@ -1029,7 +1037,8 @@
      C                   Movel     'A9X0013'     ZAMSID
      C                   Endif
       *
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm                    ZAMSID            7
@@ -1075,7 +1084,8 @@
      C                   Movel     'A9X0013'     ZAMSID
      C                   Endif
       *
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm                    ZAMSID            7
@@ -1132,7 +1142,8 @@
       *****************************************************************
      CSR   UFSUBR        Begsr
       ** Setup message data for message
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm      'A9X0016'     ZAMSID            7
@@ -1172,7 +1183,8 @@
       *****************************************************************
      CSR   UHSUBR        Begsr
       ** Setup message data for message
-     C                   Movel     'GBA9USRMSG'  ZAMSGF
+     C**********         Movel     'GBA9USRMSG'  ZAMSGF                                     MD062458
+     C                   Movel     'XXUSRMSG'    ZAMSGF                                     MD062458
      C                   Call      'Y2RVMGC'                            90
      C                   Parm      *Blank        W0RTN             7
      C                   Parm      'A9X0016'     ZAMSID            7

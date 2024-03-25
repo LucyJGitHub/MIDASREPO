@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. 223783             Date 28May12               *
+      *  Last Amend No. MD062357           Date 19Mar24               *
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 223783             Date 28May12               *
       *                 MD046248           Date 27Oct17               *
       *                 AR647426           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062357 - Cannot amend or delete Network Accounts           *
+      *             Description record for new customer/account       *
       *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
       *           Include GSH041                                      *
       *  GSH041 - GSH026 Field 86 Address Change                      *
@@ -364,7 +367,9 @@
      C                   EndIf                                                                BA6026
      C                   EndIf                                                                BA6026
       *                                                                                       BA6026
+     C                   IF        *IN28 = *ON                                              MD062357
      C                   Write     A6NW94D1                                                   BA6026
+     C                   ENDIF                                                              MD062357
       *                                                                                       BA6026
      C                   EndIf                                                                BA6026
       *    ----------    ------
@@ -462,7 +467,12 @@
      C                   EndIf                                                                BA6026
      C                   EndIf                                                                BA6026
       *                                                                                       BA6026
+     C                   IF        *IN28 = *ON                                              MD062357
+     C                   WRITE     A6NW94D1                                                 MD062357
+     C                   ELSE                                                               MD062357
+      *                                                                                     MD062357
      C                   Update    A6NW94D1                                                   BA6026
+     C                   ENDIF                                                              MD062357
       *                                                                                       BA6026
      C                   EndIf                                                                BA6026
       *    ----------    ------
@@ -685,7 +695,9 @@
      C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
      C                             N4G940 = 'Y'                                               BA6026
      C                   Eval      G4RECI = '*'                                               BA6026
+     C                   IF        *IN28 = *OFF                                             MD062357
      C                   Update    A6NW94D1                                                   BA6026
+     C                   ENDIF                                                              MD062357
      C                   EndIf                                                                BA6026
       *    ----------    ------
      C     @DeleteRcd    ENDSR
@@ -833,9 +845,12 @@
      C                   Exsr      *PSSR                                                      BA6026
      C                   Endif                                                                BA6026
       *                                                                                       BA6026
+     C                   CLEAR                   CurFilRcd2                                 MD062357
+      *                                                                                     MD062357
      C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT' And                     BA6026
      C                             NEW_N4G940 = 'Y'                                           BA6026
-     C     KGLNW94L0     CHAIN     A6NW94D1                           27                      BA6026
+     C*****KGLNW94L0     CHAIN     A6NW94D1                           27             BA6026 MD062357
+     C     KGLNW94L0     CHAIN     A6NW94D1                           28                    MD062357
  E3  C                   EndIf                                                                BA6026
       *    ----------    ------
      C     @INZSR        ENDSR

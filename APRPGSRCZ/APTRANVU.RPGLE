@@ -15,7 +15,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. CSW123             Date 08Jan24               *
-      *  Prev Amend No. MD055649           Date 21Mar23               *
+      *  Prev Amend No. 263630             Date 29Feb24               *
+      *                 MD055649           Date 21Mar23               *
       *                 MD060683           Date 15Feb23               *
       *                 MD057739           Date 28Apr22               *
       *                 MD059520           Date 21Feb22               *
@@ -243,6 +244,10 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
+      *  263630   - Error in DEAMS for the new MQ API's processing.   *
+      *             Amended so that system can get the associated     *
+      *             front office ID from JAVA.                        *
+      *           - Applied for MD062275                              *
       *  MD055649 - Authorised corrective batch was not copied to     *
       *             PEA system. Introduced New Field BPAUTH           *
       *  MD060683 - Unable to Authorize newly inserted Single         *
@@ -610,8 +615,8 @@
       *****************************************************************
      FAPQMBXPD  IF   E           K DISK                                                       BG0505
       ** +--------------------------------------+
-      ** � Automatically included D-specs       �
-      ** � ==============================       �
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
       ** +--------------------------------------+
       **
       **---------------------------------------------------------------
@@ -635,8 +640,8 @@
       **---------------------------------------------------------------
 
       ** +--------------------------------------+
-      ** � End of automatically included D-specs�
-      ** � =====================================�
+      ** ï¿½ End of automatically included D-specsï¿½
+      ** ï¿½ =====================================ï¿½
       ** +--------------------------------------+
 
      D WDSPgmMod       DS                                                                     CRE020
@@ -2348,6 +2353,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       1             Bfp                                         BUG6534
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
+     C                   ADD       20            Bfp                                          263630
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt

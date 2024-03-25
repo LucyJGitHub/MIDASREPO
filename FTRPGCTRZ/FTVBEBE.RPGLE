@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060908           Date 31May23               *
-      *  Prev Amend No. MD060084           Date 29Sep22               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD060908           Date 31May23               *
+      *                 MD060084           Date 29Sep22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD026333           Date 29Apr14               *
       *                 MD046248           Date 27Oct17               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD060908 - Unable to send SWIFT payment from Midas to MMM.   *
       *           - Do not allow colon (:) as 1st char of Ben.lines.  *
       *  MD060084 - Error is returned when using an account line in   *
@@ -168,7 +170,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+     FSDCUSXL1  IF   E           K DISK                                                       CSW123
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -258,6 +260,7 @@
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
      D TranInSecB    E DS                  EXTNAME(FTOPY3PD)
      D TranInSecC    E DS                  EXTNAME(FTOPY1PD)                                  CFT032
+     D TranInISO     E DS                  EXTNAME(FTOPY11APD)                                CSW123
 
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY2PD)
@@ -394,6 +397,8 @@
      D FeatureCSW024   S               N                                                      CFT032
      D FeatureCFT004   S               N                                                      CFT032
                                                                                               CFT032
+     D CSW123          S              1A                                                      CSW123
+     D WCUSN           S              6A                                                      CSW123
      D CSW215          S              1A                                                      CSW215
      D PRTCD           S              7A                                                      CSW215
      D PCLFR           S              4A                                                      CSW215
@@ -444,6 +449,7 @@
      C                   Eval      AD#4 = 'N'
      C                   Eval      AD#5 = 'N'
      C                   Eval      AD#6 = 'N'
+     C                   EVAL      WCUSN = *BLANKS                                            CSW123
 
 
       * Validate
@@ -456,6 +462,45 @@
      C                             AND IDx = 0                                                CSW215
      C                   EXSR      VAL59F                                                     CSW215
      C                   ENDIF                                                                CSW215
+      ** Default postal address if customer is a valid Midas customer                         CSW123
+     C                   IF        CSW123 = 'Y'                                               CSW123
+     C                             AND WCUSN <> *BLANKS                                       CSW123
+     C                             AND SCNAM = *BLANKS                                        CSW123
+     C                             AND SCDEP = *BLANKS                                        CSW123
+     C                             AND SCSDE = *BLANKS                                        CSW123
+     C                             AND SCSTR = *BLANKS                                        CSW123
+     C                             AND SCBUI = *BLANKS                                        CSW123
+     C                             AND SCBUA = *BLANKS                                        CSW123
+     C                             AND SCFLO = *BLANKS                                        CSW123
+     C                             AND SCPOS = *BLANKS                                        CSW123
+     C                             AND SCROO = *BLANKS                                        CSW123
+     C                             AND SCPOC = *BLANKS                                        CSW123
+     C                             AND SCTWN = *BLANKS                                        CSW123
+     C                             AND SCTWL = *BLANKS                                        CSW123
+     C                             AND SCDIS = *BLANKS                                        CSW123
+     C                             AND SCCTR = *BLANKS                                        CSW123
+     C                             AND SCCTY = *BLANKS                                        CSW123
+     C                                                                                        CSW123
+     C     WCUSN         CHAIN     SDCUSXL1                                                   CSW123
+                                                                                              CSW123
+     C                   IF        %FOUND(SDCUSXL1)                                           CSW123
+     C                   EVAL      SDNAM = XCCNAM                                             CSW123
+     C                   EVAL      SDDEP = XCDEPT                                             CSW123
+     C                   EVAL      SDSDE = XCSDEP                                             CSW123
+     C                   EVAL      SDSTR = XCSTRE                                             CSW123
+     C                   EVAL      SDBUI = XCBUIU                                             CSW123
+     C                   EVAL      SDBUA = XCBUIA                                             CSW123
+     C                   EVAL      SDFLO = XCFLOR                                             CSW123
+     C                   EVAL      SDPOS = XCPOSB                                             CSW123
+     C                   EVAL      SDROO = XCROOM                                             CSW123
+     C                   EVAL      SDPOC = XCPOSC                                             CSW123
+     C                   EVAL      SDTWN = XCTWNN                                             CSW123
+     C                   EVAL      SDTWL = XCTWNL                                             CSW123
+     C                   EVAL      SDDIS = XCDISN                                             CSW123
+     C                   EVAL      SDCTR = XCCTRS                                             CSW123
+     C                   EVAL      SDCTY = XCCTRY                                             CSW123
+     C                   ENDIF                                                                CSW123
+     C                   ENDIF                                                                CSW123
 
       ** If an error was found, set the return code appropriately
       *
@@ -593,6 +638,7 @@
      C                   IF        (C#RTCD = *BLANKS AND C#KYST = '*CNUM') OR                 262721
      C                             (C#RTCD = *BLANKS AND C#KYST = '*CSHT')                    262721
      C                   Eval      @BNCT = 'C'
+     C                   EVAL      WCUSN = BBCUST                                             CSW123
      C                   IF        ADSLSH <> '/'                                              262721
      C                   MOVEL(P)  BBCUST        SBNC1                                        262721
      C                   ELSE                                                                 262721
@@ -653,6 +699,7 @@
      C                   End
 
      C                   Eval      @BNCT = 'C'
+     C                   EVAL      WCUSN = BBCUST                                             CSW123
      C**********         If        ADSLSH = '/'                                        233421 255453
      C**********                   and C#KYST = '*CSHT  '                              233421 255453
      C**********         Movel(P)  BBCSSN        SBNC2                                 233421 255453
@@ -716,6 +763,7 @@
 
      C                   Else
      C                   Eval      @BNCT = 'S'
+     C                   EVAL      WCUSN = BBCUST                                             CSW123
      C                   Move      'Y'           WCsid                                      BUG14771
       *
       *  No SWIFT address record.
@@ -1540,6 +1588,7 @@
      C                   Parm                    TranInSecA
      C                   Parm                    TranInSecB
      C                   Parm                    TranInSecC                                 BUG12541
+     C                   Parm                    TranInISO                                    CSW123
 
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1632,6 +1681,20 @@
      C                   EVAL      CSW215 = 'Y'                                               CSW215
      C                   ENDIF                                                                CSW215
                                                                                               CSW215
+      ** Check if feature CSW123 is installed                                                 CSW123
+                                                                                              CSW123
+     C                   Call      'AOSARSR0'                                                 CSW123
+     C                   Parm      *Blanks       @RtCd                                        CSW123
+     C                   Parm      '*VERIFY'     @Optn                                        CSW123
+     C                   Parm      'CSW123'      P@Sar                                        CSW123
+     C                   Parm                    DSSDY                                        CSW123
+                                                                                              CSW123
+     C                   If        @RtCd = *Blanks                                            CSW123
+     C                   EVAL      CSW123 = 'Y'                                               CSW123
+     C                   ELSE                                                                 CSW123
+     C                   EVAL      CSW123 = 'N'                                               CSW123
+     C                   ENDIF                                                                CSW123
+                                                                                              CSW123
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

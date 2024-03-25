@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD062153           Date 13Dec23               *
-      *  Prev Amend No. AR819780           Date 05Oct23               *
+      *  Last Amend No. MD036339           Date 08Mar24               *
+      *  Prev Amend No. MD062153           Date 13Dec23               *
+      *                 AR819780           Date 05Oct23               *
       *                 AR816445           Date 05Oct23               *
       *                 AR816464           Date 05Oct23               *
       *                 MD061485           Date 13Jun23               *
@@ -158,6 +159,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *
+      *           - Applied for MD062343.                             *
       *  MD062153 - Pay & Receipts Settlement Method defaulted to '00'*
       *             on insert even without CCY & customer. Reinstate  *
       *             checking for DDCUST & DDCCY so it will not default*
@@ -1395,6 +1400,9 @@
      C                   EXSR      SetupAmend
      C                   EXSR      ValidateTr
      C                   EXSR      ValidateSt
+     C                   IF        CDL033 = 'Y' and DDSTRT <> *BLANKS                       MD036339
+     C                   EVAL      @@STRT = IKINTR                                          MD036339
+     C                   ENDIF                                                              MD036339
      C                   EXSR      ValidateLP                                                BUG3992
                                                                                             BUG12589
       ** For Amend:                                                                         BUG12589

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061774           Date 25Aug23               *
-      *  Prev Amend No. MD061219           Date 05Apr23               *
+      *  Last Amend No. MD062297           Date 06Mar24               *
+      *  Prev Amend No. MD061774           Date 25Aug23               *
+      *                 MD061219           Date 05Apr23               *
       *                 249385             Date 01Aug22               *
       *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
@@ -438,6 +439,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062297 - Loan generated different amount for key "JAVI6 A" *
+      *             between FM2021G and MP1.4.                        *
+      *           - When setting the current principal amount as the  *
+      *             posting amount for the discount loan's nnVnn_A    *
+      *             account key, use the condition CLE031 = 'Y'       *
+      *             instead of WPROC = 'Y'.                           *
       *  MD061774 - Deal Accrual Posting Difference for Deals with    *
       *           - Value Date 28th Feb.                              *
       *           - Recompile due to changes in ZINTDYZ2LE.           *
@@ -7546,7 +7553,9 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
       *
      C                   IF        (PTYP = 63 OR PTYP = 65 OR PTYP = 67)                    MD051883
-     C                             AND WPROC = 'Y'                                          MD051883
+     C**********                   AND WPROC = 'Y'                                 MD051883 MD062297
+     C                             AND CLE031 = 'Y'                                         MD062297
+      *                                                                                     MD062297
      C                   MOVEL     WECCY         CCYL                                       MD051883
      C                   Z-ADD     CPAM          ACAMNT                                     MD051883
      C                   ENDIF                                                              MD051883

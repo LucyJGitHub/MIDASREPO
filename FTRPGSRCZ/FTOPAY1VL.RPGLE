@@ -1358,6 +1358,7 @@
       *  Screen fields
      C                   Parm                    TranInPrim
      C                   Parm                    TranInPrmB                                   CFT032
+     C                   PARM                    TranInISO                                    CSW123
      C/COPY OFCPYSRCZ,CFT148_015                                                              CFT148
 
       * OUTPUTS

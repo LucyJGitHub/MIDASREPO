@@ -515,6 +515,7 @@
      C                   Parm                    TranInSecB
      C**********         Parm                    TranInSecC                          CFT032 BUG14042
      C                   Parm                    TranInPrim                                 BUG14042
+     C                   PARM                    TranInISO                                    CSW123
 
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller

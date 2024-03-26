@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061704           Date 21Aug23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSW123             Date 08Jan24               *
+      *  Prev Amend No. MD061704           Date 21Aug23               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD050405           Date 03Jun20               *
       *                 MD055570           Date 15May20               *
       *                 MD051978           Date 14Oct19               *
@@ -120,6 +121,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW123 - SWIFT ISO 20022 - Phase 2 (Structured Addresses)    *
       *  MD061704 - Error in the XML from IPAY API.                   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -288,6 +290,7 @@
                                                                                               CSW207
      FSDJACCL7  IF   E           K DISK    INFSR(*PSSR)                                       CSW207
      F                                     RENAME(SDJACCD0:SDJACCF)                           CSW207
+     FSDCUSXL1  IF   E           K DISK    INFSR(*PSSR)                                       CSW123
 
       *****************************************************************
       ** +--------------------------------------+
@@ -373,6 +376,7 @@
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)                                 CFT032
+     D TranInISO     E DS                  EXTNAME(FTOPY11APD)                                CSW123
 
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
@@ -683,6 +687,8 @@
      D WNUMX           S              7P 0                                                  BUG26002
      D X#CNUM          S              6  0                                                  BUG26002
                                                                                             BUG26002
+     D CSW123          S              1A                                                      CSW123
+     D WCUSN           S              6A                                                      CSW123
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -713,13 +719,53 @@
      C                   Eval      WFldNmXAr = *Blanks                                        240689
      C                   Eval      WMsgIDXAr  = *Blanks                                       240689
      C                   Eval      WMsgDtaXAr = *Blanks                                       240689
+     C                   EVAL      WCUSN = *BLANKS                                            CSW123
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                    240689
 
       * Order Customer
       *
      C                   Exsr      VORDCUS
-
+                                                                                              CSW123
+      ** Default postal address if customer is a valid Midas customer                         CSW123
+     C                   IF        CSW123 = 'Y'                                               CSW123
+     C                             AND WCUSN <> *BLANKS                                       CSW123
+     C                             AND SDNAM = *BLANKS                                        CSW123
+     C                             AND SDDEP = *BLANKS                                        CSW123
+     C                             AND SDSDE = *BLANKS                                        CSW123
+     C                             AND SDSTR = *BLANKS                                        CSW123
+     C                             AND SDBUI = *BLANKS                                        CSW123
+     C                             AND SDBUA = *BLANKS                                        CSW123
+     C                             AND SDFLO = *BLANKS                                        CSW123
+     C                             AND SDPOS = *BLANKS                                        CSW123
+     C                             AND SDROO = *BLANKS                                        CSW123
+     C                             AND SDPOC = *BLANKS                                        CSW123
+     C                             AND SDTWN = *BLANKS                                        CSW123
+     C                             AND SDTWL = *BLANKS                                        CSW123
+     C                             AND SDDIS = *BLANKS                                        CSW123
+     C                             AND SDCTR = *BLANKS                                        CSW123
+     C                             AND SDCTY = *BLANKS                                        CSW123
+     C                                                                                        CSW123
+     C     WCUSN         CHAIN     SDCUSXL1                                                   CSW123
+                                                                                              CSW123
+     C                   IF        %FOUND(SDCUSXL1)                                           CSW123
+     C                   EVAL      SDNAM = XCCNAM                                             CSW123
+     C                   EVAL      SDDEP = XCDEPT                                             CSW123
+     C                   EVAL      SDSDE = XCSDEP                                             CSW123
+     C                   EVAL      SDSTR = XCSTRE                                             CSW123
+     C                   EVAL      SDBUI = XCBUIU                                             CSW123
+     C                   EVAL      SDBUA = XCBUIA                                             CSW123
+     C                   EVAL      SDFLO = XCFLOR                                             CSW123
+     C                   EVAL      SDPOS = XCPOSB                                             CSW123
+     C                   EVAL      SDROO = XCROOM                                             CSW123
+     C                   EVAL      SDPOC = XCPOSC                                             CSW123
+     C                   EVAL      SDTWN = XCTWNN                                             CSW123
+     C                   EVAL      SDTWL = XCTWNL                                             CSW123
+     C                   EVAL      SDDIS = XCDISN                                             CSW123
+     C                   EVAL      SDCTR = XCCTRS                                             CSW123
+     C                   EVAL      SDCTY = XCCTRY                                             CSW123
+     C                   ENDIF                                                                CSW123
+     C                   ENDIF                                                                CSW123
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKOrc1 = 'N'
@@ -1207,6 +1253,7 @@ E4   C**********         End                                                    
      C                   If        #SORC2 = *Blanks                                         BUG15059
      C                   Eval      @@IBAN = 'Y'                                             BUG15059
      C                   Eval      @ORCT = 'I'                                                CFT032
+     C                   EVAL      WCUSN = IFCNUM                                             CSW123
      C                   Else                                                               BUG15059
      C                   Eval      @@IBAN = 'N'                                             BUG15059
      C                   Eval      @ORCT = 'A'                                              BUG15059
@@ -1381,6 +1428,7 @@ E3   C**********         End                                                    
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689
      C                   Eval      @ORCT = 'P'
+     C                   EVAL      WCUSN = CNUM                                               CSW123
      C                   Eval      @ACST3 = ACST
                                                                                             BUG14771
      C                   If        IBAN <> ' '                                              BUG14771
@@ -1447,6 +1495,7 @@ E2   C                   EndIf                                                  
      C**********                   *IN31 = *Off And                                  CFT032 BUG15037
      C**********                   *IN32 = *Off                                      CFT032 BUG15037
      C                   Eval      @ORCT = 'S'                                                CFT032
+     C                   EVAL      WCUSN = BBCUST                                             CSW123
      C                   Move      'Y'           WCSID             1                        BUG14771
       *                                                                                     BUG15037
      C                   If        W9Cust = 'Y'                                             BUG15037
@@ -1724,6 +1773,7 @@ E2   C                   EndIf                                                  
      C                   EndIf                                                                CFT032
      C                   MOvel     BBCUST        K#CNUM                                     BUG15037
      C                   Eval      @ORCT = 'C'
+     C                   EVAL      WCUSN = BBCUST                                             CSW123
      C                   Else
 
      C                   If        %Subst(#SORC1:1:1) = '/'                                   CFT032
@@ -1801,6 +1851,7 @@ E2   C                   EndIf                                                  
      C                   Eval      K#BRCA = BRCA
 
      C                   Eval      @ORCT = 'R'
+     C                   EVAL      WCUSN = CNUM                                               CSW123
      C                   Eval      @ACST3 = ACST
                                                                                             BUG14771
      C                   If        IBAN <> ' '                                              BUG14771
@@ -2754,6 +2805,7 @@ E2   C                   EndIf                                                  
       *  Screen fields
      C                   Parm                    TranInPrim
      C                   Parm                    TranInPrmB                                   CFT032
+     C                   Parm                    TranInISO                                    CSW123
      C/COPY OFCPYSRCZ,CFT148_028                                                              CFT148
 
       * OUTPUTS
@@ -2868,6 +2920,20 @@ E2   C                   EndIf                                                  
      C                   EXSR      *PSSR                                                      CFT142
      C                   ENDIF                                                                CFT142
      C                   ENDIF                                                                CFT142
+                                                                                              CSW123
+      ** Check if feature CSW123 is installed                                                 CSW123
+                                                                                              CSW123
+     C                   Call      'AOSARSR0'                                                 CSW123
+     C                   Parm      *Blanks       @RtCd                                        CSW123
+     C                   Parm      '*VERIFY'     @Optn                                        CSW123
+     C                   Parm      'CSW123'      P@Sar                                        CSW123
+     C                   Parm                    DSSDY                                        CSW123
+                                                                                              CSW123
+     C                   If        @RtCd = *Blanks                                            CSW123
+     C                   Eval      CSW123 = 'Y'                                               CSW123
+     C                   Else                                                                 CSW123
+     C                   Eval      CSW123 = 'N'                                               CSW123
+     C                   EndIf                                                                CSW123
      C*
       ** Program, module and procedure names for database error processing.
       ** =================================================================

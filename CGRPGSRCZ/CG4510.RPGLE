@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. MD059859A          Date 28Jun22               *
+      *  Last Amend No. EML102A            Date 15Mar24               *
+      *  Prev Amend No. EML102             Date 15Mar24               *
+      *                 MD058830           Date 01Oct21               *
+      *                 MD059859A          Date 28Jun22               *
       *                 MD059859           Date 11May22               *
       *                 MD059908           Date 06May22               *
       *                 CCG025             Date 04Apr22               *
@@ -107,6 +109,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102A - Moved EML102 codes from CG4510C005 to EML102_030   *
+      *            Applied for MD062371.                              *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *           UNL007 - Extended Narratives                        *
+      *           Used CG4510C002, CG4510C004, CG4510C005, CG4510C006,*
+      *           CG4510F001                                          *
+      *           Applied for MD062371.                               *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  MD059859A - Apply change to both credit and debit side.      *
       *              If no entries prior to last posting date, check  *
@@ -4259,6 +4268,7 @@
      C                   ENDIF                                                                CGL193
      C                   ENDIF                                                                CGL193
       *                                                                                       CGL193
+     C/COPY WNCPYSRC,EML102_030                                                              EML102A
       **  Accumulate RDE's and associated data and output to                               BUG23277A
       **  PF/CGUDTAPD.                                                                     BUG23277A
      C                   EXSR      SRADTA                                                  BUG23277A

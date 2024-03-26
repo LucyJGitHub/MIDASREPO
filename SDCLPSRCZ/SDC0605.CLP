@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD053260           Date 12Jul19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD062107           Date 26Mar24              */
+/*       Prev Amend No. MD053260           Date 12Jul19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD062107 - SDC0605 is not purging CLINTSE records. Added    */
+/*                  call to SDC0605A for CLINTSE file purging.       */
 /*       MD053260 - FBM COB - Component SDC000817 00001 terminated   */
 /*                  abnormally. Database error in file SDCUSTPD,     */
 /*                  key 000992, in , at 001                          */
@@ -102,6 +105,10 @@
                RTVJOBA    SWS(&SWITCH)                                /*055652*/
                IF         COND(%SST(&SWITCH 8 1) *EQ '1') THEN(GOTO +
                             CMDLBL(ABNOR))                            /*055652*/
+               CALL       PGM(SDC0605A) PARM(CLINTSE &MODE)                             /*MD062107*/
+               RTVJOBA    SWS(&SWITCH)                                                  /*MD062107*/
+               IF         COND(%SST(&SWITCH 8 1) *EQ '1') THEN(GOTO +
+                            CMDLBL(ABNOR))                                              /*MD062107*/
 /*/COPY WNCPYSRC,SDC0605001                                          */
 /**********    DLTF       FILE(F256) **/                              /*055652*/
              ENDDO

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD059520           Date 21Feb22               *
-      *  Prev Amend No  MD055446           Date 04Apr20               *
+      *  Last Amend No. MD062331           Date 26Mar24               *
+      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *                 MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062331 - FATCA Subject to Reporting flag not updated in    *
+      *             Customer maintenance screens. Amend so that the   *
+      *             field will not be overriden.                      *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records.                  *
       *  MD055446 - There are parties and fields missing from the BRT *	
@@ -3072,7 +3076,8 @@
      C                   EVAL      TranCrsd = PCrsdF(X)                                       CGL157
      C                   IF        CVCTRY <> *Blanks                                          CGL157
      C                   EVAL      DDCTRY = CVCTRY                                            CGL157
-     C                   EVAL      DDREPT = CVREPT                                            CGL157
+     C**********         EVAL      DDREPT = CVREPT                                   CGL157 MD062331
+     C                   EVAL      DDREPQ = CVREPT                                          MD062331
      C                   EVAL      DDREP1 = CVREPR                                            CGL157
      C                   MOVE      CVREPR        DDREP2                                       CGL157
                                                                                               CGL157

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061950           Date 16Nov23               *
-      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *  Last Amend No. MD062335           Date 20Mar24               *
+      *  Prev Amend No. MD061950           Date 16Nov23               *
+      *                 AR819780           Date 16Nov23               *
       *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
@@ -122,6 +123,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062335 - Error completing FX deal amendments if the trade  *
+      *             is booked without SSI's.                          *
       *  MD061950 - FX Deal API Frontoffice ID is used already        *
       *  AR819780 - Multiple deletion from SOAP of same Front Office. *
       *             (Child: AR819781)                                 *
@@ -2560,6 +2563,13 @@
      C                   KFLD                    BYTRTY                                     MD059304
      C                   KFLD                    BYBRCA                                     MD059304
      C                   KFLD                    BYSTYP                                     MD059304
+                                                                                            MD062335
+     C     EXSTK2        KLIST                                                              MD062335
+     C                   KFLD                    BYCYCD                                     MD062335
+     C                   KFLD                    BYCUST                                     MD062335
+     C                   KFLD                    BYTRTY                                     MD062335
+     C                   KFLD                    BYBRCA2           3                        MD062335
+     C                   KFLD                    BYSTYP2           2                        MD062335
                                                                                             MD059304
      C     F3DN38        CHAIN     DLDLDBL1                           51                    MD059304
      C                   IF        *IN51 = *OFF                                             MD059304
@@ -2590,10 +2600,38 @@
                                                                                             MD059304
      C     EXSTK         CHAIN     SDEXSTL1                           52                    MD059304
      C                   IF        *IN52 = *ON                                              MD059304
+      *                                                                                     MD062335
+     C                   EVAL      BYBRCA2 = *BLANKS                                        MD062335
+     C                   EVAL      BYSTYP2 = *BLANKS                                        MD062335
+     C     EXSTK2        CHAIN     SDEXSTL1                           53                    MD062335
+     C                   IF        *IN53 = *ON                                              MD062335
+      *                                                                                     MD062335
+     C                   EVAL      BYBRCA2 = DDBRSN                                         MD062335
+     C                   EVAL      BYSTYP2 = *BLANKS                                        MD062335
+     C     EXSTK2        CHAIN     SDEXSTL1                           54                    MD062335
+     C                   IF        *IN54 = *ON                                              MD062335
+      *                                                                                     MD062335
+     C                   EVAL      BYBRCA2 = *BLANKS                                        MD062335
+     C                   EVAL      BYSTYP2 = DDDLST                                         MD062335
+     C     EXSTK2        CHAIN     SDEXSTL1                           55                    MD062335
+     C                   IF        *IN55 = *ON                                              MD062335
+      *                                                                                     MD062335
      C                   MOVEL     DDCUST        DDBENN                                     MD059304
+      *                                                                                     MD062335
      C                   IF        DDPSTM = '08'                                            MD059304
+     C                   EVAL      PCNUM = DDCUST                                           MD062335
+     C                   EXSR      SrRtvCust                                                MD062335
+     C                   IF        BBSWFI = 'Y'                                             MD062335
+     C                   EVAL      DDPOCN = *BLANKS                                         MD062335
+     C                   ELSE                                                               MD062335
      C                   MOVEL     DDCUST        DDPOCN                                     MD059304
      C                   ENDIF                                                              MD059304
+     C                   ENDIF                                                              MD062335
+      *                                                                                     MD062335
+     C                   ENDIF                                                              MD062335
+     C                   ENDIF                                                              MD062335
+     C                   ENDIF                                                              MD062335
+      *                                                                                     MD062335
      C                   ENDIF                                                              MD059304
                                                                                             MD059304
      C                   ENDIF                                                              MD059304

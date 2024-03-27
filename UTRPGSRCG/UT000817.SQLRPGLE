@@ -37,9 +37,6 @@
 
       /free
 
-       EXEC SQL
-         set option commit = *CHG;
-
        // Process GPPDWJPP. Add Attribute 'S' if blanks.
 
        EXEC SQL
@@ -50,9 +47,6 @@
          SQLCode <> 100;
          ExSR *PSSR;
        EndIf;
-
-       EXEC SQL
-         Commit;
 
        Eval *INLR = *ON;
        Return;
@@ -76,9 +70,6 @@
 
      C                   Dump
       /free
-
-        EXEC SQL
-         Rollback;
         Eval *INU7 = *ON;
         Eval *INU8 = *ON;
         Eval *INLR = *ON;

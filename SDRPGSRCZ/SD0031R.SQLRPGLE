@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061007           Date 31Dec21               *
-      *  Prev Amend No. MD058188           Date 11May21               *
+      *  Last Amend No. MD062338           Date 19Mar24               *
+      *  Prev Amend No. MD061007           Date 31Dec21               *
+      *                 MD058188           Date 11May21               *
       *                 MD058085           Date 11May21               *
       *                 AR672002           Date 11Jan22               *
       *                 CSD103             Date 10Aug20               *
@@ -115,6 +116,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD062338 - Authority issue when accessing UDC details from   *
+      *             Standing Data Account Codes Maintenance Enquiry   *
       *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD058188 - Deliverable Data Split for Global files           *
       *  MD058085 - Deliverable Data Split for Standing Data          *
@@ -1168,6 +1171,14 @@
      D WTFCA           C                   CONST('Trade Finance Exposu-                           MD
      D**********    're  Accnt...:'                                                MD028343 MD030956
      D                                     re Account..:')                                        MD
+      *                                                                                     MD062338
+      ** External Data Area of Menu Item                                                    MD062338
+     D ZMITEM        E DS                  EXTNAME(ZMITEM)                                  MD062338
+      *                                                                                     MD062338
+      ** Menu item index                                                                    MD062338
+     D UDCMNT          C                   CONST('0000000583')                              MD062338
+     D ACCMNT          C                   CONST('0000000788')                              MD062338
+      *                                                                                     MD062338
       ** Override Command Array                                                               CGP001
       *                                                                                       CGP001
      I*
@@ -6650,6 +6661,12 @@
      C                   END                                                    *FI
      C                   END                                                    *FI
      C     Y0CX01        IFEQ      '1'                                          *IF
+      *                                                                                     MD062338
+      ** Change ZMITEM to UDC Maintenance Menu Item                                         MD062338
+     C     *LOCK         IN        ZMITEM                                                   MD062338
+     C                   EVAL      INDX = UDCMNT                                            MD062338
+     C                   OUT       ZMITEM                                                   MD062338
+      *                                                                                     MD062338
      C                   MOVEL     *BLANK        WURTCD                         Return Code wor
       * Call the UDC CL PGM - Account Codes  *
      C                   CALL      'CGC0021'                            90      Call the UDC CL
@@ -6669,6 +6686,11 @@
      C                   MOVEL     W0CLPG        ZAMSDA                         Message data
      C                   EXSR      ZASNMS
      C                   END
+      *                                                                                     MD062338
+      ** Change ZMITEM back to Account Codes Maintenance Menu Item                          MD062338
+     C     *LOCK         IN        ZMITEM                                                   MD062338
+     C                   EVAL      INDX = ACCMNT                                            MD062338
+     C                   OUT       ZMITEM                                                   MD062338
       *
       * F3 Prpcessing
       * CASE: WRK.Return Code work field is USER QUIT REQUESTED
@@ -10778,6 +10800,10 @@
      C                   MOVE      'N'           YSETCS            1
      C                   MOVE      *BLANK        WCSRLC            3
      C                   MOVE      *BLANK        SECO              1
+      *                                                                                     MD062338
+      ** ZMITEM Data Area                                                                   MD062338
+     C     *DTAARA       DEFINE                  ZMITEM                                     MD062338
+      *                                                                                     MD062338
       * Open files
       * Begin commit control
      C                   CALL      'Y2BGCMC'

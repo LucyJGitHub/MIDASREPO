@@ -138,7 +138,7 @@ VALIDATE:                                                                       
                 CHGVAR     VAR(&LENOJRN) VALUE(Y)
              ENDDO
 /**********  STRJRNPF   FILE(SDFCTLPA) JRN(ICJRN) */                                    /*MD061009*/
-             STRJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD) JRN(ICJRN) /*MD061009*/
+             STRJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD) JRN(ICJRN)                     /*MD061009*/
              MONMSG     MSGID(CPF7030) EXEC(DO)
                 CHGVAR     VAR(&FCTLJRN) VALUE(Y)
              ENDDO
@@ -154,7 +154,7 @@ VALIDATE:                                                                       
              ENDDO
              IF         COND(&FCTLJRN *EQ 'N') THEN(DO)
 /**********     ENDJRNPF   FILE(SDFCTLPA) */                                            /*MD061009*/
-                ENDJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD) /*MD061009*/
+                ENDJRNPF   FILE(SDCTLCTD SDCTLBTD SDCTLXTD)                             /*MD061009*/
              ENDDO
 
              GOTO       CMDLBL(END)

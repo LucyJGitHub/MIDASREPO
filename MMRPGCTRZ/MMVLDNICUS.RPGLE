@@ -23,8 +23,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD060528           Date 16Sep22               *
-      *  Prev Amend No. CDL063             Date 02Nov21               *
+      *  Last Amend No. MD061665           Date 28Nov23               *
+      *  Prev Amend No. CDL101             Date 01Dec22               *            
+      *                 MD060528           Date 16Sep22               *
+      *                 CDL063             Date 02Nov21               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061665 - Correct the validatio on Bank/NonBank Ind. for    *
+      *             IP/IT Deal Types.                                 *
+      *  CDL101   - Remove validation on Bank/NonBank Ind. for IP/IT  *
+      *             Deal Types                                        *      
       *  MD060528 - CDL063 fix - Split system value AllowBankNBankCpty*
       *             into two - AllowBankForTDTIDeal and               *
       *             AllowNonBankForIPIT                               *
@@ -305,6 +311,8 @@
       **********                                                                     CDL063 MD060528
      C*****CDL063        IFNE      'Y'                                               CDL063 MD060528
      C     NBankIPIT     IFNE      'Y'                                                      MD060528
+     C*****CDL101        OREQ      'N'                                               CDL101 MD061665
+     C     CDL101        ANDEQ     'N'                                                      MD061665     
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
@@ -373,6 +381,19 @@
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
                                                                                               CSD025
+      ** Check if CDL101 (IP/IT deal types check) is active                                   CDL101
+      *                                                                                       CDL101
+     C                   CALLB     'AOSARDR0'                                                 CDL101
+     C                   PARM      *BLANKS       PRtCd             7                          CDL101
+     C                   PARM      '*VERIFY'     POptn             7                          CDL101
+     C                   PARM      'CDL101'      PSARD             6                          CDL101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL101
+                                                                                              CDL101
+     C                   MOVE      'N'           CDL101            1                          CDL101
+     C                   IF        PRtCd = *Blanks                                            CDL101
+     C                   EVAL      CDL101 = 'Y'                                               CDL101
+     C                   ENDIF                                                                CDL101
+                                                                                              CDL101                                                                                              
      C**********         CALLB     'AOSARDR0'                                        CDL063 MD060528
      C**********         PARM      *BLANKS       PRtCd             7                 CDL063 MD060528
      C**********         PARM      '*VERIFY'     POptn             7                 CDL063 MD060528

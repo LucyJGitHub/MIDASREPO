@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061268           Date 16May23               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. 250932             Date 01Dec22               *
+      *  Prev Amend No. UUC100             Date 01Dec22               *      
+      *                 MD061268           Date 16May23               *
+      *                 MD060092           Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD058181           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
@@ -179,6 +181,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250932 - Value date of Batch Items uploaded from interface   *
+      *           file changed to run date. Screen should show the    *
+      *           value date held in the interface file GLJEIPPD.     *
+      *           Also field DACO contains invalid data if the        *
+      *           account doesn't exist in the system.                *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
+      *  UUC100 - Upgrade UUC027 to FBM 2.1                           *
+      *           Cover-control on journal entries input.             *
+      *           Do not output Warning msg for Overdraft limit if    *
+      *           feature UUC027 is 'On'.                             *
+      *           Hooks Used: GL0121MC08 ,GLH00638                    *      
       *  MD061268 - JE Postings Maintenance GL0121M incorrectly re-   *
       *             ports errors in uploaded batch from JE interface. *
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
@@ -1777,8 +1790,8 @@
      C           WUAPRC    ORNE *BLANKS                                   CEU013
      C           CEU013    ANDEQ'Y'                                       CEU013
      C           WP0008    ANDEQ'V'                                       CEU013
-     C           WUINCY    ANDEQ'Y'                                       CEU013
-     C           A5ACTY    ANDEQ'R'                                       CEU013
+     C********** WUINCY    ANDEQ'Y'                                                    CEU013 250932
+     C********** A5ACTY    ANDEQ'R'                                                    CEU013 250932
      C/COPY WNCPYSRC,GL0121MK69
       * Midas Conv. Day to Date - Standard functions  *
      C                     CALL 'ZDATE2'               90  Midas Conv. Day
@@ -7969,9 +7982,12 @@ E1   C                     ENDIF                                          CGL016
      C*
      C**   CHECK AGAINST DATE THE ACCOUNT WAS OPENED
      C*
+     C                     Z-ADDDACO      W#DACO  50                                          250932
+     C           W#DACO    IFGT 0                                                             250932
      C           DACO      IFGT #1VLDT                       IF 1
      C                     MOVE '*DTOPER' W0RTN
      C                     END                               END 1
+     C                     ENDIF                                                              250932
      C/COPY WNCPYSRC,GL0121MC21
      C                     ENDIF                                                              CGL148
      C*
@@ -8971,6 +8987,8 @@ E1   C                     ENDIF                                          CGL016
      C*
      C**   CHECK AGAINST DATE THE ACCOUNT WAS OPENED
      C*
+     C                     Z-ADDDACO      W#DACO                                              250932
+     C           W#DACO    IFGT 0                                                             250932
      C           DACO      IFGT #1VLDT                       IF 1
      C           CGL149    ANDEQ'N'                                                           CGL149
      C           DACO      ORGT #1VLDT                                                        CGL149
@@ -8982,6 +9000,7 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE '*BVLDER' W0RTN                                               CGL149
      C                     ENDIF                                                              CGL149
      C                     END                               END 1
+     C                     ENDIF                                                              250932
      C/COPY WNCPYSRC,GL0121MC23
      C                     ENDIF                                                              CGL148
       * CASE: PGM.*Return code is Value Date Before Ac Open

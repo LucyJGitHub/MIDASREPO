@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD056602           Date 04Sep20               *
-      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *  Last Amend No. MD022358           Date 01Dec22               *      
+      *  Prev Amend No. MD056602           Date 04Sep20               *
+      *                 MD060092           Date 01Aug22               *
       *                 MD060121           Date 18Jun22               *
       *                 CLE138             Date 02Nov21               *
       *                 MD034146           Date 17May22               *
@@ -79,6 +80,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022358 - Amendment to facility details cannot be performed *
+      *             on the same day as the reactivation of the ex-    *
+      *             pired facility.                                   *
+      *           - If Facility is either closed or expired, check    *
+      *             for records in PF/LEFCAMPD if it has been reacti- *
+      *             vated.                                            *      
       *  MD056602 - Deliverable Data Split for T_APICFG               *
       *  MD060092 - Revert CLE138 Changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance. Apply CLE138        *
@@ -1087,9 +1094,22 @@
      C                   GOTO      EVALAA
      C                   END
 
+      **  If Facility is either closed or expired, check for records                        MD022358
+      **  in PF/LEFCAMPD if it has been reactivated.                                        MD022358
+     C                   MOVE      *OFF          WREAC                                      MD022358
+     C     F7_RECI       IFEQ      'C'                                                      MD022358
+     C     F7_RECI       OREQ      'E'                                                      MD022358
+     C                   MOVEL     DDCSSN        K3CNUM                                     MD022358
+     C                   MOVE      DDFACT        K3FACT                                     MD022358
+     C                   MOVE      DDFCNO        K3FCNO                                     MD022358
+     C                   EXSR      SRCKFR                                                   MD022358
+     C                   ENDIF                                                              MD022358
+                                                                                            MD022358
       * Amendments are only allowed on live records
+      * and reactivated facilities (i.e. WREAC is *ON)                                      MD022358
      C     F7_RECI       IFNE      'D'
      C     WAggregate    ANDNE     'Y'                                                        CLE041
+     C     WREAC         ANDNE     *ON                                                      MD022358
                                                                                               CLE041
      C     AGF1_RECI     ORNE      'D'                                                        CLE041
      C     WAggregate    ANDEQ     'Y'                                                        CLE041

@@ -16,6 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. BUG26014           Date 01Dec22              *      
       *  Last Amend No. BA7106             Date 08Aug23               *
       *  Prev Amend No. MD060840           Date 08May23               *
       *                 AR959687           Date 08May23               *
@@ -173,6 +174,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG26014 - Reverse CDL016.                                   *
+      *           - Applied for AR1068690 (Child: AR1069087)          *      
       *  BA7106 - FX/MM Deal subtype allocation via In-house Program  *
       *  MD060840 - Unable to complete a TD/CF deal with              *
       *             regular/irregular interest rate change and/or     *
@@ -3799,34 +3802,34 @@
 
       /COPY WNCPYSRC,MMLDNIV069
 
-      *  *---------------------------------------*                                            CDL016
-      *  * Validate Rollover Indicator           *                                            CDL016
-      *  *---------------------------------------*                                            CDL016
-     C     CDL016        IFEQ      'Y'                                                        CDL016
-                                                                                              CDL016
-     C                   EXSR      RESETERRS                                                  CDL016
-                                                                                              CDL016
-     C                   CALLB     'MMVROLLIND'                                               CDL016
-     C                   PARM                    ReturnCode                                   CDL016
-     C                   PARM                    MSG1                                         CDL016
-     C                   PARM                    DDROLI                                       CDL016
-     C                   PARM                    DDAURO                                       CDL016
-     C                   Parm                    W_Deal_Type                                 BUG8582
-                                                                                              CDL016
-     C     MSG1          IFNE      *BLANK                                                     CDL016
-     C                   ADD       1             Idx                                          CDL016
-     C                   EVAL      FldNameArr(Idx) = 'DDROLI'                                 CDL016
-     C                   EVAL      MsgIDArr(Idx) = MSG1                                       CDL016
-     C                   ENDIF                                                                CDL016
-                                                                                              CDL016
-      ** Use the return code's value to set the field's OK flag                               CDL016
-     C                   CALLB     'ZASETOKFLG'                                               CDL016
-     C                   PARM                    DDROLIOK                                     CDL016
-     C                   PARM                    ReturnCode                                   CDL016
-     C                   PARM                    WarnGlobal                                   CDL016
-                                                                                              CDL016
-     C                   ENDIF                                                                CDL016
-                                                                                              CDL016
+      *****************************************************************              CDL016 BUG26014
+      *****Validate*Rollover*Indicator*********************************              CDL016 BUG26014
+      *****************************************************************              CDL016 BUG26014
+     C*****CDL016        IFEQ      'Y'                                               CDL016 BUG26014
+      **********                                                                     CDL016 BUG26014
+     C**********         EXSR      RESETERRS                                         CDL016 BUG26014
+      **********                                                                     CDL016 BUG26014
+     C**********         CALLB     'MMVROLLIND'                                      CDL016 BUG26014
+     C**********         PARM                    ReturnCode                          CDL016 BUG26014
+     C**********         PARM                    MSG1                                CDL016 BUG26014
+     C**********         PARM                    DDROLI                              CDL016 BUG26014
+     C**********         PARM                    DDAURO                              CDL016 BUG26014
+     C**********         Parm                    W_Deal_Type                        BUG8582 BUG26014
+      **********                                                                     CDL016 BUG26014
+     C*****MSG1*         IFNE      *BLANK                                            CDL016 BUG26014
+     C**********         ADD       1             Idx                                 CDL016 BUG26014
+     C**********         EVAL      FldNameArr(Idx) = 'DDROLI'                        CDL016 BUG26014
+     C**********         EVAL      MsgIDArr(Idx) = MSG1                              CDL016 BUG26014
+     C**********         ENDIF                                                       CDL016 BUG26014
+      **********                                                                     CDL016 BUG26014
+      ***Use*the*return*code's*value*to*set*the*field's*OK*flag                      CDL016 BUG26014
+     C**********         CALLB     'ZASETOKFLG'                                      CDL016 BUG26014
+     C**********         PARM                    DDROLIOK                            CDL016 BUG26014
+     C**********         PARM                    ReturnCode                          CDL016 BUG26014
+     C**********         PARM                    WarnGlobal                          CDL016 BUG26014
+      **********                                                                     CDL016 BUG26014
+     C**********         ENDIF                                                       CDL016 BUG26014
+      **********                                                                     CDL016 BUG26014
       *  *--------------------------------------------*
       *  * Validate Automatic Rollover Indicator      *  #36
       *  *--------------------------------------------*
@@ -3861,6 +3864,34 @@
      C                   PARM                    WarnGlobal
      C                   END                                                                  250597
 
+                                                                                            BUG26014
+      *  *---------------------------------------*                                          BUG26014
+      *  * Validate Rollover Indicator           *                                          BUG26014
+      *  *---------------------------------------*                                          BUG26014
+     C     CDL016        IFEQ      'Y'                                                      BUG26014
+                                                                                            BUG26014
+     C                   EXSR      RESETERRS                                                BUG26014
+                                                                                            BUG26014
+     C                   CALLB     'MMVROLLIND'                                             BUG26014
+     C                   PARM                    ReturnCode                                 BUG26014
+     C                   PARM                    MSG1                                       BUG26014
+     C                   PARM                    DDROLI                                     BUG26014
+     C                   PARM                    DDAURO                                     BUG26014
+     C                   Parm                    W_Deal_Type                                BUG26014
+                                                                                            BUG26014
+     C     MSG1          IFNE      *BLANK                                                   BUG26014
+     C                   ADD       1             Idx                                        BUG26014
+     C                   EVAL      FldNameArr(Idx) = 'DDROLI'                               BUG26014
+     C                   EVAL      MsgIDArr(Idx) = MSG1                                     BUG26014
+     C                   ENDIF                                                              BUG26014
+                                                                                            BUG26014
+      ** Use the return code's value to set the field's OK flag                             BUG26014
+     C                   CALLB     'ZASETOKFLG'                                             BUG26014
+     C                   PARM                    DDROLIOK                                   BUG26014
+     C                   PARM                    ReturnCode                                 BUG26014
+     C                   PARM                    WarnGlobal                                 BUG26014
+                                                                                            BUG26014
+     C                   ENDIF                                                              BUG26014
       /COPY WNCPYSRC,MMLDNIV071
 
       *  *--------------------------------------------*

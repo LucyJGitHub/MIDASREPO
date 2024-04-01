@@ -10,8 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD062259           Date 30Jan24               *
-      *  Prev Amend No. BA5103             Date 10Jan24               *
+      *  Last Amend No. AR991639           Date 01Dec22               *
+      *  Prev Amend No. AR898005           Date 01Dec22               *
+      *                 231185             Date 01Dec22               *
+      *                 MD020081           Date 01Dec22               *
+      *                 UUC105             Date 01Dec22               *      
+      *                 MD062259           Date 30Jan24               *
+      *                 BA5103             Date 10Jan24               *
       *                 CDL103             Date 15Dec23               *
       *                 MD058815           Date 28Sep21               *
       *                 CIR020             Date 02Aug21               *
@@ -326,6 +331,19 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR991639 - IBAN (23) is losing last character. Pgm fld BENAN *
+      *             has to be increased from 22 to 23.                *
+      *             (Child: AR993989)                                 *
+      *  AR898005 - Missing the Beneficiary A/C line details          *
+      *             Add Beneficiary A/C line details in the confo.    *
+      *             Applied 193021. (Child: AR898006)                 *
+      *  231185 - Show interest account on a separate field.          *
+      *         - Applied for MD022569.                               *
+      *  MD020081 - DL0110P1 prints two pages instead of one.         *
+      *  UUC105 - upgrade of UUC070 to FBM 2.1                        *
+      *           NRA in Retail Account Information                   *
+      *           Added hooks UUC105_006 and UUC105_007.              *
+      *           Used core hook DLH00021.                            *      
       *  MD062259 - Bank to Bank Info Lines 2 and 3 are not displayed *
       *  BA5103 - Adjust Layout of Dealing & Lending I/C Confirmations*
       *  CDL103 - Add Bank to Bank Information in DL I/C Confirmations*
@@ -1163,6 +1181,7 @@
      FDLFSACL0IF  E           K        DISK                               CDL018
      FDLRPIFL1IF  E           K        DISK                                                   CSW213
       *                                                                   CDL018
+     F/COPY WNCPYSRC,UUC105_006                                                               UUC105
 0023 F*
 0024 F**01************DTRIXHH/SDTIX HEADER                                E27626
      F* 01            DTRIXHH HEADER                                      E27626
@@ -6613,6 +6632,12 @@
      C                     END                                            166972
       *                                                                   166972
 1127 C                     EXSR SETTYP
+     C                     MOVE *BLANKS   WINT1  17                                           231185
+     C                     MOVE *BLANKS   WINT2  20                                           231185
+     C                     MOVE *BLANKS   WINT3  10                                           231185
+     C           IPDS      IFEQ 'Y'                                                           231185
+     C                     EXSR STINSL                                                        231185
+     C                     ENDIF                                                              231185
 1128 C*
 1129 C*    SET UP OUR RECEIPT NOSTRO FIELDS
 1130 C                     SETOF                     616217
@@ -7539,6 +7564,11 @@
      C           DTYP      ANDNE'LT'                                      CDL006
      C/COPY WNCPYSRC,DL0110CCP5                                           S01408
      C*                                                                   S01408
+      ** Setup Beneficiary a/c line position if 'YOURSELVES'                                AR898005
+     C           @@60      IFEQ '1'                                                         AR898005
+     C                     MOVE *BLANKS   CPTN                                              AR898005
+     C                     MOVELBENAN     CPTN                                              AR898005
+     C                     ENDIF                                                            AR898005
      C*                                                                   S01310
 1219 C                     EXSR EXCPT
       *                                                                   CDL018
@@ -9883,6 +9913,7 @@
      C*                                                                   E25392
 1355 C   57                MOVELRETAC     CPTN
 1355 C   57                MOVELRETAC     AWCNTN                          S01194
+     C/COPY WNCPYSRC,UUC105_007                                                               UUC105
 1356 C   61                GOTO QPAY
 1357 C*
 1358 C*         - RECEIPT NARRATIVE
@@ -9979,6 +10010,8 @@
 1395 C                     MOVE BLANK     AWCPNM                          S01194
 1396 C                     MOVE BLANK     CPTN
 1396 C                     MOVE BLANK     AWCNTN                          S01194
+     C**********           MOVE BLANK     BENAN  22                                AR898005 AR991639
+     C                     MOVE BLANK     BENAN  23                                         AR991639
 1397 C                     MOVE BLANK     ARRAY
      C                     MOVE *BLANK    CSTRD   1                       S01194
      C                     MOVE *BLANK    CNTRD   1                       S01194
@@ -10022,10 +10055,12 @@ TA06 CORN62 51             MOVELPAY       ADD
 1420 C*    AND TOWN FROM COUNTERPARTY SHORTNAME OR CUSTOMER NO.
 1421 C  N05      CUSTNO    COMP CNUMA                    60
 1422 C   05      CUSTNO    COMP PCUSA                    60
+     C                     MOVE *IN60     @@60    1                                         AR898005
 1330 C***60*               MOVE *BLANKS   CPNM                     S01177 S01194
 1330 C   60                MOVE *BLANKS   AWCPNM                          S01194
 1423 C***60*               MOVELYERSEL    CPNM                            S01194
 1423 C   60                MOVELYERSEL    AWCPNM                          S01194
+     C   60                MOVELBENA      BENAN                                             AR898005
      C/COPY WNCPYSRC,DL0110C055
 1424 C   60                GOTO ENDCPN
 1425 C*****                MOVELCUSTNO    CLIKEY                          S01194
@@ -10064,6 +10099,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      C/COPY WNCPYSRC,DL0110C057
 1429 C                     MOVELBBCRTN    CPTN                            S01194
 1429 C                     MOVELBBCRTN    AWCNTN                          S01194
+     C                     MOVELBENA      BENAN                                             AR898005
      C                     END                                            S01194
      C/COPY WNCPYSRC,DL0110C221
 1428 C***08                MOVELCRNM      CPNM                            S01194
@@ -14926,6 +14962,76 @@ TA06 CORN62 51             MOVELPAY       ADD
      C                     ENDSR                                                              CSW213
       *****************************************************************                       CSW213
       *                                                                                       CIR011
+      /EJECT                                                                                  231185
+      *****************************************************************                       231185
+      *                                                               *                       231185
+      *  S/R STINSL - Set interest settlement account.                *                       231185
+      *                                                               *                       231185
+      *****************************************************************                       231185
+     C           STINSL    BEGSR                                                              231185
+      *                                                                                       231185
+     C                     MOVEL'INTEREST'WINT1                                               231185
+     C                     MOVE 'ACCOUNT:'WINT1                                               231185
+     C           IMET      IFEQ '03'                                                          231185
+     C           IMET      OREQ '05'                                                          231185
+     C           IMET      OREQ '14'                                                          231185
+     C                     MOVELINSA      WINT2                                               231185
+     C                     ENDIF                                                              231185
+     C           IMET      IFEQ '01'                                                          231185
+     C           IMET      OREQ '07'                                                          231185
+     C           IMET      OREQ '08'                                                          231185
+     C           IMET      OREQ '12'                                                          231185
+     C                     MOVELINSA      WNOS    2                                           231185
+     C           ISCY      IFEQ *BLANKS                                                       231185
+     C                     MOVE CCY       WCURR   3                                           231185
+     C                     ELSE                                                               231185
+     C                     MOVE ISCY      WCURR                                               231185
+     C                     ENDIF                                                              231185
+     C                     CALL 'AONOSTR0'                                                    231185
+     C                     PARM '*MSG    '@RTCD                                               231185
+     C                     PARM '*KEY    '@OPTN                                               231185
+     C                     PARM *BLANKS   @KEYA                                               231185
+     C                     PARM WCURR     @AJCD                                               231185
+     C                     PARM *BLANKS   @KEYC                                               231185
+     C                     PARM *BLANKS   @KEYD                                               231185
+     C                     PARM WNOS      @DRNB                                               231185
+     C                     PARM *BLANKS   @KEYF                                               231185
+     C                     PARM *BLANKS   @KEYG                                               231185
+     C                     PARM *BLANKS   @KEYH                                               231185
+     C           @NOST     PARM @NOST     DSFDY                                               231185
+     C           @RTCD     IFNE *BLANK                                                        231185
+     C                     MOVEL'SDNOSTPD'DBFILE                                              231185
+     C                     MOVEL'27'      DBASE                                               231185
+     C                     MOVEL@OPTN     DBOPTN                                              231185
+     C                     MOVE NOS       NKEY    5                                           231185
+     C                     MOVELCURR      NKEY                                                231185
+     C                     MOVELNKEY      DBKEY                                               231185
+     C                     SETON                     U7U880                                   231185
+     C                     EXSR *PSSR                                                         231185
+     C                     MOVEL'NOSTRO ' ERM                                                 231185
+     C                     MOVELERM       AWCPNM                                              231185
+     C                     ELSE                                                               231185
+     C                     CALL 'AOCUSTR0'                                                    231185
+     C                     PARM '*MSG    '@RTCD                                               231185
+     C                     PARM '*KEY    '@OPTN                                               231185
+     C                     PARM A7CUST    @AENB                                               231185
+     C                     PARM *BLANKS   @KYST                                               231185
+     C           @CUST     PARM @CUST     DSSDY                                               231185
+     C           @RTCD     IFNE *BLANK                                                        231185
+     C                     MOVEL'SDCUSTPD'DBFILE                                              231185
+     C                     MOVEL'19'      DBASE                                               231185
+     C                     MOVEL@OPTN     DBOPTN                                              231185
+     C                     MOVELXPIBN     DBKEY                                               231185
+     C                     SETON                     U7U8LR                                   231185
+     C                     EXSR *PSSR                                                         231185
+     C                     ELSE                                                               231185
+     C                     MOVELBBCRNM    WINT2                                               231185
+     C                     MOVELBBCRTN    WINT3                                               231185
+     C                     ENDIF                                                              231185
+     C                     ENDIF                                                              231185
+     C                     ENDIF                                                              231185
+     C                     ENDSR                                                              231185
+      *****************************************************************                       231185
      C/COPY WNCPYSRC,DL0110CP36                                           S01408
       /COPY ZSRSRC,ZFRPEDZ3                                               CIR001
      C*****************************************************************   CIR001
@@ -17485,7 +17591,8 @@ TA06 CORN62 51             MOVELPAY       ADD
 1886 O*****   E  1     69N38                                              S01119
 1886 O*****   E  125   69N38                                       S01119 S01117
      O/COPY WNCPYSRC,DL0110O074
-1886 O        E  125   69N38 07                                           S01117
+1886 O********E* 125   69N38 07                                                      S01117 MD020081
+     O        E  126   69N38 07                                                             MD020081
      O/COPY WNCPYSRC,DL0110O075
      O*******AND      N87                                           S01354S01373
      O       AND      N87N08                                              S01373
@@ -17626,7 +17733,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      O/COPY WNCPYSRC,DL0110OP51                                           S01408
      O                         CNUM      15                               046852
      O/COPY WNCPYSRC,DL0110OP52                                           S01408
-     O                 04      CNNA      80                               079375
+     O**********       04      CNNA      80                                            079375 231185
+     O                         WINT1     62                                                   231185
 1889 O******  E  1     69N38                                              S01117
      O/COPY WNCPYSRC,DL0110O085
 1889 O        E  1     69N38 07                                           S01117
@@ -17712,6 +17820,7 @@ TA06 CORN62 51             MOVELPAY       ADD
 1927 O**********      N83      BBCNA3 B  44                                            S01194 BA5103
      O                N83NKI   BBCNA3 B  44                                                   BA5103
      O                N83 KI   BBCNA3 B  40                                                   BA5103
+     O                         WINT2     65                                                   231185     
      O/COPY WNCPYSRC,DL0110OP60                                           S01408
      O*                  N25 31RNNA      68                               S01129
      O                N83N25 31RNNA      68                               S01129
@@ -17750,6 +17859,7 @@ TA06 CORN62 51             MOVELPAY       ADD
 1929 O**********      N83      BBCNA4 B  44                                            S01194 BA5103
      O                N83NKI   BBCNA4 B  44                                                   BA5103
      O                N83 KI   BBCNA4 B  40                                                   BA5103
+     O                         WINT3     55                                                   231185     
      O/COPY WNCPYSRC,DL0110OP62                                           S01408
      O                 83                24 '** DO NOT SEND **'           S01129
      O/COPY WNCPYSRC,DL0110OP15                                           S01408
@@ -23935,7 +24045,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      O/COPY WNCPYSRC,DL0110OP63                                                             MD049357
      O                         CNUM      15                                                 MD049357
      O/COPY WNCPYSRC,DL0110OP64                                                             MD049357
-     O                 04      CNNA      80                                                 MD049357
+     O**********       04      CNNA      80                                          MD049357 231185
+     O                         WINT1     62                                                   231185
      O/COPY WNCPYSRC,DL0110OJS2                                                             MD049357
      O        E  1     69N38 07                                                             MD049357
      O       AND      N87 08 KY                                                             MD049357
@@ -23951,6 +24062,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      O**********               BBCNA1 B  44                                          MD049357 BA5103
      O                NKI      BBCNA1 B  44                                                   BA5103
      O                 KI      BBCNA1 B  40                                                   BA5103
+     O                         WINT2     65                                                   231185     
      O/COPY WNCPYSRC,DL0110OP68                                                             MD049357
      O                   N24N38SPI       83                                                 MD049357
      O        E  1     69N38 07                                                             MD049357
@@ -23960,6 +24072,7 @@ TA06 CORN62 51             MOVELPAY       ADD
      O**********      N83      BBCNA2 B  44                                          MD049357 BA5103
      O                N83NKI   BBCNA2 B  44                                                   BA5103
      O                N83 KI   BBCNA2 B  40                                                   BA5103
+     O                         WINT3     55                                                   231185     
      O/COPY WNCPYSRC,DL0110OP70                                                             MD049357
      O*                  N25 31TITL7  B  65                                                 MD049357
      O                N83N25 31TITL7  B  65                                                 MD049357

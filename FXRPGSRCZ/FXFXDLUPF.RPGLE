@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060727           Date 01Dec22               *
-      *  Prev Amend No. 251029             Date 22May20               *
+      *  Last Amend No. 250229             Date 20May08               *      
+      *  Prev Amend No. MD060727           Date 01Dec22               *
+      *                 251029             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250229 - When inputting transactions ensure an error message *
+      *           set when trying to insert the same deal number      *
+      *           simultaneously.                                     *
+      *         - Applied for MD030370.                               *      
       *  MD060727 - Ensure that sale value date is a working day      *
       *  251029 - Applied fix 231306.                                 *
       *  231306 - Handle file locking properly.                       *
@@ -833,7 +838,9 @@
      C*  WRITE (OR UPDATE IF PRESENT) NEW DEAL
      C*
      C     *IN99         IFEQ      '0'
-     C                   UPDATE    FXDEALP0
+     C**********         UPDATE    FXDEALP0                                                   250229
+     C                   MOVEL     '*RECINS'     @@RTCD                                       250229
+     C                   GOTO      EXIT                                                       250229
      C                   ELSE
      C                   WRITE     FXDEALP0
      C/COPY WNCPYSRC,FXFXDLFC01

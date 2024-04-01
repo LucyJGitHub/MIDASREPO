@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD061704           Date 21Aug23               *
-      *  Prev Amend No. MD061083           Date 01Jun23               *
+      *  Last Amend No. BUG25348           Date 30Jan13               *      
+      *  Prev Amend No. MD061704           Date 21Aug23               *
+      *                 MD061083           Date 01Jun23               *
       *                 CSD103             Date 10Aug20               *
       *                 MD051508           Date 12Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -92,6 +93,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG25348 - Should accept invalid characters                  *
+      *           - Applied for AR1068690 (Child: AR1069087)          *      
       *  MD061704 - Error in the XML from IPAY API.                   *
       *  MD061083 - Ordering Customer 1 and Ordering Customer 2 went  *
       *             blank after user authorized that incoming payment *
@@ -941,6 +944,9 @@
      C                   MOVEL     'FTM2153'     MsgIdXAr(IDX)
      C                   ENDIF
       *
+     C                   IF        %SUBST(WDORC1:1:1) = '/' AND                             BUG25348
+     C                             *IN94 = *ON                                              BUG25348
+     C                   ELSE                                                               BUG25348
      C     AD#1          IFEQ      'Y'
      C**********         MOVEL     'N'           OKORC1                                     MD061083
      C                   EVAL      OKORC1 = 'W'                                             MD061083
@@ -980,6 +986,7 @@
      C                   EVAL      WFldNmXAr(WIx) = 'DDORC5'                                MD061083
      C                   EVAL      WMsgIDXAr(Wix) = 'FTM0070'                               MD061083
      C                   ENDIF                                                                CFT032
+     C                   ENDIF                                                              BUG25348
                                                                                               CFT032
      C                   IF        CSW207 = 'N'                                               250600
      C                   IF        PNWRK = 'SWIFT ' OR PNWRK = '      '                       250600

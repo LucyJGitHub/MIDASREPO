@@ -12,8 +12,21 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. CFT166             Date 02Nov22               *
+      *  Last Amend No. MD058687           Date 01Dec22               *
+      *  Prev Amend No. CFT162             Date 01Dec22               *
+      *                 AR918987           Date 01Dec22               *
+      *                 CFT046             Date 01Dec22               *
+      *                 MD056975           Date 01Dec22               *
+      *                 UUC104             Date 01Dec22               *
+      *                 MD022928           Date 01Dec22               *
+      *                 MD021370           Date 01Dec22               *
+      *                 MD021371           Date 01Dec22               *
+      *                 MD021369           Date 01Dec22               *	
+      *                 AR1068690          Date 01Dec22               *
+      *                 223053             Date 01Dec22               *
+      *                 217679             Date 01Dec22               *      
+      *                 MD058081           Date 11May21               *
+      *                 CFT166             Date 02Nov22               *
       *                 CSW122A            Date 04May22               *	
       *                 MD058914           Date 06Oct21               *
       *                 CSD103             Date 10Aug20               *
@@ -156,6 +169,36 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058687 - Formalise AR918987 for CFT162                     *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
+      *           Applied AR918987 and conditioned to CFT162.         *
+      *  AR918987 - Missing MT900/MT910 extension details in STP for  *
+      *             CAR UUC068. Recompile.                            *
+      *           - Pass generation criteria as parms.                *
+      *             (Child: AR922598)                                 *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
+      *  MD056975 - SWIFT2020 AND  UUC069CC1                          *
+      *             CATER FOR SMALL 'y' for field GNAUTO in UUC069    *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook FT0300C056, FT0300OTFT, FT0300CCP9,   *
+      *                         FT0300C033, FT0300INFT, FT0300C076    *
+      *                         FT0300C075, FT0300C061                *
+      *           Add copy hook UUC104_001, UUC104_002, UUC104_003,   *
+      *                         UUC104_004, UUC104_005                *
+      *  MD022928 - FT STP Incoming payments do not saved the TRNO    *
+      *             on INPAYDD.                                       *
+      *           - Save Trno to write to INPAYDD later               *
+      *  MD021370  - Additional conditioning of processing based on   *
+      *              'No update indicator' for report ME1140          *
+      *  MD021371  - FT0300 fails to create transaction with error    *
+      *              message "Transaction Type validation failed"     *
+      *  MD021369  - STP removes 71G Charge when creating OP          *
+      *  AR1068690 - Apply 223053 217679 (Child:AR1069087)            *
+      *  223053 - Conditioning of call to ME1501 should also depend   *
+      *           on CRE008 if CRT002 is off (not upgraded from DBA3).*
+      *  217679 - Do not print report if only CRE008 is on and        *
+      *           if it is not a Cash Management message              *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CFT166 - Amendment to FT A/C Balance Check on Authorisation  *
       *  CSW122A  - SWIFT ISO 20022 CCR1 Generation of MTn99          *
@@ -454,6 +497,7 @@
      F            ACCNTACF                          KIGNORE               CFT002
       ** Account master                                                   130869
       *                                                                   130869
+     FSDM901L0IF  E           K        DISK                                                   CFT162
      FREPDRIL1IF  E           K        DISK                               122060
      F                                              KINFSR SRFILA         122060
       ** Drafts Issuaance Incoming Msg Keyed on Draft No                  122060
@@ -474,6 +518,9 @@
      F*MEISOCL1IF* E           K        DISK         KINFSR *PSSR                    CFT017 MD058081 
       ** Midas ME SWIFT ISO Country Codes retrieval index                                     CFT017
       *                                                                                       CFT017
+     FMEGNCRX0IF  E           K        DISK         KINFSR *PSSR                              CFT046
+      *                                                                                       CFT046
+      ** Generation Criteria Header Extension File                                            CFT046
      F/COPY ZSRSRC,RTCCYSF1                                               122060
       *                                                                   122060
      F/COPY WNCPYSRC,FT0300DFPG
@@ -938,6 +985,8 @@
      I              CRMT                            ICRMT                                     CLE134
      I              CRFD                            ICRFD                                     CLE134
      I/COPY WNCPYSRC,FT0300I002
+     IPCRITX    E DSMEGNCRX0                                                                AR918987
+      *                                                                                     AR918987
       *                                                                   CFT009
       ** Define full account for IBAN.                                    CFT009
       *                                                                   CFT009
@@ -2106,13 +2155,42 @@
      C* Report Cash Management routing check if CRE008 is on              CRE008
      C* and 101 or 103                                                    CRE008
      C           CRE008    IFEQ 'Y'                                       CRE008
+     C           CFT002    ANDNE'Y'                                                           217679
      C           PMTPY     IFEQ '101'                                     CRE008
      C           PMTPY     OREQ '103'                                     CRE008
-     C           W0ACT     IFEQ *BLANK                                    CRE008
+     C********** W0ACT     IFEQ *BLANK                                                 CRE008 217679
+     C                     SELEC                                                              217679
+     C* If no report required                                                                 217679
+     C           GNEXCP    WHEQ 'N'                                                           217679
+     C           GNEXCP    OREQ ' '                                                           217679
+     C                     MOVEL*BLANKS   W0ACT                                               217679
+     C* If action taken                                                                       217679
+     C           W0ACT     WHNE *BLANKS                                                       217679
+     C* Default is report required                                                            217679
+     C                     OTHER                                                              217679
      C                     MOVEL'*REPT'   W0ACT                           CRE008
+     C                     ENDSL                                                              217679
+     C**********           ENDIF                                                       CRE008 217679
      C                     ENDIF                                          CRE008
      C                     ENDIF                                          CRE008
-     C                     ENDIF                                          CRE008
+      *                                                                                       217679
+      ** FT STP enables                                                                       217679
+      *                                                                                       217679
+     C           CFT002    IFEQ 'Y'                                                           217679
+     C                     SELEC                                                              217679
+      * If no report required                                                                 217679
+     C           GNEXCP    WHEQ 'N'                                                           217679
+     C           E#NOUP    ANDNE'Y'                                                         MD021370
+     C           GNEXCP    OREQ ' '                                                           217679
+     C           E#NOUP    ANDNE'Y'                                                         MD021370
+     C                     MOVEL*BLANKS   W0ACT                                               217679
+      * If action taken                                                                       217679
+     C           W0ACT     WHNE *BLANKS                                                       217679
+      * Default is report required                                                            217679
+     C                     OTHER                                                              217679
+     C                     MOVEL'*REPT'   W0ACT                                               217679
+     C                     ENDSL                                                              217679
+     C                     ENDIF                                                              217679
       *
       *  Report on actions taken
       *
@@ -3381,6 +3459,7 @@
       * Call ME1501 to analysis the data of the messages for FT fields    CFT002
       *                                                                   CFT002
      C           CFT002    IFEQ 'Y'                                       163446
+     C           CRE008    OREQ 'Y'                                                           223053
       *                                                                   163446
      C                     CALL 'ME1501'                                  CFT002
      C                     PARM *BLANKS   W0ACT            Action Code    CFT002
@@ -3391,7 +3470,14 @@
      C                     PARM *BLANKS   PRTN    7        Return Code    CFT002
      C                     PARM ##PGM     W0CPGM 10        Messages ?     CFT002
      C           P@RETV    PARM *BLANK    P@RETV256        Return field   CRE008
+     C                     PARM           PCRITX                                            AR918987
+      *                                                                                     AR918987
      C/COPY WNCPYSRC,FT0300C029
+     C           CFT046    IFEQ 'Y'                                                           CFT046
+     C                     MOVE *BLANKS   WORTTY                                              CFT046
+     C                     MOVE *BLANKS   WIRTTY                                              CFT046
+     C           KYRPX0    CHAINMEGNCRX0             89                                       CFT046
+     C                     ENDIF                                                              CFT046
       *                                                                   CFT002
       *  Clear ISO fields                                                 CFT002
       *                                                                   CFT002
@@ -3509,6 +3595,11 @@
      C                     MOVE GNPYST    S1PYST                          CFT002
      C                     MOVE GNBOKC    S1BOKC                          CFT002
      C                     MOVE *BLANKS   S1PRFC                          CFT002
+      *                                                                                       CFT046
+      *  If Transaction Type specified then use it                                            CFT046
+     C           X0TRAT    IFNE *BLANKS                                                       CFT046
+     C                     MOVELX0TRAT    WIRTTY                                              CFT046
+     C                     END                                                                CFT046
       *                                                                   163446
       * End of test : PRTN IFNE 'MIN0096'                                 163446
      C                     END                                            163446
@@ -3614,6 +3705,11 @@
      C                     MOVE GNPYST    S4PYST                          CFT002
      C                     MOVE GNBOKC    S4BOKC                          CFT002
      C                     MOVE *BLANKS   S4PRFC                          CFT002
+      *                                                                                       CFT046
+      *  If Transaction Type specified then use it                                            CFT046
+     C           X0TRAT    IFNE *BLANKS                                                       CFT046
+     C                     MOVELX0TRAT    WORTTY                                              CFT046
+     C                     END                                                                CFT046
       *                                                                   CFT002
       *  Default the settlement method from the analysis result           CFT002
      C                     MOVELGNSETT    S4STMT                          CFT002
@@ -4763,6 +4859,8 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
+     C                     MOVEL*BLANKS   PRTCD                                             MD021371
      C                     MOVELWIRTTY    WRTTY   5                                           CER030
      C                     MOVELS3TTCD    WTTCD   3                                           CER030
      C                     EXSR SRTRTY                                                        CER030
@@ -4824,6 +4922,7 @@
       *                                                                   CFT005
      C           CFT005    IFEQ 'Y'                                       CFT005
      C           GNAUTO    ANDEQ'Y'                                       CFT005
+      /COPY WNCPYSRC,UUC104_001                                                               UUC104
      C                     EXSR SRINAU                                    CFT005
      C                     ENDIF                                          CFT005
       *                                                                   CFT009
@@ -4925,6 +5024,8 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
+     C                     MOVEL*BLANKS   PRTCD                                             MD021371
      C                     MOVELWORTTY    WRTTY                                               CER030
      C                     MOVELS5TTCD    WTTCD                                               CER030
      C                     EXSR SRTRTY                                                        CER030
@@ -4965,6 +5066,7 @@
       *                                                                   CFT005
      C           CFT005    IFEQ 'Y'                                       CFT005
      C           GNAUTO    ANDEQ'Y'                                       CFT005
+      /COPY WNCPYSRC,UUC104_002                                                               UUC104
      C                     EXSR SROTAU                                    CFT005
      C                     ENDIF                                          CFT005
       *                                                                   S01408
@@ -8399,7 +8501,58 @@
       *                                                                   CFT003
      C           CFT003    IFEQ 'CFT003'                                  CFT003
      C           CFT014    OREQ 'Y'                                       CFT003
+     C           CFT162    OREQ 'Y'                                                           CFT162
      C/COPY WNCPYSRC,FT0300C027
+      *                                                                                       CFT162
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+      *                                                                                       CFT162
+      ** Check From Account Receivers Correspondent or Sender                                 CFT162
+      *                                                                                       CFT162
+     C                     MOVELV#FRGL    @ACCN                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R900    WINR90  1                                           CFT162
+     C                     ELSE                                                               CFT162
+      *                                                                                       CFT162
+      ** record not found, check if there is a record for the customer                        CFT162
+      *                                                                                       CFT162
+     C                     MOVE *BLANKS   @BRCA                                               CFT162
+     C                     MOVE *BLANKS   @CCY                                                CFT162
+     C                     MOVE *BLANKS   @ACOD                                               CFT162
+     C                     MOVE *BLANKS   @ACSQ                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R900    WINR90                                              CFT162
+     C                     ELSE                                                               CFT162
+     C                     MOVEL'N'       WINR90                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+      ** Check to Account (A/C with Bank or Benefeciary)                                      CFT162
+      *                                                                                       CFT162
+     C                     MOVELV#TOGL    @ACCN                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R910    WINR91  1                                           CFT162
+     C                     ELSE                                                               CFT162
+      *                                                                                       CFT162
+      ** record not found, check if there is a record for the customer                        CFT162
+      *                                                                                       CFT162
+     C                     MOVE *BLANKS   @BRCA                                               CFT162
+     C                     MOVE *BLANKS   @CCY                                                CFT162
+     C                     MOVE *BLANKS   @ACOD                                               CFT162
+     C                     MOVE *BLANKS   @ACSQ                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R910    WINR91                                              CFT162
+     C                     ELSE                                                               CFT162
+     C                     MOVEL'N'       WINR91                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C                     ENDIF                                                              CFT162
       *                                                                   CFT003
       ** Update extension record to include the Auto-generated            CFT003
       ** indicator                                                        CFT003
@@ -8437,6 +8590,13 @@
      C                     CALL 'ZAGENTS'                                                   BUG26009
      C                     PARM           INTMST                                            BUG26009
       *                                                                                     BUG26009
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+     C                     MOVELWINR90    INR900                                              CFT162
+     C                     MOVELWINR91    INR910                                              CFT162
+     C                     MOVEL'N'       ING900                                              CFT162
+     C                     MOVEL'N'       ING910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     WRITEINPAYXDF                                  CFT003
       *                                                                   CFT003
       * If existing extension record, update                              CFT003
@@ -8468,6 +8628,19 @@
      C                     CALL 'ZAGENTS'                                                   BUG26009
      C                     PARM           INTMST                                            BUG26009
       *                                                                                     BUG26009
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+     C           INR900    IFEQ *BLANKS                                                       CFT162
+     C                     MOVELWINR90    INR900                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           INR910    IFEQ *BLANKS                                                       CFT162
+     C                     MOVELWINR91    INR910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C                     MOVEL'N'       ING900                                              CFT162
+     C                     MOVEL'N'       ING910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     UPDATINPAYXDF                                  CFT003
       *                                                                   CFT003
      C                     ENDIF                                          CFT003
@@ -8627,6 +8800,8 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
+     C                     MOVEL*BLANKS   PRTCD                                             MD021371
       *                                                                                       CER030
      C                     MOVELWIRTTY    IRTTY                                               CER030
       *                                                                                       CER030
@@ -8959,6 +9134,57 @@
       *                                                                   CFT003
      C           CFT003    IFEQ 'CFT003'                                  CFT003
      C           CFT014    OREQ 'Y'                                                           210509
+     C           CFT162    OREQ 'Y'                                                           CFT162
+      *                                                                                       CFT162
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+      *                                                                                       CFT162
+      ** Check From Account (Ordering Bank or Ordering Customer)                              CFT162
+      *                                                                                       CFT162
+     C                     MOVELV#FRGL    @ACCN                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R900    WOPR90  1                                           CFT162
+     C                     ELSE                                                               CFT162
+      *                                                                                       CFT162
+      ** record not found, check if there is a record for the customer                        CFT162
+      *                                                                                       CFT162
+     C                     MOVE *BLANKS   @BRCA                                               CFT162
+     C                     MOVE *BLANKS   @CCY                                                CFT162
+     C                     MOVE *BLANKS   @ACOD                                               CFT162
+     C                     MOVE *BLANKS   @ACSQ                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R900    WOPR90                                              CFT162
+     C                     ELSE                                                               CFT162
+     C                     MOVEL'N'       WOPR90                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+      ** Check to Account (Senders Correspondent Or Destination)                              CFT162
+      *                                                                                       CFT162
+     C                     MOVELV#TOGL    @ACCN                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R910    WOPR91  1                                           CFT162
+     C                     ELSE                                                               CFT162
+      *                                                                                       CFT162
+      ** record not found, check if there is a record for the customer                        CFT162
+      *                                                                                       CFT162
+     C                     MOVE *BLANKS   @BRCA                                               CFT162
+     C                     MOVE *BLANKS   @CCY                                                CFT162
+     C                     MOVE *BLANKS   @ACOD                                               CFT162
+     C                     MOVE *BLANKS   @ACSQ                                               CFT162
+     C           KYM901    CHAINSDM901L0             60                                       CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELM9R910    WOPR91                                              CFT162
+     C                     ELSE                                                               CFT162
+     C                     MOVEL'N'       WOPR91                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C                     ENDIF                                                              CFT162
       *                                                                   CFT003
       ** Update extension record to include the Auto-generated            CFT003
       ** indicator                                                        CFT003
@@ -8998,6 +9224,13 @@
      C                     CALL 'ZAGENTS'                                                   BUG26009
      C                     PARM           OPTMST                                            BUG26009
       *                                                                                     BUG26009
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+     C                     MOVELWOPR90    OPR900                                              CFT162
+     C                     MOVELWOPR91    OPR910                                              CFT162
+     C                     MOVEL'N'       OPG900                                              CFT162
+     C                     MOVEL'N'       OPG910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     WRITEOTPAYXDF                                  CFT003
       *                                                                   CFT003
       * If existing extension record, update                              CFT003
@@ -9029,6 +9262,19 @@
      C                     CALL 'ZAGENTS'                                                   BUG26009
      C                     PARM           OPTMST                                            BUG26009
       *                                                                                     BUG26009
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+     C           OPR900    IFEQ *BLANKS                                                       CFT162
+     C                     MOVELWOPR90    OPR900                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C           OPR910    IFEQ *BLANKS                                                       CFT162
+     C                     MOVELWOPR91    OPR910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+     C                     MOVEL'N'       OPG900                                              CFT162
+     C                     MOVEL'N'       OPG910                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     UPDATOTPAYXDF                                  CFT003
      C                     ENDIF                                          CFT003
       *                                                                   CFT003
@@ -9209,6 +9455,8 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
+     C                     MOVEL*BLANKS   PRTCD                                             MD021371
       *                                                                                       CER030
      C                     MOVELWORTTY    OPRTTY                                              CER030
       *                                                                                       CER030
@@ -10441,6 +10689,11 @@
      C           GNAUTO    ANDEQ'Y'                                                           CSW220
      C           WAUIN     ANDEQ'Y'                                                           CSW220
       *                                                                                     MD056683
+     C           CSW220    OREQ 'Y'                                                         MD056975
+     C           PMTPY     ANDEQ'103'                                                       MD056975
+     C           GNAUTO    ANDEQ'y'                                                         MD056975
+     C           WAUIN     ANDEQ'Y'                                                         MD056975
+      *                                                                                     MD056975
      C           ACBT      IFEQ *BLANK                                                      MD056683
      C                     MOVEL'A'       FTM199                                              CSW220
      C                     ELSE                                                             MD056683
@@ -10466,6 +10719,11 @@
      C           GNAUTO    ANDEQ'Y'                                                         MD055849
      C********** GNAUTO    IFEQ 'Y'                                                  CSW220 MD055849
      C           WAUIN     ANDEQ'Y'                                                           CSW220
+      *                                                                                     MD056975
+     C           CSW220    OREQ 'Y'                                                         MD056975
+     C           PMTPY     ANDEQ'103'                                                       MD056975
+     C           GNAUTO    ANDEQ'y'                                                         MD056975
+     C           WAUIN     ANDEQ'Y'                                                         MD056975
       *                                                                                       CSW220
      C           OPSETM    IFNE '01'                                                          CSW220
      C           OPSETM    ANDNE'08'                                                          CSW220
@@ -10930,6 +11188,7 @@
       *                                                                   CFT005
       ** Call FT0805 to check for sufficient fund using the set-up parm   CFT005
       *                                                                   CFT005
+      /COPY WNCPYSRC,UUC104_003                                                               UUC104
      C                     CALL 'FT0805'               42                 CFT005
      C**********           PARM           @ACNT  15                                    CFT005 CGL029
      C                     PARM           @ACNT  21                                           CGL029
@@ -11010,6 +11269,7 @@
      C                     MOVEL'FTUSRMSG'W0MSGF           Msg file       CFT005
      C                     EXSR SRLOG                                     CFT005
      C                     ENDIF                                          CFT005
+      /COPY WNCPYSRC,UUC104_004                                                               UUC104
       *                                                                   CFT005
       *** Payment authorised                                              CFT005
       *                                                                   CFT005
@@ -11087,6 +11347,7 @@
       *                                                                   CFT005
      C                     ENDIF                                          CFT005
       *                                                                   CFT005
+      /COPY WNCPYSRC,UUC104_005                                                               UUC104
       ** Call FT0805 to check for sufficient fund using the set-up parm   CFT005
       *                                                                   CFT005
      C                     CALL 'FT0805'               42                 CFT005
@@ -11548,6 +11809,24 @@
      C                     OPEN OTPAYXL0                                  CFT003
      C                     ENDIF                                          CFT003
       *                                                                   CFT003
+      ** Check if 'CFT162' is switched 'ON'                                                   CFT162
+      *                                                                                       CFT162
+     C                     MOVE 'N'       CFT162  1                                           CFT162
+     C                     CALL 'AOSARDR0'                                                    CFT162
+     C                     PARM *BLANKS   PRTCD                                               CFT162
+     C                     PARM '*VERIFY' POPTN                                               CFT162
+     C                     PARM 'CFT162'  PSARD                                               CFT162
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT162
+     C           PRTCD     IFEQ *BLANKS                                                       CFT162
+     C                     MOVE 'Y'       CFT162                                              CFT162
+     C           KYM901    KLIST                                                              CFT162
+     C                     KFLD           @CNUM                                               CFT162
+     C                     KFLD           @CCY                                                CFT162
+     C                     KFLD           @ACOD                                               CFT162
+     C                     KFLD           @ACSQ                                               CFT162
+     C                     KFLD           @BRCA                                               CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     SETON                     50
       *
       *  Get Rundate information
@@ -12393,6 +12672,32 @@ A     *                                                                         
      C                     ENDIF                                                              CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
+      ** Check if 'CFT046' is switched 'ON'                                                   CFT046
+      *                                                                                       CFT046
+     C                     CALL 'AOSARDR0'                                                    CFT046
+     C                     PARM *BLANKS   PRTCD                                               CFT046
+     C                     PARM '*VERIFY' POPTN                                               CFT046
+     C                     PARM 'CFT046'  PSARD                                               CFT046
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT046
+      *                                                                                       CFT046
+     C           PRTCD     IFEQ *BLANKS                                                       CFT046
+     C                     MOVE 'Y'       CFT046  1                                           CFT046
+     C                     ELSE                                                               CFT046
+      *                                                                                       CFT046
+     C           PRTCD     IFNE '*NRF   '                                                     CFT046
+     C                     MOVEL'CFT046'  W0KEY                                               CFT046
+     C                     MOVEL'SCSARDPD'W0FILE                                              CFT046
+     C                     Z-ADD55        W0ERNB                                              CFT046
+     C                     EXSR SRERRA                                                        CFT046
+     C                     ELSE                                                               CFT046
+     C                     MOVE 'N'       CFT046                                              CFT046
+     C                     ENDIF                                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+     C           KYRPX0    KLIST                                                              CFT046
+     C                     KFLD           GNMTPY                                              CFT046
+     C                     KFLD           GNMSET                                              CFT046
+      *                                                                                       CFT046
      C                     CALL 'AOSARDR0'                                                  BUG25944
      C                     PARM '       ' @RTCD                                             BUG25944
      C                     PARM '*VERIFY' @OPTN                                             BUG25944
@@ -12865,6 +13170,9 @@ A     *                                                                         
      C           ##NONB    ANDNE*BLANKS                                   CFT014
      C                     MOVEL*BLANKS   S1TRIB                          CFT014
      C                     MOVEL##NONB    S1TRIB                          CFT014
+     C                     MOVEL##NCCY    ##005A  5 P                                         217679
+     C                     MOVE ##NONB    ##005A                                              217679
+     C                     MOVEL##005A    S1TRIB    P                                         217679
       *                                                                   CFT014
       * If currency the same use GL Account                               CFT014
      C           TRCYCD    WHEQ S1SMCY                                    CFT014
@@ -14980,6 +15288,9 @@ A     *                                                                         
      C*********************PARM           PRFDDT           Repair T CFT002CFT006
      C                     PARM           W0RTN   7        Return Code    CFT002
      C/COPY WNCPYSRC,FT0300C036
+     C                     PARM           PCRIT                                             AR918987
+     C                     PARM           PCRITX                                            AR918987
+      *                                                                                     AR918987
       *                                                                   CFT002
      C***********W0RTN     IFEQ '*MAP'                              CFT002CFT006
      C*********************EXSR SRMAPR                              CFT002CFT006
@@ -16144,6 +16455,9 @@ A     *                                                                         
      C                     ELSE                                           CGL009
      C                     MOVEL*BLANKS   INTRNO                          CGL009
      C                     END                                            CGL009
+      * Save Trno                                                                           MD022928
+     C           *LIKE     DEFN INTRNO    W#TRNO                                            MD022928
+     C                     MOVELINTRNO    W#TRNO                                            MD022928
       *                                                                   CGL009
       * Related Reference                                                 CGL009
       *                                                                   CGL009
@@ -20196,7 +20510,7 @@ A     *                                                                         
      C                     MOVEL'MIDAS  ' W0MSGF                          CFT009
      C                     EXSR SRERRA                                    CFT009
      C                     ELSE                                           CFT009
-     C                     SUB  P#TOAM    WCVCRM                          CFT009
+     C**********           SUB  P#TOAM    WCVCRM                                     CFT009 MD021369
       *                                                                   CFT009
       ** IF RESULT IS NEGATIVE, ZERO OUT WCVCRM (RECEIVER'S CHARGES       CFT009
       ** REMITTED). THIS MEANS NO FURTHER CHARGES TO BE PASSED ONTO THE   CFT009
@@ -20972,6 +21286,9 @@ A     *                                                                         
      C                     MOVELMIR       MIR                             CFT009
      C                     MOVELISEQ      ISEQ                            CFT009
      C                     MOVELINTRNO    INTRNO                          CFT009
+      * Restore Trno                                                                        MD022928
+     C                     MOVELW#TRNO    INTRNO                                            MD022928
+      *                                                                                     MD022928
      C                     MOVELINMTPY    INMTPY                          CFT009
      C                     Z-ADDINMSGR    INMSGR                          CFT009
      C                     Z-ADDINKPRT    INKPRT                          CFT009
@@ -25103,6 +25420,11 @@ A     *                                                                         
       *                                                                                       CER030
      C           WTTCD     IFNE *BLANKS                                                       CER030
      C           CFT014    ANDEQ'Y'                                                           CER030
+     C           CER030    ANDEQ'Y'                                                           CFT046
+      *                                                                                       CFT046
+     C           WTTCD     ORNE *BLANKS                                                       CFT046
+     C           CFT014    ANDEQ'Y'                                                           CFT046
+     C           CGL013    ANDEQ'Y'                                                           CFT046
       *                                                                                       CER030
      C                     CALL 'AONTTIR1'             9090                                   CER030
      C                     PARM *BLANKS   PRTCD                                               CER030

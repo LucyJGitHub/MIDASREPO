@@ -11,8 +11,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061858           Date 05Oct23               *
-      *  Prev Amend No. MD057537           Date 13Sep22               *
+      *  Last Amend No. MD024384A          Date 01Dec22               *
+      *  Prev Amend No. MD025308           Date 01Dec22               *      
+      *                 MD061858           Date 05Oct23               *
+      *                 MD057537           Date 13Sep22               *
       *                 CLE138             Date 02Nov21               *
       *                 249680             Date 18May22               *
       *                 CLE126             Date 02Nov21               *
@@ -217,6 +219,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD024384A - Recompiled due to changes in CLOANL3.            *
+      *  MD025308 - Change to the Contingent Facilities Accounting so *
+      *             so that Original Borrower is used as the Customer *
+      *             of the Posting when the Facility is an 'Internal' *
+      *             Facility of an Agent syndicated Facility and the  *
+      *             Facility A/c key action is Facility Increase,     *
+      *             Facility Decrease, Loan Amount Drawn, Loan Amount *
+      *             repayment and Posting ref is 3.                   *      
       *  MD061858 - Unexpected change in posting narrative. Remove    *
       *             condition against posting reference to align with *
       *             bank expectation. Change control for CLE126.      *
@@ -2326,6 +2336,7 @@
       ** Work variables                                                                       241519
      I              'LoanCustOriginPurch' C         WPARM                                     241519
      I              'LoanAsocOriginPurch' C         WPARM2                                  MD050817
+     I              'FcltySyndOriginPurch'C         WPARMF                                  MD025308
      I              'LEC000471A'          C         WL471A                                    CLE134
      I              'LEC000471B'          C         WL471B                                    CLE134
      I              'PDCLIntPostNarrCode' C         WPNARR                                  MD051695
@@ -3365,6 +3376,7 @@
       ** Check System Value: Use Original Borrower or Purchased From on ASOC?               MD050817
       ** Set up parameter so access object checks LoanAsocOriginPurch                       MD050817
      C                     MOVELWPARM2    SVALK1                                            MD050817
+     C                     MOVELWPARMF    SVALK2                                            MD025308
       ** Call Access object:                                                                MD050817
      C                     CALL 'AOSVALR0'                                                  MD050817
      C                     PARM           RTNCDE  7                                         MD050817
@@ -3391,6 +3403,7 @@
       * If the system value is not found then default value to 'P'                          MD050817
      C           RTNCDE    IFNE '        '                                                  MD050817
      C                     MOVE 'P'       PPASOC                                            MD050817
+     C                     MOVEL'A'       WFCUST  1                                         MD025308
      C                     ELSE                                                             MD050817
       * Isolate the first character of SVAL1 which = 'P' or 'O'.                            MD050817
      C                     MOVELSVAL1     WRK02   1                                         MD050817
@@ -3399,6 +3412,7 @@
      C                     ELSE                                                             MD050817
      C                     MOVE 'P'       PPASOC                                            MD050817
      C                     ENDIF                                                            MD050817
+     C                     MOVELSVAL2     WFCUST                                            MD025308
      C                     ENDIF                                                            MD050817
       *                                                                                     MD020134
       ** Check system value if value date = posting date                                    MD020134
@@ -7003,6 +7017,20 @@
      C                     MOVE BRCA      ACBRCD                          S01117
      C/COPY WNCPYSRC,LE0470C036
 1228 C**
+      *                                                                                     MD025308
+     C           WFCUST    IFEQ 'O'                                                         MD025308
+     C           PREF,N    ANDEQ3                                                           MD025308
+     C           AKEY6     ANDEQ'I'                                                         MD025308
+     C           RCSI      ANDEQ'R'                                                         MD025308
+     C           SYIN      ANDEQ'S'                                                         MD025308
+     C           AMCOD     IFEQ 'I'                                                         MD025308
+     C           AMCOD     OREQ 'D'                                                         MD025308
+     C           AMCOD     OREQ 'A'                                                         MD025308
+     C           AMCOD     OREQ 'R'                                                         MD025308
+     C                     MOVE OLNO      ACCNM                                             MD025308
+     C                     ENDIF                                                            MD025308
+     C                     ENDIF                                                            MD025308
+      *                                                                                     MD025308
 1229 C                     ENDSR
 1230 C**
 1231 C**

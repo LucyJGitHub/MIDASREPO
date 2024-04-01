@@ -43,8 +43,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061615           Date 10Nov23               *
-      *  Prev Amend No. MD057650           Date 31Mar21               *
+      *  Last Amend No. MD058880           Date 12Oct21               *
+      *  Prev Amend No. UUC107             Date 18Nov20               *
+      *                 251687             Date 17May12               *      
+      *                 MD061615           Date 10Nov23               *
+      *                 MD057650           Date 31Mar21               *
       *                 MD056477           Date 22Sep20               *
       *                 MD056483           Date 15Sep20               *
       *                 MD053553           Date 21Jan20               *
@@ -87,6 +90,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058880 - FM is recalculating GBP amount for EUR/GBP and    *
+      *             not respecting the values sent from FPM/DS.       *
+      *             Amend to condition inverse if UUC107.             *
+      *  UUC107 - Upgrade CEUFT1 to FBM 2.1                           *
+      *           FT Quotation of Rates                               *
+      *           Hooks used: UUC107_001, UUC107_002, UUC107_003,     *
+      *                       UUC107_004                              *
+      *         - Upgrade 251687 to FBM 2.1                           *
+      *           Hooks used: UUC107_002                              *
+      *  251687 - Checks for P#OVRT even when CEUFT1 is off.          *      
       *  MD061615 - ME_FT_IMM background job is dumping in New York.  *
       *           - Recompile due to changes in ZCCYXR_ILE. ZAMTT     *
       *             field lenght was increased from 15,0 to 16,0.     *
@@ -145,6 +158,7 @@
       *                                                               *
       * 01-05         Error Indicators                                *
       *****************************************************************
+     F/COPY WNCPYSRC,UUC107_001                                                               UUC107
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
@@ -1033,6 +1047,7 @@
      C                   ENDIF
      C                   EVAL      WINVER = 'N'                                             MD045094
      C                   Z-ADD     0             WGRATE                                     AR787421
+     F/COPY WNCPYSRC,UUC107_005                                                             MD058880
      C     P#RATE        IFNE      0                                                        AR787421
      C     P#RATE        IFLT      1                                                        AR787421
      C     ZRATEX        ANDGT     1                                                        AR787421
@@ -1043,6 +1058,7 @@
      C                   EVAL      WINVER = 'Y'                                             MD045094
      C                   ENDIF                                                              AR787421
      C                   ENDIF                                                              AR787421
+     F/COPY WNCPYSRC,UUC107_006                                                             MD058880
       *
       ** Send message if Currency types are not compatible and
       ** a rate has been entered.
@@ -1094,6 +1110,7 @@
      C*****P#OVRT        IFNE      'Y'                                                      AR737259
      C*****ZRATEX        ANDNE     P#RATE                                                   AR737259
      C                   Z-ADD     0             NEWRAT           13 8
+     F/COPY WNCPYSRC,UUC107_002                                                               UUC107
       *
      C     P#RATE        SUB       ZRATEX        DIFF1            13 8                       BUG4227
      C     DIFF1         IFLT      0                                                         BUG4227
@@ -1177,6 +1194,7 @@
      C**********         ENDSL                                                               BUG4227
       *
      C**********         ENDIF                                                              AR737259
+     F/COPY WNCPYSRC,UUC107_003                                                               UUC107
      C                   ENDIF
       *
      C                   ENDSR
@@ -1741,6 +1759,7 @@
       *
      C     P#RATE        IFNE      *ZERO
      C                   Z-ADD     P#RATE        ZCRSRT                         Cross Ccy Exch
+     F/COPY WNCPYSRC,UUC107_004                                                               UUC107
       *                                                                                     MD045094
       ** If rate is inverse, use the original rate for calculation,                         MD045094
       ** then inverse M/D indicator for precision                                           MD045094

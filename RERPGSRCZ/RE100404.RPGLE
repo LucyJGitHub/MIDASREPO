@@ -27,8 +27,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD059119           Date 14Aug23               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 247308             Date 30Mar12               *
+      *  Prev Amend No. 224603             Date 04Oct12               *
+      *                 223051             Date 04Oct12               *      
+      *                 MD059119           Date 14Aug23               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 15May13               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -42,6 +45,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  247308 - Add Validation for Group Accounting.                *
+      *  224603 - Allow alternate account input even if not within    *
+      *           hierarchy.                                          *
+      *  223051 - No need to verify presence of shadow account for    *
+      *           sub-accounts ina ZS hierarchy                       *      
       *  MD059119 - Invalid hierachy error messages reported:         *
       *             . A/c to post DR int is not a sub a/c in the      *
       *               same hierarchy                                  *
@@ -345,6 +353,7 @@
      C     CLCCAT        CASEQ     'S'           GA_SUB_VAL
      C                   ENDCS
 
+     C                   EXSR      ZS_GA_XVAL                                                 247308
      C                   ENDIF
 
       * Exit if many errors encountered
@@ -682,48 +691,48 @@
      C                   MOVEL     ZLICCY        WCCY
      C                   MOVEL     ZLIACD        WACD
      C                   MOVEL     ZLIASN        WASN
-     C     WACCID        IFEQ      BlankAC
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75085'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
+     C*****WACCID        IFEQ      BlankAC                                                    223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75085'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ELSE                                                                 223051
 
       * 'Internal interest income a/c is not a sub a/c in the same hierarchy.'
 
-     C     WACCNTK       CHAIN     RELZSHLJ0                          60
-     C     *IN60         IFEQ      '1'
-     C     S_CLHIER      ORNE      CLHIER
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75086'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
+     C*****WACCNTK       CHAIN     RELZSHLJ0                          60                      223051
+     C******IN60         IFEQ      '1'                                                        223051
+     C*****S_CLHIER      ORNE      CLHIER                                                     223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75086'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ELSE                                                                 223051
 
       * 'Internal interest income a/c for a member must have the same parent as the member'
 
-     C                   MOVEL     S_CLPBRC      WBRC
-     C                   MOVEL     S_CLPCUS      WCUS
-     C                   MOVEL     S_CLPCCY      WCCY
-     C                   MOVEL     S_CLPACD      WACD
-     C                   MOVEL     S_CLPASN      WASN
-     C     WACCID        IFNE      PACCID
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75087'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ENDIF
-     C                   ENDIF
-     C                   ENDIF
+     C**********         MOVEL     S_CLPBRC      WBRC                                         223051
+     C**********         MOVEL     S_CLPCUS      WCUS                                         223051
+     C**********         MOVEL     S_CLPCCY      WCCY                                         223051
+     C**********         MOVEL     S_CLPACD      WACD                                         223051
+     C**********         MOVEL     S_CLPASN      WASN                                         223051
+     C*****WACCID        IFNE      PACCID                                                     223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75087'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ENDIF                                                                223051
+     C**********         ENDIF                                                                223051
+     C**********         ENDIF                                                                223051
 
       * ' A sub a/c must have an internal interest expense a/c.'
 
@@ -732,48 +741,48 @@
      C                   MOVEL     ZLECCY        WCCY
      C                   MOVEL     ZLEACD        WACD
      C                   MOVEL     ZLEASN        WASN
-     C     WACCID        IFEQ      BlankAC
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75088'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
+     C*****WACCID        IFEQ      BlankAC                                                    223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75088'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ELSE                                                                 223051
 
       * 'Internal interest expense a/c is not a sub a/c in the same hierarchy.'
 
-     C     WACCNTK       CHAIN     RELZSHLJ0                          60
-     C     *IN60         IFEQ      '1'
-     C     S_CLHIER      ORNE      CLHIER
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75089'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
+     C*****WACCNTK       CHAIN     RELZSHLJ0                          60                      223051
+     C******IN60         IFEQ      '1'                                                        223051
+     C*****S_CLHIER      ORNE      CLHIER                                                     223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75089'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ELSE                                                                 223051
 
       * 'Internal interest expense a/c for a member must have the same parent as the member'
 
-     C                   MOVEL     S_CLPBRC      WBRC
-     C                   MOVEL     S_CLPCUS      WCUS
-     C                   MOVEL     S_CLPCCY      WCCY
-     C                   MOVEL     S_CLPACD      WACD
-     C                   MOVEL     S_CLPASN      WASN
-     C     WACCID        IFNE      PACCID
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75090'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ENDIF
-     C                   ENDIF
-     C                   ENDIF
+     C**********         MOVEL     S_CLPBRC      WBRC                                         223051
+     C**********         MOVEL     S_CLPCUS      WCUS                                         223051
+     C**********         MOVEL     S_CLPCCY      WCCY                                         223051
+     C**********         MOVEL     S_CLPACD      WACD                                         223051
+     C**********         MOVEL     S_CLPASN      WASN                                         223051
+     C*****WACCID        IFNE      PACCID                                                     223051
+     C**********         ADD       1             Ix                                           223051
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               223051
+     C**********         MOVEL     'RE75090'     MsgIDArr(Ix)                                 223051
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 223051
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 223051
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 223051
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 223051
+     C**********         ENDIF                                                                223051
+     C**********         ENDIF                                                                223051
+     C**********         ENDIF                                                                223051
 
      C                   ENDIF
 
@@ -808,6 +817,7 @@
      C                   MOVEL     A_GLTACD      WACD
      C                   MOVEL     A_GLTASN      WASN
      C     WACCID        IFEQ      BlankAC
+     C     CDHTYP        IFEQ      'ZS'                                                       247308
      C                   ADD       1             Ix
      C                   MOVEL     'RELATION '   FldNameArr(Ix)
      C                   MOVEL     'RE75045'     MsgIDArr(Ix)
@@ -819,6 +829,7 @@
      C                   CAT       H_CDHISN:0    MsgDtaTmp                                  MD000091
      C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
+     C                   ENDIF                                                                247308
      C                   ELSE
 
       * ' top/level a/c has a transaction a/c which is not a sub a/c.'
@@ -898,36 +909,36 @@
      C                   EXSR      ACS_ACNUM
      C                   ENDIF
 
-      * 'A/c to post DR int is not a sub a/c in the same hierarchy.'
-
-     C     WACCNTK       CHAIN     RELGAHLJ0                          60
-     C     *IN60         IFEQ      '1'
-     C     S_CLHIER      ORNE      CLHIER
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75052'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
-
-      * Check if a/c to post DR int exists below the top a/c
-
-     C                   EXSR      CHK_AC_CHN
-
-      * 'A/c to post DR int for a member is not present below that member.'
-
-     C     AC_In_Chn     IFNE      'Y'
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75053'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ENDIF
-     C                   ENDIF
+      **'A/c*to*post*DR*int*is*not*a*sub*a/c*in*the*same*hierarchy.'***********************   224603
+      **********                                                                              224603
+     C*****WACCNTK       CHAIN     RELGAHLJ0                          60                      224603
+     C******IN60         IFEQ      '1'                                                        224603
+     C*****S_CLHIER      ORNE      CLHIER                                                     224603
+     C**********         ADD       1             Ix                                           224603
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               224603
+     C**********         MOVEL     'RE75052'     MsgIDArr(Ix)                                 224603
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 224603
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 224603
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 224603
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 224603
+     C**********         ELSE                                                                 224603
+      **********                                                                              224603
+      * Check if a/c to post DR int exists below the top a/c                                  224603
+      **********                                                                              224603
+     C**********         EXSR      CHK_AC_CHN                                                 224603
+      **********                                                                              224603
+      **'A/c*to*post*DR*int*for*a*member*is*not*present*below*that*member.'****************   224603
+      **********                                                                              224603
+     C*****AC_In_Chn     IFNE      'Y'                                                        224603
+     C**********         ADD       1             Ix                                           224603
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               224603
+     C**********         MOVEL     'RE75053'     MsgIDArr(Ix)                                 224603
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 224603
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 224603
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 224603
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 224603
+     C**********         ENDIF                                                                224603
+     C**********         ENDIF                                                                224603
 
       * A/c ID = a/c to post CR interest
 
@@ -940,36 +951,36 @@
      C                   EXSR      ACS_ACNUM
      C                   ENDIF
 
-      * 'A/c to post CR int is not a sub a/c in the same hierarchy.'
-
-     C     WACCNTK       CHAIN     RELGAHLJ0                          60
-     C     *IN60         IFEQ      '1'
-     C     S_CLHIER      ORNE      CLHIER
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75054'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ELSE
-
-      * Check if a/c to post CR int exists below the top a/c
-
-     C                   EXSR      CHK_AC_CHN
-
-      * 'A/c to post CR int for a member is not present below that member.'
-
-     C     AC_In_Chn     IFNE      'Y'
-     C                   ADD       1             Ix
-     C                   MOVEL     'RELATION '   FldNameArr(Ix)
-     C                   MOVEL     'RE75055'     MsgIDArr(Ix)
-     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                              MD000091
-     C                   MOVEL     CLLINK        MsgDtaTmp                                  MD000091
-     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                            MD000091
-     C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)                 MD000091
-     C                   ENDIF
-     C                   ENDIF
+      **'A/c*to*post*CR*int*is*not*a*sub*a/c*in*the*same*hierarchy.'***********************   224603
+      **********                                                                              224603
+     C*****WACCNTK       CHAIN     RELGAHLJ0                          60                      224603
+     C******IN60         IFEQ      '1'                                                        224603
+     C*****S_CLHIER      ORNE      CLHIER                                                     224603
+     C**********         ADD       1             Ix                                           224603
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               224603
+     C**********         MOVEL     'RE75054'     MsgIDArr(Ix)                                 224603
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 224603
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 224603
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 224603
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 224603
+     C**********         ELSE                                                                 224603
+      **********                                                                              224603
+      **Check*if*a/c*to*post*CR*int*exists*below*the*top*a/c*******************************   224603
+      **********                                                                              224603
+     C**********         EXSR      CHK_AC_CHN                                                 224603
+      **********                                                                              224603
+      **'A/c*to*post*CR*int*for*a*member*is*not*present*below*that*member.'****************   224603
+      **********                                                                              224603
+     C*****AC_In_Chn     IFNE      'Y'                                                        224603
+     C**********         ADD       1             Ix                                           224603
+     C**********         MOVEL     'RELATION '   FldNameArr(Ix)                               224603
+     C**********         MOVEL     'RE75055'     MsgIDArr(Ix)                                 224603
+     C**********         MOVEL     CLLINK        MsgDtaArr(Ix)                       MD000091 224603
+     C**********         MOVEL     CLLINK        MsgDtaTmp                           MD000091 224603
+     C**********         EVAL      BLen = %Len(%Trim(MsgDtaTmp))                     MD000091 224603
+     C**********         EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(MsgDtaTmp)          MD000091 224603
+     C**********         ENDIF                                                                224603
+     C**********         ENDIF                                                                224603
 
      C                   ENDIF
 

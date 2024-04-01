@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD060263           Date 20Jul22               *
-      *  Prev Amend No. MD060250           Date 11Jul22               *
+      *  Last Amend No. UUC108             Date 01Dec22               *      
+      *  Prev Amend No. MD060263           Date 20Jul22               *
+      *                 MD060250           Date 11Jul22               *
       *                 CSW122A            Date 04May22               *
       *                 MD057056           Date 19May21               *
       *                 MD056683           Date 14Sep20               *
@@ -26,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC108 - FED Messages are formatted into MT103 format but    *
+      *           these don't have field :121: and should not generate*
+      *           MT199                                               *
+      *           Addition of hooks: UUC108_001 to UUC108_006.        *      
       *  MD060263 - MT199 REJT field tag 79 Line 4 TREF value should  *
       *             not include further trailing info.                *
       *  MD060250 - Not translated Incoming MT is generating MTn99    *
@@ -765,6 +770,7 @@
      C                   MOVEL     'N'           CSW220                                      CSW122A
      C                   ENDIF                                                               CSW122A
 
+      /COPY WNCPYSRC,UUC108_006                                                               UUC108
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -995,6 +1001,7 @@
       ** Writes to MGOMSGPD
       *
      C                   IF        WGenFlg = 'Y'
+      /COPY WNCPYSRC,UUC108_001                                                               UUC108
      C                   EXSR      SrOMSG
      C                   ENDIF                                                               CSW122A
      C                   ENDIF                                                               CSW122A
@@ -1004,6 +1011,7 @@
       ** If generation is successful, turn MT199 to 'Z'
       *
      C                   EVAL      FTM199 = 'Z'
+      /COPY WNCPYSRC,UUC108_002                                                               UUC108
      C                   UPDATE    @INFTL6                              98
 
      C                   IF        *IN98 = *ON
@@ -1359,6 +1367,7 @@
 
      C     SrExtract     BEGSR
 
+      /COPY WNCPYSRC,UUC108_003                                                               UUC108
       *
       ** Get tag 121
       *
@@ -1373,6 +1382,7 @@
      C                   MOVEL     WTag121Val    MFLD
 
      C                   ELSE
+      /COPY WNCPYSRC,UUC108_004                                                               UUC108
      C     *LOCK         IN        LDA
      C                   MOVE      '011'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
@@ -1508,6 +1518,7 @@
      C     Q             OCCUR     MULT
      C                   MOVEL     WTag79L4Val   MFLD
 
+      /COPY WNCPYSRC,UUC108_005                                                               UUC108
      C                   ENDSR
       *****************************************************************
       /EJECT

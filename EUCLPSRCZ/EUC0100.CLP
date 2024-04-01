@@ -10,8 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD060753           Date 10Nov22              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR853283           Date 15Nov11              */
+/*       Prev Amend No. 262056             Date 30Jan13              */
+/*                      MD060753           Date 10Nov22              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      243017             Date 05Jul07              */
@@ -27,6 +29,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR853283 - Apply 235493.  Introduce new parameter on EU0100 */
+/*                  and EU0110.  (Child: AR860489).                  */
+/*       262056 - Attempt to start commitment control as it may be   */
+/*                not started.                                       */
+/*              - Applied for AR1068690 (Child: AR1069087)           */
 /*       MD060753 - Error in source compilation                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       243017 - Customer number now can be non-numeric.             */
@@ -49,6 +56,7 @@
 /**********  DCL        VAR(&PRM1) TYPE(*CHAR) LEN(216)                         */ /*217435 TDA082*/
              DCL        VAR(&PRM1) TYPE(*CHAR) LEN(226)                                   /*TDA082*/
              DCL        VAR(&PRM2) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRM3) TYPE(*CHAR) LEN(1)                                   /*AR853283*/
              DCL        VAR(&WBRCA) TYPE(*CHAR) LEN(3)
 /**********  DCL        VAR(&WACOD) TYPE(*CHAR) LEN(4)                                 */ /*TDA082*/
              DCL        VAR(&WACOD) TYPE(*CHAR) LEN(10)                                   /*TDA082*/
@@ -75,10 +83,13 @@
                           CMDLBL(ABNOR))
 
              CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*262056*/
+             MONMSG     MSGID(CPF8351)                                                    /*262056*/
 /*/COPY WNCPYSRC,EUC0100002                                          */
 
 /**START:****CALL*******PGM(EU0100) PARM(&PRM1 &PRM2) ***/   /*CRE008*/
- START:      CALL       PGM(EU0100) PARM(&EMUM &PRM1 &PRM2)  /*CRE008*/
+/*START:***   CALL       PGM(EU0100) PARM(&EMUM &PRM1 &PRM2) */                  /*CRE008 AR853283*/
+ START:      CALL       PGM(EU0100) PARM(&EMUM &PRM1 &PRM2 &PRM3)                       /*AR853283*/
 /*/COPY WNCPYSRC,EUC0100003                                          */
 /**/
 /*/COPY WNCPYSRC,EUC0100004                                          */
@@ -213,7 +224,8 @@
 
 /*/COPY WNCPYSRC,EUC0100005                                          */
 /*********** CALL ******PGM(EU0110) PARM(&PRM1 &PRM2) **/    /*CRE008*/
-             CALL       PGM(EU0110) PARM(&EMUM &PRM1 &PRM2)  /*CRE008*/
+/**********  CALL       PGM(EU0110) PARM(&EMUM &PRM1 &PRM2) */                   /*CRE008 AR853283*/
+             CALL       PGM(EU0110) PARM(&EMUM &PRM1 &PRM2 &PRM3)                       /*AR853283*/
              CLOF       OPNID(ACCNTAB)
 /*/COPY WNCPYSRC,EUC0100006                                          */
 /**/

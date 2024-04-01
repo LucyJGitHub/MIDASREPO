@@ -20,8 +20,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. MD060125           Date 21Jun22               *
+      *  Last Amend No. MD060125           Date 21Jun22               *
+      *  Prev Amend No. MD058687           Date 09Jul21               *
+      *                 CFT162             Date 16Dec20               *
+      *                 217679             Date 04Feb13               *
+      *                 AR918987A          Date 04Feb13               *
+      *                 AR918987           Date 09Feb12               *      
+      *                 MD058081           Date 11May21               *
+      *                 MD060125           Date 21Jun22               *
       *                 MD056560           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
       *                 AR936976           Date 13Apr12               *
@@ -76,6 +82,23 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
+      *             in ME1501.                                        *
+      *           - Include FIXNBR(*ZONED), avoid decimal data error. *
+      *  MD058687 - Formalise 217679/AR918987A/AR918987 for CFT162    *
+      *  CFT162 - MT900 and MT910 Message Generation                  *
+      *           Applied 217679/AR918987A/AR918987 and conditioned to*
+      *           CFT162                                              *
+      *  217679 - Condition all access on UUC068 being switched on    *
+      *         - Amendment to AR918987A                              *
+      *         - Do not print report if only CRE008 is on and        *
+      *           if it is not a Cash Management message              *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
+      *  AR918987A - Missing code to access Lf/MEGNCRX0               *
+      *  AR918987 - Missing MT900/MT910 extension details in STP for  *
+      *             CAR UUC068. Recompile.                            *
+      *           - Pass generation criteria as parms.                *
+      *             (Child: AR922598)                                 *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
       *             in ME1501.                                        *
@@ -227,6 +250,9 @@
       *  Exception Audit List
       *
      F/COPY WNCPYSRC,ME1501F001
+     FMEGNCRX0  IF   E           K DISK    USROPN                                           AR918987
+     F**  GENERATION CRITERIA HEADER EXTENSION FILE                                         AR918987
+      *                                                                                     AR918987
      F*E1501P1O***E********************PRINTER                        UC  CFT006
      FME1501P1  O    E             PRINTER OFLIND(*IN25)                        CFT006
      F                                     USROPN
@@ -269,6 +295,8 @@
      D*COPY*MECPYSRC,SME1100P                                                               MD056560
      D/COPY MECPYSRC,SME1100PLE                                                             MD056560
      D/COPY WNCPYSRC,ME1501I001
+     DPCRITX         E DS                  EXTNAME(MEGNCRX0)                                AR918987
+      *                                                                                     AR918987
       *                                                                   CRE008
      D INLF          E DS                  EXTNAME(MEINLFPD)                    CRE008
       *
@@ -489,6 +517,8 @@
      C                   PARM                    W0CPGM           10            Program for msgs
      C                   PARM                    P@RETV          256            Return value
      C/COPY WNCPYSRC,ME1501C009
+     C                   PARM                    PCRITX                                     AR918987
+      *                                                                                     AR918987
       *
       * Initialise program
       *
@@ -568,6 +598,13 @@
       *  If record found - continue analysis
       *
      C     *IN60         IFEQ      '0'
+      *                                                                                    AR918987A
+      *  Access criteria extension details                                                 AR918987A
+      *                                                                                    AR918987A
+     C*****UUC068        IFEQ      'Y'                                                 217679 CFT162
+     C     CFT162        IFEQ      'Y'                                                        CFT162
+     C     KYGNCR        CHAIN     MEGNCRX0                           89                   AR918987A
+     C                   ENDIF                                                                217679
       *                                                                   CGL009
      C/COPY WNCPYSRC,MEH00018
       * FONTIS and SWIFT can have the same message type (100) so          CGL009
@@ -778,7 +815,9 @@
       *  Produce audit list
       *
      C     GNEXCP        IFEQ      'Y'
+     C     WUPYTP        ANDNE     *BLANKS                                                    217679
      C     W0ACT         OREQ      *BLANKS
+     C     WUPYTP        ANDEQ     *BLANKS                                                    217679
      C                   EXSR      #HAUDT
      C                   ENDIF
       *
@@ -4810,6 +4849,25 @@
      C                   MOVEL     'N'           CER031
      C                   ENDIF
      C/COPY WNCPYSRC,ME1501C003
+      *                                                                                     AR918987
+      ***ACCESS*SAR*DETAILS*FILE*TO*SEE*IF*UUC068*IS*INSTALLED.                      AR918987 CFT162
+      ** ACCESS SAR DETAILS FILE TO SEE IF CFT162 IS INSTALLED.                               CFT162
+      *                                                                                     AR918987
+     C                   CALL      'AOSARDR0'                                               AR918987
+     C                   PARM      *BLANKS       P@RTCD            7                        AR918987
+     C                   PARM      '*VERIFY'     P@OPTN            7                        AR918987
+     C*****              PARM      'UUC068'      P@SARD            6                 AR918987 CFT162
+     C                   PARM      'CFT162'      P@SARD            6                          CFT162
+     C     SCSARD        PARM      *BLANKS       DSFDY                                      AR918987
+      *                                                                                     AR918987
+     C     P@RTCD        IFEQ      *BLANKS                                                  AR918987
+     C*****              MOVE      'Y'           UUC068            1                 AR918987 CFT162
+     C                   MOVE      'Y'           CFT162            1                        AR918987
+     C                   OPEN      MEGNCRX0                                                 AR918987
+     C                   ELSE                                                               AR918987
+     C*****              MOVE      'N'           UUC068                              AR918987 CFT162
+     C                   MOVE      'N'           CFT162                                     AR918987
+     C                   END                                                                AR918987
       *
       *  Indicate that set up is complete
       *

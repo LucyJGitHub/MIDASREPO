@@ -16,8 +16,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060968           Date 25Jan23               *
-      *  Prev Amend No. MD060008           Date 11May21               *
+      *  Last Amend No. MD059365           Date 01Dec22               *
+      *  Prev Amend No. CFT046             Date 01Dec22               *
+      *                 UUC104             Date 01Dec22               *
+      *                 AR857777           Date 01Dec22               *      
+      *                 MD060968           Date 25Jan23               *
+      *                 MD060008           Date 11May21               *
       *                 MD058830           Date 01Oct21               *
       *                 MD058081           Date 11May21               *
       *                 MD058890           Date 21Sep21               *
@@ -74,6 +78,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059365 - Mis-aligned ME1540 copy sources                   *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook ME1540C005                            *
+      *           Add copy hook UUC104_14, UUC104_015, UUC014_16      *
+      *                         UUC104_017                            *
+      *  AR857777 - Apply 243390. DR Override Ac = Nostro = Err Msg   *
+      *             Ac *NF.  (Child: AR860490)                        *      
       *  MD060968 - Re-deliver correct source                         *
       *  MD060008 - Deliverable Data Split for Standing Data 2        *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
@@ -173,6 +186,11 @@
      F**********                           RENAME(@EFREJ5:@MTAGL1)                          MD056560
      F*MEINMVL2* IF   E           K DISK                                           MD020057 MD058081
      F** Midas Incoming Valid Messages by Message Type                                      MD020057
+     F*                                                                                       CFT046
+     FMEGNCRX0  UF A E           K DISK    USROPN                                             CFT046
+     F                                     COMMIT                                             CFT046
+     F** UPD : Midas ME Generation Criteria Header (Extension file) Update                    CFT046
+     F*                                                                                       CFT046
      F/EJECT
       *****************************************************************
       *                                                               *
@@ -375,6 +393,9 @@
      D*
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
      D**  Data Structures for Book codes
+     D*                                                                                       CFT046
+     DSDRETR         E DS                  EXTNAME(SDRETRPD)                                  CFT046
+     D**  Data Structure for Retail Transaction Types Details                                 CFT046
      D*
      D P@ACCT        E DS                  EXTNAME(ACCNTAB)
       * ACCNTABF - Account details record format data structure
@@ -755,6 +776,23 @@
      C                   ELSE                                                                  CRE00
      C                   MOVE      'N'           CRE008                                        CRE00
      C                   ENDIF                                                                 CRE00
+      *                                                                                       CFT046
+     C** Access SAR details file to see if CFT046 is installed.                               CFT046
+      *                                                                                       CFT046
+     C                   CALL      'AOSARDR0'                                                 CFT046
+     C                   PARM      *BLANKS       @RTCD                                        CFT046
+     C                   PARM      '*VERIFY'     @OPTN                                        CFT046
+     C                   PARM      'CFT046'      @SARD                                        CFT046
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT046
+      *                                                                                       CFT046
+      ** If CFT046 is switched ON                                                             CFT046
+      *                                                                                       CFT046
+     C     @RTCD         IFEQ      *BLANKS                                                    CFT046
+     C                   MOVE      'Y'           CFT046            1                          CFT046
+     C                   OPEN      MEGNCRX0                                                   CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVE      'N'           CFT046                                       CFT046
+     C                   ENDIF                                                                CFT046
       *                                                                                       CSW209
       ** Check if SWIFT 2009 is installed                                                     CSW209
       *                                                                                       CSW209
@@ -802,6 +840,9 @@
      C**  Position file cursor at the beginning of header file
      C*
      C     *LOVAL        SETLL     MEGNCRL0
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     *LOVAL        SETLL     MEGNCRX0                                                   CFT046
+     C                   ENDIF                                                                CFT046
      C*
      C**  Load subfile page
      C*
@@ -860,6 +901,18 @@
      C                   MOVEL     GNBRCA        #1BRCA
      C                   MOVEL     GNAUTO        #1AUTO                                        CFT00
      C/COPY WNCPYSRC,ME1540C006
+     C*                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C                   MOVEL     #1MTPY        #KMTPY                                       CFT046
+     C                   MOVE      #1MSET        #KMSET                                       CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
+     C                   UNLOCK    MEGNCRX0                                                   CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   MOVEL     X0TRAT        #1TRAT                                       CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVE      *BLANKS       #1TRAT                                       CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
      C*
      C**  Output to subfile
      C                   ADD       1             ##RR1                86
@@ -1079,6 +1132,8 @@
      C                   MOVEL     #1SETT        #HSETL
      C     *LIKE         DEFINE    #1BOKC        #HBOKC
      C                   MOVEL     #1BOKC        #HBOKC
+     C     *LIKE         DEFINE    #1TRAT        #HTRAT                                       CFT046
+     C                   MOVEL     #1TRAT        #HTRAT                                       CFT046
      C     *LIKE         DEFINE    #1PYST        #HPYST
      C                   MOVEL     #1PYST        #HPYST
      C     *LIKE         DEFINE    #1CSET        #HCSET
@@ -1122,6 +1177,7 @@
      C                   MOVEL     #HNETW        #1NWRK
      C                   MOVEL     #HSETL        #1SETT
      C                   MOVEL     #HBOKC        #1BOKC
+     C                   MOVEL     #HTRAT        #1TRAT                                       CFT046
      C                   MOVEL     #HPYST        #1PYST
      C                   MOVEL     #HCSET        #1CSET
      C                   MOVEL     #HDSET        #1DSET
@@ -1505,7 +1561,11 @@
      C                   WRITE     #HEADER
      C                   WRITE     #MSGCTL
      C                   WRITE     #CMDTXT1
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C                   EXFMT     #RCDDTL4                                                   CFT046
+     C                   ELSE                                                                 CFT046
      C                   EXFMT     #RCDDTL1
+     C                   ENDIF                                                                CFT046
      C*
      C**  Update job time
      C                   TIME                    ##JTM
@@ -1619,7 +1679,11 @@
      C                   WRITE     #HEADER
      C                   WRITE     #MSGCTL
      C                   WRITE     #CMDTXT1
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C                   EXFMT     #RCDDTL4                                                   CFT046
+     C                   ELSE                                                                 CFT046
      C                   EXFMT     #RCDDTL1
+     C                   ENDIF                                                                CFT046
      C*
      C**  Update job time
      C                   TIME                    ##JTM
@@ -1662,6 +1726,22 @@
      C                   GOTO      ENDDEL                                                      16242
      C                   END                                                                   16242
      C                   END                                                                   16242
+      *                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   DELETE    MEGNCRD0                             88                    CFT046
+     C     *IN88         IFEQ      '1'                                                        CFT046
+      * Change error detected                                                                 CFT046
+     C                   MOVEL     'Y2U0004'     ZAMSID                                       CFT046
+     C                   MOVEL     'Y2USRMSG'    ZAMSGF                                       CFT046
+     C                   EXSR      ZASNMS                                                     CFT046
+     C                   SETON                                        99                      CFT046
+     C                   UNLOCK    MEGNCRX0                                                   CFT046
+     C                   GOTO      ENDDEL                                                     CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
      C*
      C**  Delete corresponding detail records
      C     #KMTPY        DOWEQ     GDMTPY
@@ -1861,6 +1941,20 @@
      C                   MOVEL     'I'           GNAACT                         Action Type
      C                   Z-ADD     WURDNB        GNRDNB                         Run day number
      C                   WRITE     @GNCRPD                              99
+      *                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
+      *                                                                                       CFT046
+     C                   MOVEL     #1TRAT        X0TRAT                                       CFT046
+      *                                                                                       CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   UPDATE    MEGNCRD0                             88                    CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVEL     #2MTPY        X0MTPY                                       CFT046
+     C                   MOVE      #2MSET        X0MSET                                       CFT046
+     C                   WRITE     MEGNCRD0                             88                    CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
      C*
      C**  Position to detail records to be copied
      C                   MOVEL     #1MTPY        #KMTPY
@@ -1989,7 +2083,11 @@
      C                   WRITE     #HEADER
      C                   WRITE     #MSGCTL
      C                   WRITE     #CMDTXT1
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C                   EXFMT     #RCDDTL4                                                   CFT046
+     C                   ELSE                                                                 CFT046
      C                   EXFMT     #RCDDTL1
+     C                   ENDIF                                                                CFT046
      C*
      C     *IN03         IFNE      '1'
      C     *IN05         ANDNE     '1'
@@ -2030,6 +2128,11 @@
      C     CFT005        IFEQ      'Y'                                                         CFT00
      C                   EXSR      #HVAUT                                                      CFT00
      C                   END                                                                   CFT00
+     C*                                                                                       CFT046
+     C**  Validate Transaction Type                                                           CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C                   EXSR      #HVTRT                                                     CFT046
+     C                   END                                                                  CFT046
      C*
      C**  Validate Credit Account
      C     #1CSET        IFNE      *BLANKS
@@ -2110,6 +2213,22 @@
      C                   ELSE                                                                  16242
      C** Update saved record image                                        162428
      C                   MOVEL     @1GNCR        #1GNCR                                        16242
+      *                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
+      *                                                                                       CFT046
+     C                   MOVEL     #1TRAT        X0TRAT                                       CFT046
+      *                                                                                       CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   UPDATE    MEGNCRD0                             88                    CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVEL     #1MTPY        X0MTPY                                       CFT046
+     C                   MOVE      #1MSET        X0MSET                                       CFT046
+     C                   WRITE     MEGNCRD0                             88                    CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
      C                   COMMIT                                                                16242
      C                   END                                                                   16242
      C                   ELSE
@@ -2122,6 +2241,22 @@
      C                   SETON                                        99                       16242
      C                   ROLBK                                                                 16242
      C                   ELSE                                                                  16242
+      *                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                           88                      CFT046
+      *                                                                                       CFT046
+     C                   MOVEL     #1TRAT        X0TRAT                                       CFT046
+      *                                                                                       CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   UPDATE    MEGNCRD0                             88                    CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVEL     #1MTPY        X0MTPY                                       CFT046
+     C                   MOVE      #1MSET        X0MSET                                       CFT046
+     C                   WRITE     MEGNCRD0                             88                    CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
      C                   COMMIT                                                                16242
      C                   END                                                                   16242
      C                   END
@@ -2692,6 +2827,7 @@
      C     #1PYTP        ANDNE     '++'                                                        CFT00
      C     #1PYTP        ANDNE     '**'                                                        CFT00
      C     CRE008        ANDNE     'Y'                                                         CRE00
+     C/COPY WNCPYSRC,UUC104_014                                                               UUC104
      C     W0PMT         IFEQ      'N'                                                         CFT00
       *                                                                   CFT006
       **  Send message 'Payment type is invalid'                          CFT006
@@ -2703,6 +2839,7 @@
      C                   MOVE      *ON           *IN32                                         CFT00
      C                   MOVE      *ON           *IN99                                         CFT00
      C                   ENDIF                                                                 CFT00
+     C/COPY WNCPYSRC,UUC104_015                                                               UUC104
       *                                                                   CFT006
      C                   ENDIF                                                                 CFT00
       *                                                                   CRE008
@@ -2714,6 +2851,7 @@
      C     #1PYTP        ANDNE     '++'                                                        CRE00
      C     #1PYTP        ANDNE     '**'                                                        CRE00
      C     CRE008        ANDEQ     'Y'                                                         CRE00
+     C/COPY WNCPYSRC,UUC104_016                                                               UUC104
      C     W0PMT         IFEQ      'N'                                                         CRE00
       *                                                                   CRE008
       **  Send message 'Payment type is invalid'                          CRE008
@@ -2724,6 +2862,7 @@
      C                   MOVE      *ON           *IN32                                         CRE00
      C                   MOVE      *ON           *IN99                                         CRE00
      C                   ENDIF                                                                 CRE00
+     C/COPY WNCPYSRC,UUC104_017                                                               UUC104
       *                                                                   CRE008
      C                   ENDIF                                                                 CRE00
       *                                                                   CFT006
@@ -3217,6 +3356,91 @@
      C*
      C                   ENDSR
      C/EJECT
+     C*****************************************************************                       CFT046
+     C**  #HVTRT  Subroutine to validate Transaction Type             *                       CFT046
+     C**                                                              *                       CFT046
+     C**  Called by  #HAMIN                                           *                       CFT046
+     C**  Calls      ZASNMS                                           *                       CFT046
+     C**                                                              *                       CFT046
+     C*****************************************************************                       CFT046
+     C     #HVTRT        BEGSR                                                                CFT046
+     C*                                                                                       CFT046
+     C                   MOVE      '0'           *IN69                                        CFT046
+     C                   MOVE      *OFF          *IN70                                        CFT046
+      *                                                                                       CFT046
+      * If ?  then defer confirm                                                              CFT046
+      *                                                                                       CFT046
+     C                   MOVEL     #1TRAT        WQM               1                          CFT046
+     C     WQM           IFEQ      '?'                                                        CFT046
+     C                   MOVEL(P)  '?'           #1TRAT                                       CFT046
+     C                   MOVEL     'Y'           W0PMT                                        CFT046
+     C                   MOVEL     '1'           *IN99                                        CFT046
+     C                   MOVE      *ON           *IN70                                        CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C**  For manual processing or choice to ignore incoming msg                              CFT046
+     C**  this field is useless                                                               CFT046
+     C     #1PYTP        IFEQ      '**'                                                       CFT046
+     C     #1PYTP        OREQ      '++'                                                       CFT046
+     C     #1TRAT        IFNE      *BLANK                                                     CFT046
+      * When ? is entered we perform no validity checks                                       CFT046
+     C     W0PMT         IFEQ      'N'                                                        CFT046
+     C**  Send message 'This field must no be entered'                                        CFT046
+     C                   MOVEL     'MIN0322'     ZAMSID                                       CFT046
+     C                   MOVEL     'MEMSG'       ZAMSGF                                       CFT046
+     C                   EXSR      ZASNMS                                                     CFT046
+     C                   MOVE      '1'           *IN69                                        CFT046
+     C                   MOVE      '1'           *IN99                                        CFT046
+     C                   ELSE                                                                 CFT046
+     C*                                                                                       CFT046
+     C                   CALL      'AORETRR0'                                                 CFT046
+     C                   PARM      *BLANKS       P@RTCD                                       CFT046
+     C                   PARM      '*KEY   '     P@OPTN                                       CFT046
+     C                   PARM      #1TRAT        @TRAT             5                          CFT046
+     C     SDRETR        PARM      SDRETR        DSFDY                                        CFT046
+      *                                                                                       CFT046
+      * if selection made move value to screen field                                          CFT046
+     C     P@RTCD        IFEQ      *BLANKS                                                    CFT046
+     C                   MOVEL     A1RTTY        #1TRAT                                       CFT046
+     C                   END                                                                  CFT046
+     C                   END                                                                  CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C** End of #1PYTP = '**' '++'                                                            CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C     #1PYTP        IFNE      '**'                                                       CFT046
+     C     #1PYTP        ANDNE     '++'                                                       CFT046
+     C*                                                                                       CFT046
+     C**  If not blank use access object to verify RE Transaction Type                        CFT046
+     C     #1TRAT        IFNE      *BLANKS                                                    CFT046
+     C                   CALL      'AORETRR0'                                                 CFT046
+     C                   PARM      *BLANKS       P@RTCD                                       CFT046
+     C                   PARM      '*KEY   '     P@OPTN                                       CFT046
+     C                   PARM      #1TRAT        @TRAT                                        CFT046
+     C     SDRETR        PARM      SDRETR        DSFDY                                        CFT046
+      *                                                                                       CFT046
+      * if selection made move value to screen field                                          CFT046
+     C     P@RTCD        IFEQ      *BLANKS                                                    CFT046
+     C                   MOVEL     A1RTTY        #1TRAT                                       CFT046
+     C                   ELSE                                                                 CFT046
+     C     W0PMT         IFEQ      'N'                                                        CFT046
+     C**  Send message 'Transaction Type not found '                                          CFT046
+     C                   MOVEL     'FTM5055'     ZAMSID                                       CFT046
+     C                   MOVEL     'FTUSRMSG'    ZAMSGF                                       CFT046
+     C                   EXSR      ZASNMS                                                     CFT046
+     C                   MOVE      '1'           *IN69                                        CFT046
+     C                   MOVE      '1'           *IN99                                        CFT046
+     C                   END                                                                  CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C** End of #1PYTP <> '**' '++'                                                           CFT046
+     C                   END                                                                  CFT046
+     C*                                                                                       CFT046
+     C                   ENDSR                                                                CFT046
+     C/EJECT                                                                                  CFT046
      CSR   #HVCRA        BEGSR
       *================================================================
       * Check MIDAS equivalent (A/C or Cust No)
@@ -3538,7 +3762,8 @@
       *  12 digits allowed
       *
      C     *IN90         IFEQ      '1'
-     C     Y#            ANDNE     13
+     C*****Y#***         ANDNE     13                                                       AR857777
+     C     Y#            ANDNE     19                                                       AR857777
       * When ? is entered we perform no validity checks
      C     W0PMT         IFEQ      'N'
      C                   SETON                                        3899
@@ -3948,7 +4173,8 @@
       *  12 digits allowed
       *
      C     *IN90         IFEQ      '1'
-     C     Y#            ANDNE     13
+     C*****Y#***         ANDNE     13                                                       AR857777
+     C     Y#            ANDNE     19                                                       AR857777
       * When ? is entered we perform no validity checks
      C     W0PMT         IFEQ      'N'
      C                   SETON                                        3999
@@ -5160,6 +5386,7 @@
      C                   MOVEL     *BLANKS       #1SETT
      C                   MOVEL     *BLANKS       #1EXCP
      C                   MOVEL     *BLANKS       #1BOKC
+     C                   MOVEL     *BLANKS       #1TRAT                                       CFT046
      C                   MOVEL     *BLANKS       #1PYST
      C                   MOVEL     *BLANKS       #1CSET
      C                   MOVEL     *BLANKS       #1DSET
@@ -5244,6 +5471,16 @@
      C                   ELSE                                                                   CFT0
      C                   MOVE      *OFF          *IN28                                          CFT0
      C                   ENDIF                                                                  CFT0
+     C*                                                                                       CFT046
+     C     CFT046        IFEQ      'Y'                                                        CFT046
+     C     #HHKEY        CHAIN     MEGNCRX0                             88                    CFT046
+     C                   UNLOCK    MEGNCRX0                                                   CFT046
+     C     *IN88         IFEQ      '0'                                                        CFT046
+     C                   MOVEL     X0TRAT        #1TRAT                                       CFT046
+     C                   ELSE                                                                 CFT046
+     C                   MOVE      *BLANKS       #1TRAT                                       CFT046
+     C                   ENDIF                                                                CFT046
+     C                   ENDIF                                                                CFT046
      C*
      C                   ENDSR
      C/EJECT

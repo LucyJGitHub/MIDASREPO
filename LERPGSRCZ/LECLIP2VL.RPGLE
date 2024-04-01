@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD060620           Date 14Nov22               *
-      *  Prev Amend No. MD059368           Date 17Dec21               *
+      *  Last Amend No. 227174             Date 01Dec22               *
+      *  Prev Amend No. AR918333           Date 01Dec22               *      
+      *                 MD060620           Date 14Nov22               *
+      *                 MD059368           Date 17Dec21               *
       *                 MD057917           Date 02Jul21               *
       *                 CLE172             Date 01Oct20               *
       *                 MD042329           Date 04May21               *
@@ -137,6 +139,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  227174 - Int. Basis should default to loan ccy during loan   *
+      *           input                                               *
+      *         - Applied for MD042752                                *
+      *  AR918333 - Warning message LEL0559 is spurious and should not*
+      *             be displayed. As a local fix, do not issue warning*
+      *             LEL0559. (Child: AR918334)                        *      
       *  MD060620 - Cannot edit Base Rate due to Libor fields.        *
       *  MD059368 - Inhibit the LIBOR fields if the feature CLE172 is *
       *             switched off                                      *
@@ -2471,6 +2479,28 @@
      C                   MOVE      DICB          DDCALC
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       227174
+      ** If calculation basis is still blank, default from calculation basis                  227174
+      ** of loan currency.                                                                    227174
+      *                                                                                       227174
+     C     DDCALC        IFEQ      *BLANK                                                     227174
+     C                   MOVE      CCLCCY        @CYCD                                        227174
+     C                   CALLB     'AOCURRR0'                                                 227174
+     C                   PARM      *BLANKS       @RTCD                                        227174
+     C                   PARM      '*KEY   '     @OPTN                                        227174
+     C                   PARM                    @CYCD                                        227174
+     C     SDCURR        PARM      SDCURR        DSSDY                                        227174
+      *                                                                                       227174
+     C     @RTCD         IFNE      *BLANKS                                                    227174
+     C     *LOCK         IN        LDA                                                        227174
+     C                   MOVEL     'SDCURRPD'    DBFILE                         ************* 227174
+     C                   Z-ADD     11            DBASE                          * DBERR 011 * 227174
+     C                   MOVEL     CCLCCY        DBKEY                          ************* 227174
+     C                   OUT       LDA                                                        227174
+     C                   EXSR      *PSSR                                                      227174
+     C                   ENDIF                                                                227174
+     C                   MOVE      A6DICB        DDCALC                                       227174
+     C                   ENDIF                                                                227174
       *
       ***  For parts sold interest calculation defaults from sale of loan
       ***  number.
@@ -5052,6 +5082,10 @@ E004 C                   ENDIF
      C                   Z-ADD     WCRPYA        WSVRA                          Repay Amnt   BUG3721
                                                                                              BUG3721
      C                   ELSE                                                                BUG3721
+      *                                                                                     AR918333
+      ** As local change, skip showing of warning message LEL0559.                          AR918333
+      *                                                                                     AR918333
+     C                   GOTO      SKIP                                                     AR918333
                                                                                              BUG3721
       ** Show Warning message if different from calculated                                   BUG3721
                                                                                              BUG3721
@@ -5102,6 +5136,7 @@ E004 C                   ENDIF
                                                                                              BUG3721
      C**********         ENDIF                                                       BUG3721 BUG4351
      C                   ENDIF                                                               BUG3721
+     C     SKIP          TAG                                                                AR918333
                                                                                              BUG3721
      C                   ENDIF                                                               BUG3721
                                                                                              BUG3721

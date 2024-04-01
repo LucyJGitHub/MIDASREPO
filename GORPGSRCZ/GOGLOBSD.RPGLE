@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060092           Date 01Aug22               *
-      *  Prev Amend No. MD058085           Date 11May21               *
+      *  Last Amend No. CFT162             Date 01Dec22               *      
+      *  Prev Amend No. MD060092           Date 01Aug22               *
+      *                 MD058085           Date 11May21               *
       *                 CLE138             Date 02Nov21               *
       *                 MD056557           Date 31Aug20               *
       *                 CSD103             Date 10Aug20               *
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation                  *      
       *  MD060092 - Revert CLE138 changes in SDFACTPD, AOFACTR0 and   *
       *             SD Facility Type Maintenance.                     *
       *           - Apply CLE138 original design of SDFACTX0 to store *
@@ -381,6 +383,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDSVLBTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDSVLXTD'    GLOB_SDSVALPD                              MD054605
      C     PFLNAME       CASEQ     'SDCONVPD'    GLOB_SDCONVPD                                CMG008
+     C     PFLNAME       CASEQ     'SDM901PD  '  GLOB_SDM901PD                                CFT162
      C                   ENDCS
      C                   ENDIF
 
@@ -1177,6 +1180,12 @@ O                                                                               
      C     GLOB_SDCONVPD BEGSR                                                                CMG008
       /COPY GPCPYSRCG,GPSDCONVPD                                                              CMG008
      C                   ENDSR                                                                CMG008
+      *****************************************************************                       CFT162
+      * Global Updates - Account/Customer MT900/MT910 Details                                 CFT162
+      *****************************************************************                       CFT162
+     C     GLOB_SDM901PD BEGSR                                                                CFT162
+      /COPY GPCPYSRCG,GPSDM901PD                                                              CFT162
+     C                   ENDSR                                                                CFT162
       *****************************************************************
       * Determine Updates
       *****************************************************************

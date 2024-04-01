@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060111           Date 01Jul22               *
-      *  Prev Amend No. CSW122             Date 04Oct21               *
+      *  Last Amend No. 230453             Date 01Dec22               *      
+      *  Prev Amend No. MD060111           Date 01Jul22               *
+      *                 CSW122             Date 04Oct21               *
       *                 CSD103             Date 10Aug20               *
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
@@ -176,6 +177,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  230453 - Extend details for the Third Reimbursement          *
+      *         - Applied for MD020977.                               *      
       *  MD060111 - IPAY processing failed being unable to allocate   *
       *             INPAYDA.                                          *
       *           - Condition lock of OTPAYD if CFT151 is OFF.        *
@@ -9089,6 +9092,12 @@
      C                   MOVEL     INB3          SINB3                                        195220
      C                   MOVEL     INB4          SINB4                                        195220
      C                   MOVEL     INB5          SINB5                                        195220
+      *                                                                                       230453
+     C                   MOVEL     OPTRI1        STRI1                                        230453
+     C                   MOVEL     OPTRI2        STRI2                                        230453
+     C                   MOVEL     OPTRI3        STRI3                                        230453
+     C                   MOVEL     OPTRI4        STRI4                                        230453
+     C                   MOVEL     OPTRI5        STRI5                                        230453
       *                                                                                       195220
      C                   ENDIF                                                                195220
       *

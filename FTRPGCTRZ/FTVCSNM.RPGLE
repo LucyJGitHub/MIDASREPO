@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. BUG20229           Date 30Jan13               *      
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD051679           Date 09Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW213             Date 03Jun13               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  BUG20229 - Error message MMA3000 occurred                    *
+      *           - Applied for AR1068690 (Child: AR1069087)          *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -948,7 +951,8 @@ E2    *                                                                         
                                                                                               CSW207
      C                   If        @RtCd = *Blanks                                            CSW207
       *                                                                                       250600
-     C                   Eval      C#JANO = @ORDCS                                            250600
+     C**********         Eval      C#JANO = @ORDCS                                   250600 BUG20229
+     C                   Eval      C#JANO = SORC1                                           BUG20229
       *                                                                                       250600
      C     JACMKY1       KLIST                                                                250600
      C                   KFLD                    C#JANO            6                          250600

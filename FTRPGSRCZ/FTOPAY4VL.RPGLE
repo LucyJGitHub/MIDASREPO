@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. MD060110           Date 15Sep22               *
+      *  Last Amend No. CFT162             Date 16Oct20               *      
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 MD060110           Date 15Sep22               *
       *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)            
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD060110 - Payments can be amended and authorised by the     *
       *             same user. Use the MSWINPUSER value from T_MSWIP  *

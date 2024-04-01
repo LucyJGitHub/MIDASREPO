@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060936           Date 21Feb23               *
-      *  Prev Amend No. MD058085           Date 11May21               *
+      *  Last Amend No. CFT162             Date 01Dec22               *      
+      *  Prev Amend No. MD060936           Date 21Feb23               *
+      *                 MD058085           Date 11May21               *
       *                 CLE138             Date 02Nov21               *
       *                 MD056557           Date 31Aug20               *
       *                 MD056556           Date 31Aug20               *
@@ -118,6 +119,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *      
       *  MD060936 - BFMM - issue re incoming payment missing          *
       *             from the incoming payment queue.                  *
       *           - Recompile due to changes in GPINPAYDD and         *

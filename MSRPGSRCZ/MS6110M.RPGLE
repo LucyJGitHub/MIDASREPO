@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061719           Date 07Aug23               *
-      *  Prev Amend No. MD041126           Date 21Jan19               *
+      *  Last Amend No. UUC104             Date 12Oct20               *      
+      *  Prev Amend No. MD061719           Date 07Aug23               *
+      *                 MD041126           Date 21Jan19               *
       *                 CSW125             Date 20Mar23               *
       *                 MD058137           Date 18May21               *
       *                 MD051624           Date 23Sep20               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook MS6110MC05		                      *
+      *	          Add copy hook UUC104_018                            *      
       *  MD061719 - Compilation issue on MSRPGSRCZ/MS6110M, redefine  *
       *             missing field definition from CSW125.             *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
@@ -747,6 +751,7 @@
 
       ** Send message
      C**********         Z-ADD     MQPUT         CID                                        MD041126
+     C                   Z-ADD     PMNMID        PMOPT                                      MD058137
      C**********         CALL      'QMQM'                                                   MD041126
      C**********         PARM                    CID               9 0                      MD041126
      C**********         PARM                    HCONN             9 0                      MD041126
@@ -1236,6 +1241,7 @@
      C**********         MOVEL     CINONE        MDCID                               BUG14494 257554
      C**********         MOVEL     MCSYTM        MDCID                               257554 AR214111
      C*****              MOVEL     CINONE        MDCID                                        CSW039
+     C/COPY WNCPYSRC,UUC104_018                                                               UUC104
 
       ** Clear message buffer
      C                   clear                   q@msgbuf

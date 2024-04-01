@@ -14,8 +14,19 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059313           Date 07Feb22               *
+      *  Prev Amend No. MD059042           Date 28Oct21               *
+      *                 MD058791A          Date 23Sep21               *
+      *                 MD058791           Date 15Sep21               *
+      *                 MD058751           Date 03Sep21               *
+      *                 AR1068690          Date 14Dec12               *
+      *                 260897             Date 19Oct12               *
+      *                 244144             Date 19Oct12               *
+      *                 UUC105             Date 19Oct20               *
+      *                 UUC102             Date 16Oct20               *
+      *                 CGL195             Date 07Oct20               *      
+      *                 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR1088283          Date 20Mar13               *
       *                 BUG25122B          Date 13Oct09               *
       *                 EFIXJM             Date 16Sep09               *
@@ -166,6 +177,50 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD059313 - Ensure XXAPOSV1 definition includes all formats to*
+      *             avoid undefined type error when UUC102 is OFF.    *
+      *             Replace hooks GL0420IP11 and GL0420IIP2 with      *
+      *             UUC102_012.                                       *
+      *  MD059042 - 'AVAILABLE BALANCE' line is printed on the same   *
+      *             line as 'C/F' line.                               *
+      *  MD058791A - Lack of space between '/' and STPG, results in   *
+      *             '/' overprinted by STPG. Moved the printing of '/'*
+      *             1 position to the left. Amended hook UUC102_007.  *
+      *  MD058791 - STPG not printed due to incorrect hook placement. *
+      *             Replace hook GL042OOOP7 with UUC102_008.          *
+      *             Replace hook GL042OOOP9 with UUC102_009.          *
+      *             Replace hook GL042OOO10 with UUC102_010.          *
+      *             Replace hook GL042OOO11 with UUC102_011.          *
+      *           - '/' statement page separator is not printed.      *
+      *             Amended hook GLH00439.                            *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *           CAR UUC103. Alphanumeric batch numbers not checked  *
+      *           correctly.                                          *
+      *           Hook GL0420CP15 amended.                            *
+      *  AR1068690 - Apply 260897 244144 (Child:AR1069087)            *
+      *  260897 - Negative rate shown on account statement.           *
+      *  244144 - initialised arrays VDAR & VCAR after adding the     *
+      *           amount to VDDR & VDCR respectively.                 *
+      *  UUC105 - upgrade of UUC070 to FBM 2.1                        *
+      *           NRA in Retail Account Information                   *
+      *           Added hooks UUC105_009, UUC105_010, UUC105_011,     *
+      *                       UUC105_012, UUC105_013, UUC105_014.     *
+      *           Used hooks GL0420CCP8, GL0420FFPG and GL0420C111.   *
+      *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
+      *           UUC063 - Balance Statement Enhancement              *
+      *           Use Hooks GLH00438, GLH00439, GL0420CP12, GL0420CP15*
+      *           GL0420CP20, GL0420CP21, GL0420CP25,  GL0420CP26,    *
+      *           GL0420CP29, GL0420CP50, GL0420CP51,  GL0420CP52,    *
+      *           GL0420CP53, GL0420CP54, GL0420CP55,  GL0420CP56,    *
+      *           GL0420CP57, GL0420CY34, GL0420C002,  GL0420C003,    *
+      *           GL0420C057, GL0420C074, GL0420C079,  GL0420C089,    *
+      *           GL0420F004, GL0420IIP1, GL0420IIP2,  GL0420IP11,    *
+      *           GL0420OOP7, GL0420OOP9,  GL0420OO10,                *
+      *           GL0420OO11, GL0420OP13, GL0420OP14, GL0420F001,     *
+      *           GL0420F003                                          *
+      *           Add Hooks UUC102_007                                *
+      *  CGL195 - Print Clear Balance just after the CF Balance for   *
+      *           all retail accounts                                 *      
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT_ILE)           *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -1133,7 +1188,7 @@
       *                                                                   S01408
 0166 IAPOST     NS  06    1 CP                                                  S01091
       *                                                                   S01408
-     I/COPY WNCPYSRC,GL0420IP11                                           S01408
+     I*/COPY*WNCPYSRC,GL0420IP11                                                     S01408 MD059313
       *                                                                   S01408
 0167 I                                  1    1  RECI
      I/COPY WNCPYSRC,GL0420I005                                           S01408
@@ -1171,7 +1226,7 @@
 0186 I**********                              1 160 LOTP                                      CGL029
      I                                  1  170  LOTP                                          CGL029
      I*                                                                   S01408
-     I/COPY WNCPYSRC,GL0420IIP2                                           S01408
+     I*/COPY*WNCPYSRC,GL0420IIP2                                                     S01408 MD059313
      I                                317  319  XRFI                            CEU013
      I                                320  329 0XRFN                            CEU013
      I                                590  599 0ACOD                                          CGL029
@@ -1239,6 +1294,7 @@
      I*                                                                   S01091
 0213 I*ODPOZZ*NS*                                               S01091    S01161
 0214 I***********                             2   60NORE        S01091    S01161
+     I/COPY WNCPYSRC,UUC102_012                                                             MD059313
      I*
 0226 I*    ACCOUNT MASTER DETAIL RECORD
 0227 I**
@@ -1639,6 +1695,19 @@
      C*                                                                   S01408
      C***/COPY*WNCPYSRC,GL0420CP35***                                                  S01408 CFC006
      C/COPY WNCPYSRC,GL0420CP35                                                             MD020563
+      *                                                                                       CGL195
+      **  Check to see if SAR is installed.                                                   CGL195
+      *                                                                                       CGL195
+     C                   MOVE      'N'           CGL195            1                          CGL195
+     C                   CALL      'AOSARDR0'                                                 CGL195
+     C                   PARM      '       '     @RTCD                                        CGL195
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL195
+     C                   PARM      'CGL195'      @SARD             6                          CGL195
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL195
+      *                                                                                       CGL195
+     C     @RTCD         IFEQ      *BLANKS                                                    CGL195
+     C                   MOVE      'Y'           CGL195                                       CGL195
+     C                   END                                                                  CGL195
      C*                                                                   S01408
       ***Check*if*CFC006*is*installed**********************************           AR1097176 MD020563
       *****************************************************************           AR1097176 MD020563
@@ -3224,6 +3293,11 @@
      C                   END                                                                  E16612
      C                   END                                                                  E16612
      C                   END                                                                  E16612
+     C*  Negative rate shown on account statement                                             260897
+     C     INTR          IFLT      0                                                          260897
+     C                   Z-ADD     0             INTR                                         260897
+     C                   END                                                                  260897
+     C*                                                                                       260897
 0747 C*    CHECK FOR FULL PAGE                                            S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP19                                           S01408
@@ -3819,6 +3893,8 @@
 0812 C     CLBF          SUB       VCAR(I)       CLBF
 0813 C     VDDR          ADD       VDAR(I)       VDDR
 0814 C     VDCR          ADD       VCAR(I)       VDCR
+     C                   Z-ADD     0             VDAR(I)                                      244144
+     C                   Z-ADD     0             VCAR(I)                                      244144
      C/COPY WNCPYSRC,GL0420C048
 0815 C**   INCREMENT INDEX & DATE.
 0816 C     I             ADD       1             I
@@ -4163,6 +4239,17 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
      C                   EXCEPT    TOT                                                        S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP17                                           S01408
+      *
+     C     CGL195        IFEQ      'Y'                                                        CGL195
+     C     ATYP          ANDEQ     'R'                                                        CGL195
+      *                                                                                       CGL195
+      ** *IN41='1' PRINT FORMAT '1'  (PRINTER FILE P2 USED)                                   CGL195
+      *                                                                                       CGL195
+     C     *IN41         ANDEQ     '1'                                                        CGL195
+      *                                                                                       CGL195
+     C                   Z-ADD     CLBL          CLEBAL           15 005                      CGL195
+     C                   EXCEPT    TOT028                                                     CGL195
+     C                   ENDIF                                                                CGL195
      C*                                                                   S01408
      C******************   SETOF                     52            S01091 E10603
      C     ENDPS         TAG                                                                  E12038
@@ -5836,11 +5923,17 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 1643 O**********      N27      ACNO      80                                                   CGL029
      O                       ACOD                72                                           CGL029
      O                       ACSQ                75                                           CGL029
+     O/COPY WNCPYSRC,UUC105_009                                                               UUC105
      O              N27      ACNO                86                                           CGL029
+     O/COPY WNCPYSRC,UUC105_010                                                               UUC105
 1644 O**********                         97 'BRANCH -'                    S01194
+     O/COPY WNCPYSRC,UUC105_011                                                               UUC105
 1644 O                  58                       97 'BRANCH -'                  S01194
+     O/COPY WNCPYSRC,UUC105_012                                                               UUC105
 1645 O***********              BRNM     128                               S01194
+     O/COPY WNCPYSRC,UUC105_013                                                               UUC105
      O                  58   A8BRNM             128                             S01194
+     O/COPY WNCPYSRC,UUC105_014                                                               UUC105
 1646 O*       H   08   60                                                 S01091
 1646 O********E** 08   60                                       S01091    S01117
 1646 O          E    60 84                    08                                S01117
@@ -6112,6 +6205,19 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
      O                       WCMTX4              97                             216006
      O**                                                                  216006
      O/COPY WNCPYSRC,GL0420O036
+      *                                                                                       CGL195
+     O**********E 1  41 52   TOT028                                                  CGL195 MD059042
+     O          E    41 52   TOT028      1                                                  MD059042
+     O         AND  N34 84                                                                    CGL195
+     O         AND  N33                                                                       CGL195
+     O                                           47 'AVAILABLE BALANCE'                       CGL195
+     O                       RUNA                +1                                           CGL195
+     O                  70   CLEBAL             127 '   ,   ,   ,   , 0 CR'                   CGL195
+     O                  71   CLEBAL             127 '  ,   ,   ,   , 0 . CR'                  CGL195
+     O                  72   CLEBAL             127 ' ,   ,   ,   , 0 .  CR'                  CGL195
+     O                  73   CLEBAL             127 '   ,   ,   , 0 .   CR'                   CGL195
+     O                  05                      127 'DR'                                      CGL195
+      *                                                                                       CGL195
 1721 O**   END OF PAGE ONLY
 1722 O**
 1723 O*       T 1         41 45                                           S01091
@@ -6482,6 +6588,7 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 1752 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O055
 1753 O                       STPA          3    108
+     O/COPY WNCPYSRC,UUC102_008                                                               UUC102
      O          E    62 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O*                                                                   S01408
@@ -6791,6 +6898,7 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 1839 O                                           93 'PAGE'
      O/COPY WNCPYSRC,GL0420O064
 1840 O                       STPA          3     98
+     O/COPY WNCPYSRC,UUC102_007                                                               UUC102
      O          E    64 84 05                 11                                              220877
      O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408
@@ -7072,6 +7180,7 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 1930 O                       RUNA                85
      O/COPY WNCPYSRC,GL0420O065
 1931 O                       STPA          3     98
+     O/COPY WNCPYSRC,UUC102_009                                                               UUC102
      O          E    66 84 05                 11                                              220877
      O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408
@@ -7330,6 +7439,7 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 2015 O                                          102 'PAGE'
      O/COPY WNCPYSRC,GL0420O066
 2016 O                       STPA          3    108
+     O/COPY WNCPYSRC,UUC102_010                                                               UUC102
      O          E    80 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408
@@ -7675,6 +7785,7 @@ X    C     KACNBY        READE     GLNWACJ1                               27    
 2119 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O067
 2120 O                       STPA          3    107
+     O/COPY WNCPYSRC,UUC102_011                                                               UUC102
      O          E    87 84 05                 11                                              220877
      O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408

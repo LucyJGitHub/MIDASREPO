@@ -48,8 +48,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060411           Date 20Sep22               *
-      *  Prev Amend No. 264174             Date 10Aug22               *
+      *  Last Amend No. MD024384A          Date 01Dec22               *
+      *  Prev Amend No. 230628             Date 01Dec22               *      
+      *                 MD060411           Date 20Sep22               *
+      *                 264174             Date 10Aug22               *
       *                 MD039533           Date 10Aug22               *
       *                 249385             Date 01Aug22               *
       *                 CLE138             Date 02Nov21               *
@@ -209,6 +211,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024384A - Reopen due to compilation error. Recompiled due  *
+      *              to changes in CLOANL3.                           *
+      *  230628 - Error in fee event calculation for calculated fee.  *
+      *             Drawn amount array is not properly updated        *
+      *             resulting to incorrect fee computation.           *
+      *         - Applied for MD024384.                               *      
       *  MD060411 - Correct the calculation of fee amount using       *
       *             calculation basis 6. Correction to MD058815       *
       *  264174 - Fee adjustment was not reflected correctly on       *
@@ -775,6 +783,7 @@
      I              FCXR                            FCXRL3                                    199588
      I              FMDI                            FMDIL3                                    199588
      I              CLAS                            CLASL3                                    CLE042
+     I              LPFI                            LPFIL3                                    230628
      I/COPY WNCPYSRC,LE0492I003
       *
      IPSOLDL1F                                                                             AR375891A
@@ -2977,6 +2986,10 @@
       *
      C**********           ADD  1         COUNTL                            0031
      C                     ADD  1         COUNT2                            0031
+      *                                                                                       230628
+      ** Chain CLOANL3 to retrieve LPFI value.                                                230628
+      *                                                                                       230628
+     C           LNRF      CHAINCLOANL3              22                                       230628
       *
       ***  Only process event further if this is not an inter-branch
       ***  event.
@@ -6827,15 +6840,36 @@
      C***********PTP       IFNE '66'                       ***B002        CLE005
      C***********PTP       ORNE '67'                                      CLE005
      C           PTP       IFEQ '66'                       ***B002        CLE005
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
+     C           PTP       OREQ '64'                                                          230628
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
+     C           PTP       OREQ '65'                                                          230628
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
      C           PTP       OREQ '67'                                      CLE005
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
+     C           PTP       OREQ '68'                                                          230628
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
       *                                                                   CLE005
       ** The above coding was fixed by SAR CLE005 for the inclusion of    CLE005
       ** PTP 69 and 72                                                    CLE005
       *                                                                   CLE005
      C           PTP       OREQ '69'                                      CLE005
      C           CLE005    ANDEQ*ON                                       CLE005
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
+     C           PTP       OREQ '71'                                                          230628
+     C           CLE005    ANDEQ*ON                                                           230628
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
      C           PTP       OREQ '72'                                      CLE005
      C           CLE005    ANDEQ*ON                                       CLE005
+     C           PRTR      ANDEQ'A'                                                           230628
+     C           LPFIL3    ANDNE*BLANK                                                        230628
      C                     ELSE                                           CLE005
       *
      C                     Z-ADD1         Y
@@ -6855,6 +6889,9 @@
       ***  Participations sold without recourse should only be
       ***  processed if facility is revolving.
       *
+     C           LPFIL3    IFEQ *BLANKS                                                       230628
+     C           PRTR      ANDNE'A'                                                           230628
+      *                                                                                       230628
      C           PTP       IFEQ '66'                       ***B002
      C           RCSI      ANDNE'Y'
      C           FCTI      ANDNE'C'
@@ -6890,6 +6927,7 @@
      C                     END                                            100517
       *
      C                     END                             ***E002
+     C                     END                                                                230628
       *
       ***  If ETP eq A1 event
       *

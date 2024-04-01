@@ -15,8 +15,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. MD021789           Date 15Aug13               *
+      *                 AR933181           Date 13Apr12               *
+      *                 AR856319           Date 14Nov11               *      
+      *                 MD058081           Date 11May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 AR1001980          Date 28Jun12               *
       *                 AR930698           Date 21Mar12               *
       *                 AR918975           Date 21Mar12               *
@@ -86,6 +90,18 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  UUC104 - MPM INTEGRATION (UPGRADE OF 1.4.11.06 CAR UUC069)   *
+      *           Use copy hook FT0342C022                            *
+      *           Add copy hook UUC104_006                            *
+      *  MD021789 - FT STP fails when trying to process an IDR - USD  *
+      *             transaction.                                      *
+      *           - The STP validation only allows p(12,8)            *
+      *             whereas the online allows p(13,8)                 *
+      *  AR933181 - Allow account line construct in Ordering Customer *
+      *             (Child: AR937315)                                 *
+      *  AR856319 - Apply 260198.  STP failed due to destination &    *
+      *             Sndrs Corr are the same addr. Amend pgm to remove *
+      *             validation.  (Child: AR856320)                    *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -2818,26 +2834,26 @@
      C                     MOVEL'A'       F4ORCT
      C                     GOTO EXORC
      C                     END
-      *                                                                                       CFT032
-     C           WSLSH     IFEQ '/'                                                           CFT032
-      *                                                                                       CFT032
-      ** If first character of ordering customer is '/' statement type                        CFT032
-      ** must be SWIFT or TELEX                                                               CFT032
-      *                                                                                       CFT032
-     C           S4STMT    IFNE '08'                                                          CFT032
+      *****************************************************************              CFT032 AR933181
+     C********** WSLSH     IFEQ '/'                                                  CFT032 AR933181
+      *****************************************************************              CFT032 AR933181
+      ***If*first*character*of*ordering*customer*is*'/'*statement*type*              CFT032 AR933181
+      ***must*be*SWIFT*or*TELEX****************************************              CFT032 AR933181
+      *****************************************************************              CFT032 AR933181
+     C********** S4STMT    IFNE '08'                                                 CFT032 AR933181
      C********** S4STMT    ORNE '01'                                                  CFT032 CSW207A
-     C           S4STMT    ANDNE'01'                                                         CSW207A
-     C                     MOVEL'Y'       E#MSGS                                              CFT032
-     C                     MOVELS4STMT    FTMSDT                                              CFT032
-     C                     MOVELE#CPGM    FTPGMQ                                              CFT032
+     C********** S4STMT    ANDNE'01'                                                CSW207A AR933181
+     C**********           MOVEL'Y'       E#MSGS                                     CFT032 AR933181
+     C**********           MOVELS4STMT    FTMSDT                                     CFT032 AR933181
+     C**********           MOVELE#CPGM    FTPGMQ                                     CFT032 AR933181
      C**********           MOVEL'MMAnn11' FTMSID                                     CFT032 BUG14042
-     C                     MOVEL'MMA1411' FTMSID                                            BUG14042
-     C                     MOVEL'DRSMM   'FTMSGF                                            AR928992
-     C                     EXSR FTSNMS                                                        CFT032
-     C                     MOVEL'Y'       I4ORC1                                              CFT032
-     C                     MOVEL'Y'       E#NOUP                                              CFT032
-     C                     ENDIF                                                              CFT032
-     C                     ENDIF                                                              250600
+     C**********           MOVEL'MMA1411' FTMSID                                   BUG14042 AR933181
+     C**********           MOVEL'DRSMM   'FTMSGF                                   AR928992 AR933181
+     C**********           EXSR FTSNMS                                               CFT032 AR933181
+     C**********           MOVEL'Y'       I4ORC1                                     CFT032 AR933181
+     C**********           MOVEL'Y'       E#NOUP                                     CFT032 AR933181
+     C**********           ENDIF                                                     CFT032 AR933181
+     C**********           ENDIF                                                     250600 AR933181
       *                                                                                       CFT032
       ** If switchable feature CFT004 is on, validate entry                                   CFT032
       ** as an IBAN.                                                                          CFT032
@@ -4871,7 +4887,8 @@
       *
      C                     MOVEL*BLANK    ZFIELD
      C                     MOVE S4RATE    ZFIELD
-     C                     Z-ADD4         ZADIG
+     C**********           Z-ADD4         ZADIG                                             MD021789
+     C                     Z-ADD5         ZADIG                                             MD021789
      C                     Z-ADD8         ZADEC
       *
      C                     EXSR SRALGN
@@ -6621,18 +6638,18 @@
       * If currency is local and addresses are the same then
       * MT202 must be N
       *
-     C           DSADD     IFEQ SSADD
-     C           S4SNMT    ANDEQ'Y'
-     C                     MOVEL'Y'       E#MSGS
-     C                     MOVELS4SNMT    FTMSDT
-     C                     MOVELE#CPGM    FTPGMQ
-     C                     MOVEL'FTM2284' FTMSID
-     C                     EXSR FTSNMS
-     C                     MOVEL'Y'       I4SNCO
-     C                     MOVEL'Y'       I4SNMT
-     C                     MOVEL'Y'       E#NOUP
-     C                     GOTO EXSNMT
-     C                     END
+     C********** DSADD     IFEQ SSADD                                                       AR856319
+     C********** S4SNMT    ANDEQ'Y'                                                         AR856319
+     C**********           MOVEL'Y'       E#MSGS                                            AR856319
+     C**********           MOVELS4SNMT    FTMSDT                                            AR856319
+     C**********           MOVELE#CPGM    FTPGMQ                                            AR856319
+     C**********           MOVEL'FTM2284' FTMSID                                            AR856319
+     C**********           EXSR FTSNMS                                                      AR856319
+     C**********           MOVEL'Y'       I4SNCO                                            AR856319
+     C**********           MOVEL'Y'       I4SNMT                                            AR856319
+     C**********           MOVEL'Y'       E#NOUP                                            AR856319
+     C**********           GOTO EXSNMT                                                      AR856319
+     C**********           END                                                              AR856319
       *
       *  Unwind subroutine stack name
       *
@@ -7189,6 +7206,7 @@
      C*********************Z-ADDWPDAM     P#PDAM                          CFT014
      C*********************ENDIF                                          CFT014
       *                                                                   CGL009
+     C/COPY WNCPYSRC,UUC104_006                                                              UUC104
      C                     ENDIF                                          CGL009
       *                                                                   CEU006
      C                     CALL 'FT0010'                                  CEU006
@@ -8899,7 +8917,8 @@
       *                                                                   CFT014
      C                     MOVEL*BLANK    ZFIELD                          CFT014
      C                     MOVE S4OEXR    ZFIELD                          CFT014
-     C                     Z-ADD4         ZADIG                           CFT014
+     C**********           Z-ADD4         ZADIG                                      CFT014 MD021789
+     C                     Z-ADD5         ZADIG                                             MD021789
      C                     Z-ADD8         ZADEC                           CFT014
       *                                                                   CFT014
      C                     EXSR SRALGN                                    CFT014

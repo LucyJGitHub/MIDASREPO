@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061240           Date 25May23               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CFT162             Date 16Oct20               *      
+      *  Prev Amend No. MD061240           Date 25May23               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD054059           Date 28Nov19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *      
       *  MD061240 - Charges are defaulted during OPAY amend. Add      *
       *             validation to execute the defaulting of charges   *
       *             only if action is insert.                         *

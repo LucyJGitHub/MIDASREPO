@@ -3,6 +3,7 @@
 /*XBI1*  OVRDBF FILE(APOST)    TOFILE(GLWKPSPD )                      *                      BUG4844
 /*X*I****OVRDBF*FILE(GLAPSGL0)*TOFILE(GLAPSGAL0)***********************                      BUG4844
 /*XBI2*  OVRDBF FILE(GLAPSGL0) TOFILE(GLAPSGAL0)                      *                      BUG4844
+/*XBI3*  OVRDBF FILE(XXAPOSV1) TOFILE(GLWKPSPD )                      *                      UUC102
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas GL Balance statements')                          *
       *****************************************************************
@@ -15,8 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 249385             Date 01Aug22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD059313           Date 07Feb22               *
+      *  Prev Amend No. MD058792           Date 15Sep21               *
+      *                 MD058751           Date 03Sep21               *
+      *                 UUC102             Date 16Oct20               *
+      *                 CGL195             Date 07Oct20               *      
+      *                 249385             Date 01Aug22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD055733           Date 03Jul20               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -40,6 +46,30 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059313 - Ensure XXAPOSV1 definition includes all formats   *
+      *             to avoid undefined type error.                    *
+      *             Amended hook GL0065IP10.                          *
+      *  MD058792 - '/' statement page separator not printed.         *
+      *           Amended hooks GL0065OOP7, GL0065OOP8, GL0065OOP9,   *
+      *           GL0065OO10, GL0065OO11, UUC102_006.                 *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *           CAR UUC103. Alphanumeric batch numbers not checked  *
+      *           correctly.                                          *
+      *           Hook GL0065CP15 amended.                            *
+      *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
+      *           UUC063 - Balance Statement Enhancement              *
+      *           Use Hooks GL0065CP12, GL0065CP15, GL0065CP18,       *
+      *           GL0065CP20, GL0065CP21, GL0065CP25,  GL0065CP26,    *
+      *           GL0065CP29, GL0065CP35, GL0065CP51,  GL0065CP52,    *
+      *           GL0065CP53, GL0065CP54, GL0065CP55,  GL0065CP56,    *
+      *           GL0065CP57, GL0065CY34, GL0065C002,  GL0065C003,    *
+      *           GL0065C074, GL0065C079, GL0065C089,  GL0065F004,    *
+      *           GL0065IIP1, GL0065IP10, GL0065OOP7,  GL0065OOP8,    *
+      *           GL0065OOP9, GL0065OO10, GL0065OO11,  GL0065OP13,    *
+      *           GL0065OP14, GL0065O090, UUC102_004,  UUC102_005,    *
+      *           UUC102_006                                          *
+      *  CGL195 - Print Clear Balance just after the CF Balance for   *
+      *           all retail accounts                                 *      
       *  249385 - Ensure input fields ZDAYNO keeps original value     *
       *            (Recompiled due to changes in ZBKDT)               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -732,6 +762,20 @@
      C                     END
      C*
      C/COPY WNCPYSRC,GL0065CP35
+      *                                                                                       CGL195
+      **  Check to see if SAR is installed.                                                   CGL195
+      *                                                                                       CGL195
+     C                     MOVE 'N'       CGL195  1                                           CGL195
+     C                     CALL 'AOSARDR0'                                                    CGL195
+     C                     PARM '       ' @RTCD                                               CGL195
+     C                     PARM '*VERIFY' @OPTN                                               CGL195
+     C                     PARM 'CGL195'  @SARD   6                                           CGL195
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL195
+      *                                                                                       CGL195
+     C           @RTCD     IFEQ *BLANKS                                                       CGL195
+     C                     MOVE 'Y'       CGL195                                              CGL195
+     C                     END                                                                CGL195
+      *                                                                                       CGL195
      C*
      C** Check if Account Statements Changes switchable feature is
      C** switched ON
@@ -1263,6 +1307,7 @@
      C           *IN15     ANDEQ'0'
      C********** MATCHS    ANDEQAPKEY                                                        BUG4844
      C**********           READPAPOST                  1515                                  BUG4844
+     C/COPY WNCPYSRC,UUC102_004
      C           MATCH     REDPEAPOST                  1515                                  BUG4844
      C/COPY WNCPYSRC,GL0065C089
      C                     END
@@ -1678,6 +1723,7 @@
      C*
      C           MATCH     READEAPOST                  1515
       *
+     C/COPY WNCPYSRC,UUC102_005
       ** Print Postings up to End Date only
      C           PSTD      IFGT ENDD
      C                     MOVE *ON       *IN15
@@ -2405,6 +2451,17 @@
      C*
      C/COPY WNCPYSRC,GL0065CP17
      C*
+     C           CGL195    IFEQ 'Y'                                                           CGL195
+     C           ATYP      ANDEQ'R'                                                           CGL195
+      *                                                                                       CGL195
+      ** *IN41='1' PRINT FORMAT '1'  (PRINTER FILE P2 USED)                                   CGL195
+      *                                                                                       CGL195
+     C           *IN41     ANDEQ'1'                                                           CGL195
+      *                                                                                       CGL195
+     C                     Z-ADDCLBL      CLEBAL 150 05                                       CGL195
+     C                     EXCPTTOT028                                                        CGL195
+     C                     ENDIF                                                              CGL195
+      *                                                                                       CGL195
      C           ENDPS     TAG
      C/COPY WNCPYSRC,GL0065C108
      C                     END
@@ -3229,6 +3286,7 @@
      O                                  102 'PAGE'
      O/COPY WNCPYSRC,GL0065OY63
      O                         STPA  3  108
+     O/COPY WNCPYSRC,UUC102_006
      O        E   11   60 84 05
      O                         RIBAN     50
      O*
@@ -3401,6 +3459,16 @@
      O                         WCMTX4    97
      O*
      O/COPY WNCPYSRC,GL0065O036
+     O        E 1         41 52TOT028                                                         CGL195
+     O       AND      N34 84                                                                  CGL195
+     O       AND      N33                                                                     CGL195
+     O                                   47 'AVAILABLE BALANCE'                               CGL195
+     O                         RUNA    +  1                                                   CGL195
+     O                       70CLEBAL   127 '   ,   ,   ,   , 0 CR'                           CGL195
+     O                       71CLEBAL   127 '  ,   ,   ,   , 0 . CR'                          CGL195
+     O                       72CLEBAL   127 ' ,   ,   ,   , 0 .  CR'                          CGL195
+     O                       73CLEBAL   127 '   ,   ,   , 0 .   CR'                           CGL195
+     O                       05         127 'DR'                                              CGL195
      O** END OF PAGE ONLY
      O*
      O        E 11        41 45ENDPG

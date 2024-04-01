@@ -14,8 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD061831           Date 13Sep23               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD059143           Date 28Oct21               *
+      *  Prev Amend No. MD058767           Date 07Sep21               *
+      *                 MD058751           Date 03Sep21               *
+      *                 UUC103             Date 20Oct20               *      
+      *                 MD061831           Date 13Sep23               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 MD028250           Date 28Jul14               *
       *                 MD046248           Date 27Oct17               *
@@ -36,6 +40,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD059143 - Third line of fld86 is getting ommitted. Upgrade  *
+      *             fix MMFIX3 from BF Midas 1106.                    *
+      *             Hook GLH00404 amended. (Recompile)                *
+      *  MD058767 - MT940s are producing many extra spaces in tag 86. *
+      *             Upgraded CAR UUC061 fix MD030976.                 *
+      *             Hooks GLH00403, GLH00404 amended.                 *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *             CAR UUC103. Alphanumeric batch numbers not        *
+      *             checked correctly.                                *
+      *           Hook GLH00404 amended.                              *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Use Hooks GLH00403, GLH00404, GLH00407, GLH00408,   *
+      *           GLH00410, GLH00411, GLH00518, GLH00519, GLH00520,   *
+      *           GLH00461                                            *      
       *  MD061831 - When CGL146 is ON, do not create posting record   *
       *             if: Batch was submitted via real time post, and   *
       *                 No MT940 request during I/C                   *

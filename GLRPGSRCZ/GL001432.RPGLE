@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. CSW101             Date 03Feb23               *
+      *  Last Amend No. MD058751           Date 03Sep21               *
+      *  Prev Amend No. AR1042753          Date 25Jan17               *
+      *                 UUC103             Date 20Oct20               *      
+      *                 BA6026             Date 18Jan23               *
+      *                 CSW101             Date 03Feb23               *
       *                 MD060966           Date 25Jan23               *
       *                 MD060784           Date 02Dec22               *
       *                 MD058830           Date 01Oct21               *
@@ -62,6 +65,19 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *             CAR UUC103. Alphanumeric batch numbers not checked*
+      *             correctly.                                        *
+      *             Hook GLH00428 amended.                              *
+      *  AR1042753 - Exclude posting with blank GLOTTP for FT0325     *
+      *              processing. (Child: AR1042754)                   *
+      *              Applied for MD-41622.                            *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Use Hooks GLH00180, GLH00207, GLH00208, GLH00414,   *
+      *           GLH00416, GLH00417, GLH00418, GLH00420, GLH00421,   *
+      *           GLH00422, GLH00423, GLH00424, GLH00425, GLH00426,   *
+      *           GLH00427, GLH00428                                  *      
       *  BA6026 - Structuring Current MT940 and SEPA Compliance       *
       *           Include GSH026, MD-28413 and MD-27371B              *
       *  CSW101 - PAYplus Interface.                                  *
@@ -467,6 +483,7 @@
       ** Format MT950 subfields
 
      C                   IF        WkModuleID = 'FT'                            Fund Transfer
+     C                             AND GLOTTP <> *BLANKS                                   AR1042753
      C                   EXSR      $FT0325
      C                   ENDIF
 

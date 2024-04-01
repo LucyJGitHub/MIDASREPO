@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058081           Date 11May21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CFT162             Date 16Oct20               *      
+      *  Prev Amend No. MD058081           Date 11May21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *      
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *

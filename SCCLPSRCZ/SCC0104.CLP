@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD037320           Date 10Jan24              */
-/*       Prev Amend No. CSD103             Date 10Aug20              */
+/*       Last Amend No. 260383A            Date 21OCT09              */
+/*       Prev Amend No. 260383             Date 28May09              */
+/*                      MD037320           Date 10Jan24              */
+/*                      CSD103             Date 10Aug20              */
 /*                      MD039086           Date 24Oct16              */
 /*                      MD055683           Date 21May20              */
 /*                      MD046248           Date 27Oct17              */
@@ -51,6 +53,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       260383A - ALSO STARTUP CM_GAC_REP                           */
+/*       260383 - Cash Management job is not restarting after        */
+/*                sub-system has been restarted.                     */
+/*                Applied for MD034645.                              */
 /*       MD037320 - Cash management background jobs must be          */
 /*                  submitted when subsystem starts.                 */
 /*                - Applied for MD-62184.                            */
@@ -160,6 +166,7 @@
              DCL        VAR(&CRE072) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CRE072*/
              DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD027386*/
              DCL        VAR(&CSD103) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD103*/
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1) VALUE('N')                        /*260383*/
                                                                                           /*CSD103*/
 /*/COPY OFCPYSRCZ,CGL155_004                                         */                   /*CGL155*/
                                                                                           /*214363*/
@@ -492,6 +499,35 @@
                 CHGVAR     VAR(&CFT158) VALUE('Y') /*MD031644*/
              ENDDO      /*MD031644*/
                                                                                        /*MD031644*/
+/** Check if the Cash Management Feature is on */                                         /*260383*/
+                                                                                          /*260383*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*260383*/
+             CHGVAR     VAR(&SARD) VALUE('CRE008')                                        /*260383*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*260383*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &SCSARD)                                                        /*260383*/
+                                                                                          /*260383*/
+/** If error occured in AOSARDR0, perform abnormal termination */                         /*260383*/
+                                                                                          /*260383*/
+             IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                          '*NRF   ') THEN(DO)                                             /*260383*/
+                SNDPGMMSG  MSG('Program error in AOSARDR0') +
+                           TOMSGQ(MOPERQ)                                                 /*260383*/
+                GOTO       CMDLBL(ABNOR)                                                  /*260383*/
+             ENDDO                                                                        /*260383*/
+                                                                                          /*260383*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*260383*/
+                CHGVAR     VAR(&CRE008) VALUE('Y')                                        /*260383*/
+             ENDDO                                                                        /*260383*/
+                                                                                          /*260383*/
+/* Start CM_SWP_CTL job when CRE008 is ON and system is in input cycle                    /*260383*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                      /*260383*/
+             IF         COND(&MPHAS *EQ 'A' *AND &CRE008 *EQ 'Y') THEN(DO)                /*260383*/
+                CALL       PGM(REC101201)                                                 /*260383*/
+             ENDDO                                                                        /*260383*/
+             IF         COND(&MPHAS *EQ 'A' *AND &CRE008 *EQ 'Y') THEN(DO)               /*260383A*/
+                CALL       PGM(REC101501)                                                /*260383A*/
+             ENDDO                                                                       /*260383A*/
 /** Check if the Retail Teller API is on */                                               /*CAP205*/
                                                                                           /*CAP205*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CAP205*/

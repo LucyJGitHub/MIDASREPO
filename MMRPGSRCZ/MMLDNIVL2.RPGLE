@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD045018           Date 08May23               *
-      *  Prev Amend No. AR959687           Date 08May23               *
+      *  Last Amend No. 245692             Date 01Dec22               *      
+      *  Prev Amend No. MD045018           Date 08May23               *
+      *                 AR959687           Date 08May23               *
       *                 MD054313           Date 08May23               *
       *                 MD049864           Date 08May23               *
       *                 MD046446           Date 08May23               *
@@ -68,6 +69,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for AR1068690 (Child: AR1069087)            *      
       *  MD045018 - MM deal, with a Base Rate Code, could not be      *
       *              amended due to blank Rate Change Date.           *
       *           - Amend validation such that (1) Rate Change Date,  *
@@ -1796,6 +1801,29 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                               MD059049
      C                   EVAL      MsgIDArr(Idx)   = 'FLR0023'                                CDL033
      C                   EVAL      ReturnCode      = 'Error'                                  CDL033
+     C                   Z-ADD     0             @@AMT                                        245692
+     C                   Z-ADD     0             @@ERCD                                       245692
+     C                   MOVEL     *BLANKS       @@ALPH                                       245692
+     C                   MOVEL     DDSTRT        @@ALPH                                       245692
+     C                   Z-ADD     4             @@IINT                                       245692
+     C                   Z-ADD     7             @@IDP                                        245692
+     C                   CALLB     'ZA0840'                                                   245692
+     C                   PARM                    @Rtcde                                       245692
+     C                   PARM                    @@ALPH                                       245692
+     C                   PARM                    @@IDP                                        245692
+     C                   PARM                    @@IINT                                       245692
+     C                   PARM                    @@MTID                                       245692
+     C                   PARM                    @@ERCD                                       245692
+     C                   PARM                    @@AMT                                        245692
+     C                   PARM                    BNDCSP                                       245692
+b2   C     @@ERCD        IFNE      0                                                          245692
+     C                   EVAL      Idx = Idx + 1                                              245692
+     C                   EVAL      FldNameArr(Idx) = 'DDSTRT'                                 245692
+     C                   EVAL      MsgIDArr(Idx) = 'FLR0014'                                  245692
+     C                   EVAL      ReturnCode = 'Error'                                       245692
+x2   C                   ELSE                                                                 245692
+     C                   MOVE      @@AMT         WSTRT                                        245692
+     C                   ENDIF                                                                245692
      C**********         ELSE                                                        CDL033 BUG24317
      C**********         MOVEL     *BLANKS       ZFIELD                              CDL033 BUG24317
      C**********         CALLB     'ZALIGN'                                          CDL033 BUG24317

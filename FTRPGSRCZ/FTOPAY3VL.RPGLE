@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060110           Date 15Sep22               *
-      *  Prev Amend No. MD055002           Date 31Jan20               *
+      *  Last Amend No. CFT162             Date 16Oct20               *      
+      *  Prev Amend No. MD060110           Date 15Sep22               *
+      *                 MD055002           Date 31Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD034973           Date 16Jul15               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *      
       *  MD060110 - Payments can be amended and authorised by the     *
       *             same user. Use the MSWINPUSER value from T_MSWIP  *
       *             to populate Input Officer 1 and Input Officer 2.  *

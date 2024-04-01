@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. BA6032             Date 09Jan23              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CGL196             Date 07Oct20              */
+/*       Prev Amend No. BA6032             Date 09Jan23              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD030959           Date 17Jun15              */
 /*                      AR1097467          Date 01Apr13              */
 /*                      BUG27667           Date 14May10              */
@@ -38,6 +39,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     CGL196 - Account Mapping Stopped Cheques Processing          */
 /*       BA6032 - Invoke In-house Command to Update SAVF Authority   */
 /*       MD046248 - Finastra Rebranding                              */
 /*     MD030959 - Recompiled due to changed PF/HELDIHC.              */
@@ -97,6 +99,7 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CER001*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CER001*/
              DCL        VAR(&ULX043) TYPE(*CHAR) LEN(1)                                   /*CER001*/
+             DCL        VAR(&CGL196) TYPE(*CHAR) LEN(1)                                   /*CGL196*/
              DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*BUG27667*/
              DCL        VAR(&CMTTXT) TYPE(*CHAR) LEN(460)                               /*BUG27667*/
              DCL        VAR(&WSID) TYPE(*CHAR) LEN(3)                                   /*BUG27667*/
@@ -148,6 +151,19 @@
              CHGVAR     VAR(&WSID) VALUE(&JOB)                                          /*BUG27667*/
              CHGVAR     VAR(&WSTI) VALUE(&JOB)                                          /*BUG27667*/
                                                                                         /*BUG27667*/
+/*                                                  */                                    /*CGL196*/
+/* Check if Enhancement Number CGL196 is present.   */                                    /*CGL196*/
+/*                                                  */                                    /*CGL196*/
+             CHGVAR     VAR(&CGL196) VALUE(' ')                                           /*CGL196*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CGL196*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CGL196*/
+             CHGVAR     VAR(&SAR) VALUE('CGL196')                                         /*CGL196*/
+                                                                                          /*CGL196*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CGL196*/
+                                                                                          /*CGL196*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CGL196*/
+                CHGVAR     VAR(&CGL196) VALUE('Y')                                        /*CGL196*/
+             ENDDO                                                                        /*CGL196*/
 /*/COPY WNCPYSRC,REC90MP2                                            */
                                                                       /*S01408*/
 /**/
@@ -160,6 +176,9 @@
                 CLRPFM FILE(STOPOSC)
                 CLRPFM FILE(STOPOSD)
                 CLRPFM FILE(STOPOSE)
+                IF COND(&CGL196 *EQ 'Y') THEN(DO)                                         /*CGL196*/
+                  CLRPFM FILE(RESTPOPD)                                                   /*CGL196*/
+                ENDDO                                                                     /*CGL196*/
 /**/
                 CALL PGM(RE0910)
 /**/
@@ -213,6 +232,13 @@
                    MONMSG (CPF2817) CMPDTA(CPF2869) +
                           EXEC(CLRPFM STOPCSD)                        /*S01098*/
 /**/
+                   IF COND(&CGL196 *EQ 'Y') THEN(DO)                                      /*CGL196*/
+                   CPYF   FROMFILE(RESTPOPD) TOFILE(RESTPCPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NONE)                                  /*CGL196*/
+                   MONMSG (CPF2817) CMPDTA(CPF2869) +
+                          EXEC(CLRPFM RESTPCPD)                                           /*CGL196*/
+                   ENDDO                                                                  /*CGL196*/
+
 /*                 ADDLFM     FILE(STOPC) MBR(STOPC) */    /*S01098*/ /*BHF982*/
                    ADDLFM     FILE(STOPC) MBR(STOPC) SHARE(*YES)      /*BHF982*/
                    MONMSG     MSGID(CPF0000)                          /*S01098*/

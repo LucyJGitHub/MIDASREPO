@@ -10,8 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT166             Date 02Nov22               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD060580           Date 21Oct22               *
+      *  Prev Amend No. MD058687           Date 09Jul21               *
+      *                 MD027774           Date 07Oct20               *
+      *                 UUC101             Date 07Oct20               *
+      *                 CFT162             Date 26Oct20               *
+      *                 CFT046             Date 26Oct20               *      
+      *                 CFT166             Date 02Nov22               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD056683           Date 14Sep20               *
       *                 MD055849           Date 15May20               *
       *                 CSW220             Date 09Mar20               *
@@ -165,6 +171,33 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060580 - XX00002 dumping on each access to FT0060 Payment  *
+      *             Authorisation.                                    *
+      *             Ensure feature reference 'UUC101' for Cover FT    *
+      *             Payments is passed when calling program AOSARDR0. *
+      *             Amended hook FT0060C001.                          *
+      *  MD058687 - Formalise fix to MD027774 for UUC101.             *
+      *             FT Cover Check validating incorrect account.      *
+      *             Amended hook FT0060C037.                          *
+      *  MD027774 - No warning for retail account OD                  *
+      *             Recompile due to changes on WNCPYSRC/FT0060C037   *
+      *             Upgraded with UUC101                              *
+      *  UUC101 - Cover FT Payments                                   *
+      *           Upgrade UUC041 to FBM 2.1                           *
+      *         - Switchability on feature UUC100 rather than UUC101  *
+      *             WNCPYSRC,FT0060CADV                               *
+      *             WNCPYSRC,FT0060CCP1                               *
+      *             WNCPYSRC,FT0060C001                               *
+      *             WNCPYSRC,FT0060C010                               *
+      *             WNCPYSRC,FT0060C023                               *
+      *             WNCPYSRC,FT0060C037                               *
+      *             WNCPYSRC,FT0060C058                               *
+      *             WNCPYSRC,FT0060I001                               *
+      *             WNCPYSRC,FT0060I002                               *
+      *  CFT162 - Upgrade UUC068 to FBM 2.1 SP23                      *
+      *           MT900/MT910 Confirmation Messages                   *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *      
       *  CFT166 - Amendment to FT A/C Balance Check on Authorisation  *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -603,6 +636,9 @@
      I              'PROCESSED'           C         WKPROC                                    CFT158
      I              'AOSVALR0'            C         PGMA                                      CFT158
       *                                                                                       CFT158
+      ** Declare MT900/910 Display System Value Constant                                      CFT162
+     I              'MT900_MT910TranLvl'  C         M9SVAL                                    CFT162
+      *                                                                                       CFT162
       ** Declare SWIFTACTV constant                                                           CSW220
       *                                                                                       CSW220
      I              'SWIFTACTV'           C         SWIFT                                     CSW220
@@ -2172,6 +2208,78 @@
      C                     KFLD           WIPZON 10                                           241810
       *
      C/COPY WNCPYSRC,FT0060C001
+      *                                                                                       CFT162
+      ** Access SAR details file to determine if CFT162 is switched ON                        CFT162
+      *                                                                                       CFT162
+     C                     CALL 'AOSARDR0'                                                    CFT162
+     C                     PARM *BLANKS   @RTCD                                               CFT162
+     C                     PARM '*VERIFY' @OPTN                                               CFT162
+     C                     PARM 'CFT162'  @SARD                                               CFT162
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT162
+      *                                                                                       CFT162
+      ** If core feature is switched ON, set a variable field to                              CFT162
+      ** condition the rest of the processing.                                                CFT162
+      *                                                                                       CFT162
+     C           @RTCD     IFEQ *BLANKS                                                       CFT162
+     C                     MOVE 'Y'       CFT162  1                                           CFT162
+     C                     ELSE                                                               CFT162
+     C                     MOVE 'N'       CFT162                                              CFT162
+     C*                                                                                       CFT162
+     C** else, database error (return code other than *NRF)                                   CFT162
+     C*                                                                                       CFT162
+     C           @RTCD     IFNE '*NRF   '                                                     CFT162
+     C                     MOVEL'FT0060 ' DBPGM                                               CFT162
+     C                     MOVE 'SCSARDPD'DBFILE           *************                      CFT162
+     C                     MOVEL'*VERIFY' DBKEY            *DB ERROR 110*                     CFT162
+     C                     Z-ADD110       DBASE            *************                      CFT162
+     C                     OUT  DLDA                                                          CFT162
+     C                     SETON                     U7U8LR                                   CFT162
+     C                     DUMP                                                               CFT162
+      *                                                                                       CFT162
+      * ALLOCATE DATAARA TO BLANKS                                                            CFT162
+     C                     EXSR DALLOC                                                        CFT162
+     C                     RETRN                                                              CFT162
+     C                     ENDIF                                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
+      ** Call AOSVALR0 to check system values                                                 CFT162
+      *                                                                                       CFT162
+     C           CFT162    IFEQ 'Y'                                                           CFT162
+     C                     MOVELM9SVAL    PM9SV1 20                                           CFT162
+     C                     MOVE *BLANKS   PBLNK1                                              CFT162
+     C                     MOVE *BLANKS   PBLNK2                                              CFT162
+      *                                                                                       CFT162
+     C                     CALL 'AOSVALR0'                                                    CFT162
+     C                     PARM *BLANKS   @RTCD                                               CFT162
+     C                     PARM           PM9SV1                                              CFT162
+     C                     PARM           PM9VL1200                                           CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+     C                     PARM           PBLNK1                                              CFT162
+     C                     PARM           PBLNK2                                              CFT162
+      *                                                                                       CFT162
+     C           @RTCD     IFNE *BLANKS                                                       CFT162
+     C                     Z-ADD111       W0ERNB                                              CFT162
+     C                     MOVEL'CFT162'  W0KEY                                               CFT162
+     C                     MOVEL'SDSVALPD'W0FILE                                              CFT162
+     C                     EXSR SRERR                                                         CFT162
+     C                     ENDIF                                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
       ** Access SAR Details to determine if ULX043 is switched ON                             CER001
      C                     MOVEL'N'       ULX043  1                                           CER001
      C                     CALL 'AOSARDR0'                                                    CER001
@@ -2301,10 +2409,44 @@
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
      C                     ENDIF                                                              CER030
+      *                                                                                       CFT046
+      ** Check if CFT046 is switched 'ON'                                                     CFT046
+      *                                                                                       CFT046
+     C                     MOVE 'N'       CFT046  1                                           CFT046
+      *                                                                                       CFT046
+     C                     CALL 'AOSARDR0'                                                    CFT046
+     C                     PARM *BLANKS   PRTCD                                               CFT046
+     C                     PARM '*VERIFY' POPTN                                               CFT046
+     C                     PARM 'CFT046'  PSARD                                               CFT046
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT046
+      *                                                                                       CFT046
+     C           PRTCD     IFEQ *BLANKS                                                       CFT046
+     C                     MOVE 'Y'       CFT046                                              CFT046
+     C                     ELSE                                                               CFT046
+      *                                                                                       CFT046
+      ** else, database error (return code other than *NRF)                                   CFT046
+      *                                                                                       CFT046
+     C           PRTCD     IFNE '*NRF   '                                                     CFT046
+     C                     MOVEL'FT0060 ' DBPGM                                               CFT046
+     C                     MOVEL'SCSARDPD'DBFILE                                              CFT046
+     C                     MOVELPSARD     DBKEY                                               CFT046
+     C                     Z-ADD109       DBASE                                               CFT046
+     C                     OUT  DLDA                                                          CFT046
+     C                     SETON                     U7U8LR                                   CFT046
+     C                     DUMP                                                               CFT046
+      *                                                                                       CFT046
+      ** Allocate dataarea to blanks                                                          CFT046
+      *                                                                                       CFT046
+     C                     EXSR DALLOC                                                        CFT046
+     C                     RETRN                                                              CFT046
+     C                     ENDIF                                                              CFT046
+      *                                                                                       CFT046
+     C                     ENDIF                                                              CFT046
       *                                                                                       CER030
      C           CGL013    IFEQ 'Y'                                                           CER030
      C           CER030    OREQ 'Y'                                                           CER030
      C           CER031    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
      C                     MOVE *ON       *IN47                                               CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
@@ -4553,6 +4695,7 @@
      C           CGL013    IFEQ 'Y'                                                           CER030
      C           CER030    OREQ 'Y'                                                           CER030
      C           CER031    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
       *                                                                                       CER030
       ** Outgoing Payment                                                                     CER030
       *                                                                                       CER030
@@ -4563,6 +4706,7 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
      C                     MOVE *ON       *IN48                                               CER030
      C                     MOVELOPRTTY    D1RTTY                                              CER030
      C                     ENDIF                                                              CER030
@@ -4597,6 +4741,7 @@
       *                                                                                       CER030
      C           CER030    IFEQ 'Y'                                                           CER030
      C           CGL013    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
      C                     MOVE *ON       *IN48                                               CER030
      C                     MOVELIRTTY     D1RTTY                                              CER030
      C                     ENDIF                                                              CER030
@@ -8642,6 +8787,7 @@
      C           CGL013    IFEQ 'Y'                                                           CER030
      C           CER030    OREQ 'Y'                                                           CER030
      C           CER031    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
       *                                                                                       CER030
      C                     GOTO SCREN5                                                        CER030
       *                                                                                       CER030
@@ -8670,6 +8816,7 @@
      C           CGL013    IFEQ 'Y'                                                           CER030
      C           CER030    OREQ 'Y'                                                           CER030
      C           CER031    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
       *                                                                                       CER030
      C           *IN01     DOWEQ*OFF                                                          CER030
      C           *IN02     ANDEQ*OFF                                                          CER030
@@ -8778,6 +8925,7 @@
      C           CGL013    IFEQ 'Y'                                                         AR694651
      C           CER030    OREQ 'Y'                                                         AR694651
      C           CER031    OREQ 'Y'                                                         AR694651
+     C           CFT046    OREQ 'Y'                                                           CFT046
      C                     GOTO SCREN5                                                      AR694651
      C                     ELSE                                                             AR694651
      C                     GOTO SCREN4                                                        CSW209
@@ -8887,6 +9035,7 @@
      C           CGL013    IFEQ 'Y'                                                           CER030
      C           CER030    OREQ 'Y'                                                           CER030
      C           CER031    OREQ 'Y'                                                           CER030
+     C           CFT046    OREQ 'Y'                                                           CFT046
      C           *IN02     IFEQ *ON                                                           CER030
      C           *IN03     ANDEQ*ON                                                           CER030
       *                                                                                       CER030
@@ -8944,6 +9093,21 @@
       *     as a parameter to the window controller                       059192
       *                                                                   059192
       /COPY WNCPYSRC,FT0060MOV1                                           059192
+      *                                                                                       CFT162
+     C                     MOVE PREF      WKPREF           Set PayRef                         CFT162
+     C                     MOVE PYTP      WKPYTP           Set Type                           CFT162
+     C                     MOVE PYST      WKPYST           Set Sub Type                       CFT162
+     C           *IN60     IFEQ *ON                                                           CFT162
+     C                     Z-ADDOPMSGR    MSGREF                                              CFT162
+     C                     ELSE                                                               CFT162
+     C                     Z-ADDINMSGR    MSGREF                                              CFT162
+     C                     ENDIF                                                              CFT162
+     C           *IN60     IFEQ *OFF                                                          CFT162
+     C                     MOVELPCCY      CLCCY                                               CFT162
+     C                     Z-ADDPYAM      CLPAMT                                              CFT162
+     C                     Z-ADDRUND      CLLDTE                                              CFT162
+     C                     ENDIF                                                              CFT162
+      *                                                                                       CFT162
      C                     MOVE PREF      PREFX                                               CER001
      C                     SELEC                                          059192
      C           *IN60     WHEQ '0'                                       059192

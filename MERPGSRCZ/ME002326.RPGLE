@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD058830           Date 01Oct21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CGL197             Date 07Oct20               *      
+      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *                 CSD103             Date 10Aug20               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL197 - Statement Page number                               *      
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
@@ -175,6 +177,9 @@
       ** Declared variables
       ** ------------------
       *
+     D PRtcd           S             10A                                                      CGL107
+     D POptn           S              7A                                                      CGL107
+     D PSard           S              6A                                                      CGL107
 
       ** Error Indicators Array
       *
@@ -376,6 +381,8 @@
      C                   PARM      *Blanks       RetCodeIn
      C                   PARM      ZAPGM         CallerOut        10
      C                   PARM                    ScrLayout
+     C                   PARM                    F72LSPT                                      CGL197
+     C                   PARM                    ActionCode                                   CGL197
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
      C                   PARM      N40SFR        MT940StFq         1
@@ -451,7 +458,15 @@
      C                   EVAL      F72AMR = N42AMR
      C                   EVAL      F72RPL = N42RPL
      C                   EVAL      F72RAS = N42RAS
+     C                   IF        CGL197 ='Y'                                                CGL197
+     C                   IF        N42LSP = 0                                                 CGL197
+     C                   MOVE(P)   0             F72LSPT                                      CGL197
+     C                   ELSE                                                                 CGL197
+     C                   MOVE      N42LSP        F72LSPT                                      CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ELSE                                                                 CGL197
      C                   EVAL      F72LSP = N42LSP
+     C                   ENDIF                                                                CGL197
      C                   EVAL      F72LST = N42LST
      C                   EVAL      F72LDN = N42LDN
      C                   EVAL      F72LCN = N42LCN
@@ -610,6 +625,11 @@
      C                   EVAL      N42AMR = F72AMR
      C                   EVAL      N42RPL = F72RPL
      C                   EVAL      N42RAS = F72RAS
+      *                                                                                       CGL197
+     C                   IF        CGL197 = 'Y'                                               CGL197
+     C                   MOVE      F72LSPT       N42LSP                                       CGL197
+     C                   ENDIF                                                                CGL197
+      *                                                                                       CGL197
       *    ----------    ------
      C     @ScrToFile    ENDSR
 
@@ -636,6 +656,23 @@
      C                   ENDIF
 
      C                   MOVEL     '*SAME'       ZAPGRL            5
+
+      ** Check if CGL197 is installed                                                         CGL197
+      *                                                                                       CGL197
+     C                   MOVE      'N'           CGL197            1                          CGL197
+     C                   EVAL      *IN79 = *Off                                               CGL197
+      *                                                                                       CGL197
+     C                   CALLB     'AOSARDR0'                                                 CGL197
+     C                   PARM      *BLANKS       PRtcd                                        CGL197
+     C                   PARM      '*VERIFY'     POptn                                        CGL197
+     C                   PARM      'CGL197'      PSard                                        CGL197
+                                                                                              CGL197
+      ** If CGL197 is switched ON and insert mode                                             CGL197
+      *                                                                                       CGL197
+     C                   IF        PRtcd = *BLANKS AND ActionCode = 'I'                       CGL197
+     C                   MOVE      'Y'           CGL197                                       CGL197
+     C                   EVAL      *IN79 = *On                                                CGL197
+     C                   ENDIF                                                                CGL197
 
       ** Retrieve RUNDAT
       *

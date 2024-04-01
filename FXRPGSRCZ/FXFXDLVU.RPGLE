@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061950           Date 16Nov23               *
-      *  Prev Amend No. AR819780           Date 16Nov23               *
+      *  Last Amend No. 250229             Date 01Dec22               *      
+      *  Prev Amend No. MD061950           Date 16Nov23               *
+      *                 AR819780           Date 16Nov23               *
       *                 252024             Date 03Feb22               *
       *                 MD059304           Date 11Nov21               *
       *                 MD057285           Date 17Feb21               *
@@ -122,6 +123,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250229 - Display a warning message when inserting a deal that*
+      *           already exist.                                      *
+      *         - Applied for MD030370.                               *      
       *  MD061950 - FX Deal API Frontoffice ID is used already        *
       *  AR819780 - Multiple deletion from SOAP of same Front Office. *
       *             (Child: AR819781)                                 *
@@ -1930,6 +1934,7 @@
       *
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*RECUPD'
+     C     @RTCD         ANDNE     '*RECINS'                                                  250229
      C                   MOVEL     '0'           APIRetc
      C                   If        (CSC022 = 'N')                                             CSC022
      C                             Or (CSC022 = 'Y') And (wCommitSkip = 'N')                  CSC022
@@ -1966,6 +1971,16 @@
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
      C
      C                   END
+      *                                                                                       250229
+      ** If insert not done due to record being inserted by another                           250229
+      ** workstation send message to screen.                                                  250229
+      *                                                                                       250229
+     C     @RTCD         IFEQ      '*RECINS'                                                  250229
+      *                                                                                       250229
+     C                   MOVEL     '*ANY'        FldNameArr(1)                                250229
+     C                   MOVEL     'FXM0163'     MsgIdArr(1)                                  250229
+     C                                                                                        250229
+     C                   ENDIF                                                                250229
 
      C                   ENDSR
       *****************************************************************

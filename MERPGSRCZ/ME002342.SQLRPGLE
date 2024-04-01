@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BA6026             Date 18Jan23               *
-      *  Prev Amend No. MD058830           Date 01Oct21               *
+      *  Last Amend No. CGL197             Date 07Oct20               *      
+      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *                 MD058830           Date 01Oct21               *
       *                 CMG008             Date 20Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR870148           Date 24Nov11               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL197 - Statement Page number                               *      
       *  BA6026 - Structuring Current MT940 and SEPA Compliance.      *
       *  MD058830 - Deliverable Data Split for SDNWRKPD               *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
@@ -132,6 +134,9 @@
      D                                     abcdefghijklmnopqrstuvwxyz-
      D                                     0123456789 /-?:().,''+'
 
+     D Numerics        C                   '0123456789'                                       CGL197
+     D                                                                                        CGL197
+                                                                                              CGL197
       ** Arrays and Data Structures
       ** --------------------------
       *
@@ -177,6 +182,9 @@
       *                                                                                     BUG26381
      D WMuCshE         S              1A                                                    BUG26381
      D KNwrk           S              6A                                                    BUG26381
+     D CGL197          S              1A                                                      CGL197
+     D W20LSNT         S              5A                                                      CGL197
+     D WTXT005         S              5A                                                      CGL197
 
       ** Error Indicators Array
       *
@@ -217,6 +225,8 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    CallerIn         10
      C                   PARM                    ScrLayout
+     C     F20LSNT       PARM                    W20LSNT                                      CGL197
+     C                   PARM                    ActionCode                                   CGL197
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
      C                   PARM                    NewFilRcd2                                   BA6026
@@ -607,6 +617,27 @@
      C                   ENDIF
       *
       ** End Default MT940 Information to Account Owner (6)
+      *
+      ** Last Page Statement check                                                            CGL197
+                                                                                              CGL197
+     C                   IF        CGL197 = 'Y'                                               CGL197
+     C                   EVALR     WTXT005 = '00000' + %Trim(F20LSNT)                         CGL197
+     C     Numerics      CHECK     WTXT005:1                              99                  CGL197
+     C     *IN99         IFEQ      *ON                                                        CGL197
+     C                   MOVE      'ME00097'     ZAMSID                                       CGL197
+     C                   EXSR      $ZaSndMsg                                                  CGL197
+     C                   MOVE      *On           *IN51                                        CGL197
+     C                   MOVE      *On           *IN40                                        CGL197
+     C                   MOVEL(P)  '*MSG'        RetCodeOut                                   CGL197
+     C                   ELSE                                                                 CGL197
+     C                   IF        WTXT005 = '00000'                                          CGL197
+     C                   MOVE(P)   '0'           F20LSNT                                      CGL197
+     C                   ELSE                                                                 CGL197
+     C                   MOVE      WTXT005       F20LSNT                                      CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ENDIF                                                                CGL197
+     C                   ENDIF                                                                CGL197
+      *                                                                                       CGL197
      C/COPY OFCPYSRCZ,CGL146_052                                                              CGL146
 
       ** End of the module
@@ -735,6 +766,21 @@
      C                   EVAL      CER030 = 'N'                                             BUG26381
      C                   ENDIF                                                              BUG26381
      C                   ENDIF                                                              BUG26381
+      *                                                                                       CGL197
+      ** Check if CGL197 is installed                                                         CGL197
+      *                                                                                       CGL197
+     C                   CALLB     'AOSARDR0'                                                 CGL197
+     C                   PARM      *BLANKS       PRtcd                                        CGL197
+     C                   PARM      '*VERIFY'     POptn                                        CGL197
+     C                   PARM      'CGL197'      PSard                                        CGL197
+                                                                                              CGL197
+      ** If CGL197 is switched ON and insert mode                                             CGL197
+      *                                                                                       CGL197
+     C                   IF        PRtcd = *BLANKS AND ActionCode = 'I'                       CGL197
+     C                   EVAL      CGL197 = 'Y'                                               CGL197
+     C                   ELSE                                                                 CGL197
+     C                   EVAL      CGL197 = 'N'                                               CGL197
+     C                   ENDIF                                                                CGL197
      C/COPY OFCPYSRCZ,CGL146_040                                                              CGL146
       *                                                                                       BA6026
       ** Access SAR file to determine if BA6026 is installed.                                 BA6026

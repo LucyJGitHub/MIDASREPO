@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. UUC102             Date 16Oct20               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL140             Date 12Dec12               *
       *                 AR787620           Date 10Jun11               *
       *                 CRE075             Date 06Dec10               *
@@ -34,6 +35,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC102 - Upgrade of CAR UUC063 to BF Midas 2.1               *
+      *           UUC063 - Balance Statement Enhancement              *
+      *           Use Hooks GLH00038, GLH00042,                       *
+      *           UUC102_001, UUC102_002, UUC102_003, CGL140_023      *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -158,6 +163,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for Access Object Programs
 
+     D/COPY WNCPYSRC,UUC102_003
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -172,6 +178,7 @@
      D EDateChr        S              5
      D InputOk         S              1
      D CmdText         S            512
+     D/COPY WNCPYSRC,UUC102_001                                                              UUC102
 
      D ExcCmd          PR                  EXTPGM('QCMDEXC')
      D   Cmd                        512A   CONST OPTIONS(*VARSIZE)
@@ -495,3 +502,4 @@ SBMJOB CMD(CALL PGM(GLC0064) PARM('123456789012345678901234' X'SSSSSF' X'EEEEEF'
 JOB(GLC0064) JOBD(MIDASIC) USER(*JOBD)
      X/COPY WNCPYSRC,GLH00045
      X/COPY OFCPYSRCZ,CGL140_031                                                              CGL140
+     X/COPY WNCPYSRC,UUC102_002                                                               UUC102

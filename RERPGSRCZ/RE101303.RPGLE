@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783             Date 28May12               *      
+      *  Last amend No. AR1094157          Date 07Mar13               *
+      *  Prev Amend No. AR1084600          Date 06Feb13               *
+      *                 CSD103             Date 10Aug20               *
+      *                 223783             Date 28May12               *      
       *                 AR928996A          Date 03May12               *
       *                 AR928996           Date 27Mar12               *
       *                 CSW218             Date 19Mar18               *
@@ -62,6 +64,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1094157 - Clear 54 save fields so that data is not         *
+      *              carried over to the next cover message.          *
+      *              (Child: AR1094178)                               *
+      *  AR1084600 - If destination is a SWIFT only then default      *
+      *              sender bic to branch bic. (Child: AR1084601)     *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - Use IBAN as account number.                         *
@@ -704,6 +711,11 @@
      C                   MOVEL     A8BTID        NWSN
      C**********         Z-ADD     SavDECN       DECN                                         CSD027
      C                   EVAL      DECN = SavDECN                                             CSD027
+      *                                                                                    AR1084600
+      ** Set network sender to branch bic                                                  AR1084600
+      *                                                                                    AR1084600
+     C                   Eval      O@NwSn = A8BTId                                         AR1084600
+      *                                                                                    AR1084600
      C                   Movel     IDDEST        NWDS
      C                   End
       *
@@ -1585,6 +1597,15 @@
      C                   Move      BBCSID        W202Nwds
      C                   Endif
 
+      *                                                                                    AR1094157
+      ** Clear save fields                                                                 AR1094157
+      *                                                                                    AR1094157
+     C                   Clear                   Sav54Tag                                  AR1094157
+     C                   Clear                   Sav54L1                                   AR1094157
+     C                   Clear                   Sav54L2                                   AR1094157
+     C                   Clear                   Sav54L3                                   AR1094157
+     C                   Clear                   Sav54L4                                   AR1094157
+     C                   Clear                   Sav54L5                                   AR1094157
       * Field :54a:
      C                   If        IDRCVC <> *blanks
      C                   Eval      Q = Q + 1
@@ -2962,6 +2983,15 @@
      C                   Endif
      C                   Endif
 
+      *                                                                                    AR1094157
+      ** Clear save fields                                                                 AR1094157
+      *                                                                                    AR1094157
+     C                   Clear                   Sav54Tag                                  AR1094157
+     C                   Clear                   Sav54L1                                   AR1094157
+     C                   Clear                   Sav54L2                                   AR1094157
+     C                   Clear                   Sav54L3                                   AR1094157
+     C                   Clear                   Sav54L4                                   AR1094157
+     C                   Clear                   Sav54L5                                   AR1094157
       * Field :54a:
       *    First, Field :54A:
      C                   Eval      KTag = ':54A:'

@@ -1,0 +1,92 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - STP Functions                                        *
+      *                                                               *
+      *  FT0300C056 -  MPM Mapping Extensions                         *
+      *                                                               *
+      *  Function: This extends FT STP for Charges and FX rates       *
+      *                                                               *
+      *  Component of: *None                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       UUC104
+     C                     CLEAR##CHRG                                                        UUC104
+     C           UUC104    IFEQ 'Y'                                                           UUC104
+      *                                                                                       UUC104
+      * Date processing for Inwards                                                           UUC104
+     C                     MOVELPDCA      DSTRAN                                              UUC104
+     C           2         SUBSTTVDCA:1   U#YY    2                                           UUC104
+     C           2         SUBSTTVDCA:3   U#MM    2                                           UUC104
+     C           2         SUBSTTVDCA:5   U#DD    2                                           UUC104
+     C           WUDFF     IFEQ 'D'                                                           UUC104
+     C                     MOVELU#DD      U#PVDT  6 P                                         UUC104
+     C           U#PVDT    CAT  U#MM:0    U#PVDT                                              UUC104
+     C                     ELSE                                                               UUC104
+     C                     MOVELU#MM      U#PVDT  6 P                                         UUC104
+     C           U#PVDT    CAT  U#DD:0    U#PVDT                                              UUC104
+     C                     END                                                                UUC104
+     C                     MOVE U#YY      U#PVDT                                              UUC104
+     C                     MOVELU#PVDT    S1SLDT                                              UUC104
+     C                     MOVELU#PVDT    S1PVDT                                              UUC104
+     C                     MOVELU#PVDT    S4SLDT                                              UUC104
+     C                     MOVELU#PVDT    S4PVDT                                              UUC104
+      *                                                                                       UUC104
+      * Fx rate processing                                                                    UUC104
+     C                     MOVELSDCA      DSTRAN                                              UUC104
+     C                     CLEARSVSDCA                                                        UUC104
+     C                     CLEARSVSDCA                                                        UUC104
+      * Set up rate field                                                                     UUC104
+     C           TRTAG     IFEQ ':FX:'                                                        UUC104
+     C           ',':'.'   XLATETMLIN2    S1RATE                                              UUC104
+     C           ',':'.'   XLATETMLIN2    S4RATE                                              UUC104
+     C                     ENDIF                                                              UUC104
+     C           SDCA      IFNE *BLANKS                                                       UUC104
+     C           TRTAG     ANDEQ':FX:'                                                        UUC104
+     C                     MOVELSDCA      SVSDCA256                                           UUC104
+     C                     MOVELPDCA      SVPDCA256                                           UUC104
+     C                     CLEARSDCA                                                          UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C                     MOVELPEXN      DSTRAN                                              UUC104
+      *                                                                                       UUC104
+      * Check if routing                                                                      UUC104
+     C           TRTAG     IFEQ ':RT:'                                                        UUC104
+     C           TRTAG     OREQ ':CH:'                                                        UUC104
+     C           TMLIN4    IFNE *BLANKS                                                       UUC104
+     C           1         SUBSTTMLIN4:1  S1ADDC                                              UUC104
+     C           1         SUBSTTMLIN4:1  S4ADDC                                              UUC104
+     C           5         SUBSTTMLIN4:2  S7CDE1                                              UUC104
+     C           12        SUBSTTMLIN4:7  S7TRCD                                              UUC104
+     C           5         SUBSTTMLIN4:2  S0CDE1                                              UUC104
+     C           12        SUBSTTMLIN4:7  S0TRCD                                              UUC104
+      *                                                                                       UUC104
+      * Note if amount has been passed                                                        UUC104
+     C           S0TRCD    IFNE *BLANKS                                                       UUC104
+     C                     MOVEL'Y'       ##CHRG  1                                           UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      * Direct to dummy rule to pick up correct charge code                                   UUC104
+     C                     Z-ADD999       GNMSET                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      * Check for Charge account                                                              UUC104
+     C           TMLIN5    IFNE *BLANKS                                                       UUC104
+     C           3         SUBSTTMLIN5:25 S0CDBR                                              UUC104
+     C           3         SUBSTTMLIN5:25 S7CDBR                                              UUC104
+     C           18        SUBSTTMLIN5:7  S0CDRO                                              UUC104
+     C           18        SUBSTTMLIN5:7  S7CDRO                                              UUC104
+     C                     ENDIF                                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      *****************************************************************

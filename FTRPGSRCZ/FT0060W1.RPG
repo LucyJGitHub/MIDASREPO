@@ -1,0 +1,272 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Payments Authorisation MT900/MT910 window')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0060W1 - Payment Authorisation MT900/MT910 window          *
+      *                                                               *
+      *  Function:  This program displays the values of MT900         *
+      *             and MT910.                                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. CFT162 *CREATE    Date 16Oct20                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CFT162 - Upgrade UUC068 to FBM 2.1 SP23                      *
+      *           MT900/MT910 Confirmation Messages                   *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       20      PROTECT FIELD IN ENQUIRE MODE
+      *       30      REDISPLAY THE SCREEN
+      *       84      CHAIN TO INPAYXPD FAILED
+      *       85      CHAIN TO OTPAYXPD FAILED
+      *
+     FINPAYXL0IF  E           K        DISK
+      ** Incoming Payments Extension File - Read
+      *
+     FOTPAYXL2IF  E           K        DISK
+      ** Outgoing Payments Extension File - Read
+      *
+     FFT0060#0CF  E                    WORKSTN
+      ** Display file for MT900 Payments Authorisation window
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     ISCSARD    E DSSCSARDPD
+      * External Data Structure for Swtichable features description
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I            DS
+     I                                        1  15 K@PREF
+     I                                       12  13 P#TYPE
+      *
+     I/COPY QWINDSRC,FT0060DTA
+      * Data member for main program
+      *****************************************************************
+     C/EJECT
+      *
+      **   Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           RTNCDE  7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *                M A I N  P R O C E S S I N G
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      ** Main format of the display file
+     C                     EXFMTFT0060X0
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            END              Exit program
+     C                     ENDCS
+      *
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' RTNCDE
+     C                     EXSR END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Only display the window if SAR CFT162 is active.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CFT162'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     EXSR END
+     C                     ENDIF
+      *
+      **   Only do first time through
+      *
+     C           *IN01     IFEQ '0'
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **   Define window position
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+     C                     SETON                     20
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *
+      ** Set up KLIST and move in key from DATA
+      *
+     C           K@KEY     KLIST
+     C                     KFLD           K@PREF
+      *
+     C                     MOVELWKPREF    K@PREF
+      *
+      ** If Incoming Payment then retrieve data from the extension
+      ** file INPAYXPD.
+      *
+     C           P#TYPE    IFEQ 'IN'
+      *
+      ** Retrieve MT900 and MT910 from extension file
+     C           K@KEY     CHAININPAYXDF             84
+     C           *IN84     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELK@PREF    DBKEY            *************
+     C                     MOVEL'INPAYXPD'DBFILE           *DB ERROR 01*
+     C                     Z-ADD1         DBASE            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE *ON       *IN80
+     C                     MOVE INR900    SMT900
+     C                     MOVE INR910    SMT910
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Outgoing Payment then retrieve data from the extension
+      ** file OTPAYXPD.
+      *
+     C           P#TYPE    IFEQ 'OP'
+      *
+      ** Retrieve MT900 and MT910 from extension file
+     C           K@KEY     CHAIN@OPYXL2              85
+     C           *IN85     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELK@PREF    DBKEY            *************
+     C                     MOVEL'OTPAYXPD'DBFILE           *DB ERROR 02*
+     C                     Z-ADD2         DBASE            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE OPR900    SMT900
+     C                     MOVE OPR910    SMT910
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *****************************************************************
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' RTNCDE
+     C                     EXSR END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+** CPY@
+(C) Copyright Finastra International Limited 2020

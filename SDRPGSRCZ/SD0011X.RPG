@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD024741           Date 02Apr14               *
+      *  Prev Amend No. 263892             Date 27Sep13               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042652           Date 06Feb17               *
       *                 CER071             Date 01Aug16               *
       *                 MD037870           Date 25May16               *
@@ -76,6 +78,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024741 - Deletion of customer details not allowed. Ensure  *
+      *             that error flags are not reset on call to SD0010U.*
+      *  263892 - Customer Deletion: Save value of P2DELS prior to    *
+      *           access of program SD0010U since it is overwritten.  *
+      *         - Applied for MD024741.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042652 - FFC0800 FAILED IN COB.Dont allow deletion when    *
@@ -1225,13 +1232,21 @@
      C                     EXSR ZYEXPG                                    CSD008
      C                     ENDIF                                          CSD008
      C                     ENDIF                                          CSD008
+      *                                                                                       263892
+      ** Save P2DELS if it is not blanks since it is overwritten by                           263892
+      ** program SD0010U.                                                                     263892
+      *                                                                                       263892
+     C           P2DELS    IFNE *BLANKS                                                       263892
+     C                     MOVELP2DELS    SAVRTN  7                                           263892
+     C                     ENDIF                                                              263892
       * Start of S01522
       * Check references in non-SYNON files by calling SD0010U.
       * Check for delete - Client Details  *
      C                     CALL 'SD0010U'              90  Check for delet
      C                     PARM P1CUST    WQ0026  6        Customer Number
      C           P2DELS    PARM P2DELS    WQ0027  7        *Return code
-     C           P3CDS1    PARM *BLANK    WQ0036200        Customer Deln S                    246639
+     C********** P3CDS1    PARM *BLANK    WQ0036200        Customer Deln S           246639 MD024741
+     C           WUCDS1    PARM WUCDS1    WQ0036200        Customer Deln S                  MD024741
      C           WUCDS2    PARM *BLANK    WQ0028200        Customer Deln S
      C           WUCDS3    PARM *BLANK    WQ0029200        Customer Deln S
      C                     PARM P8QPGM    WQ0030  1        Quit program on
@@ -1254,6 +1269,11 @@
      C           P2DELS    IFNE *BLANK
      C                     SETON                     99    *
      C                     END
+      *                                                                                     MD024741
+     C           P2DELS    IFEQ 'DELETE'                                                    MD024741
+     C           SAVRTN    ANDNE*BLANK                                                      MD024741
+     C                     MOVELSAVRTN    P2DELS                                            MD024741
+     C                     ENDIF                                                            MD024741
       * End of S01522
       * /COPY for Bank's own pre-check processing.
       * The /COPY should update field WUDELI with a 'N' if the customer

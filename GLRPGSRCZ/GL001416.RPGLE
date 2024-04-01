@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Last Amend No. MD058751           Date 03Sep21               *
+      *  Prev Amend No. UUC103             Date 20Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 223783 (Reopen)    Date 28May12               *
       *                 223783             Date 28May12               *
       *                 CMG009             Date 24Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -48,6 +50,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD058751 - Missing tag :86: on MT940s as not extracted by    *
+      *           CAR UUC103. Alphanumeric batch numbers not checked  *
+      *           correctly.                                          *
+      *           Hook GLH00397 amended.                              *
+      *  UUC103 - Upgrade of CAR UUC061 to BF Midas 2.1               *
+      *           UUC061 - SWIFT Statement Enhancement                *
+      *           Use Hooks GLH00394, GLH00395, GLH00396, GLH00397,   *
+      *           GLH00398, GLH00399, GLH00400, GLH00401, GLH00402    *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *

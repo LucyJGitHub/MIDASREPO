@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055503           Date 03Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD055503           Date 03Apr20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
@@ -44,6 +45,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD055503 - Not able to do webfacing authorisation for invalid*
       *             outgoing payment that had been repaired.          *
       *           - Added the missing parameter (InputUser) introduced*

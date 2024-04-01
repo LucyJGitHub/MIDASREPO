@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD039425           Date 12Aug16              */
+/*       Last Amend No. CFT162             Date 20Oct20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD039425           Date 12Aug16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CFT162 - MT900 and MT910 Message Generation                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD039425 - Sort order in the outgoing payment second        */
 /*                  authorization level screen                       */
@@ -50,7 +52,7 @@
 /**          PGM                                                      /*S01117*/
 /************PGM        PARM(&BRCH &BORO &PCMD)            */ /*S01117 S01494*/
              PGM        PARM(&BRCH &BORO &PCMD &RNTP)                /*S01494*/
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -62,19 +64,33 @@
              DCL        VAR(&BORO) TYPE(*CHAR) LEN(1)                 /*S01117*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1)                 /*S01117*/
              DCL        VAR(&RNTP) TYPE(*CHAR) LEN(7)                /*S01494*/
- 
+
                                                                       /*042167*/
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)               /*042167*/
              DCL        VAR(&TRNREF) TYPE(*CHAR) LEN(15)              /*042167*/
              DCL        VAR(&RINFOR) TYPE(*CHAR) LEN(80)              /*042167*/
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*042167*/
+
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CFT162*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CFT162*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*CFT162*/
+             DCL        VAR(&CFT162) TYPE(*CHAR) LEN(1)                                   /*CFT162*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CFT162*/
+
 /*/COPY WNCPYSRC,FTC0110001                                          */
- 
+
              DCLF       FILE(SDFTFRPD)                                /*S01194*/
- 
+
              CHGJOB     SWS(XXXXXX00)
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CFT162*/
+             CHGVAR     VAR(&SARD) VALUE('CFT162')                                        /*CFT162*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CFT162*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CFT162) +
+                          VALUE('Y'))                                                     /*CFT162*/
+
 /*/COPY WNCPYSRC,FTC0110002                                          */
- 
+
 /**/                                                                 /*S01494*/
 /** Check run type                                                */ /*S01494*/
 /**/                                                                 /*S01494*/
@@ -89,7 +105,7 @@
              ENDDO                                                   /*MD039425*/
                                                                      /*MD039425*/
 /*  CALL PROGRAM & MONITOR FOR ERRORS                               */
- 
+
 /**          CALL       PGM(FT0110)                                   /*S01117*/
 /************CALL       PGM(FT0110) PARM(&BRCH &BORO &PCMD)*/ /*S01117 S01494*/
              CALL       PGM(FT0110) PARM(&BRCH &BORO &PCMD &RNTP)    /*S01494*/
@@ -98,11 +114,11 @@
                           Press Enter to Continue.') TOPGMQ(*EXT)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /*/COPY WNCPYSRC,FTC0110007                                          */
 /**/
 /* AUTOMATIC CALL OF PAY/RECEIVE INDICATOR */
- 
+
 /**          RCVF       RCDFMT(TABTB11F)                              /*S01194*/
 /**          IF         COND((&APYR = 'Y')) THEN(DO)                  /*S01194*/
              RCVF       RCDFMT(SDFTFRD0)                              /*S01194*/
@@ -135,17 +151,27 @@
 /*/COPY WNCPYSRC,FTC0110005                                          */
              ENDDO
 /**/
- 
+
 /**   DATABASE ERROR HANDLING   **/
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
 /**          RTVDTAARA  DTAARA(LDA (134 44)) RTNVAR(&MEM)             /*S01194*/
              RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)             /*S01194*/
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
- 
+
 /**END:********ENDPGM                                                 /*S01117*/
+             IF         COND(&CFT162 = 'Y') THEN(DO)                                      /*CFT162*/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                               /*CFT162*/
+                   SBMJOB     JOB(FTC162001) JOBD(MBATCH) USER(*JOBD) +
+                                RTGDTA(*JOBD) RQSDTA('CALL PGM(FTC162001) +
+                                PARM('''' '''' '''' )') INLLIBL(*JOBD)                    /*CFT162*/
+                   SBMJOB     CMD(CALL PGM(MIDASRMV)) JOB(MIDASRMV) JOBD(MBATCH) +
+                                RTGDTA(*JOBD) INLLIBL(*JOBD) USER(*JOBD)                  /*CFT162*/
+                ENDDO                                                                     /*CFT162*/
+             ENDDO                                                                        /*CFT162*/
+
 /*/COPY WNCPYSRC,FTC0110003                                          */
  END:                                                                 /*S01117*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
@@ -162,4 +188,4 @@
 /*/COPY WNCPYSRC,FTC0110006                                          */
 /**/                                                                  /*S01117*/
             ENDPGM                                                    /*S01117*/
- 
+

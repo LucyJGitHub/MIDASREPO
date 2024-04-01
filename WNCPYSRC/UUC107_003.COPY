@@ -1,0 +1,210 @@
+      *****************************************************************                       UUC107
+      *                                                               *                       UUC107
+      *  Midas - Funds Transfer Module                                *                       UUC107
+      *                                                               *                       UUC107
+      *  UUC107_003 - Currency Conversion/Validation for FT           *                       UUC107
+      *                                                               *                       UUC107
+      *  (c) Finastra Ltd 2020                                        *                       UUC107
+      *                                                               *                       UUC107
+      *  Last Amend No. UUC107  *CREATE    Date 19Oct20               *                       UUC107
+      *                                                               *                       UUC107
+      *****************************************************************                       UUC107
+      *                                                               *                       UUC107
+      *  UUC107 - Upgrade CEUFT1 to FBM 2.1                           *                       UUC107
+      *           FT Quotation of Rates                               *                       UUC107
+      *                                                               *                       UUC107
+      *****************************************************************                       UUC107
+      *                                                                                       UUC107
+     C                   ENDIF                                                                UUC107
+      *                                                                                       UUC107
+      ** If switchable feature installed                                                      UUC107
+      ** and either the settle or pay currencies are OUT                                      UUC107
+b1   C     UUC107        IFEQ      'Y'                                                        UUC107
+     C     TYPE(2)       ANDEQ     'OT'                                                       UUC107
+     C     UUC107        OREQ      'Y'                                                        UUC107
+     C     TYPE(3)       ANDEQ     'OT'                                                       UUC107
+      *                                                                                       UUC107
+      * Check if quotation convention required                                                UUC107
+      *                                                                                       UUC107
+     C                   MOVEL     CCY(2)        FTFCCY                                       UUC107
+     C                   MOVEL     CCY(3)        FTTCCY                                       UUC107
+     C     KQUTE         CHAIN     @QUTEPD                            90                      UUC107
+     C     *IN90         IFEQ      *OFF                                                       UUC107
+     C                   MOVEL     FTCFLG        W#QFLG                                       UUC107
+     C                   ELSE                                                                 UUC107
+     C     *LIKE         DEFINE    FTCFLG        W#QFLG                                       UUC107
+     C                   MOVEL     *BLANKS       W#QFLG                                       UUC107
+     C                   ENDIF                                                                UUC107
+      *                                                                                       UUC107
+      ** Calculate the top and bottom ranges for the rate                                     UUC107
+      ** using the following formula                                                          UUC107
+      **                                                                                      UUC107
+      ** ZRATEX * (1 + P#RTDS) = Top (W#TOP)                                                  UUC107
+     C     *LIKE         DEFINE    ZRATEX        W#TOP                                        UUC107
+     C     *LIKE         DEFINE    ZRATEX        W#BOT                                        UUC107
+     C     P#RTDS        ADD       1             W#TOP                                        UUC107
+     C     ZRATEX        MULT      W#TOP         W#TOP                                        UUC107
+      ** ZRATEX * (1 - P#RTDS) = Bottom (W#BOT)                                               UUC107
+     C     1             SUB       P#RTDS        W#BOT                                        UUC107
+     C     ZRATEX        MULT      W#BOT         W#BOT                                        UUC107
+      *                                                                                       UUC107
+      ** Calculate the inverse rates for the top & bottom                                     UUC107
+      ** using the following formula                                                          UUC107
+      **                                                                                      UUC107
+      ** 1/W#TOP = I#TOP                                                                      UUC107
+      ** 1/W#BOT = I#BOT                                                                      UUC107
+     C     *LIKE         DEFINE    ZRATEX        I#TOP                                        UUC107
+     C     *LIKE         DEFINE    ZRATEX        I#BOT                                        UUC107
+     C     1             DIV       W#TOP         I#TOP                                        UUC107
+     C     1             DIV       W#BOT         I#BOT                                        UUC107
+      *                                                                                       UUC107
+      ** Check whether the passed rates are within tolerance                                  UUC107
+b2   C                   SELECT                                                               UUC107
+      *                                                                                       UUC107
+      ** Quotation Convention                                                                 UUC107
+b3   C     W#QFLG        WHENNE    *BLANKS                                                    UUC107
+b2   C                   SELECT                                                               UUC107
+      * No rate entered and convention is Divide                                              UUC107
+     C     W#QFLG        WHENEQ    'D '                                                       UUC107
+     C     P#RATE        ANDEQ     0                                                          UUC107
+     C     ZMDIX         IFEQ      'M'                                                        UUC107
+     C     1             DIV       ZRATEX        ZRATEX                                       UUC107
+     C                   MOVEL     'M'           ZMDIX                                        UUC107
+     C                   ENDIF                                                                UUC107
+      * No rate entered and convention is Multiply                                            UUC107
+     C     W#QFLG        WHENEQ    'M '                                                       UUC107
+     C     P#RATE        ANDEQ     0                                                          UUC107
+     C     ZMDIX         IFEQ      'D'                                                        UUC107
+     C     1             DIV       ZRATEX        ZRATEX                                       UUC107
+     C                   MOVEL     'M'           ZMDIX                                        UUC107
+     C                   ENDIF                                                                UUC107
+      ** Quotation Convention is divide                                                       UUC107
+b3   C     W#QFLG        WHENEQ    'D '                                                       UUC107
+      *                                                                                       UUC107
+     C                   MOVEL     'D'           W#MDIN                                       UUC107
+      ** Default rate is divide                                                               UUC107
+     C     ZMDIX         IFEQ      'D'                                                        UUC107
+      *                                                                                       UUC107
+      ** Rate LT Top & GT Bottom rate range                                                   UUC107
+     C     P#RATE        IFGT      W#TOP                                                      UUC107
+     C     P#RATE        ORLT      W#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Error if not overriden                                                               UUC107
+     C     P#OVRT        IFNE      'Y'                                                        UUC107
+     C                   MOVE      *ON           *IN05                                        UUC107
+     C                   SETON                                        55                      UUC107
+     C                   MOVEL     'FTM2578'     FTMSID                                       UUC107
+     C                   EXSR      SNDMSG                                                     UUC107
+     C                   EXSR      RETURN                                                     UUC107
+     C                   SETOFF                                       55                      UUC107
+e2   C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+      ** Change Mult/Div indicator                                                            UUC107
+      ** Default rate is multiply                                                             UUC107
+     C                   ELSE                                                                 UUC107
+      *                                                                                       UUC107
+      ** Rate LE Top & GE Bottom rate range                                                   UUC107
+     C     P#RATE        IFLT      I#TOP                                                      UUC107
+     C     P#RATE        ORGT      I#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Error if not overriden                                                               UUC107
+     C     P#OVRT        IFNE      'Y'                                                        UUC107
+     C                   MOVE      *ON           *IN05                                        UUC107
+     C                   SETON                                        55                      UUC107
+     C                   MOVEL     'FTM2578'     FTMSID                                       UUC107
+     C                   EXSR      SNDMSG                                                     UUC107
+     C                   EXSR      RETURN                                                     UUC107
+     C                   SETOFF                                       55                      UUC107
+e2   C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+      *                                                                                       UUC107
+      ** Quotation Convention is multiply                                                     UUC107
+b3   C     W#QFLG        WHENEQ    'M '                                                       UUC107
+      *                                                                                       UUC107
+     C                   MOVEL     'M'           W#MDIN                                       UUC107
+      ** Default rate is divide                                                               UUC107
+     C     ZMDIX         IFEQ      'M'                                                        UUC107
+      *                                                                                       UUC107
+      ** Rate LT Top & GT Bottom rate range                                                   UUC107
+     C     P#RATE        IFGT      W#TOP                                                      UUC107
+     C     P#RATE        ORLT      W#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Error if not overriden                                                               UUC107
+     C     P#OVRT        IFNE      'Y'                                                        UUC107
+     C                   MOVE      *ON           *IN05                                        UUC107
+     C                   SETON                                        55                      UUC107
+     C                   MOVEL     'FTM2578'     FTMSID                                       UUC107
+     C                   EXSR      SNDMSG                                                     UUC107
+     C                   EXSR      RETURN                                                     UUC107
+     C                   SETOFF                                       55                      UUC107
+e2   C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+      ** Change Mult/Div indicator                                                            UUC107
+      ** Default rate is multiply                                                             UUC107
+     C                   ELSE                                                                 UUC107
+      *                                                                                       UUC107
+      ** Rate LE Top & GE Bottom rate range                                                   UUC107
+     C     P#RATE        IFLT      I#TOP                                                      UUC107
+     C     P#RATE        ORGT      I#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Error if not overriden                                                               UUC107
+     C     P#OVRT        IFNE      'Y'                                                        UUC107
+     C                   MOVE      *ON           *IN05                                        UUC107
+     C                   SETON                                        55                      UUC107
+     C                   MOVEL     'FTM2578'     FTMSID                                       UUC107
+     C                   EXSR      SNDMSG                                                     UUC107
+     C                   EXSR      RETURN                                                     UUC107
+     C                   SETOFF                                       55                      UUC107
+e2   C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+     C                   ENDIF                                                                UUC107
+b2   C                   ENDSL                                                                UUC107
+      *                                                                                       UUC107
+      ** Rate LE Top & GE Bottom rate range                                                   UUC107
+b3   C     P#RATE        WHENLE    W#TOP                                                      UUC107
+     C     P#RATE        ANDGE     W#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Set up Mult/Div indicator                                                            UUC107
+     C     *LIKE         DEFINE    ZMDIX         W#MDIN                                       UUC107
+     C                   MOVEL     ZMDIX         W#MDIN                                       UUC107
+      *                                                                                       UUC107
+      ** Rate GE Top & LE Inverse Bottom rate range                                           UUC107
+b3   C     P#RATE        WHENGE    I#TOP                                                      UUC107
+     C     P#RATE        ANDLE     I#BOT                                                      UUC107
+      *                                                                                       UUC107
+      ** Change Mult/Div indicator                                                            UUC107
+b4   C     ZMDIX         IFEQ      'M'                                                        UUC107
+     C                   MOVEL     'D'           W#MDIN                                       UUC107
+x4   C                   ELSE                                                                 UUC107
+     C                   MOVEL     'M'           W#MDIN                                       UUC107
+e4   C                   ENDIF                                                                UUC107
+      *                                                                                       UUC107
+      ** Otherwise this is an error                                                           UUC107
+x3   C                   OTHER                                                                UUC107
+     C     P#OVRT        IFNE      'Y'                                                        UUC107
+     C                   MOVE      *ON           *IN05                                        UUC107
+     C                   SETON                                        55                      UUC107
+     C                   MOVEL     'FTM2578'     FTMSID                                       UUC107
+     C                   EXSR      SNDMSG                                                     UUC107
+     C                   EXSR      RETURN                                                     UUC107
+     C                   SETOFF                                       55                      UUC107
+e2   C                   ENDIF                                                                UUC107
+     C                   MOVEL     ZMDIX         W#MDIN                                       UUC107
+      *                                                                                       UUC107
+      *  If rate looks like reciprocal then                                                   UUC107
+      ** Change Mult/Div indicator                                                            UUC107
+b4   C     P#RATE        IFLT      1                                                          UUC107
+b4   C     W#QFLG        ANDEQ     *BLANKS                                                    UUC107
+b4   C     ZMDIX         IFEQ      'M'                                                        UUC107
+     C                   MOVEL     'D'           W#MDIN                                       UUC107
+x4   C                   ELSE                                                                 UUC107
+     C                   MOVEL     'M'           W#MDIN                                       UUC107
+e4   C                   ENDIF                                                                UUC107
+e4   C                   ENDIF                                                                UUC107
+e2   C                   ENDSL                                                                UUC107
+e1   C                   ENDIF                                                                UUC107
+      *                                                                                       UUC107
+      *****************************************************************                       UUC107
+      * End of /COPY UUC107_003                                       *                       UUC107
+      *****************************************************************                       UUC107

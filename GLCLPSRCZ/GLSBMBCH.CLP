@@ -9,9 +9,11 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD057680           Date 08Apr21              */
+/*       Prev Amend No. MD026880           Date 26May14              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260259             Date 14May09              */
+/*                      260259             Date 14May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      245635             Date 13Feb07              */
 /*                      241672A            Date 09Jan07              */
@@ -38,6 +40,12 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD057680 - BITH status not updated after authorize if       */
+/*                  CGL016 and CRE023 is OFF. Reverse fix MD026880   */
+/*                  because the user for jor GLC445 is not authorize */
+/*                  in MRUNQ/MOPERQ.                                 */
+/*       MD026880 - Submit job should be done under user *CURRENT.   */
+/*                  Apply fix 202562.                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       260259 - Batch acceptance delay problem. Fix is to          */
 /*                sbmjob GLC445 to MIDASJOBQ and removed MIDASRMV.   */
@@ -70,20 +78,20 @@
 /*       E17598  - PARAMETERS , JOB NAME & SNDMSG INCORRECT         *  *E17598*/
 /*                                                                  */
 /********************************************************************/
- 
+
 /*           PGM        PARM(&RTCD &BNUM)                              *E20994*/
 /*/COPY WNCPYSRC,GLSBMBCH04                                          */
              PGM        PARM(&RTCD &BNUMA)                            /*E20994*/
 /*/COPY WNCPYSRC,GLSBMBCH05                                          */
- 
- 
+
+
 /* Declare variables :                                          */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
 /**/
- 
+
              DCL        VAR(&RTCD)    TYPE(*CHAR) LEN(7)
 /*           DCL        VAR(&BNUM)    TYPE(*DEC)  LEN(3)       *E17482**E20994*/
 /*           DCL        VAR(&BNUM)    TYPE(*DEC)  LEN(3 0)             *E17482*/
@@ -99,9 +107,9 @@
 /**********  DCL        VAR(&GLC445) TYPE(*CHAR) LEN(1)                          /*241672 BUG13062*/
 /**********  DCL        VAR(&CONT) TYPE(*CHAR) LEN(1)                            /*241672 BUG13062*/
 /*/COPY WNCPYSRC,GLSBMBCH01                                          */
- 
+
 /* Global message monitor :                                     */
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(TAGEND))
                                                                                          /*241672A*/
@@ -126,11 +134,11 @@
              DMPCLPGM                                                                     /*CRE020*/
              GOTO       CMDLBL(PGMEND)                                                    /*CRE020*/
              ENDDO                                                                        /*CRE020*/
- 
+
 /* Get the current job name so that errors can be sent to user  */    /*S01154*/
                                                                       /*S01154*/
              RTVJOBA    JOB(&WRKSTN) /*S01154*/
- 
+
 /* Send msg to prevent COB taking place during the batch job    */    /*S01154*/
                                                                       /*S01154*/
              SNDPGMMSG  MSG('MIDAS') TOMSGQ(MSTATUS)                  /*S01154*/
@@ -168,11 +176,21 @@
 /**********               RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA + */                   /*260259*/
 /**********               *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +   */                   /*260259*/
 /**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                */            /*245631 260259*/
-             SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +
-                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
-                          RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +
-                          *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +
-                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                     /*260259*/
+/**********  SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +                   */ /*MD026880*/
+/**********               OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +                    */ /*MD026880*/
+/**********               RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +                 */ /*MD026880*/
+/**********               *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +                   */ /*MD026880*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                                */ /*MD026880*/
+/**********  SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +                   */ /*MD057680*/ 
+/**********               OUTQ(*JOBD) USER(*CURRENT) RTGDTA(*JOBD) +                 */ /*MD057680*/
+/**********               RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +                 */ /*MD057680*/
+/**********               *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +                   */ /*MD057680*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                      */  /*MD026880 MD057680*/
+             SBMJOB     JOB(GLC445) JOBD(MBATCH) JOBQ(MIDASJOBQ) +              
+                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +                                   
+                          RQSDTA('CALL GLC445 PARM(''' *CAT &BNUMA +                                
+                          *CAT ''' ''' *CAT &WRKSTN *TCAT ''')') +                                  
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD057680*/
 /*/COPY WNCPYSRC,GLSBMBCH03                                          */
 /*           SBMJOB     JOB(GLC445) JOBD(MBATCH) USER(*JOBD) +        /*E36493*/
 /*                        RTGDTA(*JOBD) RQSDTA('CALL GLC445 PARM(''' +/*E36493*/
@@ -273,9 +291,9 @@
 /*                        INLLIBL(*JOBD) MSGQ(MOPERQ) /*S01154* E20722/*E36493*/
 /*           SBMJOB     JOB(MIDASRMV) JOBD(MBATCH) USER(*JOBD) +      /*E20722*/
 /*                        RQSDTA('CALL MIDASRMV') MSGQ(MOPERQ)/*S01154**E20722*/
- 
+
 /* Submit the Posting job :                                     */
- 
+
 /*           SBMJOB     JOB(XXXXXXXXXX)                         */
 /*           SNDPGMMSG  MSGID(USR1000) MSGF(GLUSRMSG) TOPGMQ(*EXT) +    E17598*/
 /*                        MSGTYPE(*STATUS)                              E17598*/
@@ -292,7 +310,7 @@
              SNDPGMMSG  MSG('GLSBMBCH - Ended in error for batch ' +
                           *BCAT &BNUMA) TOMSGQ(MRUNQ MOPERQ)                             /*241672A*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*241672A*/
- 
+
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

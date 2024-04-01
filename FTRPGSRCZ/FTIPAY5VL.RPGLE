@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. CFT046             Date 13Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT046 - Upgrade CFT046 to FBM 2.1 SP23                      *
+      *           RE Transaction Type for FT payments                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -185,6 +188,8 @@
       *                                                                                       CER030
      D DDTTCD          S              3A                                                      CER030
      D I2INTTCD        S              3A                                                      CER030
+      *                                                                                       CFT046
+     D CFT046          S              1A                                                      CFT046
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -224,6 +229,7 @@
      C                   ENDIF
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' OR CGL013 = 'Y'                               CER030
+     C                             OR CFT046 = 'Y'                                            CFT046
      C                   EXSR      SRTrty                                                     CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
@@ -426,6 +432,9 @@
       ** Mode = '*SIN  ' (Screen Input Function)                                              CER030
       *                                                                                       CER030
      C                   PARM                    PMode                                        CER030
+      *                                                                                       CFT046
+     C                   PARM                    CER030                                       CFT046
+     C                   PARM                    CGL013                                       CFT046
       *                                                                                       CER030
       ** OUTPUT                                                                               CER030
       *                                                                                       CER030
@@ -659,6 +668,28 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
+      *                                                                                       CFT046
+      ** Check the switchable feature CFT046                                                  CFT046
+      *                                                                                       CFT046
+     C                   CALLB     'AOSARDR0'                                                 CFT046
+     C                   PARM      *BLANKS       PRtCd                                        CFT046
+     C                   PARM      '*VERIFY'     POptn                                        CFT046
+     C                   PARM      'CFT046'      PSard                                        CFT046
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtcd = *BLANKS                                            CFT046
+     C                   EVAL      CFT046 = 'Y'                                               CFT046
+     C                   ELSE                                                                 CFT046
+      *                                                                                       CFT046
+     C                   IF        PRtcd <> '*NRF'                                            CFT046
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CFT046
+     C                   EVAL      DBASE = 004                                                CFT046
+     C                   EVAL      DBKEY = '*VERIFY'                                          CFT046
+     C                   ELSE                                                                 CFT046
+     C                   EVAL      CFT046 = 'N'                                               CFT046
+     C                   ENDIF                                                                CFT046
+      *                                                                                       CFT046
+     C                   ENDIF                                                                CFT046
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

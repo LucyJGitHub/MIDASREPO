@@ -5,10 +5,10 @@
 /**** *  CRTRPGMOD                                                    *                     MD056612
 /*STD *  RPGSQLMOD                                                    *                     MD056612
 /*EXI *  CLOSQLCSR(*ENDMOD)                                           *                     MD056612
-/*CRT *  MODULE(**********/**********)                                *                       260324
-/*CRT *  SRCFILE(**********/**********)                               *                       260324
-/*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
-/*CRT *  INDENT(*NONE) TGTRLS(V5R3M0)                                 *                       260324
+/*C*T****MODULE(**********/**********)*********************************              260324 MD060955
+/*C*T****SRCFILE(**********/**********)********************************              260324 MD060955
+/*C*T****SRCMBR(*MODULE)*OUTPUT(*PRINT)********************************              260324 MD060955
+/*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD060955
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************
       *                                                               *
@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056612           Date 12Sep20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD060955           Date 08May23               *
+      *  Prev Amend No. MD056612           Date 12Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060955 - IBMi 7.4 Certification                            *
+      *           - Applied for MD061336.                             *
       *  MD056612 - Deliverable Data Split for MX group               *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *

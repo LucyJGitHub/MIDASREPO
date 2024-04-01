@@ -12,8 +12,9 @@
       *  (c) Finastra International Limited 2001                      *
      F*      1990, 1993                                               *
 0008 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026015           Date 13Feb15               *
+      *  Last Amend No. CGL196             Date 07Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026015           Date 13Feb15               *
       *                 248203             Date 13Feb15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27627           Date 07May10               *
@@ -36,6 +37,7 @@
 0010 F*                                                               *
 0011 F*****************************************************************
      F*                                                               *
+      *  CGL196 - Account Mapping Stopped Cheques Processing          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026015 - Prevent purging of Stopped cheques if EXPD is not *
       *             set.                                              *
@@ -83,6 +85,9 @@
 0015 F***STOPOSE O   F      96 18AI     2 DISK                                               BUG4139
      FSTOPOSE O   F     106 18AI     2 DISK                                                  BUG4139
      F/COPY WNCPYSRC,RE0910F004
+     FRESTPCPDIF  E           K        DISK         KINFSR *PSSR      UC                      CGL196
+     F            RESTPCD0                          KRENAMERESTPCD1                           CGL196
+     FRESTPOPDO   E                    DISK         KINFSR *PSSR      UC                      CGL196
      FRE0910AUO   F     132     OV     PRINTER      KINFDS SPOOLU         S01117
 0016 F*E0910P1O   F     132     OF     PRINTER                      S01124S01117
      FRE0910P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
@@ -312,6 +317,14 @@
 0141 C   02 60             MOVE ZZTOTI    SHASHI 150       INTEGERS
 0142 C   02 60             MOVE ZZTOTD    SHASHD  30       DECIMALS
      C*                                                                   S01117
+     C           CGL196    IFEQ 'Y'                                       CGL196
+     C           *IN02     ANDEQ*ON                                       CGL196
+     C           KRESTC    CHAINRESTPCPD             99                   CGL196
+     C           *IN99     IFEQ *OFF                                      CGL196
+     C                     WRITERESTPCD0                                  CGL196
+     C                     ENDIF                                          CGL196
+     C                     ENDIF                                          CGL196
+      *                                                                   CGL196
 0098 C  N02                                                               S01117
 0098 CORN50                GOTO END                                       S01117
      C*                                                                   S01117
@@ -439,7 +452,31 @@
 0191 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
 0192 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
 0193 C**
-0194 C                     ENDSR
+      *                                                                                       CGL196
+      ** Check if Feature CGL196 is active (Account mapping - Process Stopped Cheque)         CGL196
+      *                                                                                       CGL196
+     C                     MOVE 'N'       CGL196  1                                           CGL196
+     C                     CALL 'AOSARDR0'                                                    CGL196
+     C                     PARM *BLANK    @RTCD   7                                           CGL196
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL196
+     C                     PARM 'CGL196'  @SARD   6                                           CGL196
+      *                                                                                       CGL196
+     C           @RTCD     IFEQ *BLANKS                                                       CGL196
+     C                     MOVE 'Y'       CGL196  1                                           CGL196
+     C                     OPEN RESTPOPD                                                      CGL196
+     C                     OPEN RESTPCPD                                                      CGL196
+      *                                                                                       CGL196
+     C           KRESTC    KLIST                           Key RESTPCPD                       CGL196
+     C                     KFLD           BRCA             Full A/c                           CGL196
+     C                     KFLD           CNUM                                                CGL196
+     C                     KFLD           CCY                                                 CGL196
+     C                     KFLD           ACOD                                                CGL196
+     C                     KFLD           ACSQ                                                CGL196
+     C                     KFLD           STCR             and chq Reference                  CGL196
+      *                                                                                       CGL196
+     C                     ENDIF                                                              CGL196
+0193 C**
+B194 C                     ENDSR
 0195 C**
 0196 C**
 0197 C********************************************************************

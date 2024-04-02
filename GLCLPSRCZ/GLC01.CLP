@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*       Last Amend No. MD062210           Date 15Feb24              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031966           Date 27Jul15              */
 /*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
@@ -47,6 +48,12 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD062210 - COB: GLC0404 performance enhancement.           */
+/*                - Enhance performance of GL2560 program by        */
+/*                  writing new records directly to the historic    */
+/*                  files and introducing new recovery failure      */
+/*                  logic with historic files cleanup. GLJEHXPD     */
+/*                  is also included into the recovery logic now.   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
@@ -240,55 +247,107 @@
 /*********** CLRPFM     FILE(QTEMP/XGLJEHHPD)                                  /*S01340*/ /*CCB016*/
 /*********** CLRPFM     FILE(QTEMP/XGLJEHPPD)                                  /*S01340*/ /*CCB016*/
 /*********** CLRPFM     FILE(QTEMP/XGLJEHSPD)                                  /*S01340*/ /*CCB016*/
-             CRTDUPOBJ  OBJ(GLJEHHPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
-                          TOLIB(QTEMP) NEWOBJ(XGLJEHHPD) DATA(*NO)                        /*CCB016*/
-             CRTDUPOBJ  OBJ(GLJEHPPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
-                          TOLIB(QTEMP) NEWOBJ(XGLJEHPPD) DATA(*NO)                        /*CCB016*/
-             CRTDUPOBJ  OBJ(GLJEHSPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
-                          TOLIB(QTEMP) NEWOBJ(XGLJEHSPD) DATA(*NO)                        /*CCB016*/
+/*********** CRTDUPOBJ  OBJ(GLJEHHPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(XGLJEHHPD) DATA(*NO)               /*CCB016 MD062210*/
+/*********** CRTDUPOBJ  OBJ(GLJEHPPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(XGLJEHPPD) DATA(*NO)               /*CCB016 MD062210*/
+/*********** CRTDUPOBJ  OBJ(GLJEHSPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(XGLJEHSPD) DATA(*NO)               /*CCB016 MD062210*/
                                                                                           /*CCB016*/
-             OVRDBF     FILE(GLJEHHPD) TOFILE(QTEMP/XGLJEHHPD)        /*S01340*/
-             OVRDBF     FILE(GLJEHPPD) TOFILE(QTEMP/XGLJEHPPD)        /*S01340*/
-             OVRDBF     FILE(GLJEHSPD) TOFILE(QTEMP/XGLJEHSPD)        /*S01340*/
+/*********** OVRDBF     FILE(GLJEHHPD) TOFILE(QTEMP/XGLJEHHPD)                   /*S01340 MD062210*/
+/*********** OVRDBF     FILE(GLJEHPPD) TOFILE(QTEMP/XGLJEHPPD)                   /*S01340 MD062210*/
+/*********** OVRDBF     FILE(GLJEHSPD) TOFILE(QTEMP/XGLJEHSPD)                   /*S01340 MD062210*/
                                                                                           /*CGL013*/
 /** If CGL013 is installed, */                                                            /*CGL013*/
                                                                                           /*CGL013*/
              IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                    /*CGL013*/
 /*********** CLRPFM     FILE(QTEMP/XGLJEHXPD)                         /*CGL013*/          /*CCB016*/
-             CRTDUPOBJ  OBJ(GLJEHXPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
-                          TOLIB(QTEMP) NEWOBJ(XGLJEHXPD) DATA(*NO)                        /*CCB016*/
-                OVRDBF     FILE(GLJEHXPD) TOFILE(QTEMP/XGLJEHXPD)                         /*CGL013*/
+/*********** CRTDUPOBJ  OBJ(GLJEHXPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(XGLJEHXPD) DATA(*NO)               /*CCB016 MD062210*/
+/***********    OVRDBF     FILE(GLJEHXPD) TOFILE(QTEMP/XGLJEHXPD)                /*CGL013 MD062210*/
              ENDDO                                                                        /*CGL013*/
                                                                                           /*CGL013*/
 /**/                                                                  /*S01340*/
              CALL       PGM(GL2560)                                   /*S01340*/
-             DLTOVR     FILE(GLJEHHPD GLJEHPPD GLJEHSPD)              /*S01340*/
+/*********** DLTOVR     FILE(GLJEHHPD GLJEHPPD GLJEHSPD)                         /*S01340 MD062210*/
                                                                                           /*CGL013*/
 /** If CGL013 is installed, */                                                            /*CGL013*/
                                                                                           /*CGL013*/
              IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                    /*CGL013*/
-                DLTOVR     FILE(GLJEHXPD)                                                 /*CGL013*/
+/***********    DLTOVR     FILE(GLJEHXPD)                                        /*CGL013 MD062210*/
              ENDDO                                                                        /*CGL013*/
                                                                                           /*CGL013*/
 /*/COPY WNCPYSRC,GLC01007                                            */
-             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO END)        /*S01340*/
+/*********** IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO END)        /*S01340*/        /*MD062210*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD062210*/
+                                                                                        /*MD062210*/
+/** Perfor historic files cleanup in case of GL2560 failure */                          /*MD062210*/
+                                                                                        /*MD062210*/
+             CALL       PGM(GL2560A) PARM(&RTCD 'GLJEHHPD  ' 'HHBEDT    ')              /*MD062210*/
+                                                                                        /*MD062210*/
+             IF         COND(&RTCD *NE ' ') THEN(DO)                                    /*MD062210*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Historic batch file GLJEHHPD +
+                          cleanup ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD062210*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
+                                                                                        /*MD062210*/
+             CALL       PGM(GL2560A) PARM(&RTCD 'GLJEHPPD  ' 'HPBEDT    ')              /*MD062210*/
+                                                                                        /*MD062210*/
+             IF         COND(&RTCD *NE ' ') THEN(DO)                                    /*MD062210*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Historic batch file GLJEHPPD +
+                          cleanup ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD062210*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
+                                                                                        /*MD062210*/
+             CALL       PGM(GL2560A) PARM(&RTCD 'GLJEHSPD  ' 'HSBEDT    ')              /*MD062210*/
+                                                                                        /*MD062210*/
+             IF         COND(&RTCD *NE ' ') THEN(DO)                                    /*MD062210*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Historic batch file GLJEHSPD +
+                          cleanup ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD062210*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
+                                                                                        /*MD062210*/
+             IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                  /*MD062210*/
+                                                                                        /*MD062210*/
+             CALL       PGM(GL2560A) PARM(&RTCD 'GLJEHXPD  ' 'HAPTDT    ')              /*MD062210*/
+                                                                                        /*MD062210*/
+             IF         COND(&RTCD *NE ' ') THEN(DO)                                    /*MD062210*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Historic batch file GLJEHXPD +
+                          cleanup ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD062210*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
+                                                                                        /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
+                                                                                        /*MD062210*/
+/** Terminate processing in case of GL2560 failure */                                   /*MD062210*/
+                                                                                        /*MD062210*/
+             GOTO       CMDLBL(END)                                                     /*MD062210*/
+             ENDDO                                                                      /*MD062210*/
 /**/                                                                  /*S01340*/
-             CPYF       FROMFILE(QTEMP/XGLJEHHPD) TOFILE(GLJEHHPD) +
-                          MBROPT(*ADD)                                /*S01340*/
-             MONMSG     MSGID(CPF2972)                                /*S01340*/
-             CPYF       FROMFILE(QTEMP/XGLJEHPPD) TOFILE(GLJEHPPD) +
-                          MBROPT(*ADD)                                /*S01340*/
-             MONMSG     MSGID(CPF2972)                                /*S01340*/
-             CPYF       FROMFILE(QTEMP/XGLJEHSPD) TOFILE(GLJEHSPD) +
-                          MBROPT(*ADD)                                /*S01340*/
-             MONMSG     MSGID(CPF2972)                                /*S01340*/
+/*********** CPYF       FROMFILE(QTEMP/XGLJEHHPD) TOFILE(GLJEHHPD) +
+                          MBROPT(*ADD)                                           /*S01340 MD066210*/
+/*********** MONMSG     MSGID(CPF2972)                                           /*S01340 MD062210*/
+/*********** CPYF       FROMFILE(QTEMP/XGLJEHPPD) TOFILE(GLJEHPPD) +
+                          MBROPT(*ADD)                                           /*S01340 MD062210*/
+/*********** MONMSG     MSGID(CPF2972)                                           /*S01340 MD062210*/
+/*********** CPYF       FROMFILE(QTEMP/XGLJEHSPD) TOFILE(GLJEHSPD) +
+                          MBROPT(*ADD)                                           /*S01340 MD062210*/
+/*********** MONMSG     MSGID(CPF2972)                                           /*S01340 MD062210*/
                                                                                           /*CGL013*/
 /** If CGL013 is installed, */                                                            /*CGL013*/
                                                                                           /*CGL013*/
              IF         COND(&CGL013 *EQ 'Y') THEN(DO)                                    /*CGL013*/
-                CPYF       FROMFILE(QTEMP/XGLJEHXPD) TOFILE(GLJEHXPD) +
-                             MBROPT(*ADD)                                                 /*CGL013*/
-                MONMSG     MSGID(CPF2972)                                                 /*CGL013*/
+/***********    CPYF       FROMFILE(QTEMP/XGLJEHXPD) TOFILE(GLJEHXPD) +
+                             MBROPT(*ADD)                                        /*CGL013 MD062210*/
+/***********    MONMSG     MSGID(CPF2972)                                        /*CGL013 MD062210*/
              ENDDO                                                                        /*CGL013*/
 /*                                                                 */ /*S01340*/
 /*/COPY WNCPYSRC,GLC01003                                            */

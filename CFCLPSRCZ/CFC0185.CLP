@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD060952           Date 19Jan23              */
-/*       Prev Amend No. MD027509           Date 10Oct22              */
+/*       Last Amend No. MD062361           Date 11Mar24              */
+/*       Prev Amend No. MD060952           Date 19Jan23              */
+/*                      MD027509           Date 10Oct22              */
 /*                      CSC059             Date 10Oct22              */
 /*                      247251             Date 24Aug21              */
 /*                      MD056206           Date 24Sep20              */
@@ -51,6 +52,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD062361 - Locking on CFWICMPD caused SCKOBJLCB 00001 to be */
+/*                  on LCKW and eventually failed. Add DLCOBJ to     */
+/*                  CFWICMPD.                                        */
 /*       MD060952 - Error with CSC059 on as CPYTOPCD is still being  */
 /*                  executed                                         */
 /*       MD027509 - Change folder calculation to use absolute path.  */
@@ -825,6 +829,9 @@ FULL3:                                                                          
                                                                                         /*MD055267*/
              ENDDO                                                                        /*CSC059*/
              CHGDTAARA  DTAARA(CFSTAT (4 3)) VALUE(&TRAMID)
+
+             DLCOBJ     OBJ((CFWICMPD *FILE *EXCL *FIRST))                              /*MD062361*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD062361*/
 
 /* Copy feedback */
              IF         COND(&CSC059 *EQ 'Y') THEN(DO)                                    /*CSC059*/

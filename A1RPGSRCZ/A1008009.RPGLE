@@ -18,11 +18,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 21Jan19               *
-      *  Past Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD062029           Date 20Mar24               *
+      *  Prev Amend No. MD041126           Date 21Jan19               *
+      *                 BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062029 - Trades replication does not work since password   *
+      *             change to 12 charaters.                           *
+      *             Alter password field length to accept 128-char    *
+      *             passwords.                                        *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-60517                              *
       *  BA1008 - Replication of Trades to consolidated branches      *
@@ -342,7 +347,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    TgtQueue         48
-     C                   PARM                    ApnHeadDS       200
+     C**********         PARM                    ApnHeadDS       200                        MD062029
+     C                   PARM                    ApnHeadDS       318                        MD062029
      C                   PARM                    ApData         8000
      C                   PARM                    CommitCtl         1
       *
@@ -353,7 +359,8 @@
       ** Determine length of the Meridian header
       ** Remove use of %len as this is not supported below V3R7
       *
-     C                   EVAL      ApnHeadLen = 200
+     C**********         EVAL      ApnHeadLen = 200                                         MD062029
+     C                   EVAL      ApnHeadLen = 318                                         MD062029
 
      C                   ENDSR
 

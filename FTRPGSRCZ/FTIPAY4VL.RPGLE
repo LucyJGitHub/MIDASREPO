@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD047884           Date 25Sep17               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *                 MD047884           Date 25Sep17               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
       *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *

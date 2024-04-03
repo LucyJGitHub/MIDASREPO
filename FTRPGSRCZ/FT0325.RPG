@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1004241          Date 18Jul12               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR857266           Date 13Nov11               *
+      *  Prev Amend No. AR1004241          Date 18Jul12               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034633           Date 11Aug15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -44,6 +45,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR857266 - Apply 229867. Original Transaction Type of an FT  *
+      *             transaction should not be used as reference on    *
+      *             what type of payment was entered because this     *
+      *             field can contain the front office reference of   *
+      *             the transaction. To be sure use the transaction   *
+      *             type which can be found on the Payment Reference. *
+      *             (Child: AR857267)                                 *
       * AR1004241 - Change quotation of subfield 7 for 101s and 191s  *
       *             Also correct quotation of contra party with       *
       *             check of account quoted in line 1                 *
@@ -256,6 +264,7 @@
      I                                       87  88 W1DRCR
       *
      I                                       89  90 W1CQSQ
+     I** FIELD NOT FILLED BY GL001432 NOR GL1300 ** 91  93 W1KPRT                           AR857266
       *                                                                   S01408
      I/COPY WNCPYSRC,FT0325IIP1                                           S01408
       *                                                                   S01408
@@ -300,14 +309,27 @@
      C********** W0ACT     CASEQ'CC'      SRCCPY           Chq Collected                      215066
      C********** W0ACT     CASEQ'CP'      SRCPPY           Chq to be Paid                     215066
      C********** W0ACT     CASEQ'NT'      SRNTPY           Nostro Transfer                    215066
-     C                     MOVELW0ACT     W0ACT2  2                                           215066
-     C           W0ACT2    CASEQ'OP'      SROTPY           Outgoing                           215066
-     C           W0ACT2    CASEQ'IN'      SRINPY           Incoming                           215066
-     C           W0ACT2    CASEQ'CC'      SRCCPY           Chq Collected                      215066
-     C           W0ACT2    CASEQ'CP'      SRCPPY           Chq to be Paid                     215066
-     C           W0ACT2    CASEQ'NT'      SRNTPY           Nostro Transfer                    215066
-     C                     CAS            SRACT
-     C                     ENDCS
+     C**********           MOVELW0ACT     W0ACT2  2                                  215066 AR857266
+     C********** W0ACT2    CASEQ'OP'      SROTPY           Outgoing                  215066 AR857266
+     C********** W0ACT2    CASEQ'IN'      SRINPY           Incoming                  215066 AR857266
+     C********** W0ACT2    CASEQ'CC'      SRCCPY           Chq Collected             215066 AR857266
+     C********** W0ACT2    CASEQ'CP'      SRCPPY           Chq to be Paid            215066 AR857266
+     C********** W0ACT2    CASEQ'NT'      SRNTPY           Nostro Transfer           215066 AR857266
+     C**********           CAS            SRACT                                             AR857266
+     C**********           ENDCS                                                            AR857266
+      *                                                                                     AR857266
+     C                     MOVELW0ACT     W0ACT2  2                                         AR857266
+      ** Use the transaction type in the transaction reference                              AR857266
+      *                                                                                     AR857266
+     C                     MOVE W1PREF    WOTTP4  4                                         AR857266
+     C                     MOVELWOTTP4    WOTTP2  2                                         AR857266
+     C           WOTTP2    CASEQ'OP'      SROTPY           Outgoing                         AR857266
+     C           WOTTP2    CASEQ'IN'      SRINPY           Incoming                         AR857266
+     C           WOTTP2    CASEQ'CC'      SRCCPY           Chq Collected                    AR857266
+     C           WOTTP2    CASEQ'CP'      SRCPPY           Chq to be Paid                   AR857266
+     C           WOTTP2    CASEQ'NT'      SRNTPY           Nostro Transfer                  AR857266
+     C                     CAS            SRACT                                             AR857266
+     C                     ENDCS                                                            AR857266
       *
       *
       *  Unwind subroutine stack name

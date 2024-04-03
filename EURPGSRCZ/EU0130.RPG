@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD058305           Date 23Jun21               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CGL196             Date 01Dec22               *
+      *  Prev Amend No. MD058305           Date 23Jun21               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *================================================================
       *                                                               *
+      *  CGL196 - Account Mapping Stopped Cheques Processing          *
       *  MD058305 - Bulk Retail Account Maintenance not displaying    *
       *             CRE008 fields. (Recompile)                        *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
@@ -317,6 +319,29 @@
      C                     ENDIF                                          196781
       *                                                                   196781
      C/COPY WNCPYSRC,EU0130C025
+      *                                                                                       CGL196
+      ** Check if enhancement CGL196 is ON.                                                   CGL196
+      *                                                                                       CGL196
+     C                     MOVE 'N'       CGL196                                              CGL196
+     C                     CALL 'AOSARDR0'                                                    CGL196
+     C                     PARM *BLANKS   @RTCD                                               CGL196
+     C                     PARM '*VERIFY' @OPTN                                               CGL196
+     C                     PARM 'CGL196'  @SARD                                               CGL196
+     C           @RTCD     IFEQ *BLANKS                                                       CGL196
+     C                     MOVE 'Y'       CGL196  1                                           CGL196
+     C                     ENDIF                                                              CGL196
+      *                                                                                       CGL196
+      ** Check if enhancement CRE008 is on.                                                   CGL196
+      *                                                                                       CGL196
+     C                     CALL 'AOSARDR0'                                                    CGL196
+     C                     PARM *BLANKS   @RTCD                                               CGL196
+     C                     PARM '*VERIFY' @OPTN                                               CGL196
+     C                     PARM 'CRE008'  @SARD                                               CGL196
+     C           @RTCD     IFEQ *BLANKS                                                       CGL196
+     C                     MOVE 'Y'       CRE008  1                                           CGL196
+     C                     ELSE                                                               CGL196
+     C                     MOVE 'N'       CRE008                                              CGL196
+     C                     ENDIF                                                              CGL196
       *                                                                                       CER001
       **  Access Switchable SAR details for the existence of ULX004                           CER001
       **  (Authorisation)                                                                     CER001
@@ -1120,6 +1145,32 @@
       *Display job submitted message
      C           @RTRN     IFEQ *BLANKS
      C/COPY WNCPYSRC,EUH00005
+      *                                                                                       CGL196
+      ** As job EUC0120 is submitted in MBATCH, and as only 1 job at a time,                  CGL196
+      ** When feature is active, do Print of A/C Mapping details (stopped cheque(s))          CGL196
+      ** (= Report EU0170P1)                                                                  CGL196
+      ** Not only for RE A/c Mapping but also for In' CCy A/c Mapping to Euro A/c             CGL196
+      *                                                                                       CGL196
+     C           CGL196    IFEQ 'Y'                                                           CGL196
+      *                                                                                       CGL196
+     C                     MOVE *BLANKS   STRG25 25                                           CGL196
+      *  Mapping Number                                                                       CGL196
+     C                     MOVE S1MAPN    STRG25                                              CGL196
+      *  pos 14 to 19 with Map Number                                                         CGL196
+     C                     MOVELSTRG25    @RPARM                                              CGL196
+      *                                                                                       CGL196
+     C                     CALL 'FC0040X'                                                     CGL196
+     C                     PARM *BLANKS   @RETRN  7                                           CGL196
+     C                     PARM 'EU0170'  @RPORT 10                                           CGL196
+     C                     PARM 'EUC0170' @COMPN 10                                           CGL196
+     C                     PARM '00001'   @CPSEQ  5                                           CGL196
+     C                     PARM           @RPARM100                                           CGL196
+     C                     PARM *BLANKS   @MULTB  1                                           CGL196
+     C                     PARM 'S'       @LVL    1                                           CGL196
+     C                     PARM *BLANKS   @ENTTY  3                                           CGL196
+      *                                                                                       CGL196
+     C                     ENDIF                                                              CGL196
+      *                                                                                       CGL196
      C                     MOVEL'EMR0327' ZAMSID
      C                     EXSR ZASNMS
       *Set*up*account*closure*indicator*field*with*'I'*on*file            153138

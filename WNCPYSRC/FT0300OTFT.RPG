@@ -1,0 +1,100 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - STP Functions                                        *
+      *                                                               *
+      *  FT0300OTFT -  Outgoing Mapping Rules                         *
+      *                                                               *
+      *  Function: This extends FT STP for Outgoing Routing           *
+      *                                                               *
+      *  Component of: *None                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. UUC104             Date 12Oct20               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  UUC104 - MPM Integration (Upgrade of 1.4.11.06 CAR UUC069)   *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       UUC104
+     C           UUC104    IFEQ 'Y'                                                           UUC104
+      *                                                                                       UUC104
+     C           SVSDCA    IFNE *BLANKS                                                       UUC104
+      *                                                                                       UUC104
+      * Debit side                                                                            UUC104
+     C                     MOVELSVPDCA    DSTRAN                                              UUC104
+     C                     MOVELTVCCY     S4SMCY                                              UUC104
+     C           TRCODE    IFNE '101'                                                         UUC104
+     C           ',':'.'   XLATETVAMT     S4SMAM                                              UUC104
+     C                     ELSE                                                               UUC104
+     C                     MOVEL*BLANKS   S4SMAM                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      * Credit side                                                                           UUC104
+     C                     MOVELSVSDCA    DSTRAN                                              UUC104
+     C                     MOVELTVCCY     S4PCCY                                              UUC104
+     C           ',':'.'   XLATETMLIN2    S4RATE                                              UUC104
+     C           TRCODE    IFNE '101'                                                         UUC104
+     C                     MOVEL*BLANKS   S4PYAM                                              UUC104
+     C                     ELSE                                                               UUC104
+     C           ',':'.'   XLATETVAMT     S4PYAM                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+      * Override rate                                                                         UUC104
+     C                     MOVEL'Y'       S4OVRD                                              UUC104
+      *                                                                                       UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C                     MOVELPEXN      DSTRAN                                              UUC104
+      * Check if routing                                                                      UUC104
+     C                     SELEC                                                              UUC104
+     C           PEXN      WHEQ *BLANKS                                                       UUC104
+     C                     MOVEL*BLANKS   S4SNCO                                              UUC104
+     C           TRTAG     WHEQ ':RT:'                                                        UUC104
+     C                     MOVEL*BLANKS   S4SNCO                                              UUC104
+     C                     MOVEL*BLANKS   S4DST                                               UUC104
+     C                     MOVELTMLIN1    S4DST                                               UUC104
+      *                                                                                       UUC104
+      * Check if Senders correspondent                                                        UUC104
+     C           TMLIN2    IFNE *BLANKS                                                       UUC104
+     C           1         SUBSTTMLIN2:1  S4SNMT                                              UUC104
+     C           10        SUBSTTMLIN2:2  S4SNCO                                              UUC104
+      * Check if Receivers correspondent                                                      UUC104
+     C                     SELEC                                                              UUC104
+     C           TMLIN3    WHEQ '*P56'                                                        UUC104
+     C                     MOVEL*BLANKS   S5RCO                                               UUC104
+     C                     MOVELP56       DSTRAN                                              UUC104
+     C                     MOVELTMLIN     S5RCO                                               UUC104
+     C                     MOVEL*BLANKS   S5IBK                                               UUC104
+     C                     MOVELPEXN      DSTRAN                                              UUC104
+     C           TMLIN3    WHNE *BLANKS                                                       UUC104
+     C                     MOVEL*BLANKS   S5RCO                                               UUC104
+     C                     MOVELTMLIN3    S5RCO                                               UUC104
+     C                     ENDSL                                                              UUC104
+     C                     ENDIF                                                              UUC104
+      * Change Add deduct                                                                     UUC104
+     C           TMLIN4    IFNE *BLANKS                                                       UUC104
+     C           1         SUBSTTMLIN4:1  S4ADDC                                              UUC104
+     C                     ENDIF                                                              UUC104
+      * Check if Transaction type is specified                                                UUC104
+     C           TMLIN6    IFNE *BLANKS                                                       UUC104
+     C                     MOVELTMLIN6    WORTTY                                              UUC104
+     C                     ENDIF                                                              UUC104
+      * Charges only                                                                          UUC104
+     C           TRTAG     WHEQ ':CH:'                                                        UUC104
+      *                                                                                       UUC104
+      * Change Add deduct                                                                     UUC104
+     C           TMLIN4    IFNE *BLANKS                                                       UUC104
+     C           1         SUBSTTMLIN4:1  S4ADDC                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C           TMLIN6    IFNE *BLANKS                                                       UUC104
+     C                     MOVELTMLIN6    WORTTY                                              UUC104
+     C                     ENDIF                                                              UUC104
+      *                                                                                       UUC104
+     C                     ENDSL                                                              UUC104
+      *                                                                                       UUC104
+     C                     ENDIF                                                              UUC104
+      *****************************************************************

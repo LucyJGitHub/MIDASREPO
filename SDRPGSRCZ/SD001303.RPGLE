@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042269           Date 16Nov16               *
+      *  Last Amend No. MD051117           Date 06Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042269           Date 16Nov16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD027768           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051117 - Database error when file SDRIFPD is empty -Formal-*
+      *             ize hotfix EMRFIX1 to allow the opening of printer*
+      *             file SD001303P1 even though file SDRPIFPD is empty*
       *  MD046248 - Finastra Rebranding                               *
       *  MD042269 - Record already exists is displayed when           *
       *             re-inserting deleted reporting information data   *
@@ -301,10 +305,10 @@
      C     *LOVAL        SETLL     SDRPIFL2
      C                   READ      SDRPIFL2                               80
  
-     C                   IF        *IN80 = *OFF                                             MD022342
+     C**********         IF        *IN80 = *OFF                                    MD022342 MD051117
      C                   OPEN      SD001303P1                                               MD022342
      C                   WRITE     R1HD                                                     MD022342
-     C                   ENDIF                                                              MD022342
+     C**********         ENDIF                                                     MD022342 MD051117
                                                                                             MD023342
      C                   DOW       *IN80 = *OFF
  
@@ -333,10 +337,10 @@
  
      C     PrEnt         SETLL     SDRPIFL2
      C     PrEnt         READE     SDRPIFL2
-     C                   IF        NOT %EOF(SDRPIFL2)                                       MD022342
+     C**********         IF        NOT %EOF(SDRPIFL2)                              MD022342 MD051117
      C                   OPEN      SD001303P1                                               MD022342
      C                   WRITE     R1HD                                                     MD022342
-     C                   ENDIF                                                              MD022342
+     C**********         ENDIF                                                     MD022342 MD051117
      C                   DOW       NOT %EOF(SDRPIFL2)
      C**********         EXSR      SrCntRec                                                 MD022342
      C                   EXSR      SrPrint                                                  MD022342

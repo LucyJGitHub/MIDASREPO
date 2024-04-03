@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. AR857831           Date 14Nov11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR857831 - Apply 249889.  Missing A/c narrative on bottom    *
+      *             posting.  (Child: AR857832)                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -94,6 +97,7 @@
      D S_ACCID2Temp          282    291                                                       CGL029
      D S_ACCID3Temp          124    125                                                       CGL029
                                                                                               CGL029
+     D                 DS                                                                   AR857831
       ** Shadow Account                                                                       CGL029
      D S_ACCID                 1     24                                                       CGL029
      D S_ACCID1                1     12                                                       CGL029

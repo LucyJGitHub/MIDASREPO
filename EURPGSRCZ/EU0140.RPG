@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD036314           Date 20Jun16               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034366           Date 09Sep15               *
@@ -93,6 +94,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD036314 - BFM error regarding deletion of account - ALTI    *
+      *           and NOALT will be moved to the new account          *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
@@ -267,7 +270,8 @@
      F                                              KCOMIT
       *
       ** Retail Interest and Charges Detail
-     FIACBR   IF  E           K        DISK         KINFSR *PSSR A
+     F***IACBR   IF  E           K        DISK         KINFSR *PSSR A
+     FIACBR   UF  E           K        DISK         KINFSR *PSSR A                          MD036314
      F                                              KCOMIT
       *
       ** Retail Accrued Interest to Date Detail
@@ -283,7 +287,8 @@
      F**********                                    KCOMIT                                    CSD101
       *
       ** Retail History file
-     FREHISBL IF  E           K        DISK         KINFSR *PSSR A
+     F***REHISBL IF  E           K        DISK         KINFSR *PSSR A
+     FREHISBL UF  E           K        DISK         KINFSR *PSSR A                          MD036314
      F                                              KCOMIT
       *                                                                                       238619
       ** Account Master Extension file                                                        238619
@@ -1906,6 +1911,7 @@
       ** clear default values.                                            136675
      C                     CLEARWUPTRA                                    136675
      C                     CLEARWUPRCH                                    136675
+     C                     CLEARWUNALT                                                      MD036314
       *                                                                   136675
      C           K#KY01    CHAINIACBR                70                   136675
       *                                                                   136675
@@ -1915,6 +1921,11 @@
      C                     MOVE PTRA      WUPTRA  1                       136675
      C                     MOVE PRCH      WUPRCH  1                       136675
      C                     MOVE TCHO      WUTCHO  70                      194878
+     C                     MOVE NOALT     WUNALT  1                                         MD036314
+     C           NOALT     IFNE 0                                                           MD036314
+     C                     MOVE 0         NOALT                                             MD036314
+     C                     UPDATREIACDF                                                     MD036314
+     C                     ENDIF                                                            MD036314
      C                     ENDIF                                          136675
       *                                                                   136675
       ** Clear IN a/c record.                                             136675
@@ -1968,6 +1979,7 @@
       ** default values.                                                  136675
      C                     MOVE WUPTRA    PTRA             prt trans adv  136675
      C                     MOVE WUPRCH    PRCH             prt rate adv   136675
+     C                     MOVE WUNALT    NOALT                                             MD036314
       *                                                                   194878
       ** Transaction Charge                                               194878
       *  ------------------                                               CRE008
@@ -2144,6 +2156,8 @@
      C                     MOVE EUIACD    K#ACOD                          184617
      C                     MOVE EUISQN    K#ACSQ                          184617
      C                     MOVE '0'       *IN70                           184617
+      *                                                                                     MD036314
+     C                     CLEARALTI1                                                       MD036314
       *                                                                   184617
      C           K#KY01    CHAINREHISBL              70                   184617
       *                                                                   184617
@@ -2158,6 +2172,13 @@
      C                     EXSR *PSSR                                     184617
       *                                                                   184617
      C                     ELSE                                           184617
+      *                                                                                     MD036314
+     C                     MOVE ALTI      ALTI1   1                                         MD036314
+     C           ALTI      IFNE *BLANKS                                                     MD036314
+     C                     MOVE *BLANKS   ALTI                                              MD036314
+     C                     UPDATREHISPPF                                                    MD036314
+     C                     ENDIF                                                            MD036314
+      *                                                                                     MD036314
      C                     MOVE 'B'       RECI
      C**********           Z-ADDEUECNM    CNUM                                                CSD027
      C                     MOVE EUECNM    CNUM                                                CSD027
@@ -2205,7 +2226,8 @@
      C                     MOVE *BLANK    CRCI
      C                     Z-ADDBJRDNB    VDTC
      C                     MOVE *BLANK    ADTY
-     C                     MOVE *BLANK    ALTI
+     C**********           MOVE *BLANK    ALTI                                              MD036314
+     C                     MOVE ALTI1     ALTI                                              MD036314
      C                     Z-ADD*ZERO     MNBCP
      C                     MOVE *BLANK    LGID
      C                     Z-ADD*ZERO     VALL

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD057558           Date 18Feb21               *
-      *  Prev Amend No. AR918975           Date 21Mar12               *
+      *  Last Amend No. CFT164             Date 22Oct20               *
+      *  Prev Amend No. MD057558           Date 18Feb21               *
+      *                 AR918975           Date 21Mar12               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031725           Date 07Jan15               *
       *                 CLE134             Date 01Aug12               *
@@ -139,6 +140,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT164 - Upgrade E06304 to FBM 2.1 SP23                      *
+      *           Validate Account Status.                            *
       *  MD057558 - Set tolerance to 0 if no reference rate defined   *
       *  AR918975 - Allow lower case SWIFT characters for STP.        *
       *             (Child: AR919050)                                 *
@@ -374,11 +377,13 @@
       *     ----------------------
       *
       *   01     F3 WAS PRESSED
+      *   02     Blocked Debit or Blocked Credit Account                                      CFT164
       *   04     F10 WAS PRESSED
       *   05     F12 WAS PRESSED
       *   07     F7 WAS PRESSED
       *   08     SWITCHABLE FEATURE S01499 IS SWITCHED ON                 S01499
       *   09     SWITCHABLE FEATURE S01494 IS SWITCHED ON                 S01494
+      *   12     Blocked Debit or Blocked Credit Account                                      CFT164
       *   14     F10 IS ENABLED
       *   15     F12 IS ENABLED
       *   10     F7 IS ENABLED
@@ -2154,6 +2159,7 @@
      C                     PARM           @RTINF                          042167
      C/COPY WNCPYSRC,FT0080C067
       *                                                                   042167
+     C                     WRITE#MSGCTL                                                       CFT164
      C                     WRITEFT0080F1
      C**
      C*    PROCESS HELP IF REQUESTED
@@ -2390,6 +2396,8 @@
      C           *IN75     ANDEQ'1'
      C********** *IN05     OREQ '0'                        ** B02   S01194E32543
      C********** *IN30     ANDEQ'1'                                 S01194E32543
+     C           *IN05     OREQ '0'                                                           CFT164
+     C           FTNOUP    ANDNE*BLANKS                                                       CFT164
      C                     MOVE '0'       *IN80
      C                     MOVE '0'       *IN80
      C                     END                             ** E02
@@ -2694,6 +2702,8 @@
      C**
      C           *IN01     IFEQ '0'                        ** B03
      C           *IN75     ANDEQ'1'
+     C           *IN01     OREQ '0'                                                           CFT164
+     C           FTNOUP    ANDNE*BLANKS                                                       CFT164
      C                     MOVE '0'       *IN80
      C                     END                             ** E03
      C*
@@ -2922,6 +2932,8 @@
      C**
      C           *IN05     IFEQ '0'                        ** B02
      C           *IN75     ANDEQ'1'
+     C           *IN05     OREQ '0'                                                           CFT164
+     C           FTNOUP    ANDNE*BLANKS                                                       CFT164
      C                     MOVE '0'       *IN80
      C                     END                             ** E02
      C*
@@ -5439,6 +5451,7 @@
      C                     MOVEA'0'       *IN,33                          S01414
      C                     MOVE '0'       *IN06                           S01499
      C                     MOVE '0'       *IN12                           S01499
+     C                     MOVE *BLANKS   FTNOUP                                              CFT164
      C*                                                                   S01117
      C** IF SCREEN ORIGINATING BRANCH IS BLANK MB OR NON-MB DEFAULT TO    S01117
      C** SCREEN BOOKING BRANCH.                                           S01117
@@ -5927,6 +5940,8 @@
      C*
      C           ATYP      IFEQ 'R'                        ** B05
      C                     Z-ADDDACO      RBOPN
+     C                     MOVELATYP      RBATYP  1                                           CFT164
+     C                     MOVE RETB      RBRETB  1                                           CFT164
      C                     END                             ** E05
      C*
      C                     END                             ** E04
@@ -6053,6 +6068,8 @@
      C*
      C           ATYP      IFEQ 'R'                        ** B06
      C                     Z-ADDDACO      RBOPN
+     C                     MOVELATYP      RBATYP                                              CFT164
+     C                     MOVE RETB      RBRETB                                              CFT164
      C                     END
      C*
      C                     END                             ** E06
@@ -6140,6 +6157,8 @@
      C                     MOVE 'R'       RBKT                            179732
      C                     MOVEL*BLANKS   SRBK1                           179732
      C                     MOVELACNO      SRBK1                           179732
+     C                     MOVELATYP      RBATYP                                              CFT164
+     C                     MOVE RETB      RBRETB                                              CFT164
      C                     ELSE                            ** X05                             212014
      C                     MOVE 'G'       RBKT                                                212014
      C                     END                             ** E05                             212014
@@ -6373,6 +6392,8 @@
      C*
      C           ATYP      IFEQ 'R'                        ** B05
      C                     Z-ADDDACO      SCOPN
+     C                     MOVELATYP      SCATYP  1                                           CFT164
+     C                     MOVE RETB      SCRETB  1                                           CFT164
      C                     END                             ** E05
      C*
      C                     END                             ** E04
@@ -6411,6 +6432,8 @@
      C*
      C           ATYP      IFEQ 'R'                        ** B06
      C                     Z-ADDDACO      SCOPN
+     C                     MOVELATYP      SCATYP                                              CFT164
+     C                     MOVE RETB      SCRETB                                              CFT164
      C                     END                             ** E06
      C*
      C*********************END                             ** E05         E32859
@@ -6561,6 +6584,20 @@
      C*********************MOVEA' 371'    ERCD,S                          S01117
      C                     MOVEA' 025'    ERCD,S                          S01117
      C                     END                             E005
+      *                                                                                       CFT164
+      ** Check for a Blocked Credit Account                                                   CFT164
+      *                                                                                       CFT164
+     C           RBATYP    IFEQ 'R'                                                           CFT164
+     C           CFT164    ANDEQ'Y'                                                           CFT164
+     C                     TESTB'3'       RBRETB         12                                   CFT164
+     C           *IN12     IFEQ '1'                                                           CFT164
+     C                     MOVELSRBK1     FTMSDT                                              CFT164
+     C                     MOVE '1'       *IN45                                               CFT164
+     C                     MOVEL'FTM2728' FTMSID                                              CFT164
+     C                     MOVEL'Y'       FTNOUP  1                                           CFT164
+     C                     EXSR FTSNMS                                                        CFT164
+     C                     ENDIF                                                              CFT164
+     C                     ENDIF                                                              CFT164
      C*
      C                     END                             E004
      C*
@@ -6580,6 +6617,20 @@
      C*********************MOVEA' 360'    ERCD,S                          S01117
      C                     MOVEA' 039'    ERCD,S                          S01117
      C                     END                             E004
+      *                                                                                       CFT164
+      ** Check for a Blocked Credit Account                                                   CFT164
+      *                                                                                       CFT164
+     C           SCATYP    IFEQ 'R'                                                           CFT164
+     C           CFT164    ANDEQ'Y'                                                           CFT164
+     C                     TESTB'3'       SCRETB         12                                   CFT164
+     C           *IN12     IFEQ '1'                                                           CFT164
+     C                     MOVELSSNCO     FTMSDT                                              CFT164
+     C                     MOVE '1'       *IN46                                               CFT164
+     C                     MOVEL'FTM2729' FTMSID                                              CFT164
+     C                     MOVE 'Y'       FTNOUP  1                                           CFT164
+     C                     EXSR FTSNMS                                                        CFT164
+     C                     ENDIF                                                              CFT164
+     C                     ENDIF                                                              CFT164
      C*
      C                     END                             E003
      C*
@@ -7330,6 +7381,7 @@
      C                     MOVE '0'       *IN,20                          S01494
      C                     MOVE '0'       *IN13                           S01499
      C                     MOVE '0'       *IN87                           S01499
+     C                     MOVE *BLANKS   FTNOUP                                              CFT164
      C*                                                                   CEU006
      C/COPY WNCPYSRC,FT0080C017
      C** Notified delivery currency is optional, if entered check that    CEU006
@@ -7686,6 +7738,8 @@
      C*
      C           ATYP      IFEQ 'R'                        ** B04
      C                     Z-ADDDACO      DPOPN
+     C                     MOVELATYP      DPATYP  1                                           CFT164
+     C                     MOVE RETB      DPRETB  1                                           CFT164
      C                     END                             ** E04
      C                     END                             ** E03
      C*
@@ -7731,6 +7785,8 @@
      C           ATYP      IFEQ 'R'                        ** B06
      C                     MOVE ACST      ACST3                           047179
      C                     Z-ADDDACO      DPOPN
+     C                     MOVELATYP      DPATYP                                              CFT164
+     C                     MOVE RETB      DPRETB                                              CFT164
      C                     MOVE COLF      WCOLF   1                                           CGL014
      C                     Z-ADDACNO      WACNO  100                                          CGL014
      C                     END                             ** E06
@@ -7793,6 +7849,8 @@
      C                     MOVE 'P'       DRPT                                                212014
      C                     END                             ** E06                             212014
      C                     Z-ADDDACO      DPOPN
+     C                     MOVELATYP      DPATYP                                              CFT164
+     C                     MOVE RETB      DPRETB                                              CFT164
      C                     MOVE COLF      WCOLF   1                                           CGL014
      C                     Z-ADDACNO      WACNO  100                                          CGL014
      C                     END                             ** E05
@@ -7990,6 +8048,20 @@
      C                     END                             E004
      C*
      C                     END                             E003
+      *                                                                                       CFT164
+      ** Check for a Blocked Debit Account                                                    CFT164
+      *                                                                                       CFT164
+     C           DPATYP    IFEQ 'R'                                                           CFT164
+     C           CFT164    ANDEQ'Y'                                                           CFT164
+     C                     TESTB'2'       DPRETB         12                                   CFT164
+     C           *IN12     IFEQ '1'                                                           CFT164
+     C                     MOVELSDRPY     FTMSDT                                              CFT164
+     C                     MOVE '1'       *IN56                                               CFT164
+     C                     MOVEL'FTM2730' FTMSID                                              CFT164
+     C                     MOVE 'Y'       FTNOUP  1                                           CFT164
+     C                     EXSR FTSNMS                                                        CFT164
+     C                     ENDIF                                                              CFT164
+     C                     ENDIF                                                              CFT164
      C*
      C                     Z-ADDZDAYNO    DRVD
      C                     END                             ** E02
@@ -8202,6 +8274,10 @@
      C                     MOVE ACOD      ACNTAC                          S01508
      C                     MOVE ACSQ      ACNTAS                          S01508
      C                     EXSR ACCCHN                                    S01508
+     C           ATYP      IFEQ 'R'                                                           CFT164
+     C                     MOVELATYP      XATYP   1                                           CFT164
+     C                     MOVELRETB      XRETB   1                                           CFT164
+     C                     ENDIF                                                              CFT164
      C                     END                                            S01508
      C*                                                                   S01508
      C                     END                                            S01508
@@ -8238,6 +8314,10 @@
      C                     MOVE '1'       *IN66                           S01508
      C                     ELSE                                           S01508
      C                     MOVE 'R'       CDRT                            S01508
+     C           ATYP      IFEQ 'R'                                                           CFT164
+     C                     MOVELATYP      XATYP                                               CFT164
+     C                     MOVELRETB      XRETB                                               CFT164
+     C                     ENDIF                                                              CFT164
      C                     END                                            S01508
      C                     END                                            S01508
      C                     END                                            S01508
@@ -8279,6 +8359,10 @@
      C                     MOVE '1'       *IN66                           S01508
      C                     ELSE                                           S01508
      C                     MOVE 'P'       CDRT                            S01508
+     C           ATYP      IFEQ 'R'                                                           CFT164
+     C                     MOVELATYP      XATYP                                               CFT164
+     C                     MOVELRETB      XRETB                                               CFT164
+     C                     ENDIF                                                              CFT164
      C                     END                                            S01508
      C                     END                                            S01508
      C*                                                                   S01508
@@ -8295,6 +8379,20 @@
      C                     END                                            S01508
      C*                                                                   S01508
      C                     END                                            S01508
+      *                                                                                       CFT164
+      ** Check for a Blocked Debit Account                                                    CFT164
+      *                                                                                       CFT164
+     C           XATYP     IFEQ 'R'                                                           CFT164
+     C           CFT164    ANDEQ'Y'                                                           CFT164
+     C                     TESTB'2'       XRETB          02                                   CFT164
+     C           *IN02     IFEQ '1'                                                           CFT164
+     C                     MOVELSCDRO     FTMSDT                                              CFT164
+     C                     MOVE '1'       *IN66                                               CFT164
+     C                     MOVEL'FTM2724' FTMSID                                              CFT164
+     C                     MOVE 'Y'       FTNOUP  1                                           CFT164
+     C                     EXSR FTSNMS                                                        CFT164
+     C                     ENDIF                                                              CFT164
+     C                     ENDIF                                                              CFT164
      C*                                                                   S01508
      C** Store Charges to the Debit of if valid                           S01508
      C*                                                                   S01508
@@ -13820,6 +13918,61 @@
       *                                                                   056031
      CSR         EXERR     ENDSR                                          056031
      C/EJECT
+      *****************************************************************                       CFT164
+      *                                                               *                       CFT164
+      *  FTSNMS   : Send message to program's message queue           *                       CFT164
+      *                                                               *                       CFT164
+      *  CALLED BY: ALL OVER                                          *                       CFT164
+      *                                                               *                       CFT164
+      *  CALLS    : *NONE                                             *                       CFT164
+      *                                                               *                       CFT164
+      *****************************************************************                       CFT164
+     CSR         FTSNMS    BEGSR                                                              CFT164
+      *                                                                                       CFT164
+      * If no program send to FT0080                                                          CFT164
+      *                                                                                       CFT164
+     C           FTPGMQ    IFEQ *BLANK                                                        CFT164
+     C                     MOVEL##PGM     FTPGMQ                                              CFT164
+     C                     END                                                                CFT164
+      *                                                                                       CFT164
+      * If level to send is blanks default to *SAME                                           CFT164
+      *                                                                                       CFT164
+     C           FTPGRL    IFEQ *BLANK                                                        CFT164
+     C                     MOVEL'*SAME'   FTPGRL                                              CFT164
+     C                     END                                                                CFT164
+      *                                                                                       CFT164
+      * If no message file specified, use default                                             CFT164
+      *                                                                                       CFT164
+     C           FTMSGF    IFEQ *BLANK                                                        CFT164
+     C                     MOVEL'FTUSRMSG'FTMSGF                                              CFT164
+     C                     END                                                                CFT164
+      *                                                                                       CFT164
+     C                     CALL 'AOCREPT'                                                     CFT164
+     C                     PARM           FTMSID  7                                           CFT164
+     C                     PARM           FTMSGF 10                                           CFT164
+     C                     PARM           FTMSFL 10                                           CFT164
+     C                     PARM           FTMSDT256                                           CFT164
+     C                     PARM           FTPGRL                                              CFT164
+     C                     PARM           FTPGMQ                                              CFT164
+     C                     PARM           FTMSGQ 10                                           CFT164
+     C                     PARM           FTMSGT  7                                           CFT164
+      *                                                                                       CFT164
+     C                     MOVEL'Y'       FTMSGS  1                                           CFT164
+     C                     MOVELFTWARN    FTWARN  1                                           CFT164
+      *                                                                                       CFT164
+      * Clear all fields for default mechanism next time                                      CFT164
+      *                                                                                       CFT164
+     C                     MOVEL*BLANK    FTMSID                                              CFT164
+     C                     MOVEL*BLANK    FTMSGF                                              CFT164
+     C                     MOVEL*BLANK    FTMSFL                                              CFT164
+     C                     MOVEL*BLANK    FTMSDT                                              CFT164
+     C                     MOVEL*BLANK    FTPGRL                                              CFT164
+     C                     MOVEL*BLANK    FTPGMQ                                              CFT164
+     C                     MOVEL*BLANK    FTMSGQ                                              CFT164
+     C                     MOVEL*BLANK    FTMSGT                                              CFT164
+      *================================================================                       CFT164
+     CSR         FTEXIT    ENDSR                                                              CFT164
+     C/EJECT                                                                                  CFT164
      C************************************************************     ***
      C* CURRY SR.
      C* TO CALCULATE CROSS CALCULATION AND BASE EQUIV OF SAME
@@ -15815,6 +15968,17 @@
      C                     Z-ADDDAFD1     OEDT1   60
      C                     Z-ADDDAFD2     OEDT2   20
      C                     Z-ADDDAFD3     OEDT3   60
+      *                                                                                       CFT164
+      ** Clear message subfile                                                                CFT164
+      *                                                                                       CFT164
+     C                     CALL 'Y2CLMSC'                                                     CFT164
+     C                     PARM ##PGM     FTPGMQ 10                                           CFT164
+     C                     PARM '*SAME'   FTPGRL  5                                           CFT164
+      *                                                                                       CFT164
+      ** Reset message sent flag                                                              CFT164
+      *                                                                                       CFT164
+     C                     MOVEL'N'       FTMSGS  1                                           CFT164
+     C                     MOVEL*BLANKS   FTWARN                                              CFT164
      C*                                                                   S01494
      C** Retrieve the text for FTM2510 using MEC1150                      S01494
      C*                                                                   S01494
@@ -16120,6 +16284,31 @@
      C                     ENDIF                                                              CER049
      C                     ENDIF                                                              CER049
      C/COPY WNCPYSRC,FT0080C011
+      *                                                                                       CFT164
+      ** Access SAR details file to determine if CFT164 is switched ON                        CFT164
+      *                                                                                       CFT164
+     C                     MOVE *BLANK    CFT164  1                                           CFT164
+     C                     CALL 'AOSARDR0'                                                    CFT164
+     C                     PARM *BLANKS   U#RTCD                                              CFT164
+     C                     PARM '*VERIFY' U#OPTN                                              CFT164
+     C                     PARM 'CFT164'  @SARD   6                                           CFT164
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT164
+     C           U#RTCD    IFNE *BLANKS                                                       CFT164
+     C           U#RTCD    ANDNE'*NRF   '                                                     CFT164
+     C                     MOVE 'FT0080  'DBPGM            **************                     CFT164
+     C                     MOVEL'SCSARDPD'DBFILE           * DB ERR 100 *                     CFT164
+     C                     MOVEL'100'     DBASE            **************                     CFT164
+     C                     MOVEL'CFT164'  DBKEY                                               CFT164
+     C                     SETON                     U7U8LR                                   CFT164
+     C                     DUMP                                                               CFT164
+     C                     RETRN                                                              CFT164
+     C                     ENDIF                                                              CFT164
+     C           U#RTCD    IFEQ *BLANK                                                        CFT164
+     C                     MOVEL'Y'       CFT164  1                                           CFT164
+     C                     ELSE                                                               CFT164
+     C                     MOVEL'N'       CFT164                                              CFT164
+     C                     ENDIF                                                              CFT164
+      *                                                                                       CFT164
       * Check if switchable feature CDL049 is present                                         CDL049
      C                     CALL 'AOSARDR0'                                                    CDL049
      C                     PARM '*MSG   ' PRTCD                                               CDL049

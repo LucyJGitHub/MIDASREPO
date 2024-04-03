@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD056608           Date 08Sep20               *
+      *  Last Amend No. 248772             Date 05Feb13               *
+      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *                 MD056608           Date 08Sep20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD040876           Date 26Aug16               *
       *                 MD046248           Date 27Oct17               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248772 - Garbage Data in Depot Movements Repair Queue due to *
+      *           incorrect parameter list.                           *
+      *         - Applied for AR1068690 (Child: AR1069087)            *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  MD056608 - Deliverable Data Split for APFUNCPD               *
@@ -1359,6 +1363,7 @@
      C     T1SECOD       PLIST                                                                CSE022
      C                   PARM                    APHead                                       CSE022
      C                   PARM                    Trans1                                       CSE022
+     C                   PARM                    RegData                                      248772
      C                   PARM                    ExtData                                      CSE022
      C                   PARM                    OthDData                                     CSE022
      C                   PARM                    #ProcPgm                                     CSE022

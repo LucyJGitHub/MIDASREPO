@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -67,7 +69,7 @@
       *  CFT009 - Funds Transfer Fees and Charges                     *
       *                                                               *
       *****************************************************************
- 
+
      FFTPCHGL0  IF   E           K DISK
       *****************************************************************
       ** +--------------------------------------+
@@ -87,143 +89,143 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XARRAYMAX       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FLDNAMXAR       S             10A   DIM(XARRAYMAX)
- 
+
       ** Array of error message IDs
      D MSGIDXAR        S                   DIM(XARRAYMAX) LIKE(#MSGID)
- 
+
       ** Array of error message data.
      D MSGDTAXAR       S                   DIM(XARRAYMAX) LIKE(#MSGDATA)
- 
+
       ** Array of Warning in error.
      D WFLDNMXAR       S             10A   DIM(XARRAYMAX)
- 
+
       ** Array of Warning message IDs
      D WMSGIDXAR       S                   DIM(XARRAYMAX) LIKE(#MSGID)
- 
+
       ** Array of Warning message data.
      D WMSGDTAXAR      S                   DIM(XARRAYMAX) LIKE(#MSGDATA)
- 
+
       * Incoming Transaction
      D TRANINPRIM    E DS                  EXTNAME(FTOPY1PD)
      D TRANINFOUR    E DS                  EXTNAME(FTOPY6PD)
- 
+
       * Flags to indicate whether transaction fields are valid
      D OKFLAGSDS     E DS                  EXTNAME(FTEOPY4PD)
- 
+
       * Validation Work Fields
      D VAL@FIELDS    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       ** Valid Payments layout
      D VALIDPMNT     E DS                  EXTNAME(FTVOPAYPD)
      D  QQCDRO1      E                     EXTFLD(QQCDRO)                                     CGL029
- 
+
       ** Valid Outgoing Payments Extension File
      D VALIDPMTX     E DS                  EXTNAME(FTVOPY2PD)
- 
+
       ** Valid Outgoing Payments Extension File (default)
      D DEFVALIDX     E DS                  EXTNAME(FTVOPY2PD)
      D                                     PREFIX(D#)
- 
+
       * Valid Payments layout (default)
      D DEFVALID      E DS                  EXTNAME(FTVOPAYPD)
      D                                     PREFIX(D#)
- 
+
       ** External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       * External DS for Funds Transfer details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** External data structure for access programs (short)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       *  Transaction details file parameter for FT000652
      D TRNDET          DS          3000
- 
+
       *  Transaction details extension file parameter for FT000652
      D TRNEXT          DS          3000
       *                                                                                       CFT120
       ** Switchable Features File                                                             CFT120
       *                                                                                       CFT120
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT120
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D IDX             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIX             S              3P 0
- 
+
      D ZALIGNOK        S              1
      D ZFIELD          S             16
      D ZADEC           S              1  0
      D ZADIG           S              2  0
- 
+
      D C#CURR          S              3
      D C#OPTN          S              7
      D C#RTCD          S              7
- 
+
       * Parameter for FT000940
      D P#PYCD          S                   LIKE(PYCHCD)
- 
+
       ** Parameters for FT000652
      D MRTCD           S             10
      D TRNTYP          S              2
      D CHGCDE          S              5
      D INKC            S              1
- 
+
       ** Parameters for FT000981
      D WRTCD           S             10A
      D PAYAMT          S             13P 0
@@ -240,7 +242,7 @@
      D*CHARGEDR*       S             12A                                                      CGL029
      D CHARGEDR        S             18A                                                      CGL029
      D ADDDEDUCT       S              1A
- 
+
       * Parameters for AOCCYCV0
      D D#DTA           DS           256
      D  D#FCCY                 1      3
@@ -263,8 +265,8 @@
      D PRTCD           S              7                                                       CFT120
      D POPTN           S              7                                                       CFT120
      D PSard           S              6                                                       CFT120
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -279,7 +281,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   EVAL      RETCODEIN = *BLANKS
@@ -291,14 +293,14 @@
      C                   EVAL      WMSGDTAXAR = *BLANKS
      C                   EVAL      WIX = 0
      C                   EVAL      IDX = 0
- 
+
       * Validate
      C                   EXSR      VSWFSTD
- 
+
       * If charge amount is not the same as default, warning
- 
+
      C                   IF        SACTION = 'I' OR SACTION = 'A'
- 
+
      C                   IF        @SSCD <> D#O2AMCS
      C                             AND OKSTCD <> 'N'
      C                   MOVE      'W'           OKSTCD
@@ -307,15 +309,15 @@
      C                   MOVEL     'FTF3168'     WMSGIDXAR(WIX)
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   IF        OKSTCD = 'N' OR OKSTCDE = 'N'
      C                   EVAL      RETCODEIN = 'Error'
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -324,15 +326,15 @@
       ************************************************************
       *
      C     VSWFSTD       BEGSR
- 
+
       * Validate swift standard charge code
- 
+
      C                   IF        STCDE <> *BLANKS
      C                   EXSR      VSTCODE
      C                   ENDIF
- 
+
       * If charge code is not the same as default, warning
- 
+
      C                   IF        SACTION = 'I' OR SACTION = 'A'
      C                   IF        STCDE <> D#O2SSCD
      C                             AND OKSTCDE <> 'N'
@@ -342,7 +344,7 @@
      C                   MOVEL     'FTF3183'     WMSGIDXAR(WIX)
      C                   ENDIF
      C                   ENDIF
- 
+
       *  Access currency record
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       C#RTCD
@@ -355,22 +357,22 @@
      C                   MOVEL     '*CALL'       DBKEY
      C                   EVAL       DBASE = 1
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   EVAL      @INCY = A6INCY
      C                   EVAL      @NBDP = A6NBDP
      C                   EVAL      @TPSD = A6TPSD
      C                   ENDIF
- 
+
       *  Swift Standard Charge
       *  ---------------------
       *  Swift Standard Charge is optional. It may only be entered if
       *  settlement method is '08'
       *  If entered must be valid for charge currency details
- 
+
       ** Change to IF conditioning to re-default if STCD = *blanks or
       ** charges to the DR of had changed.
- 
+
      C                   If        STCD = *BLANKS or PCDROCHG = 'Y'
       *
       * If charge code <> blank and charge amount = blank, recalculate
@@ -381,20 +383,20 @@
       ** charge code is not blank.
      C                             or PCDROCHG = 'Y' and STCDE <> *BLANKS
      C                             AND OKSTCDE <> 'N'                                         244227
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *Blanks       C#RTCD
      C                   PARM      '*KEY   '     C#OPTN
      C                   PARM      O2CCDE        C#CURR
      C     SDCURR        PARM      *BLANKS       DSSDY
- 
+
       * If use transaction exchange rate, add it in
      C                   IF        CHTRCY = 'Y'
      C                   EVAL      CHGEXC = O2XRTE
      C                   ELSE
      C                   EVAL      CHGEXC = A6SPRT
      C                   ENDIF
- 
+
      C     CFT120        IFEQ      'Y'                                                        CFT120
      C                   MOVEL     @CDRO         CHARGEDR                                     CFT120
      C                   ELSE                                                                 CFT120
@@ -438,24 +440,24 @@
      C                   PARM                    CHGAMT
      C                   PARM                    PTIERC
      C                   PARM                    PTIERA
- 
+
      C                   EVAL      @SSCD = TOTCHG
- 
+
      C                   Z-ADD     TOTCHG        @@AMTW
      C                   Z-ADD     A6NBDP        @@QECN
      C                   EXSR      FMTAMT
      C                   MOVE      @@AMTD        STCD
- 
+
      C                   ELSE
- 
+
       * If STCD blank or zero initialise output fields
      C                   MOVE      *BLANKS       STCD
      C                   Z-ADD     *ZERO         @SSCD
      C                   Z-ADD     *ZERO         @SSCH
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   Move(P)   STCD          @SSCD                                        CAP084
      C                   IF        @STMT <> 08
      C                             And @SSCD <> 0                                             CAP084
@@ -464,23 +466,23 @@
      C                   MOVEL     'STCD'        FLDNAMXAR(IDX)
      C                   MOVEL     'FTF3199'     MSGIDXAR(IDX)
      C                   ELSE
- 
+
       * ? processing - Charge enquiry
- 
+
      C     '?'           SCAN      STCD
- 
+
      C                   IF        %FOUND
- 
+
      C                   IF        OKSTCDE = 'N' OR STCDE = *BLANKS
      C                   MOVE      'N'           OKSTCD
      C                   ADD       1             IDX
      C                   MOVEL     'STCD'        FLDNAMXAR(IDX)
      C                   MOVEL     'FTF3206'     MSGIDXAR(IDX)
      C                   ELSE
- 
+
      C                   EVAL      TRNDET = VALIDPMNT
      C                   EVAL      TRNEXT = VALIDPMTX
- 
+
      C                   CALLB     'FT000652'
      C                   PARM      *BLANKS       MRTCD
      C                   PARM                    TRNDET
@@ -490,11 +492,11 @@
      C                   PARM                    INKC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE(P)   STCD          ZFIELD
      C                   EVAL      ZADIG = 11 - @NBDP
      C                   EVAL      ZADEC = @NBDP
- 
+
       * Validate amount as numeric with correct d.p.
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNOK          1
@@ -508,7 +510,7 @@
      C                   ADD       1             IDX
      C                   MOVEL     'STCD'        FLDNAMXAR(IDX)
      C                   MOVEL     'FTF3258'     MSGIDXAR(IDX)
- 
+
      C                   ELSE
      C                   Move      ZFIELD        @SSCD
       * Format amount for screen
@@ -518,9 +520,9 @@
      C                   MOVE      @@AMTD        STCD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
      C************************************************************
      C* END SWIFT STANDARD CHARGE VALIDATION
@@ -531,44 +533,44 @@
       ************************************************************
       *
      C     VSTCODE       BEGSR
- 
+
       *  It may only be entered if settlement method is '08'
- 
+
      C                   IF        @STMT = 08
- 
+
       * ? processing
- 
+
      C     '?'           SCAN      STCDE
- 
+
      C                   IF        %FOUND
- 
+
      C                   CALLB     'FT000940'
      C                   PARM      *BLANKS       P#PYCD
- 
+
      C                   IF        P#PYCD <> *BLANKS
      C                   EVAL      STCDE = P#PYCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * Check if charge code exists in payment charge definition file
- 
+
      C     STCDE         CHAIN     FTPCHGL0
- 
+
      C                   IF        NOT %FOUND
      C                   MOVE      'N'           OKSTCDE
      C                   ADD       1             IDX
      C                   MOVEL     'STCDE'       FLDNAMXAR(IDX)
      C                   MOVEL     'FTF3257'     MSGIDXAR(IDX)
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      'N'           OKSTCDE
      C                   ADD       1             IDX
      C                   MOVEL     'STCDE'       FLDNAMXAR(IDX)
      C                   MOVEL     'FTF3167'     MSGIDXAR(IDX)
      C                   ENDIF
- 
+
      C                   ENDSR
      C/EJECT
       *****************************************************************
@@ -592,31 +594,31 @@
      C     *INZSR        BEGSR
      C*
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   PARM                    RETCODEIN
- 
+
       *  Screen fields
      C                   PARM                    TRANINPRIM
      C                   PARM                    TRANINFOUR
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FLDNAMXAR
      C                   PARM                    MSGIDXAR
      C                   PARM                    MSGDTAXAR
- 
+
      C                   PARM                    WFLDNMXAR
      C                   PARM                    WMSGIDXAR
      C                   PARM                    WMSGDTAXAR
       *
       *  OK Flags
      C                   PARM                    OKFLAGSDS
- 
+
       *  Validation Work Fields
      C                   PARM                    VAL@FIELDS
- 
+
      C                   PARM                    VALIDPMNT
      C                   PARM                    VALIDPMTX
       *  Saved default charges
@@ -625,14 +627,14 @@
       *
       ** Charges to the debit of - field changed (Y or blank)
      C                   PARM                    PCDROCHG          1
- 
+
       * Access Funds Transfer details via access program
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      '*DBERR'      C#RTCD
      C                   PARM      '*FIRST'      C#OPTN
      C     SDFTFR        PARM      SDFTFR        DSFDY
- 
+
       *                                                                                       CFT120
       ** Check if CFT120 is switched on                                                       CFT120
       *                                                                                       CFT120
@@ -662,9 +664,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

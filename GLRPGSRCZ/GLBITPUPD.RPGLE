@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *  Last Amend No. AR858146           Date 01Dec22               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 CGL118             Date 02Nov21               *
       *                 MD058173           Date 28Jun21               *
       *                 AR573975           Date 01Jun20               *
       *                 254657             Date 01Jun20               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR858146 - Apply 262215.  Multibranch to be set to Y if      *
+      *             coming from API.  (Child: AR858147)               *
       *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD058173 - Hash Item input count on JRNE is updated when user*
@@ -1442,7 +1445,8 @@ E1   C                   ENDIF                                                  
      C                   MOVE      'H'           BRBTSF
      C                   MOVE      B2VALI        BRVALI
      C                   MOVE      B2TMST        BRTMST
-     C                   MOVE      'N'           BRMBRB
+     C**********         MOVE      'N'           BRMBRB                                     AR858146
+     C                   MOVE      'Y'           BRMBRB                                     AR858146
      C                   MOVE      B2FRNT        BRFRNT
      C                   MOVE      B2FRNT        BRBDES
      C                   MOVE      'H'           BRBHAI

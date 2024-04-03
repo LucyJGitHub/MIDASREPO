@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL082             Date 02Nov21               *
-      *  Prev Amend No. CGL118             Date 02Nov21               *
+      *  Last Amend No. UUC100             Date 01Dec22               *
+      *  Prev Amend No. CGL082             Date 02Nov21               *
+      *                 CGL118             Date 02Nov21               *
       *                 MD057429           Date 17Jun21               *
       *                 254657             Date 01Jun20               *
       *                 CSD103             Date 10Aug20               *
@@ -91,6 +92,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  UUC100 - Upgrade UUC027 to FBM 2.1                           *
+      *           Cover-control on journal entries input.             *
+      *           Hooks Used: GLH00634, GLH00635, GLBITHDC02,         *
+      *                       GLBITHDD01                              *
       *  CGL082 - Journal Entry User Audit                            *
       *  CGL118 - AP JE Header - Last Insert/Amend user changes       *
       *  MD057429 - Check for and delete any items in repair if the   *

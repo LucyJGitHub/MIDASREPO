@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 03May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -554,17 +556,17 @@
      C     SRValVAT      BEGSR
       *
      C                   MOVEL     WMsgArr(1)    WVCHG
- 
+
       *  If CFT010 on, flag is 'Y'                                              CFT009
       *
      C                   IF        DDVAT4 = *Blanks
- 
+
      C                   IF        CFT010 = 'Y'                                 CFT009
      C                   MOVEL     'Y'           DDVAT4                         CFT009
      C                   ELSE                                                   CFT009
      C                   MOVEL     PVATT         DDVAT4
      C                   ENDIF                                                  CFT009
- 
+
      C                   ELSE
      C                   If        DDVAT4 <> 'Y' and
      C                             DDVAT4 <> 'N'

@@ -17,14 +17,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CFT162             Date 16Oct20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25101           Date 03Sep09               *
       *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -36,7 +38,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -57,111 +59,111 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Cover Message
      D NwOPAScnFmt   E DS                  EXTNAME(FTOPYAPD)
- 
+
       ** Screen fields (Initial Screen)
      D FTOPAY1       E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Validation Work Fields
      D NwOPFilFmt    E DS                   EXTNAME(FTVOPAYPD)
      D                                     Prefix(@X)
      D NwOPFilFmx    E DS                   EXTNAME(FTVOPY2PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D FTEOPYA       E DS                  EXTNAME(FTEOPYAPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
      D I               S              3  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -172,31 +174,31 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Validate Margin fields
- 
+
      C                   ExSr      SrNetwork
- 
+
      C                   ExSr      SrInMsgType
- 
+
      C                   ExSr      SrInValFlag
- 
+
      C                   ExSr      SrOutValFlagM
- 
+
      C**********         ExSr      SrOutValFlagC                                            BUG25101
- 
+
      C                   ExSr      SrValOrdCus
- 
+
      C                   ExSr      SrValOrdIns
- 
+
      C                   ExSr      SrValIntIns
- 
+
      C                   ExSr      SrValAccIns
- 
+
      C                   ExSr      SrValBenCus
- 
+
      C                   Return
- 
+
       *****************************************************************
       /Title Sr/SrNetwork
       *****************************************************************
@@ -210,23 +212,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrNetwork     BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Network
- 
+
      C                   CallB     'FTVONWK'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/InMsgType
       *****************************************************************
@@ -240,23 +242,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrInMsgType   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Incoming Message Type
- 
+
      C                   CallB     'FTVOMTP'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/InValFlag
       *****************************************************************
@@ -270,23 +272,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrInValFlag   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Incoming Validation Flag
- 
+
      C                   CallB     'FTVOVLF'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/OutValFlagM
       *****************************************************************
@@ -300,23 +302,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrOutValFlagM BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Outgoing Validation Flag Main
- 
+
      C                   CallB     'FTVOMVF'     PList02
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrOutValFlagC
       *****************************************************************
@@ -330,23 +332,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrOutValFlagC BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Outgoing Validation Flag Cover
- 
+
      C                   CallB     'FTVOCVF'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrValOrdCus
       *****************************************************************
@@ -360,23 +362,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValOrdCus   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Ordering Customer
- 
+
      C                   CallB     'FTVOCOC'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrValOrdIns
       *****************************************************************
@@ -390,23 +392,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValOrdIns   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Ordering Institution
- 
+
      C                   CallB     'FTVOCOB'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrValIntIns
       *****************************************************************
@@ -420,23 +422,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValIntIns   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Intermediary Institution
- 
+
      C                   CallB     'FTVOCIN'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrValAccIns
       *****************************************************************
@@ -450,23 +452,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValAccIns   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Account with Institution
- 
+
      C                   CallB     'FTVOCAB'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/SrValBenCus
       *****************************************************************
@@ -480,23 +482,23 @@
       *  UPDATERRS  - Updates error information                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValBenCus   BegSr
- 
+
       ** Reset variables updated by other modules
- 
+
      C                   ExSr      ResetErrs
- 
+
       ** Validate Beneficiary Customer
- 
+
      C                   CallB     'FTVOCBN'     PList01
- 
+
       ** Update error info with that retured from the validation module
- 
+
      C                   ExSr      UpdatErrs
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/*InzSr
       *****************************************************************
@@ -508,11 +510,11 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
      C     *Entry        Plist
- 
+
      C                   Parm                    RespMode
      C                   Parm                    FTOPAY1
      C                   Parm                    NwOPFilFmt
@@ -527,7 +529,7 @@
      C                   Parm                    WMsgIDArr
      C                   Parm                    WMsgDtaArr
      C                   Parm                    WIdx
- 
+
      C     PList01       PList
      C                   Parm                    RetCodeOut
      C                   Parm                    NwOPFilFmt
@@ -540,7 +542,7 @@
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtXAr
- 
+
      C     PList02       PList
      C                   Parm                    RetCodeOut
      C                   Parm                    FTOPAY1
@@ -554,13 +556,13 @@
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtXAr
- 
+
      C     *LOCK         In        LDA
      C                   Movel     'FTOPAYAVL'   DBPGM
      C                   Out       LDA
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/Reseterrs
       *****************************************************************
@@ -573,22 +575,22 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     Reseterrs     BegSr
- 
+
      C                   Eval      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
- 
+
      C                   Eval      FldNamXAr = *BlankS
      C                   Eval      MsgIDXAr  = *BlankS
      C                   Eval      MsgDtaXAr = *BlankS
      C                   Eval      WFldNmXAr = *BlankS
      C                   Eval      WMsgIDXAr = *BlankS
      C                   Eval      WMsgDtXAr = *BlankS
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/Updaterrs
       *****************************************************************
@@ -601,11 +603,11 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     Updaterrs     BegSr
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    FldNameArr(I)                          99
      C                   If        *IN99 = True
@@ -613,15 +615,15 @@
      C                   Movea     MsgIDXAr      MsgIdArr(I)
      C                   Movea     MsgDtaXAr     MsgDtaArr(I)
      C                   EndIf
- 
+
       ** Set Error Index
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    FldNameArr(I)                          99
      C                   Eval      Idx = I - 1
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    WFldNamArr(I)                          99
      C                   If        *IN99 = True
@@ -629,15 +631,15 @@
      C                   Movea     WMsgIDXAr     WMsgIDArr(I)
      C                   Movea     WMsgDtXAr     WMsgDtaArr(I)
      C                   EndIf
- 
+
       ** Set Warning Index
- 
+
      C                   Eval      I = 1
      C     *Blank        Lookup    WFldNamArr(I)                          99
      C                   Eval      WIdx = I - 1
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -10,8 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. AR957048           Date 30Apr12               *
+      *  Last Amend No. MD060865           Date 14Feb23               *
+      *  Prev Amend No. MD022925           Date 20Oct13               *
+      *                 098439             Date 19Sep13               *
+      *                 CFT162             Date 16Oct20               *
+      *                 MD037828           Date 19Oct20               *
+      *                 UUC105             Date 19Oct20               *
+      *                 CSD103             Date 10Aug20               *
+      *                 AR957048           Date 30Apr12               *
       *                 MD027425           Date 23Jun14               *
       *                 249996             Date 29Aug19               *
       *                 MD046248           Date 27Oct17               *
@@ -119,6 +125,27 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD060865 - Pre-fix for the ordering customer account - last  *
+      *             3 digits removed.                                 *
+      *           - Amend UUC105_005, FT0560CP35                      *
+      *  MD022925 - Recompiled due to changes done in ADVGENB.        *
+      *  098439 - Not print debit and credit advice if destination    *
+      *           of this advices are a retail account and if the     *
+      *           print transaction advice (PTRA fron REIACD) for     *
+      *           this account is set to 'N'.                         *
+      *         - Applied for MD022454                                *
+      *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
+      *  MD037828 - Error in UUC105 codes. *IN33 is not initialized   *
+      *           when account is not eligible for UUC105.            *
+      *           - *IN33 use somewhere else, save it to WIND33       *
+      *           - Amend FT0560C066, FT0560CP36, FT0560CP37,         *
+      *           - FT0560C160                                        *
+      *           - Amend core processing to display partial account  *
+      *             in debit advice                                   *
+      *  UUC105 - upgrade of UUC070 to FBM 2.1                        *
+      *           NRA in Retail Account Information                   *
+      *         - Added hooks UUC105_003, UUC105_004 and UUC105_005.  *
+      *         - Used hooks FT0560CP35, FT0560CP36 and FT0560CP36.   *
       *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *           (Recompile)                                         *
       *  AR957048 - Check and remove '/' if necessary                 *
@@ -459,6 +486,9 @@
      FFT102HL3UF  E           K        DISK                               CFT006
      F                                              KCOMIT                CFT006
      F*
+     FREIAC   IF  E           K        DISK                                                   098439
+     F            REIACAF                           KIGNORE                                   098439
+     F            REIACZF                           KIGNORE                                   098439
      FTABFP   IF  E           K        DISK
      F            TABTB20F                          KIGNORE
      F            TABTG20F                          KIGNORE
@@ -501,6 +531,7 @@
      F/COPY WNCPYSRC,FT0560F002
      F*
      FACNUMA  IF  E           K        DISK                                                   CFT032
+     F/COPY WNCPYSRC,UUC105_003                                                               UUC105
      F********************************************************************
      E                    CPY@    1   1 80
      E                    WA1        15  1               UGFRMT SR.ARRAY
@@ -566,6 +597,12 @@
      I              FRNT                            OFRNT                                     251339
      I*
      I** RENAME BRANCH FIELD ON ACNUMA TO AVOID POSSIBLE CORRUPTION       S01117
+     IREIACDF                                                                                 098439
+     I              CNUM                            WKNUM                                     098439
+     I              CCY                             WKCCY                                     098439
+     I              ACOD                            WKACOD                                    098439
+     I              ACSQ                            WKACSQ                                    098439
+     I** RENAME REIACDF FROM FILE REIAC                                                       098439
      I*                                                                   S01414
      I* Rename of Profit Centre to avoid overwriting                      S01414
      I*                                                                   S01414
@@ -591,6 +628,14 @@
      I                                        1  21 WORC1                                     CGL029
       *                                                                   S01435
       *  /Copy point for Input Specifications Definition                  S01435
+     IWORK1       DS                                                                          098439
+     I                                        1  21 WACC                                      098439
+     I                                       22 256 WWWW                                      098439
+     IWREKY       DS                                                                          098439
+     I                                        1   6 WKCNUM                                    098439
+     I                                        7   9 WKCCY                                     098439
+     I                                       10  190WKACOD                                    098439
+     I                                       20  210WKACSQ                                    098439
       *                                                                   S01435
       *                                                                   CFT003
       *  DATA AREA TO SPLIT PARTY IF PARTIAL OR FULL ACCNT NUMBER USED    CFT003
@@ -999,6 +1044,14 @@
      C                     KFLD           WCNUM   6                                           CSD027
      C                     KFLD           WRCDT2  1
      C/COPY WNCPYSRC,FT0560C027
+     C*                                                                                       098439
+     C** SET UP KLIST FOR REIACDF                                                             098439
+     C*                                                                                       098439
+     C           REKY      KLIST                                                              098439
+     C                     KFLD           WKCNUM                                              098439
+     C                     KFLD           WKCCY                                               098439
+     C                     KFLD           WKACOD                                              098439
+     C                     KFLD           WKACSQ                                              098439
      C*
      C** SET UP DATABASE ERROR FIELD DBPGM
      C*
@@ -1759,6 +1812,8 @@
      C                     MOVE 'N'       CFT134                                              CFT134
      C                     ENDIF                                                              CFT134
       *                                                                                       CFT134
+     C/COPY WNCPYSRC,UUC105_004                                                               UUC105
+      *                                                                                       UUC105
      C                     ENDSR                                          S01117
      C*
      C********************************************************************
@@ -1931,6 +1986,22 @@
      C                     MOVEL*BLANKS   WBRCA   3                       S01435
      C*
      C                     EXSR SRADRS
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = N                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     MOVE WCQSQ     WCQSQX                                              098439
+     C                     MOVELPREF      WPREF                                               098439
+     C           CQKEY     CHAINCQCOD                15                                       098439
+     C                     MOVE 'S'       ADIN                                                098439
+     C                     UPDATCQCOCDDF               27                                     098439
+     C                     MOVEL*BLANKS   WORK1                                               098439
+     C                     MOVEL*BLANKS   WREKY                                               098439
+     C                     GOTO FINS01                                                        098439
+     C                     END                                                                098439
      C*
      C**   SAVE THE COLLECTING BANK ADDRESS
      C*
@@ -2393,6 +2464,15 @@
      C                     MOVEL*BLANKS   WBRCA                           S01435
      C*
      C                     EXSR SRADRS
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = Y                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     GOTO NPRT02                                                        098439
+     C                     END                                                                098439
      C*
      C**   SAVE THE REMITTING BANK ADDRESS
      C*
@@ -2669,6 +2749,14 @@
       ** Move back original value of CFT009.                                                  197178
       *                                                                                       197178
      C                     MOVELWFT009    CFT009                                              197178
+     C           NPRT02    TAG                                                                098439
+     C                     MOVE WCQSQ     WCQSQX                                              098439
+     C                     MOVELPREF      WPREF                                               098439
+     C           CQKEY     CHAINCQPAC                17                                       098439
+     C                     MOVE 'S'       ADIN                                                098439
+     C                     UPDATCQPADDDF               27                                     098439
+     C                     MOVEL*BLANKS   WORK1                                               098439
+     C                     MOVEL*BLANKS   WREKY                                               098439
      C*                                                    **************
      C           FINS02    ENDSR                           * FINS02 TAG *
      C*                                                    **************
@@ -2830,6 +2918,16 @@
      C                     MOVELACBB      WBRCA                           S01435
      C*
      C                     EXSR SRADRS
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = Y                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     GOTO NPRT03                                                        098439
+     C                     END                                                                098439
+     C*                                                                                       098439
      C*
      C/COPY WNCPYSRC,FT0560C061
      C**   SAVE THE A/C WITH BANK ADDRESS
@@ -2907,6 +3005,16 @@
      C                     MOVEL*BLANKS   WBRCA                           S01435
      C*
      C                     EXSR SRADRS
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = Y                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     GOTO NPRT03                                                        098439
+     C                     END                                                                098439
+     C*                                                                                       098439
      C*
      C**   SAVE THE BENEFICIARY CUSTOMER
      C*
@@ -3092,6 +3200,7 @@
      C           ACBT      IFEQ 'R'                                                           CFT134
      C                     MOVELACBK      P1ACBK           S03220
      C                     ENDIF                                                              CFT134
+     C/COPY WNCPYSRC,UUC105_005                                                               UUC105
      C                     ELSE                            E001
      C           BNCT      IFEQ 'R'                        B002
      C           BNCT      OREQ 'P'                                                           CFT134
@@ -4223,6 +4332,12 @@
       *                                                                                       CER030
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
+     C           NPRT03    TAG                                                                098439
+     C           PREF      CHAININPAY                18                                       098439
+     C                     MOVE 'S'       ADIN                                                098439
+     C                     UPDATINPAYDDF               27                                     098439
+     C                     MOVEL*BLANKS   WORK1                                               098439
+     C                     MOVEL*BLANKS   WREKY                                               098439
      C/COPY WNCPYSRC,FT0560C018
      C/COPY OFCPYSRCZ,CFT122_003                                                              CFT122
      C*                                                    **************
@@ -4404,6 +4519,15 @@
      C/COPY WNCPYSRC,FT0560C072
      C*
      C                     EXSR SRADRS
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = Y                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     GOTO NPRT04                                                        098439
+     C                     END                                                                098439
      C*
      C**   SAVE THE ORDERING BANK ADDRESS
      C*
@@ -4466,6 +4590,15 @@
      C*
      C**   SAVE THE ORDERING CUSTOMER
      C*
+     C*                                                                                       098439
+     C**   IF DESTINATION IS A RETAIL ACCOUNT AND PTRA FROM REIAC = Y                         098439
+     C**   BYPASS.                                                                            098439
+     C*                                                                                       098439
+     C           REKY      CHAINREIACDF              33                                       098439
+     C           *IN33     IFEQ '0'                                                           098439
+     C           PTRA      ANDEQ'N'                                                           098439
+     C                     GOTO NPRT04                                                        098439
+     C                     END                                                                098439
      C*                                                                   S01408
      C/COPY WNCPYSRC,FT0560CP20                                           S01408
      C*                                                                   S01408
@@ -4617,17 +4750,27 @@
      C                     ELSE                                                               CFT032
       *                                                                                       CFT032
      C           *IN24     IFEQ '0'                                                           CFT032
-     C                     MOVE ORC2      P1ABC1                                              CFT032
-     C                     MOVE ORC3      P1ABC2                                              CFT032
-     C                     MOVE ORC4      P1ABC3                                              CFT032
-     C                     MOVE ORC5      P1ABC4                                              CFT032
-     C                     MOVE *BLANKS   P1ABC5                                              CFT032
+     C**********           MOVE ORC2      P1ABC1                                     CFT032 MD027425
+     C**********           MOVE ORC3      P1ABC2                                     CFT032 MD027425
+     C**********           MOVE ORC4      P1ABC3                                     CFT032 MD027425
+     C**********           MOVE ORC5      P1ABC4                                     CFT032 MD027425
+     C**********           MOVE *BLANKS   P1ABC5                                     CFT032 MD027425
+     C                     MOVE ORC1      P1ABC1                                            MD027425
+     C                     MOVE ORC2      P1ABC2                                            MD027425
+     C                     MOVE ORC3      P1ABC3                                            MD027425
+     C                     MOVE ORC4      P1ABC4                                            MD027425
+     C                     MOVE ORC5      P1ABC5                                            MD027425
      C                     ELSE                                                               CFT032
-     C                     MOVE ORC2      P1ORC1                                              CFT032
-     C                     MOVE ORC3      P1ORC2                                              CFT032
-     C                     MOVE ORC4      P1ORC3                                              CFT032
-     C                     MOVE ORC5      P1ORC4                                              CFT032
-     C                     MOVE *BLANKS   P1ORC5                                              CFT032
+     C**********           MOVE ORC2      P1ORC1                                     CFT032 MD027425
+     C**********           MOVE ORC3      P1ORC2                                     CFT032 MD027425
+     C**********           MOVE ORC4      P1ORC3                                     CFT032 MD027425
+     C**********           MOVE ORC5      P1ORC4                                     CFT032 MD027425
+     C**********           MOVE *BLANKS   P1ORC5                                     CFT032 MD027425
+     C                     MOVE ORC1      P1ORC1                                            MD027425
+     C                     MOVE ORC2      P1ORC2                                            MD027425
+     C                     MOVE ORC3      P1ORC3                                            MD027425
+     C                     MOVE ORC4      P1ORC4                                            MD027425
+     C                     MOVE ORC5      P1ORC5                                            MD027425
      C                     END                                                                CFT032
       *                                                                                       CFT032
      C                     ENDIF                                                              CFT032
@@ -4638,10 +4781,15 @@
      C           ADSLSH    IFEQ '/'                                                           CFT032
       *                                                                                       CFT032
      C           *IN32     IFEQ *ON                                                           CFT032
-     C                     MOVE ORC2      P1CUS1                                              CFT032
-     C                     MOVE ORC3      P1CUS2                                              CFT032
-     C                     MOVE ORC4      P1CUS3                                              CFT032
-     C                     MOVE ORC5      P1CUS4                                              CFT032
+     C**********           MOVE ORC2      P1CUS1                                     CFT032 MD027425
+     C**********           MOVE ORC3      P1CUS2                                     CFT032 MD027425
+     C**********           MOVE ORC4      P1CUS3                                     CFT032 MD027425
+     C**********           MOVE ORC5      P1CUS4                                     CFT032 MD027425
+     C                     MOVE ORC1      P1CUS1                                            MD027425
+     C                     MOVE ORC2      P1CUS2                                            MD027425
+     C                     MOVE ORC3      P1CUS3                                            MD027425
+     C                     MOVE ORC4      P1CUS4                                            MD027425
+     C                     MOVE ORC5      P1CUS5                                            MD027425
      C                     ENDIF                                                              CFT032
       *                                                                                       CFT032
      C                     ELSE                                                               CFT032
@@ -4681,7 +4829,13 @@
      C           CFT134    ANDEQ'Y'                                                           CFT134
       *                                                                                       CFT134
      C           ORBT      IFEQ 'R'                                                           CFT134
+      ** If '/' in first character of ORBK then set up KRACN from pos 2                     AR957048
+     C           1         SUBSTORBK:1    #CHK    1                                         AR957048
+     C           #CHK      IFEQ '/'                                                         AR957048
+     C           10        SUBSTORBK:2    KRACN                                             AR957048
+     C                     ELSE                                                             AR957048
      C                     MOVELORBK      KRACN                                               CFT134
+     C                     ENDIF                                                            AR957048
      C                     ELSE                                                               CFT134
       *                                                                                       CFT134
      C           ORBT      IFEQ 'N'                                                           CFT134
@@ -6158,6 +6312,12 @@
      C                     ENDIF                                                              CER030
       *                                                                                       CER030
      C                     ENDIF                                                              CER030
+     C           NPRT04    TAG                                                                098439
+     C           PREF      CHAINOTPAY                19                                       098439
+     C                     MOVE 'S'       ADIN                                                098439
+     C                     UPDATOTPAYDDF               27                                     098439
+     C                     MOVEL*BLANKS   WORK1                                               098439
+     C                     MOVEL*BLANKS   WREKY                                               098439
       *                                                                                       CER030
      C/COPY WNCPYSRC,FT0560C021
      C/COPY OFCPYSRCZ,CFT122_005                                                              CFT122
@@ -9329,6 +9489,8 @@
      C                     MOVELADCHK3    CNA3                            S01435
      C                     MOVELADCHK4    CNA4                            S01435
       *                                                                   S01435
+     C                     MOVELW8SCR     WORK1                                               098439
+     C                     MOVE WACC      WREKY                                               098439
      C/COPY WNCPYSRC,FT0560C024
      C*
      C                     ENDSR

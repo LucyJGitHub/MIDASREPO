@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055891           Date 01Sep20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD062014           Date 02Apr24              */
+/*       Prev Amend No. MD055891           Date 01Sep20              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -28,6 +29,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD062014 - After amending COB component and taking F3 to    */
+/*                  exit COBMENU, an error in clearing CBCMPXTD was  */
+/*                  encountered as the file is still allocated.      */
+/*                  Execute RCLRSC command to close open files.      */
+/*                - Applied for MD062471                             */
 /*       MD055891 - Deliverable Data Split for COB                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       207764 - Change all SAV* and RST* commands to print a       */
@@ -221,6 +227,7 @@
 /* Check whether '&VALFLG' has been switched on, if so call           /*S01417*/
 /* validation program cycle.                                          /*S01417*/
                         IF         COND(&VALFLG *EQ 'Y') THEN(DO)     /*S01417*/
+                                   RCLRSC                                               /*MD062014*/
                                    CHGVAR    VAR(&LIB) VALUE(&DTALIB) /*S01417*/
                                    CALL      PGM(CHKCOBCL1) +
                                              PARM(&NOTVAL &LIB)       /*S01417*/

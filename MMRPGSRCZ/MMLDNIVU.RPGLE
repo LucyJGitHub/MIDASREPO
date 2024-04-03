@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD061957           Date 26Oct23               *
-      *  Prev Amend No. MD062153           Date 13Dec23               *
+      *  Last Amend No. MD036339           Date 08Mar24               *
+      *  Prev Amend No. MD061957           Date 26Oct23               *
+      *                 MD062153           Date 13Dec23               *
       *                 AR819780           Date 16Nov23               *
       *                 AR816445           Date 16Nov23               *
       *                 AR816464           Date 16Nov23               *
@@ -155,6 +156,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036339 - DL Error amending Maturity date.                  *
+      *           - Ensure Interest rate field is updated when Short  *
+      *             Term rate is amended.                             *
+      *           - Applied for MD062343.                             *
       *  MD061957 - DLBHISPD contains 188 fields, whereas DEALSDB     *
       *             contains 194 fields.                              *
       *           - Recompile due to DLBHISPD changes.                *
@@ -1385,6 +1390,9 @@
      C                   EXSR      SetupAmend
      C                   EXSR      ValidateTr
      C                   EXSR      ValidateSt
+     C                   IF        CDL033 = 'Y' and DDSTRT <> *BLANKS                       MD036339
+     C                   EVAL      @@STRT = IKINTR                                          MD036339
+     C                   ENDIF                                                              MD036339
      C                   EXSR      ValidateLP                                                BUG3992
                                                                                             BUG12589
       ** For Amend:                                                                         BUG12589

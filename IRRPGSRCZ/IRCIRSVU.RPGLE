@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD060981           Date 22Dec23               *
-      *  Prev Amend No. MD059863           Date 28Sep22               *
+      *  Last Amend No. MD061985A          Date 02Mar24               *
+      *  Prev Amend No. MD060981           Date 22Dec23               *
+      *                 MD059863           Date 28Sep22               *
       *                 MD059314           Date 22Feb22               *
       *                 MD059100A          Date 23Dec21               *
       *                 CIR020             Date 02Aug21               *
@@ -116,6 +117,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD061985A - CIRS buffer issue                                *
+      *            - Incomplete MD060981 fix.                         *
       *  MD060981 - CIRS buffer issue                                 *
       *           - Apply for MD061985.                               *
       *           - Adjust Bufferex2 to Bufferex9 fields by 100       *
@@ -2455,11 +2458,14 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   EVAL      BufferEx6=%SUBST(TCFSAST:9157)                           MD060981
      C                                      + OPCSAST                                       MD056546
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST          MD056546 MD061985
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6156)+TPCSAST                   MD061985
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6156)+TPCSAST         MD061985 MD061985A
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:5956)+TPCSAST                  MD061985A
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1055)                  MD056546 MD061985
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1155)                           MD061985
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1155)                 MD061985 MD061985A
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:955)                           MD061985A  
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11054)                 MD056546 MD061985
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11154)                          MD061985
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11154)                MD061985 MD061985A
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:10954)                         MD061985A
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 03May13               *
+      *  Last Amend No. MD062136           Date 02Apr24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 03May13               *
       *                 AR906833           Date 18Dec12               *
       *                 AR875962           Date 15Dec11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -57,6 +58,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062136 - Customer with security details are not accepted   *
+      *             when inserted via API. Suppress validation of     *
+      *             customer existence during insert action.          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR906833 - Allows deletion of Securities Trading Customers   *
@@ -103,33 +107,33 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDSECDL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDSECSD0:SDSECFOI)
- 
+
      FSDSECSLR  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BFREDP:SECFMAT)
       * Securities Clients Details File by Customer Number
- 
- 
+
+
      FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BBREBG:CUSTNUM)
       * Customer File by Customer Number
- 
- 
+
+
      FSDCUSTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@CUSTD5:CUSTSNAME)
       * Customer File by Customer Shortname
- 
- 
+
+
      F***CDEPC**   IF   E           K DISK                                                  AR906833
       ***Midas*SE*Customer*Depot*Positions*by*Customer*Number**********                     AR906833
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -141,83 +145,83 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DepotSn         S             10    DIM(10)
       ** Depot shortnames array
- 
+
      D DepotNo         S              6    DIM(10)
       ** Depot customer numbers array
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details ICD retrieval
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** External DS for Securities ICD Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG11828
       ** External DS for Switchable Feature Details                                         BUG11828
                                                                                             BUG11828
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long data structure
- 
+
      D SecsFilFmt    E DS                  EXTNAME(SDSECSPD)
       ** Securities Clients Details in File Format
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
+
      D ZMUSER          DS
      D  DBRN                  11     13
      D  BANK                  17     17
- 
+
      D WRCSST          DS
      D  WRNUM                  1      6
      D  WRCHR                  7     10
@@ -257,12 +261,12 @@
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @CUST           S              6                                                     AR906833
      D @0RTN           S              7                                                     AR906833
      D @QUIT           S              1                                                     AR906833
@@ -270,7 +274,7 @@
       *                                                                                     AR906833
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Parameters for calling AOSVALR0 (Midas System Value Access Object)                   CSD027
      D PRetCode        S              7A                                                      CSD027
      D PSysValK1       S             20A                                                      CSD027
@@ -316,7 +320,7 @@
      D BRCUSR          C                   CONST('CheckBrchUserAuthori')                      260292
      D CurSysVal       DS           200                                                       260292
      D CurVal                  1      1                                                       260292
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -431,9 +435,9 @@
      C     OKCUST        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       * Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -540,10 +544,10 @@
       * RTVSECD - RETRIEVE SECURITIES DETAILS IF ACTION CODE 'A', 'E' OR 'D'
       **********************************************************************
      C     RTVSECD       BEGSR
- 
+
       * Search by customer number
      C     DDCUSN        CHAIN     CUSTNUM                            99
- 
+
       * Error if client not present on customer file
      C     *IN99         IFEQ      '1'
      C                   MOVEL     'N'           OKCUST
@@ -556,10 +560,10 @@
      C                   Eval      WKCRTN = BBCRTN
      C                   Eval      WKCRNM = BBCRNM
      C                   ENDIF
- 
+
       * Access Securities Clients Details from Securities file
      C     DDCUSN        CHAIN     SECFMAT                            99
- 
+
       * Securities clients details not found
      C     *IN99         IFEQ      '1'
      C                   MOVEL     'N'           OKCUST
@@ -567,7 +571,7 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
      C                   MOVEL     'USR4318'     MsgIdArr(Ix)
      C                   END
- 
+
      C     EndRTV        ENDSR
       *****************************************************************
       /EJECT
@@ -642,7 +646,7 @@
       * VAL - VALIDATION OF ACTION CODE AND CUSTOMER NUMBER
       *****************************************************************
      C     VAL           BEGSR
- 
+
       * Action Code
       *  .. must be 'I','A','D' or 'E'
       *
@@ -656,7 +660,7 @@
      C                   MOVEL     'SDA0001'     MsgIdArr(Ix)
      C                   GOTO      EVAL                                                       CSD027
      C                   ENDIF
- 
+
       *
       *  Customer number or shortname required
       *
@@ -732,8 +736,9 @@
      C                   Goto      EVAL                                                       CSD027
       *                                                                                       CSD027
      C                   EndIf                                                                CSD027
- 
+
       * Access Customer details
+     C     DDACTN        IFNE      'I'                                                      MD062136
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -784,7 +789,7 @@
       *
       * Not Found
      C     @RTCD         IFNE      *BLANKS
-     C     BBDTDL        ORNE      *ZERO
+     C*****BBDTDL        ORNE      *ZERO                                                    MD062136
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
@@ -798,14 +803,15 @@
      C                   MOVEL     'USR0250'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      C                   END
- 
+     C                   ENDIF                                                              MD062136
+
       *  If the Customer shortname entered
      C     WRCHR         IFNE      *BLANKS
       * Search customer file by shortname
      C     DDCSST        CHAIN     CUSTSNAME                          99
       ** If found
      C     *IN99         IFEQ      '1'
- 
+
      C*****DDCUSN        OREQ      *ZEROS                                                     CSD027
      C     DDCUSN        OREQ      *BLANKS                                                    CSD027
      C                   MOVEL     'N'           OKCUST
@@ -817,7 +823,7 @@
      C                   MOVEL     BBCUST        DDCUSN
      C                   END
      C                   END
- 
+
      C     EVAL          ENDSR
       *****************************************************************
       /EJECT
@@ -825,16 +831,16 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
- 
+
       * Search customer file by shortname
      C     DDCSST        CHAIN     CUSTSNAME                          99
- 
+
       ** If found
      C     *IN99         IFEQ      '0'
- 
+
       ** Search securities clients file by customer number
      C     BBCUST        CHAIN     SECFMAT                            99
- 
+
       ** Error if present already
      C     *IN99         IFEQ      '0'
      C                   MOVEL     'N'           OKCUST
@@ -842,7 +848,7 @@
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
      C                   MOVEL     'USR0542'     MsgIdArr(Ix)
      C                   GOTO      EVALAI
- 
+
      C                   ELSE
      C                   Eval      DDCUSN = BBCUST
      C                   Eval      WKCSSN = BBCSSN
@@ -851,7 +857,7 @@
      C                   GOTO      EVALAI
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Not valid shortname, invalid customer number if > 6 digit length
      C                   IF        ModeofOp <> '*VU   '                                     AR875962
      C                   MOVE      DDCSST        WKLast4           4
@@ -863,40 +869,40 @@
      C                   GOTO      EVALAI
      C                   ENDIF
      C                   ENDIF                                                              AR875962
- 
+
       ** Otherwise, search customer file by customer number
      C     DDCUSN        CHAIN     CUSTNUM                            99
- 
+
       ** If found
      C     *IN99         IFEQ      '0'
       *
       ** Search securities clients file by customer number
      C     DDCUSN        CHAIN     SECFMAT                            99
- 
+
       ** Error if present already
      C     *IN99         IFEQ      '0'
      C                   MOVEL     'N'           OKCUST
      C                   ADD       1             Ix
      C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
      C                   MOVEL     'USR0542'     MsgIdArr(Ix)
- 
+
       ** Not already on securities - OK
      C                   ELSE
      C                   Eval      WKCSSN = BBCSSN
      C                   Eval      WKCRTN = BBCRTN
      C                   Eval      WKCRNM = BBCRNM
      C                   END
- 
+
       ** Not found on customer file - error
-     C                   ELSE
-     C                   IF        ModeofOp <> '*VU   '                                     AR875962
-     C                   MOVEL     'N'           OKCUST
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)
-     C                   MOVEL     'USR4320'     MsgIdArr(Ix)
-     C                   ENDIF                                                              AR875962
+     C**********         ELSE                                                               MD062136
+     C**********         IF        ModeofOp <> '*VU   '                            AR875962 MD062136
+     C**********         MOVEL     'N'           OKCUST                                     MD062136
+     C**********         ADD       1             Ix                                         MD062136
+     C**********         MOVEL     'DDCUSN'      FldNameArr(Ix)                             MD062136
+     C**********         MOVEL     'USR4320'     MsgIdArr(Ix)                               MD062136
+     C**********         ENDIF                                                     AR875962 MD062136
      C                   ENDIF
- 
+
       *
      C     EVALAI        ENDSR
       *****************************************************************
@@ -905,9 +911,9 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
- 
+
       ***If*position*present,*delete*not*allowed***********************                     AR906833
- 
+
      C*****ModeofOp      IFEQ      '*FRONT'                                          209762 AR906833
      C**********         MOVE      BFCUST        WKCUST            6 0                        CSD027
      C**********         MOVE      BFCUST        WKCUST            6                 CSD027 AR906833
@@ -927,7 +933,7 @@
      C                   ELSE                                                               AR906833
      C                   EVAL      @CUST = DDCUSN                                           AR906833
      C                   ENDIF                                                              AR906833
- 
+
      C                   CALL(E)   'SD0340U'                                                AR906833
      C                   PARM                    @CUST                                      AR906833
      C     @0RTN         PARM      *BLANK        @0RTN                                      AR906833
@@ -1067,7 +1073,7 @@
      C                   ENDIF                                                              AR906833
       *                                                                                     AR906833
      C                   ENDIF                                                              AR906833
- 
+
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -1075,12 +1081,12 @@
       * INIT - INITIALIZATION
       *****************************************************************
      C     INIT          BEGSR
- 
+
       * CLEAR OUTPUTS
      C                   CLEAR                   SecsFilFmt
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKCUST
- 
+
      C                   Eval      DepotNo(1) = BVDR1                                        BUG3122
      C                   Eval      DepotNo(2) = BVDR2                                        BUG3122
      C                   Eval      DepotNo(3) = BVDR3                                        BUG3122
@@ -1117,10 +1123,10 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *
       * Return code
@@ -1159,16 +1165,16 @@
       *
       ** Customer Shortname
      C                   PARM                    WKCSSN           10
- 
+
       ** Customer Report Name
      C                   PARM                    WKCRNM           20
- 
+
       ** Customer Report Town
      C                   PARM                    WKCRTN           10
- 
+
       ** Depot Shortnames Array
      C                   PARM                    DepotSn
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -1281,7 +1287,7 @@
      C                   ENDIF                                                              BUG11828
                                                                                             BUG11828
      C                   ENDIF                                                              BUG11828
- 
+
      C**********         Eval      DepotNo(1) = BVDR1                                        BUG3122
      C**********         Eval      DepotNo(2) = BVDR2                                        BUG3122
      C**********         Eval      DepotNo(3) = BVDR3                                        BUG3122
@@ -1311,7 +1317,7 @@
      C**********         MOVEL     WRNUM         DDCUSN                                      BUG3122
      C**********         END                                                                 BUG3122
      C**********         END                                                                 BUG3122
- 
+
       * Retrieve System Value 'CustAlphaAllow' & 'CustAlphaSupNumeric'                        CSD027
      C                   Eval      PRetCode = *BLANKS                                         CSD027
      C                   Eval      PSysValK1 = 'CustAlphaAllow'                               CSD027
@@ -1337,7 +1343,7 @@
       *                                                                                       CSD027
      C                   Eval      WCusAlphaAllow  = PSysVal1                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal2                                 CSD027
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

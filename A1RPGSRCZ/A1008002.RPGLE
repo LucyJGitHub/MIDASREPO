@@ -20,12 +20,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059522           Date 07Feb22               *
-      *  Prev Amend No. MD058656           Date 23Aug21               *
+      *  Last Amend No. MD062029           Date 20Mar24               *
+      *  Prev Amend No. MD059522           Date 07Feb22               *
+      *                 MD058656           Date 23Aug21               *
       *                 BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062029 - Trades replication does not work since password   *
+      *             change to 12 charaters.                           *
+      *             Alter password field length to accept 128-char    *
+      *             passwords.                                        *
       *  MD059522 - Replication job RPTRGSRV01 dumps with error on    *
       *             call to QMQM in module A1008009. (Recompile)      *
       *  MD058656 - Compilation Issue                                 *
@@ -396,23 +401,35 @@
      D CommitCtlB      S                   LIKE(CommitCtl)
      D MdHdAssocB2     S                   LIKE(MdnHeadDs)
      D MdHdAssocB3     S                   LIKE(MdnHeadDs)
-     D ApHdmsg         DS           200
+     D*ApHdmsg**       DS           200                                                     MD062029
+     D ApHdmsg         DS           318                                                     MD062029
      D   ApMSGT                1     32
      D   ApSRCS               33     40
      D   ApORIG               41     72
      D   ApTGTS               73     80
      D   ApUSER               81     90
-     D   ApPASS               91    100
-     D   ApFORM              101    108
-     D   ApVERS              109    116
-     D   ApRPYQ              117    136
-     D   ApRESP              137    137
-     D   ApMAPL              138    138
-     D   ApFRNT              139    158
-     D   ApASOC              159    178
-     D   ApRESPN             179    179
-     D   ApMAPLB             180    180
-     D   APFIL               181    200
+     D***ApPASS*              91    100                                                     MD062029
+     D***ApFORM*             101    108                                                     MD062029
+     D***ApVERS*             109    116                                                     MD062029
+     D***ApRPYQ*             117    136                                                     MD062029
+     D***ApRESP*             137    137                                                     MD062029
+     D***ApMAPL*             138    138                                                     MD062029
+     D***ApFRNT*             139    158                                                     MD062029
+     D***ApASOC*             159    178                                                     MD062029
+     D***ApRESPN             179    179                                                     MD062029
+     D***ApMAPLB             180    180                                                     MD062029
+     D***APFIL**             181    200                                                     MD062029
+     D   ApPASS               91    218                                                     MD062029
+     D   ApFORM              219    226                                                     MD062029
+     D   ApVERS              227    234                                                     MD062029
+     D   ApRPYQ              235    254                                                     MD062029
+     D   ApRESP              255    255                                                     MD062029
+     D   ApMAPL              256    256                                                     MD062029
+     D   ApFRNT              257    276                                                     MD062029
+     D   ApASOC              277    296                                                     MD062029
+     D   ApRESPN             297    297                                                     MD062029
+     D   ApMAPLB             298    298                                                     MD062029
+     D   APFIL               299    318                                                     MD062029
      D ApDtmsg         DS          8000
      D   A_DDACTN              1      1
      D   A_DDTDRF              2      7
@@ -1680,7 +1697,8 @@
       *
      C                   Callb     'A1008009'
      C                   Parm                    FNQUEUE
-     C                   Parm                    ApHdmsg         200
+     C**********         Parm                    ApHdmsg         200                        MD062029
+     C                   Parm                    ApHdmsg         318                        MD062029
      C                   Parm                    ApDtmsg        8000
      C                   Parm                    CommitCtl
      C                   Parm      *BLANKS       ReturnCode

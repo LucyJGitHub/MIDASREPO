@@ -18,11 +18,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2021                      *
       *                                                               *
-      *  Last Amend No. MD059522           Date 07Feb22               *
-      *  Prev Amend No. BA1008   *CREATE   Date 03Jun21               *
+      *  Last Amend No. MD062029           Date 20Mar24               *
+      *  Prev Amend No. MD059522           Date 07Feb22               *
+      *                 BA1008   *CREATE   Date 03Jun21               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062029 - Trades replication does not work since password   *
+      *             change to 12 charaters.                           *
+      *             Alter password field length to accept 128-char    *
+      *             passwords.                                        *
       *  MD059522 - Replication job RPTRGSRV01 dumps with error on    *
       *             call to QMQM in module A1008009.                  *
       *  BA1008 - Replication of Trades to consolidated branches      *
@@ -385,7 +390,8 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    TgtQueue         48
-     C                   PARM                    ApnHeadDS       200
+     C**********         PARM                    ApnHeadDS       200                        MD062029
+     C                   PARM                    ApnHeadDS       318                        MD062029
      C                   PARM                    ApData         8000
      C                   PARM                    CommitCtl         1
       *
@@ -396,7 +402,8 @@
       ** Determine length of the Meridian header
       ** Remove use of %len as this is not supported below V3R7
       *
-     C                   EVAL      ApnHeadLen = 200
+     C**********         EVAL      ApnHeadLen = 200                                         MD062029
+     C                   EVAL      ApnHeadLen = 318                                         MD062029
       *                                                                                     MD059522
       ** Use queue name defined in system values.                                           MD059522
       *                                                                                     MD059522

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD061007           Date 31Dec21               *
-      *  Prev Amend No. MD059520           Date 21Feb22               *
+      *  Last Amend No. MD062117           Date 28Mar24               *
+      *  Prev Amend No. MD061007           Date 31Dec21               *
+      *                 MD059520           Date 21Feb22               *
       *                 252069             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
@@ -160,6 +161,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062117 - SDC0602 Failed due to FOOB                        *
       *  MD061007 - Deliverable Data Split for SDFCTLPA and GPFCTLPA  *
       *  MD059520 - Fusion Midas, Customer details Currency/Time of   *
       *             netting tab not showing records. (Recompile)      *
@@ -8630,6 +8632,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDCMRKPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022
@@ -9382,6 +9385,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDCHEQPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022
@@ -9504,6 +9508,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDSAFEPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056548           Date 10Sep20               *      
-      *  Prev Amend No. 252069             Date 22May20               *
+      *  Last Amend No. MD062117           Date 28Mar24               *
+      *  Prev Amend No. MD056548           Date 10Sep20               *
+      *                 252069             Date 22May20               *
       *                 CSD103             Date 10Aug20               *
       *                 MD056982           Date 12Oct20               *
       *                 MD056719           Date 16Sep20               *
@@ -159,6 +160,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062117 - SDC0602 Failed due to FOOB                        *
       *  MD056548 - Customer Fees Maintenance is missing              *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
@@ -8615,6 +8617,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDCMRKPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022
@@ -9367,6 +9370,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDCHEQPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022
@@ -9489,6 +9493,7 @@
                                                                                               CSD079
      C     B_BBTYLC      IFNE      'A'                                                      MD025022
      C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
+     C     A_CUTYLC      OREQ      'D'                                                      MD062117
      C                   MOVEL     'SDSAFEPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
      C                   ENDIF                                                              MD025022

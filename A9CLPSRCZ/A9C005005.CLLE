@@ -1,0 +1,201 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas A9 ETL Extract Requirements')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       A9C005005 - Midas A9 ETL Extract Requirements               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2021                     */
+/*                                                                   */
+/*       Last Amend No. MD058894           Date 08Mar24              */
+/*       Prev Amend No. BA9007  *CREATE    Date 08Mar24              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD058894 - Halt ETL extract if in error                     */
+/*       BA9007 - ETL Extract Requirements                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+                          Limited 2024')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BA9007) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&POPTN1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POPTN2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POPTN3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVAL3) TYPE(*CHAR) LEN(200)
+
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BKSLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&BKPLIBT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BKLIB) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&BKDAY) TYPE(*DEC) LEN(2 0) VALUE(1)
+             DCL        VAR(&ZDYNBR) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&BJRDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&BJLCCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&BJSLCD) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&BJBVPD) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&BJDFIN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DATETO) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&DATETOT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DATE3) TYPE(*CHAR) LEN(7)
+
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)                                 /*MD058894*/
+             DCL        VAR(&RMSG) TYPE(*CHAR) LEN(132)                                 /*MD058894*/
+             DCL        VAR(&PARAMS) TYPE(*CHAR) LEN(21)                                /*MD058894*/
+                                                                                        /*MD058894*/
+             DCLF       FILE(A9ETLEXPD)
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('A9C005004 - Midas A9 ETL Extract Requirements') TOMSGQ(MRUNQ)
+
+/**/
+             CHGJOB     SWS(00000000)
+
+/**/
+/* Check if BA9007 is ON */
+/**/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('BA9007')
+             CHGVAR     VAR(&BA9007) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&BA9007) VALUE('Y')
+             ENDDO
+
+/* Process only if BA9007 is ON */
+
+             IF         COND(&BA9007 *EQ 'Y') THEN(DO)
+
+/* Check system values for ETL library names */
+
+                CHGVAR     VAR(&PRTCD) VALUE(*BLANKS)
+                CHGVAR     VAR(&POPTN1) VALUE('ETLExtractLib')
+                CHGVAR     VAR(&PVAL1) VALUE(*BLANKS)
+                CHGVAR     VAR(&POPTN2) VALUE('ETLBackupLib')
+                CHGVAR     VAR(&PVAL2) VALUE(*BLANKS)
+
+                CALL       PGM(AOSVALR0) PARM(&PRTCD &POPTN1 &PVAL1 &POPTN2 &PVAL2 &POPTN3 +
+                             &PVAL3 &POPTN3 &PVAL3 &POPTN3 &PVAL3 &POPTN3 &PVAL3 &POPTN3 +
+                             &PVAL3 &POPTN3 &PVAL3 &POPTN3 &PVAL3 &POPTN3 &PVAL3)
+
+                IF         COND(&PRTCD *NE '       ') THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+
+                IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                   CHGVAR     VAR(&EXTLIB) VALUE(&PVAL1)
+                   CHGVAR     VAR(&BKSLIB) VALUE(&PVAL2)
+
+                   IF         COND(&EXTLIB = '          ' *OR &BKSLIB = '        ') THEN(DO)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+
+                ENDDO
+
+/* Allocate main library for safe operations                                       */
+
+                ALCOBJ     OBJ((&EXTLIB *LIB *EXCLRD))
+
+/* Determine the backup data library name for the previous run                     */
+
+                CALL       PGM(A9C005006) PARM(&BJRDNB &BJLCCY &BJSLCD &BJBVPD &BJDFIN)
+                CALL       PGM(ZBKDT) PARM(&BJRDNB &BKDAY &ZDYNBR &BJLCCY &BJSLCD)
+                CALL       PGM(ZDATE2) PARM(&ZDYNBR &BJDFIN &DATETO &DATE3)
+
+                IF         COND(%SST(&DATE3 1 1) = ' ') THEN(DO)
+                   CHGVAR     VAR(&DATETOT) VALUE('0' *CAT %TRIM(&DATE3))
+                   CHGVAR     VAR(&BKPLIBT) VALUE(%SST(&DATETOT 1 2))
+                ENDDO
+                ELSE       DO
+                   CHGVAR     VAR(&BKPLIBT) VALUE(%SST(&DATE3 1 2))
+                ENDDO
+                CHGVAR     VAR(&BKLIB) VALUE(&BKSLIB *TCAT &BKPLIBT)
+
+/* Check if the backup data library exists and if not create it                    */
+
+                CHKOBJ     OBJ(&BKLIB) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(CRTLIB LIB(&BKLIB))
+
+/* Allocate backup library for safe operations                                     */
+
+                ALCOBJ     OBJ((&BKLIB *LIB *EXCLRD))
+
+/* Clear backup library                                                            */
+
+                CLRLIB     LIB(&BKLIB)
+
+/* Copy previous extraction to backup library                                      */
+
+                CRTDUPOBJ  OBJ(*ALL) FROMLIB(&EXTLIB) OBJTYPE(*ALL) TOLIB(&BKLIB) DATA(*YES) +
+                             CST(*NO) TRG(*NO)
+
+/* Clear extract library                                                           */
+
+                CLRLIB     LIB(&EXTLIB)
+
+/* Copy new files                                                                  */
+
+ READ:          RCVF
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+
+                CPYF       FROMFILE(&ETFILE) TOFILE(&EXTLIB/&ETFILE) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)
+/*              MONMSG     MSGID(CPF2802 CPF2817) EXEC(DO)                              /*MD058894*/
+                MONMSG     MSGID(CPF2802 CPF2817 CPF2952) EXEC(DO)                      /*MD058894*/
+/*                 SNDPGMMSG  MSGID(DRI0701) MSGF(GBSDUSRMSG) MSGDTA(&ETFILE) +
+                                TOMSGQ(MOPERQ) */                                       /*MD058894*/
+/*                 MONMSG     MSGID(CPF0000 MCH0000) */                                 /*MD058894*/
+ ANSWER:                                                                                /*MD058894*/
+                   CHGVAR     VAR(&PARAMS) VALUE(&EXTLIB *CAT &ETFILE)                  /*MD058894*/
+                   SNDPGMMSG  MSGID(A9X0017) MSGF(GBXXUSRMSG) MSGDTA(&PARAMS) +
+                                TOMSGQ(MOPERQ) MSGTYPE(*INQ) KEYVAR(&KEYVAR)            /*MD058894*/
+                   RCVMSG     MSGKEY(&KEYVAR) WAIT(*MAX) KEYVAR(&KEYVAR) MSG(&RMSG)     /*MD058894*/
+                   IF         (&RMSG *NE 'DONE') THEN(DO)                               /*MD058894*/
+                      GOTO       ANSWER                                                 /*MD058894*/
+                   ENDDO                                                                /*MD058894*/
+                ENDDO
+
+                GOTO       CMDLBL(READ)
+
+/* Complete gracefully                                                             */
+                GOTO       CMDLBL(ENDPGM)
+
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program A9C005005 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2024')
+
+             ENDPGM

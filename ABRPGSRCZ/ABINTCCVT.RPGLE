@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR941922           Date 28Mar12               *
+      *  Last Amend No. MD062436           Date 26Mar24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR941922           Date 28Mar12               *
       *                 261962             Date 23Sep09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062436 - Status of Matured INTC deals shown as authorized  *
+      *             on Enquire via Internal Contracts menu            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR941922 - Status of Authorised INTC deals not shown during  *
       *             Enquiry via Internal Contracts menu               *
@@ -392,7 +395,11 @@
       ** Authorised Deal                                                                    AR941922
                                                                                             AR941922
      C                   ELSE                                                               AR941922
+     C     JPDSTS        IFEQ      'M'                                                      MD062436
+     C                   MOVE      @STSA(1)      DDSTS                                      MD062436
+     C                   ELSE                                                               MD062436
      C                   MOVE      @STSA(3)      DDSTS                                      AR941922
+     C                   END                                                                MD062436
      C**********         ELSE                                                                 198665
       *****************************************************************                       198665
       **Deal*Matured***************************************************                       198665

@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Midas-Kondor I/F Customer Extract Purge')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       XXC008003 - Midas SD Customer Extract Purge                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. DRI008  *Create    Date 29Jun23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       DRI008 - Midas-Kondor Interface Customer Details            */
+/*                                                                   */
+/*********************************************************************/
+
+         PGM     PARM(&CNAM &CSEQ)
+
+         DCL     VAR(&CPYFLD) TYPE(*CHAR) +
+                     LEN(64) VALUE('(c) Finastra 2023')
+         DCL     VAR(&CNAM) TYPE(*CHAR) LEN(10)
+         DCL     VAR(&CSEQ) TYPE(*DEC) LEN(5)
+         DCL     VAR(&DATA) TYPE(*CHAR) LEN(50)
+/**/
+/* Global error trap                                                          */
+/**/
+         MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                       CMDLBL(ABNORMAL))
+/**/
+         SNDPGMMSG MSG('SD Midas-Kondor Customer Extract Purge') TOMSGQ(MRUNQ)
+
+/**/
+/* Start commitment control                                                   */
+/**/
+         STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                       CMTSCOPE(*JOB)
+/**/
+/* Purge XXMQCUTD & initialise Unique reference data area                     */
+/**/
+
+         CHGDTAARA  DTAARA(XXCUSDA (1 6)) VALUE('000001')
+
+         CALL       PGM(XX008004)
+
+         IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+            RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+            SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                       TOMSGQ(MOPERQ MRUNQ)
+            GOTO     ABNORMAL
+         ENDDO
+/**/
+/*  No errors. Commit updates                                                 */
+/**/
+         COMMIT
+/**/
+/*  Normal completion - sidestep error routine.                               */
+/**/
+         GOTO       CMDLBL(THEEND)
+/**/
+/*  Error trap - send message if any abnormality.                             */
+/**/
+ ABNORMAL:   DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDMSG     MSG('Program terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+THEEND:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra Ltd 2023')
+             ENDPGM

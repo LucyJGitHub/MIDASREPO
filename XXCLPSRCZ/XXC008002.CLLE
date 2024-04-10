@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Customer I/F Midas to Kondor')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas   - Midas Standing Data                               */
+/*                                                                   */
+/*       XXC008002 - Midas SD Customer Extract I/F Midas to Kondor   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2023                     */
+/*                                                                   */
+/*       Last Amend No. DRI008  *Create    Date 28Jun23              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       DRI008 - Midas-Kondor Interface Customer Details            */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&QPARM1 &QPARM2)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra 2023')
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30) VALUE(*BLANKS)
+             DCL        VAR(&PLVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&QPARM1) TYPE(*CHAR) LEN(8000)
+             DCL        VAR(&QPARM2) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&EXTRACT) TYPE(*CHAR) LEN(1)
+
+/**/
+/* Global error trap                                                          */
+/**/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNORMAL))
+/**/
+             SNDPGMMSG  MSG('SD Customer Extract Midas-Kondor I/F') +
+                          TOMSGQ(MRUNQ)
+
+/**/
+/* Start commitment control                                                   */
+/**/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+/**/
+/* Process trigger request                                                    */
+/**/
+             CALL       PGM(XX008001) PARM(&QPARM1 &QPARM2)
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+             CHGJOB     SWS(XXXXXX11)
+             ENDDO
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+
+             COMMIT
+
+/**/
+/* Send Customer details message                                              */
+/**/
+
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CALL       PGM(XX008002) PARM(&RTCD &ERMS)
+
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+             CHGJOB     SWS(XXXXXX11)
+             ENDDO
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+
+             GOTO       CMDLBL(END)
+
+ ABNORMAL:   DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDMSG     MSG('Program terminated abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:        ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra Ltd 2023')
+             ENDPGM

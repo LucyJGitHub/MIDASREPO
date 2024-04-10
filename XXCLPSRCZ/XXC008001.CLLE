@@ -1,0 +1,74 @@
+/****************************************************************** */
+/*STD    CLPBASEBND                                                 */
+/*EXI    TEXT('Midas XX Kondor Trigger Program for SDCUSTPD')       */
+/****************************************************************** */
+/*                                                                  */
+/*        Midas - Standing Data Module                              */
+/*                                                                  */
+/*       XXC008001 - Midas XX Kondor Trigger Program for SDCUSTPD   */
+/*                                                                  */
+/*       (c)Finastra International Limited 2023                     */
+/*                                                                  */
+/*       Last Amend No. DRI008   *Create   Date 13Jun23             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       DRI008 - Midas-Kondor Interface Customer Details           */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&QPARM1 &QPARM2)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited 2023')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&QPARM1) TYPE(*CHAR) LEN(8000)
+             DCL        VAR(&QPARM2) TYPE(*CHAR) LEN(4)
+
+/**   GLOBAL MONITOR MESSAGE                                    */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('XXC008001 - KONDOR TRIGGER PROGRAM FOR +
+                          SDCUSTPD') TOMSGQ(MRUNQ)
+
+/** CREATE DATA AREA LDA                                       */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/** SUBMIT THE TRIGGER PROGRAM TO BATCH                        */
+
+             SBMJOB     CMD(CALL XXC008002 PARM(&QPARM1 &QPARM2)) +
+                        JOB(XXC008002) JOBD(MBATCH) +
+                        USER(*JOBD) RTGDTA(*JOBD) +
+                        INLLIBL(*JOBD) MSGQ(MOPERQ) +
+                        OUTQ(*JOBD)
+
+/**   DATABASE ERROR PROCESSING                                */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/** ABNORMAL TERMINATION - BATCH JOB                          */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('KONDOR TRIGGER PROGRAM FOR SDCUSTPD ENDED +
+                          ABNORMALLY') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+
+END:
+                  ENDPGM

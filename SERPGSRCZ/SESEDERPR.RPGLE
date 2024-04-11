@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260191A            Date 22May20               *
-      *  Prev Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. MD062381           Date 14Mar24               *
+      *  Prev Amend No. 260191A            Date 22May20               *
+      *                 CSD103             Date 10Aug20               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062381 - Security Diary Event Repair fails due to parameter*
+      *             mismatched caused by CSE065. Fix is to ensure that*
+      *             parameters are matched for SESEDE1DP, SESEDE1DT,  *
+      *             SESEDE1VL and SESEDEUPD called programs.          *
       *  260191A- System should not allow deletion of LIVE/MATURED    *
       *           security diary event if ALL generated position      *
       *           settlements are still unsettled/live records.       *
@@ -375,6 +380,7 @@
       ** Output screen fields
      D DDCUCR          S             12A
      D DDSEXR          S             14A
+     D DDMATY          S              8A                                                    MD062381
       *
      D KABFIELDID      S                   LIKE(ABFIELDID)
       *
@@ -607,7 +613,7 @@
      C                   EVAL      PRDNB = 'Y'
      C                   EVAL      WScrn = 'R'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -715,11 +721,11 @@
       ** event date and diary event type is present, set Retrieve Mode to
       ** blank(Access using security shortname, event date and event type).
      C                   IF        DDACTN = 'I'
- 
+
      C                   EVAL      PMode = '*FRONT'
- 
+
      C                   ELSE
- 
+
      C                   IF        DDSDSN = *BLANK AND
      C                             DDSDED = *BLANK AND
      C                             DDSDET = *BLANK
@@ -727,9 +733,9 @@
      C                   ELSE
      C                   EVAL      PMode = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRRtvSEDE
       *
       ** For the rest of the processing, set Mode of Operation
@@ -754,7 +760,7 @@
       ** format.
      C                   IF        DDACTN <> 'I' AND
      C                             RECI <> *BLANK
- 
+
      C                   EXSR      SRCvtSEDE
       *
       ** Save security shortname, event date and event type retrieved from file
@@ -797,7 +803,7 @@
       ** the replacement character must be replaced with the corresponding
       ** character from the original transaction.
      C                   IF        GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      NwDE1ScnFmt                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'Y'           WSUBSE1
@@ -810,11 +816,11 @@
       *
       ** Do data substitution.
      C                   EXSR      SRDtaSubs
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If errors exist for action code , security shortname, event date
@@ -837,7 +843,7 @@
       *
       ** Display detail screen.
      C                   EVAL      WScrn = 'D'
- 
+
      C     ERdNBrw       ENDSR
       *****************************************************************
       /EJECT
@@ -898,6 +904,9 @@
       *
       ** Current exchange rate
      C                   PARM                    DDSEXR
+      *                                                                                     MD062381
+      ** Maturity Date                                                                      MD062381
+     C                   PARM                    DDMATY                                     MD062381
       *
       ** Processing type from PF/INVTPD
      C                   PARM                    PPROT
@@ -1012,7 +1021,7 @@
       ** F12 - cancel.  Read Next Subfile record or display
       ** Browse screen.
      C                   WHEN      PINKL = *ON
- 
+
      C                   IF        PRDNB = 'Y'
      C                   EVAL      WScrn = 'R'
      C                   ELSE
@@ -1061,9 +1070,9 @@
      C                   ELSE
      C                   EVAL      WScrn = 'B'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C     EScrnD        ENDSR
       *****************************************************************
       /EJECT
@@ -1073,9 +1082,9 @@
       *                                                               *
       *****************************************************************
      C     SRDefScnD     BEGSR
- 
+
      C     WProcOnce     IFEQ      *BLANK
- 
+
      C                   CALLB     'SESEDE1DT'
       *                             =========
       *
@@ -1134,14 +1143,17 @@
       *
       ** Current exchange rate
      C                   PARM                    DDSEXR
- 
+                                                                                            MD062381
+      ** Maturity Date                                                                      MD062381
+     C                   PARM                    DDMATY                                     MD062381
+
      C                   ENDIF
       *
       ** Set default variable to 'Y' to bypass defaulting the
       ** second time around.
       *
      C                   EVAL      WProcOnce = 'Y'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1254,6 +1266,9 @@
       *
       ** SDBANK - Date format indicator
      C                   PARM                    BJDFIN
+      *                                                                                     MD062381
+      ** SDBANK - Run day number                                                            MD062381
+     C                   PARM                    BJRDNB                                     MD062381
       *
       ** MMODF - Strategic risk management indicator
      C                   PARM                    RMFL
@@ -1310,7 +1325,7 @@
       *
       ** Redisplay screen
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   EVAL      WRedisplay = *BLANK
       *
       ** If no errors occurred during validation of fields on detail
@@ -1321,15 +1336,15 @@
      C                   Z-ADD     1             WIx
       *
      C                   DOW       WiX <= WIDx AND WRedisplay = *BLANK
- 
+
      C                   IF        WMsgIdArr(WIx) <> WPrvWarnAr(WIx)
      C                   EVAL      WRedisplay = 'Y'
      C                   ELSE
      C                   EVAL      WIx =WIx + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        WRedisplay <> 'Y'
      C                   EXSR      SRResetErr
      C                   ENDIF
@@ -1350,7 +1365,7 @@
      C                   ELSE
      C                   EVAL      WScrn = 'F'
      C                   ENDIF
- 
+
      C     EValD         ENDSR
       *****************************************************************
       /EJECT
@@ -1386,6 +1401,9 @@
       *
       ** Current exchange rate
      C                   PARM                    DDSEXR
+      *                                                                                     MD062381
+      ** Maturity Date                                                                      MD062381
+     C                   PARM                    DDMATY                                     MD062381
       *
       ** Processing type from PF/INVTPD
      C                   PARM                    PPROT
@@ -1482,7 +1500,7 @@
      C                   PARM                    DATA
      C                   PARM      *BLANKS       PWRTN
      C                   PARM                    PWSPARE
- 
+
      C                   SELECT
       *
       ** F3 - end program.
@@ -1509,11 +1527,11 @@
      C                   ELSE
      C                   EVAL      WScrn = 'B'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1557,6 +1575,9 @@
       *
       ** Current exchange rate
      C                   PARM                    DDSEXR
+      *                                                                                     MD062381
+      ** Maturity Date                                                                      MD062381
+     C                   PARM                    DDMATY                                     MD062381
       *
       ** Processing type from PF/INVTPD
      C                   PARM                    PPROT
@@ -1662,9 +1683,9 @@
       ** Enter key was pressed.  Update files.
      C                   OTHER
      C                   EVAL      WScrn = 'U'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1781,6 +1802,9 @@
       *                                                                                       CSE031
       ** Coupon Fixing for Floating Rate Notes                                                CSE031
      C                   PARM                    CSE031                                       CSE031
+      *                                                                                     MD062381
+      ** Constant Yield Amortisation on Mortgage backed assets                              MD062381
+     C                   PARM                    CSE065                                     MD062381
       *
       ** If errors occurred on update, rollback uncommitted file
       ** changes.
@@ -1840,7 +1864,7 @@
      C                   ELSE
      C                   EVAL      WScrn = 'B'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1850,7 +1874,7 @@
       *                                                               *
       *****************************************************************
      C     SRRtvSEDE     BEGSR
- 
+
                                                                                               CSC011
       ** Use Proc date in SC24X7 for RTV module if CSC011 is present                          CSC011
       ** and current system is support system.                                                CSC011
@@ -1971,7 +1995,7 @@
       *                                                                                       222373
       ** Redisplay screen                                                                     222373
      C                   PARM                    PReDsp                                       222373
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1982,7 +2006,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSEDE     BEGSR
- 
+
      C                   CALLB     'SESEDECVT'
       *                             =========
       *
@@ -2038,7 +2062,7 @@
       ** SE Diary events screen details from incoming transaction
       ** - screen format
      C                   PARM                    CrDE1ScnFmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2051,10 +2075,10 @@
       *
       ** Substitute the data for the various parts of the transaction.
      C                   IF        WSUBSE1 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -2068,11 +2092,11 @@
       *
       ** Current Data
      C                   PARM      CrDE1ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwDE1ScnFmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2111,7 +2135,7 @@
       ** Read security diary event details validation error messages for
       ** 1st screen.
      C                   EVAL      KABFIELDID = 0
- 
+
      C     ZATRNKD1      SETLL     ZATRNERRD0
      C     ZATRNKD0      READE     ZATRNERRD0                             99
       *
@@ -2119,7 +2143,7 @@
       ** OK flag for field to 'N'.
      C                   DOW       *IN99 = *OFF AND
      C                             ABFIELDID > WFldOffSet1
- 
+
      C     ABMSGID       LOOKUP    MsgIdArr(1)                            98
       *
       ** If message already present in array, disregard it
@@ -2129,17 +2153,17 @@
      C                   MOVEL     ABFIELDNAM    FldNameArr(Ex)
      C                   MOVEL     ABMSGID       MsgIdArr(Ex)
      C                   ENDIF
- 
+
      C                   Z-ADD     ABFIELDID     Fx
      C                   SUB       WFldOffset1   Fx
- 
+
      C                   IF        Fx < 1 OR Fx > 60
      C                   Z-ADD     1             Fx
      C                   ENDIF
- 
+
      C                   MOVE      'N'           WEI(Fx)
      C     ZATRNKD0      READE     ZATRNERRD0                             99
- 
+
      C                   ENDDO
       *
       ** Update error indicators using work array.
@@ -2151,7 +2175,7 @@
      C                   MOVEA     MsgIdArr      MsgIdAr1
      C                   MOVEA     MsgDtaArr     MsgDtaAr1
      C                   EVAL      ID1 = Ex
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2173,9 +2197,9 @@
      C                   Seton                                        U7U8                   BUG2604
      C                   Endif                                                               BUG2604
      C                   Endif                                                               BUG2604
- 
+
      C                   EVAL      WScrn = 'T'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2192,7 +2216,7 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   MsgDtaArr
      C                   CLEAR                   IDx
- 
+
      C                   CLEAR                   WFldNamArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WMsgDtaArr
@@ -2201,7 +2225,7 @@
       ** Initialise screen fields error indicators.
       *
      C                   EVAL      SEESEDE = *ALL'Y'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2293,7 +2317,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           CSE010
      C                   ELSE
@@ -2320,7 +2344,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           S01509
      C                   ELSE
@@ -2347,7 +2371,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           S01510
      C                   ELSE
@@ -2562,7 +2586,7 @@
      C                   PARM                    PFormat
      C                   PARM                    PField1
      C                   PARM                    PFieldNo
- 
+
      C                   IF        RetCodeOut = *BLANKS
      C                   EVAL      WFldOffset1 = PFieldNo - 1
       *
@@ -2575,12 +2599,12 @@
      C     ZATRNKD0      KLIST
      C                   KFLD                    PFOTranSel
      C                   KFLD                    PTmeStpSel
- 
+
      C     ZATRNKD1      KLIST
      C                   KFLD                    PFOTranSel
      C                   KFLD                    PTmeStpSel
      C                   KFLD                    KABFIELDID
- 
+
      C     ZATRNKX0      KLIST
      C                   KFLD                    PTmeStpSel
      C                   KFLD                    PFOTranSel

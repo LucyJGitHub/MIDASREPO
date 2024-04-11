@@ -5093,9 +5093,9 @@
      C     CDL012        IFEQ      'Y'
      C                   Z-ADD     NIDT          UGNIDT
      C                   ENDIF
-1045 C                   Z-ADD     0             NIDT
-1046 C                   MOVE      ' '           IPFR
-1045 C                   Z-ADD     0             INTF
+1045 C**********         Z-ADD     0             NIDT                                       AR653494
+1046 C**********         MOVE      ' '           IPFR                                       AR653494
+1045 C**********         Z-ADD     0             INTF                                       AR653494
      C/COPY WNCPYSRC,DL0280C010
 1047 C*
 1048 C*****    DPMAT IS A ROUTINE TO HANDLE THE MATURITY DATE PROCESSING

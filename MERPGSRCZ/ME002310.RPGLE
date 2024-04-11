@@ -609,23 +609,38 @@
      C                   EVAL      N4ACCD = KeyACCD
      C                   EVAL      N4ACSQ = KeyACSQ
      C                   EVAL      N4NATY = KeyNATY
-      *                                                                                      BA6026
-     C                   If        BA6026 = 'Y' And EDPROT = '*SWIFT'                        BA6026
-     C                   Eval      G4NWRK = KeyNWRK                                          BA6026
-     C                   Eval      G4BRCA = KeyBRCA                                          BA6026
-     C                   Eval      G4CNUM = KeyCNUM                                          BA6026
-     C                   Eval      G4CCY  = KeyCCY                                           BA6026
-     C                   Eval      G4ACCD = KeyACCD                                          BA6026
-     C                   Eval      G4ACSQ = KeyACSQ                                          BA6026
-     C                   Eval      G4NATY = KeyNATY                                          BA6026
-     C                   Eval      G4DSTN = KeyDSTN                                          BA6026
- E1  C                   EndIf                                                               BA6026
+      *                                                                             BA6026 MD062357
+     C**********         If        BA6026 = 'Y' And EDPROT = '*SWIFT'               BA6026 MD062357
+     C**********         Eval      G4NWRK = KeyNWRK                                 BA6026 MD062357
+     C**********         Eval      G4BRCA = KeyBRCA                                 BA6026 MD062357
+     C**********         Eval      G4CNUM = KeyCNUM                                 BA6026 MD062357
+     C**********         Eval      G4CCY  = KeyCCY                                  BA6026 MD062357
+     C**********         Eval      G4ACCD = KeyACCD                                 BA6026 MD062357
+     C**********         Eval      G4ACSQ = KeyACSQ                                 BA6026 MD062357
+     C**********         Eval      G4NATY = KeyNATY                                 BA6026 MD062357
+     C**********         Eval      G4DSTN = KeyDSTN                                 BA6026 MD062357
+ E1  C**********         EndIf                                                      BA6026 MD062357
 
  E1  C                   ENDIF
 
       ** Prepare the action code used by the rest of the processing
       *
      C                   EVAL      ActionCode = %Subst(ActionCod2:1:1)
+      *                                                                                    MD062357
+      ** Save the extension fields during Insert or Amend                                  MD062357
+      *                                                                                    MD062357
+     C                   IF        BA6026 = 'Y' And EDPROT = '*SWIFT'                      MD062357
+     C                             AND (ActionCode = 'I' OR                                MD062357
+     C                                  ActionCode = 'A')                                  MD062357
+     C                   EVAL      G4NWRK = KeyNWRK                                        MD062357
+     C                   EVAL      G4BRCA = KeyBRCA                                        MD062357
+     C                   EVAL      G4CNUM = KeyCNUM                                        MD062357
+     C                   EVAL      G4CCY  = KeyCCY                                         MD062357
+     C                   EVAL      G4ACCD = KeyACCD                                        MD062357
+     C                   EVAL      G4ACSQ = KeyACSQ                                        MD062357
+     C                   EVAL      G4NATY = KeyNATY                                        MD062357
+     C                   EVAL      G4DSTN = KeyDSTN                                        MD062357
+     C                   ENDIF                                                             MD062357
       *    ----------    ------
      C     @INZSR        ENDSR
 

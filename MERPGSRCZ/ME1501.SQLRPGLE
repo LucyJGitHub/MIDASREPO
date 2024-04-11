@@ -20,12 +20,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD060125           Date 21Jun22               *
-      *  Prev Amend No. MD058687           Date 09Jul21               *
-      *                 CFT162             Date 16Dec20               *
+      *  Last Amend No. MD058687           Date 09Jul21               *
+      *  Prev Amend No. CFT162             Date 16Dec20               *
       *                 217679             Date 04Feb13               *
       *                 AR918987A          Date 04Feb13               *
-      *                 AR918987           Date 09Feb12               *      
+      *                 AR918987           Date 09Feb12               *
       *                 MD058081           Date 11May21               *
       *                 MD060125           Date 21Jun22               *
       *                 MD056560           Date 31Aug20               *
@@ -82,9 +81,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
-      *             in ME1501.                                        *
-      *           - Include FIXNBR(*ZONED), avoid decimal data error. *
       *  MD058687 - Formalise 217679/AR918987A/AR918987 for CFT162    *
       *  CFT162 - MT900 and MT910 Message Generation                  *
       *           Applied 217679/AR918987A/AR918987 and conditioned to*
@@ -98,7 +94,7 @@
       *  AR918987 - Missing MT900/MT910 extension details in STP for  *
       *             CAR UUC068. Recompile.                            *
       *           - Pass generation criteria as parms.                *
-      *             (Child: AR922598)                                 *      
+      *             (Child: AR922598)                                 *
       *  MD058081 - Deliverable Data Split for ME and MS              *
       *  MD060125 - STP job ME_FT_IMM on MSGW with decimal data error *
       *             in ME1501.                                        *

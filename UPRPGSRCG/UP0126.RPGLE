@@ -11,15 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD062503           Date 11Apr24               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC017             Date 26Feb03               *
+      *                 CSC017             Date 26Feb03               *
       *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
+      *  MD062503 - Error due to ZALIGN not found                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC017 - Change library list to 250.                         *
       *                                                               *
@@ -692,7 +695,8 @@
      C                   IF        SequenceA <> *blanks
       * Call standard subroutine to convert field.
      C                   EVAL      ConvertField = SequenceA
-     C                   CALL      'ZALIGN'
+     C**********         CALL      'ZALIGN'                                                 MD062503
+     C                   CALL      'GPALIGN'                                                MD062503
      C                   PARM                    ReturnCode        7
      C                   PARM                    ConvertField     16
      C                   PARM      *ZERO         NoOfDecimals      1 0

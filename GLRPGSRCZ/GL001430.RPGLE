@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD061033           Date 27Sep23               *
-      *  Prev Amend No. BA6026             Date 18Jan23               *
+      *  Last Amend No. MD062440           Date 02Apr24               *
+      *  Prev Amend No. MD061033           Date 27Sep23               *
+      *                 BA6026             Date 18Jan23               *
       *                 MD025421           Date 10Mar23               *
       *                 MD057965           Date 28May21               *
       *                 CSD103             Date 10Aug20               *
@@ -67,6 +68,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD062440 - Field 64 Amount (Closing Available Balance) of    *
+      *             MT940 is incorrect for non-retail network account,*
+      *             not equal to CLBL in ACCNTAB. Condition MD-49134  *
+      *             fix with 'RtvFld64AvBalACCNTAB' system value.     *
+      *             The default value is 'N' which performs MD-49134  *
+      *             processing.                                       *
       *  MD061033 - GLC001430 went to MSGW.                           *
       *           - Reset next page number to 0 if current page       *
       *             number is 99999.                                  *
@@ -388,6 +395,29 @@
      D PRtcd           S             10A                                                    BUG22687
      D PMsgTyp         S              3A                                                      CER030
       *                                                                                       CER030
+     D PRetCode        S              7A                                                    MD062440
+     D P@OP01          S             20A                                                    MD062440
+     D P@VL01          S            200A                                                    MD062440
+     D P@OP02          S             20A                                                    MD062440
+     D P@VL02          S            200A                                                    MD062440
+     D P@OP03          S             20A                                                    MD062440
+     D P@VL03          S            200A                                                    MD062440
+     D P@OP04          S             20A                                                    MD062440
+     D P@VL04          S            200A                                                    MD062440
+     D P@OP05          S             20A                                                    MD062440
+     D P@VL05          S            200A                                                    MD062440
+     D P@OP06          S             20A                                                    MD062440
+     D P@VL06          S            200A                                                    MD062440
+     D P@OP07          S             20A                                                    MD062440
+     D P@VL07          S            200A                                                    MD062440
+     D P@OP08          S             20A                                                    MD062440
+     D P@VL08          S            200A                                                    MD062440
+     D P@OP09          S             20A                                                    MD062440
+     D P@VL09          S            200A                                                    MD062440
+     D P@OP10          S             20A                                                    MD062440
+     D P@VL10          S            200A                                                    MD062440
+     D SysName         C                   CONST('RtvFld64AvBalACCNTAB')                    MD062440
+      *                                                                                     MD062440
      D/COPY WNCPYSRC,GLH00174
 
       ** Input Specs
@@ -782,6 +812,10 @@
      C                   EVAL      MGIOBL = N40LCA                              Initial Opening Bala
      C                   EVAL      MGFCBL = N40LCA + WkBalance                  Final Closing Balanc
      C                   EVAL      MGCLBL = CLBL                                Available Balance
+      *                                                                                     MD062440
+      ** Execute MD-49134 fix if system value RtvFld64AvBalACCNTAB is 'N'                   MD062440
+      *                                                                                     MD062440
+     C                   If        SkpFlg ='N'                                              MD062440
                                                                                             MD049134
      C     KeyRetHis     CHAIN     REHISDL                            98                    MD049134
                                                                                             MD049134
@@ -793,6 +827,7 @@
      C                   EVAL      MGCLBL = RXHISB                                          MD049134
      C                   ENDIF                                                              MD049134
                                                                                             MD049134
+     C                   Endif                                                              MD062440
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_072                                                             CGL146A
 
@@ -1348,6 +1383,41 @@
      C                   IF        P@RTCD = *BLANKS                                           BA6026
      C                   EVAL      BA6026 = 'Y'                                               BA6026
      C                   ENDIF                                                                BA6026
+      *                                                                                     MD062440
+      ** Access System values                                                               MD062440
+      *                                                                                     MD062440
+     C                   CALL      'AOSVALR0'                                               MD062440
+     C                   PARM      *BLANKS       PRetCode                                   MD062440
+     C                   PARM      SysName       P@OP01                                     MD062440
+     C                   PARM      *BLANKS       P@VL01                                     MD062440
+     C                   PARM      *BLANKS       P@OP02                                     MD062440
+     C                   PARM      *BLANKS       P@VL02                                     MD062440
+     C                   PARM      *BLANKS       P@OP03                                     MD062440
+     C                   PARM      *BLANKS       P@VL03                                     MD062440
+     C                   PARM      *BLANKS       P@OP04                                     MD062440
+     C                   PARM      *BLANKS       P@VL04                                     MD062440
+     C                   PARM      *BLANKS       P@OP05                                     MD062440
+     C                   PARM      *BLANKS       P@VL05                                     MD062440
+     C                   PARM      *BLANKS       P@OP06                                     MD062440
+     C                   PARM      *BLANKS       P@VL06                                     MD062440
+     C                   PARM      *BLANKS       P@OP07                                     MD062440
+     C                   PARM      *BLANKS       P@VL07                                     MD062440
+     C                   PARM      *BLANKS       P@OP08                                     MD062440
+     C                   PARM      *BLANKS       P@VL08                                     MD062440
+     C                   PARM      *BLANKS       P@OP09                                     MD062440
+     C                   PARM      *BLANKS       P@VL09                                     MD062440
+     C                   PARM      *BLANKS       P@OP10                                     MD062440
+     C                   PARM      *BLANKS       P@VL10                                     MD062440
+      *                                                                                     MD062440
+     C                   IF        PRetCode  <> *BLANKS                                     MD062440
+     C                   EVAL      DBFILE = 'SDSVLJW0'                                      MD062440
+     C                   EVAL      DBKEY = SysName                                          MD062440
+     C                   EVAL      DBASE = 1                                                MD062440
+     C                   EXSR      *PSSR                                                    MD062440
+     C                   ENDIF                                                              MD062440
+      *                                                                                     MD062440
+      ** Retrieve System Value setting                                                      MD062440
+     C                   MOVEL     P@VL01        SkpFlg            1                        MD062440
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_046                                                             CGL146A
      C/COPY WNCPYSRC,GLH00387

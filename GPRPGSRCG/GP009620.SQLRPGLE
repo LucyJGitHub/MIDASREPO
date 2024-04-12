@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054733           Date 02Dec19               *
-      *  Prev Amend No. MD054209 *CREATE   Date 31Aug19               *
+      *  Last Amend No. MD062430           Date 24Mar24               *
+      *  Prev Amend No. MD054733           Date 02Dec19               *
+      *                 MD054209 *CREATE   Date 31Aug19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD062430 - Improvement to display the description name of API*
       *  MD054733 - Merge GPWPBCTD to GPWIPCTD.                       *
       *  MD054209 - Deliverable Data Split                            *
       *                                                               *
@@ -94,6 +96,9 @@
 
       ** Declare the message file
      D WUMSGF          S             10    INZ('SDUSRMSG')
+     D GAPID           S             50                                                     MD062430
+     D LCs             C                   CONST('abcdefghijklmnopqrstuvwxyz')              MD062430
+     D UCs             C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ')              MD062430
 
       /EJECT
       *****************************************************************
@@ -178,6 +183,11 @@
      C                   SETON                                        82
      C                   ELSE
      C                   SETOFF                                       82
+     C/EXEC SQL                                                                             MD062430
+     C+ select GAPID into :GAPID from GPAPIJW0                                              MD062430
+     C+ where GAPIN = :WC_API                                                               MD062430
+     C/END-EXEC                                                                             MD062430
+     C                   eval      SQLCODE = 0                                              MD062430
      C                   ENDIF
       *
       * Save previous selector values
@@ -193,6 +203,8 @@
      C                   MOVEL     #2AUTL        WZAUTL                         Authorization level
      C     *LIKE         DEFINE    #2ZONE        WZZONE
      C                   MOVEL     #2ZONE        WZZONE                         Authorization level
+     C     *LIKE         DEFINE    #2DESC        WZDESC                                     MD062430
+     C                   MOVEL     #2DESC        WZDESC                         API Name    MD062430
       *
       *
       * Translate search mask for text field (Current Setting)
@@ -299,6 +311,13 @@
      C     pos           CABEQ     0             BB020
      C                   END
       *
+      * Check description                                                                   MD062430
+     C     #2DESC        IFNE      *BLANK                                                   MD062430
+     C                   eval      pos = %SCAN(%TRIM(%XLATE(LCs:UCs:#2DESC))                MD062430
+     C                             :%TRIM(%XLATE(LCs:UCs:GAPID)):1)                         MD062430
+     C     pos           CABEQ     0             BB020                                      MD062430
+     C                   END                                                                MD062430
+                                                                                            MD062430
       *
       * Load SFL fields
      C                   EXSR      MBFL#1
@@ -327,6 +346,12 @@
      C                   SETON                                        82
      C                   ELSE
      C                   SETOFF                                       82
+     C                   eval      GAPID = *blanks                                          MD062430
+     C/EXEC SQL                                                                             MD062430
+     C+ select GAPID into :GAPID from GPAPIJW0                                              MD062430
+     C+ where GAPIN = :WC_API                                                               MD062430
+     C/END-EXEC                                                                             MD062430
+     C                   eval      SQLCODE = 0                                              MD062430
      C                   ENDIF
       *
      C                   END                                                    OD 1 - ##SFPG
@@ -446,6 +471,7 @@
      C     WZABOW        CASNE     #2ABOW        FBRQRL
      C     WZAUTL        CASNE     #2AUTL        FBRQRL
      C     WZZONE        CASNE     #2ZONE        FBRQRL
+     C     WZDESC        CASNE     #2DESC        FBRQRL                                     MD062430
      C                   END
       *
       * Reload subfile requested
@@ -609,6 +635,7 @@
      C                   eval      #1ABOW = WC_BOASTP
      C                   eval      #1AUTL = WC_AUTLVL
      C                   eval      #1ZONE = WC_ZONE
+     C                   eval      #1DESC = GAPID                                           MD062430
       *
      C                   MOVEL     *BLANK        #1SEL                          *SFLSEL
       *
@@ -626,6 +653,7 @@
      C                   MOVEL     *BLANK        #2ABOW
      C                   MOVEL     *BLANK        #2AUTL
      C                   MOVEL     *BLANK        #2ZONE
+     C                   MOVEL     *BLANK        #2DESC                                     MD062430
       *================================================================
      CSR   MEEXIT        ENDSR
       /EJECT
@@ -717,7 +745,8 @@
       *
       * Open files
      C                   OPEN      GP009620DF
-     C                   Z-ADD     13            ##SFPG            3 0          SFLPAG
+     C**********         Z-ADD     13            ##SFPG            3 0          SFLPAG      MD062430
+     C                   Z-ADD     6             ##SFPG            3 0          SFLPAG      MD062430
      C                   Z-ADD     1             ##SFRC
       *
       * Maximum record number

@@ -13,12 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054733           Date 02Dec19               *
-      *  Prev Amend No. MD054209 *CREATE   Date 31Aug19               *
+      *  Last Amend No. MD062430           Date 24Mar24               *
+      *  Prev Amend No. MD054733           Date 02Dec19               *
+      *                 MD054209 *CREATE   Date 31Aug19               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *MD054733 - Merge GPWPBCTD to GPWIPCTD.
+      *  MD062430 - Improvement to display the description name of API*
+      *  MD054733 - Merge GPWPBCTD to GPWIPCTD.                       *
       *  MD054209 - Deliverable Data Split                            *
       *                                                               *
       *****************************************************************
@@ -90,6 +92,8 @@
      D WRNGU2          S            200
      D WUMSGF          S             10    INZ('SDUSRMSG')
       *
+     D GAPID           S             50                                                     MD062430
+     D GFEAT           S              6                                                     MD062430
       * Programs to call
       *
       /EJECT
@@ -128,6 +132,13 @@
      C                   SETON                                        90
      C                   Else
      C                   SETOFF                                       90
+     C                   eval      GAPID = *blanks                                          MD062430
+     C                   eval      GFEAT = *blanks                                          MD062430
+     C/EXEC SQL                                                                             MD062430
+     C+ select GAPID, GFEAT into :GAPID, :GFEAT from GPAPIJW0                               MD062430
+     C+ where GAPIN = :WC_API                                                               MD062430
+     C/END-EXEC                                                                             MD062430
+     C                   eval      SQLCODE = 0                                              MD062430
      C                   Endif
       *
       * If record does not exist, error
@@ -323,6 +334,8 @@
      C                   MOVEL     WC_BOASTP     #1ABOW
      C                   MOVEL     WC_AUTLVL     #1AUTL
      C                   MOVEL     WC_ZONE       #1ZONE
+     C                   MOVEL     GAPID         #1DESC                                     MD062430
+     C                   MOVEL     GFEAT         #1FEAT                                     MD062430
       *
       * Hold existing record image
      C                   MOVEL     WC_BONSTP     @1NBOW
@@ -348,6 +361,13 @@
      C                   SETON                                        90
      C                   Else
      C                   SETOFF                                       90
+     C                   eval      GAPID = *blanks                                          MD062430
+     C                   eval      GFEAT = *blanks                                          MD062430
+     C/EXEC SQL                                                                             MD062430
+     C+ select GAPID, GFEAT into :GAPID, :GFEAT from GPAPIJW0                               MD062430
+     C+ where GAPIN = :WC_API                                                               MD062430
+     C/END-EXEC                                                                             MD062430
+     C                   eval      SQLCODE = 0                                              MD062430
      C                   Endif
      C     *IN90         IFEQ      '1'
       * Record not found

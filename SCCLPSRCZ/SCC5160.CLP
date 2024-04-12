@@ -45,7 +45,7 @@ ABNOR:
 
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
-                            SCC5110 ended abnormally - see job log') +
+                            SCC5160 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
 
